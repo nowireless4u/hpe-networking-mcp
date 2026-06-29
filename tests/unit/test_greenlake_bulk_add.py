@@ -1356,3 +1356,84 @@ async def test_poll_timedout_terminal() -> None:
     assert result is not None
     assert result["status"] == "TIMEDOUT"
     assert mock_client.get.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# TestUploadedCsvServerSideRead (#379 file-upload option)
+# ---------------------------------------------------------------------------
+
+
+def _ctx_with_provider(provider):
+    ctx = MagicMock()
+    ctx.lifespan_context = {"file_upload_provider": provider}
+    return ctx
+
+
+class TestReadUploadedCsv:
+    """`_read_uploaded_csv` reads the CSV server-side via the FileUpload provider
+    so a (10k-row) upload never enters the model context."""
+
+    def test_reads_content_from_provider(self) -> None:
+        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+
+        provider = MagicMock()
+        provider.on_read.return_value = {"name": "d.csv", "content": "serialNumber,macAddress\nSN1,11:22:33:44:55:66\n"}
+        out = _read_uploaded_csv(_ctx_with_provider(provider), "d.csv")
+        assert out.startswith("serialNumber,macAddress")
+        provider.on_read.assert_called_once()
+
+    def test_provider_missing_raises_400(self) -> None:
+        from fastmcp.exceptions import ToolError
+
+        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+
+        with pytest.raises(ToolError) as e:
+            _read_uploaded_csv(_ctx_with_provider(None), "d.csv")
+        assert e.value.args[0]["status_code"] == 400
+
+    def test_file_not_found_raises_404(self) -> None:
+        from fastmcp.exceptions import ToolError
+
+        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+
+        provider = MagicMock()
+        provider.on_read.side_effect = ValueError("File 'd.csv' not found. Available: []")
+        with pytest.raises(ToolError) as e:
+            _read_uploaded_csv(_ctx_with_provider(provider), "d.csv")
+        assert e.value.args[0]["status_code"] == 404
+
+    def test_non_text_or_empty_raises_400(self) -> None:
+        from fastmcp.exceptions import ToolError
+
+        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+
+        provider = MagicMock()
+        provider.on_read.return_value = {"name": "d.bin", "content_base64": "QUJD..."}  # no text content
+        with pytest.raises(ToolError) as e:
+            _read_uploaded_csv(_ctx_with_provider(provider), "d.bin")
+        assert e.value.args[0]["status_code"] == 400
+
+
+class TestSourceSelection:
+    """Exactly one of csv_filename / csv_path / csv_text — these raise before any API call."""
+
+    async def test_no_source_raises_400(self) -> None:
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as e:
+            await greenlake_bulk_add_devices(MagicMock())
+        assert e.value.args[0]["status_code"] == 400
+
+    async def test_multiple_sources_raises_400(self) -> None:
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as e:
+            await greenlake_bulk_add_devices(MagicMock(), csv_text="a,b", csv_filename="d.csv")
+        assert e.value.args[0]["status_code"] == 400
+
+    async def test_csv_filename_without_provider_raises_400(self) -> None:
+        from fastmcp.exceptions import ToolError
+
+        with pytest.raises(ToolError) as e:
+            await greenlake_bulk_add_devices(_ctx_with_provider(None), csv_filename="d.csv")
+        assert e.value.args[0]["status_code"] == 400

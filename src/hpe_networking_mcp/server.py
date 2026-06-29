@@ -34,6 +34,9 @@ async def lifespan(server: FastMCP):
     # Config is attached to the server instance before run() is called
     config: ServerConfig = server._hpe_config  # type: ignore[attr-defined]
     context: dict = {"config": config}
+    # FileUpload provider handle (present only when MCP_APP_ENABLE=true) so tools
+    # can read an uploaded file server-side without it entering model context.
+    context["file_upload_provider"] = getattr(server, "_hpe_file_upload", None)
 
     # --- Mist ---
     # v3.1.0.0 (issue #304): the ``mistapi`` SDK is gone; we go direct via
@@ -418,7 +421,13 @@ def create_server(config: ServerConfig) -> FastMCP:
         from fastmcp.apps.file_upload import FileUpload
         from fastmcp.apps.generative import GenerativeUI
 
-        mcp.add_provider(FileUpload())
+        _file_upload = FileUpload()
+        mcp.add_provider(_file_upload)
+        # Keep a handle so tools can read an uploaded file SERVER-SIDE via
+        # ``provider.on_read(name, ctx)`` — i.e. without pulling the file
+        # through the model context. ``greenlake_bulk_add_devices`` uses this
+        # for large CSVs (up to 10k rows). Surfaced on lifespan_context below.
+        mcp._hpe_file_upload = _file_upload  # type: ignore[attr-defined]
         logger.info("MCP Apps: FileUpload provider registered (MCP_APP_ENABLE=true)")
 
         mcp.add_provider(GenerativeUI())

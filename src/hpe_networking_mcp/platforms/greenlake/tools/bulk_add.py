@@ -39,6 +39,44 @@ POLL_INTERVAL_SECONDS = 5
 MAX_POLL_ATTEMPTS = 24  # = 120s total per batch
 
 
+def _read_uploaded_csv(ctx: Context, name: str) -> str:
+    """Read an operator-uploaded CSV server-side from the FileUpload session store.
+
+    Uses the ``FileUpload`` provider's ``on_read`` (the same path the ``read_file``
+    tool uses) so the CSV — up to 10k rows — is fetched INSIDE the server and never
+    enters the model context. The provider handle is placed on ``lifespan_context``
+    by ``server.create_server`` only when ``MCP_APP_ENABLE=true``.
+
+    Raises ToolError (400/404/502) on missing capability / file / read failure.
+    """
+    try:
+        provider = ctx.lifespan_context.get("file_upload_provider")
+    except Exception:  # pragma: no cover - defensive
+        provider = None
+    if provider is None:
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": (
+                    "File upload is not available on this server (MCP_APP_ENABLE is not set, or the "
+                    "client has no MCP-Apps support). Paste the CSV via csv_text, or use csv_path."
+                ),
+            }
+        )
+    try:
+        entry = provider.on_read(name, ctx)
+    except ValueError as exc:  # provider raises ValueError for not-found (lists available)
+        raise ToolError({"status_code": 404, "message": f"uploaded file {name!r} not found: {exc}"}) from exc
+    except Exception as exc:  # pragma: no cover - defensive
+        raise ToolError({"status_code": 502, "message": f"failed to read uploaded file {name!r}: {exc}"}) from exc
+    content = entry.get("content") if isinstance(entry, dict) else None
+    if not isinstance(content, str) or not content.strip():
+        raise ToolError(
+            {"status_code": 400, "message": f"uploaded file {name!r} is empty or not readable as text CSV"}
+        )
+    return content
+
+
 def _write_cache_atomic(path: pathlib.Path, data: dict) -> None:
     """Write *data* as JSON to *path* atomically using a same-directory temp file.
 
@@ -155,9 +193,16 @@ async def _poll_async_operation(
 @tool(
     name="greenlake_bulk_add_devices",
     description=(
-        "Bulk-add HPE GreenLake devices from a CSV file or inline CSV text.\n\n"
-        "Accepts either a local file path (csv_path) or raw CSV text (csv_text) — "
-        "not both. Validates CSV columns and each row before making any API call.\n\n"
+        "Bulk-add HPE GreenLake devices from a CSV.\n\n"
+        "HOW TO PROVIDE THE LIST — ASK THE OPERATOR which they prefer before calling:\n"
+        "  • FILE UPLOAD (best for large lists, up to 10k rows): have the operator upload "
+        "the CSV via the `file_manager` widget, then call with `csv_filename=\"<uploaded name>\"`. "
+        "The tool reads it SERVER-SIDE — the CSV never enters the model context. Requires the "
+        "server's MCP-Apps capability (MCP_APP_ENABLE) + an MCP-Apps-capable client.\n"
+        "  • COPY / PASTE: pass the CSV as `csv_text`. The AI WILL see the pasted content — fine "
+        "for small lists, but do NOT paste thousands of rows; use file upload for those.\n"
+        "  • LOCAL PATH (CLI / same-host only): `csv_path=\"/abs/path.csv\"`.\n"
+        "Provide EXACTLY ONE of csv_filename / csv_text / csv_path.\n\n"
         "Mandatory CSV columns: serialNumber (aliases: serial, sn, serial_number) "
         "and macAddress (aliases: mac, mac_address). Column headers are matched "
         "case-insensitively.\n\n"
@@ -172,33 +217,60 @@ async def _poll_async_operation(
 )
 async def greenlake_bulk_add_devices(
     ctx: Context,
+    csv_filename: Annotated[
+        str | None,
+        Field(
+            default=None,
+            description=(
+                "Name of a CSV the operator uploaded via the `file_manager` widget. Read "
+                "SERVER-SIDE from the session upload store — the content never enters the model "
+                "context, so this is the right choice for large lists (up to 10k rows). "
+                "Mutually exclusive with csv_text / csv_path."
+            ),
+        ),
+    ] = None,
     csv_path: Annotated[
         str | None,
         Field(
             default=None,
-            description="Absolute path to a local CSV file. Mutually exclusive with csv_text.",
+            description="Absolute path to a local CSV file (CLI / same-host). Mutually exclusive with csv_filename / csv_text.",
         ),
     ] = None,
     csv_text: Annotated[
         str | None,
         Field(
             default=None,
-            description="Raw CSV text as a string. Mutually exclusive with csv_path.",
+            description=(
+                "Raw CSV text (copy/paste). The AI sees this content — use only for small lists, "
+                "not thousands of rows. Mutually exclusive with csv_filename / csv_path."
+            ),
         ),
     ] = None,
 ) -> dict[str, Any] | str:
-    """Bulk-add GreenLake devices from CSV input."""
+    """Bulk-add GreenLake devices from CSV input (upload / paste / local path)."""
     logger.debug(
-        "greenlake_bulk_add_devices called, csv_path={}, csv_text_len={}",
+        "greenlake_bulk_add_devices called, csv_filename={}, csv_path={}, csv_text_len={}",
+        csv_filename,
         csv_path,
         len(csv_text) if csv_text else 0,
     )
 
-    # Exactly one source required
-    if csv_path is None and csv_text is None:
-        raise ToolError({"status_code": 400, "message": "provide either csv_path or csv_text"})
-    if csv_path is not None and csv_text is not None:
-        raise ToolError({"status_code": 400, "message": "provide csv_path OR csv_text, not both"})
+    # Exactly one source required (upload / local path / paste).
+    provided = [s for s in (csv_filename, csv_path, csv_text) if s is not None]
+    if not provided:
+        raise ToolError(
+            {"status_code": 400, "message": "provide exactly one of csv_filename (upload), csv_path, or csv_text (paste)"}
+        )
+    if len(provided) > 1:
+        raise ToolError(
+            {"status_code": 400, "message": "provide exactly ONE of csv_filename / csv_path / csv_text, not several"}
+        )
+
+    # File-upload path: read the CSV server-side from the session upload store so
+    # the (possibly 10k-row) content never enters the model context. Resolves to
+    # csv_text for the shared parse/cache path below.
+    if csv_filename is not None:
+        csv_text = _read_uploaded_csv(ctx, csv_filename)
 
     result = parse_csv(csv_path=csv_path, csv_text=csv_text)
     if result.error:
