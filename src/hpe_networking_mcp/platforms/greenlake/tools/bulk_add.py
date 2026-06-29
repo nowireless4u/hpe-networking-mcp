@@ -71,9 +71,7 @@ def _read_uploaded_csv(ctx: Context, name: str) -> str:
         raise ToolError({"status_code": 502, "message": f"failed to read uploaded file {name!r}: {exc}"}) from exc
     content = entry.get("content") if isinstance(entry, dict) else None
     if not isinstance(content, str) or not content.strip():
-        raise ToolError(
-            {"status_code": 400, "message": f"uploaded file {name!r} is empty or not readable as text CSV"}
-        )
+        raise ToolError({"status_code": 400, "message": f"uploaded file {name!r} is empty or not readable as text CSV"})
     return content
 
 
@@ -196,12 +194,12 @@ async def _poll_async_operation(
         "Bulk-add HPE GreenLake devices from a CSV.\n\n"
         "HOW TO PROVIDE THE LIST — ASK THE OPERATOR which they prefer before calling:\n"
         "  • FILE UPLOAD (best for large lists, up to 10k rows): have the operator upload "
-        "the CSV via the `file_manager` widget, then call with `csv_filename=\"<uploaded name>\"`. "
+        'the CSV via the `file_manager` widget, then call with `csv_filename="<uploaded name>"`. '
         "The tool reads it SERVER-SIDE — the CSV never enters the model context. Requires the "
         "server's MCP-Apps capability (MCP_APP_ENABLE) + an MCP-Apps-capable client.\n"
         "  • COPY / PASTE: pass the CSV as `csv_text`. The AI WILL see the pasted content — fine "
         "for small lists, but do NOT paste thousands of rows; use file upload for those.\n"
-        "  • LOCAL PATH (CLI / same-host only): `csv_path=\"/abs/path.csv\"`.\n"
+        '  • LOCAL PATH (CLI / same-host only): `csv_path="/abs/path.csv"`.\n'
         "Provide EXACTLY ONE of csv_filename / csv_text / csv_path.\n\n"
         "Mandatory CSV columns: serialNumber (aliases: serial, sn, serial_number) "
         "and macAddress (aliases: mac, mac_address). Column headers are matched "
@@ -233,7 +231,9 @@ async def greenlake_bulk_add_devices(
         str | None,
         Field(
             default=None,
-            description="Absolute path to a local CSV file (CLI / same-host). Mutually exclusive with csv_filename / csv_text.",
+            description=(
+                "Absolute path to a local CSV file (CLI / same-host). Mutually exclusive with csv_filename / csv_text."
+            ),
         ),
     ] = None,
     csv_text: Annotated[
@@ -259,11 +259,17 @@ async def greenlake_bulk_add_devices(
     provided = [s for s in (csv_filename, csv_path, csv_text) if s is not None]
     if not provided:
         raise ToolError(
-            {"status_code": 400, "message": "provide exactly one of csv_filename (upload), csv_path, or csv_text (paste)"}
+            {
+                "status_code": 400,
+                "message": "provide exactly one of csv_filename (upload), csv_path, or csv_text (paste)",
+            }
         )
     if len(provided) > 1:
         raise ToolError(
-            {"status_code": 400, "message": "provide exactly ONE of csv_filename / csv_path / csv_text, not several"}
+            {
+                "status_code": 400,
+                "message": "provide exactly ONE of csv_filename / csv_path / csv_text, not several",
+            }
         )
 
     # File-upload path: read the CSV server-side from the session upload store so
