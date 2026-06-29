@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **#528 — `docs/TOOLS.md` code-mode section.** Surface count 4 → 6 tools (added `skills_list` / `skills_load`); the example now unwraps the universal envelope via `["data"]` (was the pre-envelope `["result"]`) and shows Central collection reads under `data["items"]` (#491); the `call_tool` dispatch note lists all 9 platforms (Mist now callable by name, #524) + the meta-tools. Corrected now-false sandbox-limit claims: `datetime.now()` / `date.today()` WORK (v3.4.5.1), `type()` is available; replaced with the accurate stdlib/builtin guidance and the self-correcting-error note.
 - **#519 — INSTRUCTIONS.md sandbox table.** Added substitute rows for the unsupported syntax constructs `with` / `match` / `class` / `del`.
 
+### Security
+- Bump transitive `joserfc` 1.6.4 → 1.7.2 (via `authlib` / `fastmcp`) — resolves **CVE-2026-48990** flagged by the dependency audit. Lock-only change.
+
 ### Note
 - #529 (prompts/skills "use invoke_tool, not bare calls; avoid top-level `return`") is moot after #524/#539 — bare per-platform calls and top-level `return` are both supported — and the referenced prompt tools all exist; closed with that note rather than rewriting working guidance.
 
