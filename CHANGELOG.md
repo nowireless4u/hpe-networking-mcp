@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.10] - 2026-06-29
+
+**Patch — docs(skills): runbook state-machine + Generative-UI fallback guard (#531).** Last item of the small-model robustness audit (#513–#534).
+
+### Added
+- **`aos-migration.md` checkpoint ledger** — a compact "state machine at a glance" table near the top of the 2100-line runbook: per stage, the required inputs, the cached artifact it produces, allowed next stages, and stop/branch conditions, plus the hard-stops collected in one place. Keeps a small/local model from losing its place or re-collecting Act I data.
+- **`tests/unit/test_genui_skill_fallbacks.py`** — discovers every skill referencing `generate_prefab_ui` and asserts each teaches the safe render contract: call it as a TOP-LEVEL tool (not from inside `execute()`), describe a no-Generative-UI fallback, and mandate a text summary regardless of render. Both current Generative-UI skills (`central-site-dashboard`, `central-ucc-quality`) already comply; the test locks it in for future ones.
+
 ## [3.4.5.9] - 2026-06-26
 
 **Patch — docs(code-mode): refresh code-mode docs to current behavior (#528, #519).** Group G docs cleanup, re-scoped: several original premises were mooted by the v3.4.5.x fixes (bare per-platform calls and top-level `return` both work now), so this corrects what's genuinely stale rather than applying obsolete rewrites.

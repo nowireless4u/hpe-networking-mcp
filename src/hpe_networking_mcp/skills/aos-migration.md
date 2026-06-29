@@ -108,6 +108,24 @@ The skill's job is to prove the in-chat workflow produces credible readiness fin
 
 ## Procedure — 10 numbered stages across two acts (plus the Stage 6.5 questionnaire between the acts)
 
+### State machine at a glance (checkpoint ledger)
+
+This runbook is long — anchor on this table so you don't lose your place. You are always in **exactly one** stage. Before acting, confirm the named inputs exist (each is the cached artifact of an earlier stage); if a required artifact is missing, go back to the stage that produces it — **never re-fetch what an earlier stage already cached.**
+
+| Stage | Needs (inputs) | Produces / caches | Allowed next | Stop / branch |
+|---|---|---|---|---|
+| **-2 Source** | — | `source` = api / upload / paste | `-1` (api) · `1-ALT` (upload/paste) | — |
+| **-1 Reachability** (api) | AOS 8 creds | reachability OK | `1` | unreachable → stop, or fall back to upload/paste |
+| **1 Collect** (api) | reachable | `config_by_scope` (full `/md` walk) | `2` | — |
+| **1-ALT Parse** (offline) | uploaded/pasted config | parsed subset (+ `inconclusive` marks) | `2` | nothing parsed → EMPTY-SOURCE |
+| **2–5 Analyze** | `config_by_scope` / parsed subset | parity + prerequisite findings, target-arch detections | `6` | — |
+| **6 Verdict** | findings | **verdict** (GO / PARTIAL / EMPTY-SOURCE / BLOCKED) + report | GATE | **BLOCKED → end (no gate)** |
+| **GATE** | verdict report | operator `yes` / `no` / `edit-context` | `6.5` on `yes` | `no` → end · `edit-context` → re-run 3+6 |
+| **6.5 Questionnaire** | verdict ≠ EMPTY-SOURCE, detections | `runtime_values` (per-SSID forward-mode, gateway topology) | `7` | EMPTY-SOURCE → skip 6.5, Act II on defaults |
+| **7–10 Plan (Act II)** | Act I data + `runtime_values` | disposition matrix + ordered Central API sequence + validation checklist | done | plan only — never executes `central_manage_*` writes |
+
+Hard stops, in one place: **BLOCKED verdict** (no Act II), operator **`no`** at the gate, and **AOS 8 unreachable** with no offline source. Act II never re-collects — if you find yourself re-fetching effective-config or re-pasting, you've lost the ledger; the Act I artifacts are already in context.
+
 **Data-source gate (Stage -2) — ALWAYS FIRST.** Before any collection, ask the operator how to obtain the AOS 8 config — (1) API, (2) upload, (3) paste — and route accordingly. See Stage -2.
 
 **Act I (Stages -1 through 6) — readiness audit.** Runs in full on the **API path** (Stage -1 → Stage 1). On the **upload / paste paths** it runs in reduced form against the offline-parsed subset (Stage 1-ALT replaces Stage -1 + Stage 1; object classes the parser doesn't cover are marked `inconclusive — offline source`). Ends with a verdict + combined report.
