@@ -274,6 +274,10 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 |---|---|---|
 | `yield` / `yield from` | `NotImplementedError: monty syntax parser does not yet support yield expressions` | Use an explicit stack/list loop and `return` |
 | `async def` (any function) | unawaited-coroutine footgun (sandbox already runs in async context) | Inline the code at the top level inside `execute()` |
+| `with` (context managers) | `NotImplementedError: … does not yet support context managers` | Call/clean up explicitly; for tool I/O you don't need `with` at all |
+| `match` / `case` | `NotImplementedError: … does not yet support pattern matching` | Use `if` / `elif` / `else` |
+| `class` definitions | `NotImplementedError: … does not yet support class definitions` | Use a plain `dict` (or a function returning one) |
+| `del x` / `del d[k]` | `NotImplementedError: … does not yet support the 'del' statement` | Rebuild without the key, or `d.pop(k, None)` |
 | most stdlib modules (`collections`, `itertools`, `functools`, `statistics`, `random`, `hashlib`, `base64`, `uuid`, `decimal`, `csv`, …) | `ModuleNotFoundError: No module named '<x>'` | Only `json`, `re`, `math`, `datetime` exist. Use builtins: a plain `dict` for `Counter`/`defaultdict`, `sum(xs)/len(xs)` for `statistics.mean`, loops/comprehensions for `itertools`/`functools` |
 | `import hpe_networking_mcp.*` | `ModuleNotFoundError` | Use platform tools via `await call_tool(name, params)` |
 | `"{} {}".format(a, b)` | `AttributeError: 'str' object has no attribute 'format'` | Use f-strings: `f"{a} {b}"` (format specs like `f"{x:.2f}"` / `f"{n:,}"` work) |

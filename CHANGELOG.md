@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.5.9] - 2026-06-26
+
+**Patch — docs(code-mode): refresh code-mode docs to current behavior (#528, #519).** Group G docs cleanup, re-scoped: several original premises were mooted by the v3.4.5.x fixes (bare per-platform calls and top-level `return` both work now), so this corrects what's genuinely stale rather than applying obsolete rewrites.
+
+### Changed
+- **#528 — `docs/TOOLS.md` code-mode section.** Surface count 4 → 6 tools (added `skills_list` / `skills_load`); the example now unwraps the universal envelope via `["data"]` (was the pre-envelope `["result"]`) and shows Central collection reads under `data["items"]` (#491); the `call_tool` dispatch note lists all 9 platforms (Mist now callable by name, #524) + the meta-tools. Corrected now-false sandbox-limit claims: `datetime.now()` / `date.today()` WORK (v3.4.5.1), `type()` is available; replaced with the accurate stdlib/builtin guidance and the self-correcting-error note.
+- **#519 — INSTRUCTIONS.md sandbox table.** Added substitute rows for the unsupported syntax constructs `with` / `match` / `class` / `del`.
+
+### Note
+- #529 (prompts/skills "use invoke_tool, not bare calls; avoid top-level `return`") is moot after #524/#539 — bare per-platform calls and top-level `return` are both supported — and the referenced prompt tools all exist; closed with that note rather than rewriting working guidance.
+
 ## [3.4.5.8] - 2026-06-26
 
 **Patch — feat(discovery): safety metadata in discovery output + accurate `tags` behavior (#526, #527).** Final group of the small-model robustness backlog — completes the code-mode discovery story now that Mist is visible (#524).
