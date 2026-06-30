@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.6.3] - 2026-06-30
+
+**Patch — GreenLake device serials become round-trippable tokens (fixes a latent tokenization gap).** The live upload test for v3.4.6.2 confirmed no raw serial/MAC reaches the model, but the bulk-add result redacted serials to a bare `[serial]` placeholder — which (a) an MCP-Apps client misread as "the CSV has unfilled template text," and (b) makes a real multi-device failure list useless (every failure shows identical `[serial]`). Root cause: `token_store` was never placed on `lifespan_context`, so `greenlake_bulk_add_devices`' serial tokenization silently no-op'd to the fallback.
+
+### Fixed
+- **`token_store` is now on `lifespan_context`** — `greenlake_bulk_add_devices` builds its per-session `Tokenizer` from it, so failed-row serials are emitted as `[[SERIAL:uuid]]` tokens instead of the bare `[serial]` placeholder. With `ENABLE_PII_TOKENIZATION=true` these round-trip (the operator sees the real serial via detokenization; the AI's context only ever holds the token). The non-leaking `[serial]` default remains as a defensive fallback.
+
+### Changed
+- **GreenLake camelCase identifiers join the PII ruleset** — added `serialnumber` (the lowercased form of GreenLake's `serialNumber`; the field-name normalizer doesn't split camelCase) so device serials in GreenLake API responses (e.g. `greenlake_get_devices`) tokenize when PII tokenization is enabled. (MACs are normalized, not tokenized — by design, there is no MAC `TokenKind`.)
+
+### Notes
+- No tool/parameter/count changes. Tokenization round-trip + GreenLake-wide coverage activate only when `ENABLE_PII_TOKENIZATION=true`; the bulk-add serial redaction itself is always on.
+
 ## [3.4.6.2] - 2026-06-29
 
 **Patch — SECURITY: uploaded file contents never reach the model.** Removes the model-visible `read_file` tool, which returned raw uploaded file content to the LLM — defeating the whole purpose of uploads (a device CSV's serials/MACs, or an AOS 8 config carrying PSKs and RADIUS/TACACS secrets, would land in the model context). Uploaded files are now read **server-side only**; the model discovers a file's name via `list_files` (metadata only) and hands it to a consuming tool that reads it inside the server.

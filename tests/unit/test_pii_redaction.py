@@ -108,6 +108,15 @@ class TestFieldClassification:
         assert cls == FieldClassification.TOKENIZE_SECRET
         assert kind == TokenKind.PSK
 
+    def test_greenlake_camelcase_serial_classified(self) -> None:
+        """GreenLake API uses camelCase ``serialNumber``; the normalizer lowercases
+        (no camel split), so the ruleset must carry ``serialnumber`` to tokenize
+        device serials in GreenLake responses (e.g. greenlake_get_devices)."""
+        for field in ("serialNumber", "serialnumber", "serial", "serial_number"):
+            cls, kind = classify_field(field, "CN-EXAMPLE-01")
+            assert cls == FieldClassification.TOKENIZE_IDENTIFIER, field
+            assert kind == TokenKind.SERIAL, field
+
     def test_ssid_passes_through(self) -> None:
         # SSIDs are broadcast in beacon frames — observable to anyone in
         # radio range. Tokenizing them adds context-window cost without

@@ -37,6 +37,12 @@ async def lifespan(server: FastMCP):
     # FileUpload provider handle (present only when MCP_APP_ENABLE=true) so tools
     # can read an uploaded file server-side without it entering model context.
     context["file_upload_provider"] = getattr(server, "_hpe_file_upload", None)
+    # PII token store (always constructed in create_server). Tools that tokenize
+    # their own outputs server-side — e.g. greenlake_bulk_add_devices redacting
+    # device serials in its result — build a per-session Tokenizer from this.
+    # Without it on lifespan_context, that tokenization silently no-ops to a bare
+    # ``[serial]`` placeholder (latent gap fixed alongside #546).
+    context["token_store"] = getattr(server, "_hpe_token_store", None)
 
     # --- Mist ---
     # v3.1.0.0 (issue #304): the ``mistapi`` SDK is gone; we go direct via

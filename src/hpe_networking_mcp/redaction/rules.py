@@ -242,6 +242,7 @@ TOKENIZED_IDENTIFIER_FIELDS: dict[str, TokenKind] = {
     # Hardware identifiers — tie back to purchase records
     "serial": TokenKind.SERIAL,
     "serial_number": TokenKind.SERIAL,
+    "serialnumber": TokenKind.SERIAL,  # GreenLake camelCase ``serialNumber`` (normalizer lowercases, no camel split)
     "sn": TokenKind.SERIAL,
     "imei": TokenKind.IMEI,
     "imsi": TokenKind.IMSI,
