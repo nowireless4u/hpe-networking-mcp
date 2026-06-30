@@ -629,7 +629,7 @@ Use the standard dynamic-mode discovery pattern (`greenlake_list_tools`, `greenl
 
 ## Write Tools — Bulk Device Onboarding
 
-`greenlake_bulk_add_devices` accepts a local CSV path (`csv_path`) or inline CSV text (`csv_text`). Mandatory columns: `serialNumber` and `macAddress`. Optional columns: `partNumber`, `service`, `subscriptionKey`, `location`, `tags`. Column headers are case-insensitive; many aliases are recognized (e.g. `serial`, `sn`, `mac`, `mac_address`).
+`greenlake_bulk_add_devices` accepts the CSV from exactly one of three mutually-exclusive sources: an operator-uploaded file (`csv_filename`), a local CSV path (`csv_path`), or inline CSV text (`csv_text`). Prefer `csv_filename` (upload) for large/10k-row files — the upload is read server-side and never enters the model context; `csv_text` (paste) means the AI sees the data, so don't paste thousands of rows. Mandatory columns: `serialNumber` and `macAddress`. Optional columns: `partNumber`, `service`, `subscriptionKey`, `location`, `tags`. Column headers are case-insensitive; many aliases are recognized (e.g. `serial`, `sn`, `mac`, `mac_address`).
 
 The tool runs in batches of 5 at 5 POST/min; assignment/enrichment PATCHes run at 20/min. For large CSVs (>100 rows) this can take several minutes — use `ctx.report_progress` events to monitor. A `.cache.json` checkpoint is written after each batch; re-invoking the same CSV resumes from the last checkpoint.
 
