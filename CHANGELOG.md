@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.7.1] - 2026-06-30
+
+**Patch — self-correcting sandbox hint for Mist search arrays (`unhashable type: 'list'`).** Mist org-level search/aggregation endpoints (`mist_search_org_wireless_clients`, `mist_search_org_devices`, …) return **arrays** for window-aggregated fields — `ssid`, `hostname`, `ap`, `device` — because a client/device can have several over the search window (`mac`/`band` stay scalar; verified live). Code-mode models routinely use one of these directly as a dict key and crash with `cannot use 'list' as a dict key (unhashable type: 'list')`.
+
+### Fixed
+- `SandboxErrorCatchMiddleware` now appends a hint when an `execute()` block raises `unhashable type: 'list'`: it names the Mist search array fields and says to index (`value[0]`) or join (`', '.join(value)`) them, not to expect a scalar. Delivered through the error channel — the one place models reliably self-correct (unlike advisory docs). The arrays are **not** unwrapped server-side: they're intentional aggregation arrays and collapsing them would be lossy and diverge from the Mist spec.
+
+### Notes
+- No tool/parameter/count changes; middleware-only. Reported by a code-mode operator running a small model.
+
 ## [3.4.7.0] - 2026-06-30
 
 **Minor — `greenlake-device-onboarding` runbook + batch-uniform assignment params.** "Add devices to GreenLake" is a lifecycle, not a single write — operators want to add, subscribe, and assign devices to a service in one flow, not add now and come back later. A bare `greenlake_bulk_add_devices` call also skipped the choose-your-source step and never warned that pasted data is visible to the AI. This adds a guided skill and the tool support it needs.

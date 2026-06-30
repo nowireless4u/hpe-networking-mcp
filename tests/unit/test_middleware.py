@@ -440,6 +440,39 @@ class TestSandboxErrorCatchMiddleware:
         assert "datetime.now" not in str(exc_info.value)
 
     @pytest.mark.asyncio
+    async def test_unhashable_list_key_gets_mist_array_hint(self):
+        """A model using a Mist search array (ssid/hostname/ap) as a dict key hits
+        `unhashable type: 'list'`. The hint must explain these search fields are
+        arrays and to index/join them — the Zach report. Uses real failing sandbox
+        code so the message matches what the sandbox actually raises.
+        """
+        import pydantic_monty
+
+        monty = pydantic_monty.Monty("d = {}\nd[[1, 2]] = 1\nreturn d")
+        cause = None
+        try:
+            await monty.run_async()
+        except pydantic_monty.MontyError as e:
+            cause = e
+        assert cause is not None and "unhashable type: 'list'" in str(cause)
+
+        middleware = SandboxErrorCatchMiddleware()
+        ctx = _make_call_tool_context("execute")
+
+        async def _raise(_ctx):
+            raise _wrap_in_tool_error(cause)
+
+        with pytest.raises(ToolError) as exc_info:
+            await middleware.on_call_tool(ctx, _raise)
+
+        text = str(exc_info.value)
+        assert "Hint:" in text
+        assert "mist_search_org" in text.lower()
+        assert "ssid" in text and "ap" in text  # names the array fields
+        # gives the actionable fix
+        assert "value[0]" in text or "join" in text
+
+    @pytest.mark.asyncio
     async def test_nameerror_gets_statelessness_hint(self):
         """A model referencing a variable from a previous execute() block
         (each call is a FRESH sandbox) hits NameError. The hint must name the

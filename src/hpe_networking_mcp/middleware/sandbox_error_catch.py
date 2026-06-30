@@ -218,6 +218,31 @@ def _dict_union_hint(cause_text: str) -> str | None:
     return "Hint: the sandbox doesn't support `dict | dict`. Merge with `{**a, **b}`."
 
 
+def _unhashable_list_hint(cause_text: str) -> str | None:
+    """A list used as a dict key / set member — usually a Mist search array.
+
+    Mist org-level search/aggregation endpoints (``mist_search_org_wireless_clients``,
+    ``mist_search_org_devices``, ...) return ARRAYS for fields that can vary over the
+    search window — ``ssid`` / ``hostname`` / ``ap`` / ``device`` — because a client or
+    device may have several across the window (``mac`` / ``band`` stay scalar). Models
+    routinely use one of these directly as a dict key and hit ``unhashable type: 'list'``
+    (Zach report). Verified live against the Mist API. The fix is to index or join the
+    array, NOT to expect a scalar.
+    """
+    if "unhashable type: 'list'" not in cause_text and "'list' as a dict key" not in cause_text:
+        return None
+    return (
+        "Hint: a list was used as a dict key or set member (lists are unhashable). This "
+        "commonly comes from Mist org-level search results: `mist_search_org_wireless_clients` / "
+        "`mist_search_org_devices` (and other `*_search_org_*` tools) return ARRAYS for "
+        "window-aggregated fields — `ssid`, `hostname`, `ap`, `device` — since a client/device "
+        "can have several over the window (`mac` and `band` stay scalar). Index the array "
+        "(`value[0]`) or join it (`', '.join(value)`) before using it as a key; iterate it for "
+        "set membership. Do NOT assume these fields are scalars — a value that's one element "
+        "today can be several tomorrow."
+    )
+
+
 _SHAPE_RE = re.compile(r"'(\w+)' object has no attribute '(get|keys|items|values)'")
 
 
@@ -248,6 +273,7 @@ _HINT_FNS = (
     _json_default_hint,
     _next_iter_hint,
     _dict_union_hint,
+    _unhashable_list_hint,
     _shape_hint,
 )
 
