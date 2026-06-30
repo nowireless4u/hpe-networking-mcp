@@ -152,6 +152,23 @@ class TestResolveApplicationId:
         assert app_id == "app-uuid-1"
         assert region == "us-east"
 
+    async def test_exact_id_match(self) -> None:
+        """Passing a catalog service ID (UUID) resolves directly — the onboarding
+        runbook / service_id param accept an ID, not only a name (Casey #550)."""
+        mock_client = MagicMock()
+        mock_client.get = AsyncMock(
+            return_value={
+                "items": [
+                    {"id": "app-uuid-1", "name": "Aruba Central", "region": "us-west"},
+                    {"id": "app-uuid-2", "name": "Other Service", "region": "eu-central"},
+                ]
+            }
+        )
+        cache: dict = {}
+        app_id, region = await _resolve_application_id(mock_client, "app-uuid-2", cache)
+        assert app_id == "app-uuid-2"
+        assert region == "eu-central"
+
     async def test_returns_none_tuple_when_not_found(self) -> None:
         """Empty catalog must return (None, None)."""
         mock_client = MagicMock()

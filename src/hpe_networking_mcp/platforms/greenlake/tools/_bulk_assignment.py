@@ -102,18 +102,23 @@ async def _resolve_subscription_id(
 
 async def _resolve_application_id(
     client: GreenLakeHttpClient,
-    service_name: str,
+    service_value: str,
     lookup_cache: dict[str, Any],
 ) -> tuple[str | None, str | None]:
-    """Resolve service name to (application_id, region) via the service catalog.
+    """Resolve a service identifier to (application_id, region) via the catalog.
 
     Fetches ``GET /service-catalog/v1/service-managers`` once; caches the items
-    list under ``lookup_cache["_catalog"]`` for subsequent calls.  Substring match
-    is case-insensitive across ``name``, ``displayName``, and ``description`` fields.
+    list under ``lookup_cache["_catalog"]`` for subsequent calls. Accepts EITHER
+    an exact catalog ``id`` (a service UUID) OR a name — exact ``id`` is tried
+    first, then a case-insensitive substring match across ``name`` /
+    ``displayName`` / ``description``. Both forms work because the onboarding
+    runbook and the ``service_id`` parameter are documented as "ID or name", and
+    operators reach for the UUID they see in the service catalog.
 
     Args:
         client: Authenticated GreenLake HTTP client.
-        service_name: Name from the CSV ``service`` column (e.g. 'Aruba Central').
+        service_value: A catalog service ``id`` (UUID) or a name/substring
+            (e.g. 'Aruba Central').
         lookup_cache: Per-run dict; catalog stored under ``"_catalog"`` key.
 
     Returns:
@@ -134,7 +139,13 @@ async def _resolve_application_id(
         catalog = result.get("items", [])
         lookup_cache["_catalog"] = catalog
 
-    normalized = service_name.strip().lower()
+    value = service_value.strip()
+    # Exact id match first — operators commonly pass the catalog UUID.
+    for item in catalog:
+        if item.get("id") and item["id"] == value:
+            return (item.get("id"), item.get("region"))
+    # Fall back to a case-insensitive name/displayName/description substring match.
+    normalized = value.lower()
     for item in catalog:
         names = [item.get("name", ""), item.get("displayName", ""), item.get("description", "")]
         if any(normalized in n.lower() for n in names if n):

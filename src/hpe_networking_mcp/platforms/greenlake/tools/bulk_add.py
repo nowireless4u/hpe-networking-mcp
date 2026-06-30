@@ -202,7 +202,13 @@ async def greenlake_bulk_add_devices(
     ] = None,
     service_id: Annotated[
         str | None,
-        Field(default=None, description="Service/application ID applied to EVERY device lacking a serviceId column."),
+        Field(
+            default=None,
+            description=(
+                "Service to assign to EVERY device lacking a serviceId column — a catalog "
+                "service ID (UUID) OR a name (e.g. 'Aruba Central'); both resolve."
+            ),
+        ),
     ] = None,
     location: Annotated[
         str | None,

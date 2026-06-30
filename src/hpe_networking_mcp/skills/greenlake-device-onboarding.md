@@ -80,8 +80,10 @@ unsubscribed and can be subscribed later, and skip to Stage 5.
 ## Stage 3 — Assign a service
 
 Determine which service/application the devices should be assigned to (e.g. an
-Aruba Central instance). Confirm the **service ID** with the operator and
-capture it for Stage 5 (`service_id`). If unsure, ask — don't guess a service.
+Aruba Central instance). Confirm the service with the operator and capture it
+for Stage 5 (`service_id`) — you may pass **either** the catalog service ID
+(UUID) **or** the service name (e.g. "Aruba Central"); both resolve. If unsure,
+ask — don't guess a service.
 
 ## Stage 4 — Location + tags (optional)
 
