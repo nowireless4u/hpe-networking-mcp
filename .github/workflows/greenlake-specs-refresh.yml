@@ -1,97 +1,110 @@
-name: GreenLake specs refresh
+name: Sync GreenLake OAS
 
-# Pulls the vendored HPE GreenLake OpenAPI specs from the public developer
-# portal into vendor/greenlake/ and opens a PR if anything changed. The set of
-# specs is driven by vendor/greenlake/sources.json (curated public northbound
-# APIs). The job also diffs the live llms.txt manifest against sources.json and
-# reports any newly-published services so the manifest can be extended.
+# Pulls the vendored HPE GreenLake public northbound OpenAPI specs from the
+# developer portal weekly and opens an auto-merge PR with the refreshed copies
+# if they changed.
 #
-# URLs in sources.json are exact (the _bundle files preserve source casing —
-# openApi.json / openapiBeta.json / @v1 — so they can't be derived by string
-# transform). See vendor/greenlake/README.md.
+# Source: developer.greenlake.hpe.com is a Redocly SPA. The spec index is
+# /llms.txt; raw specs are the /_bundle/...json?download files. Casing is
+# preserved upstream (openApi.json / openapiBeta.json / @v1) so URLs can't be
+# derived — they're pinned + verified in vendor/greenlake/sources.json.
+# .github/scripts/fetch_greenlake_oas.py downloads, validates, and canonicalizes
+# each spec, and warns about newly-published services. **Tool regeneration does
+# NOT happen here** — the maintainer regenerates the GreenLake tool surface at
+# release time so tool-surface changes are reviewed before tagging.
+#
+# Branch protection on `main` requires PRs + status checks, and the default
+# GITHUB_TOKEN cannot trigger downstream workflows on a PR it opens, so this
+# uses the same fine-grained PAT as the other OAS syncs (secret: MIST_SYNC_PAT)
+# to open the PR and enable auto-merge.
 
 on:
   schedule:
-    - cron: "0 6 * * 1" # weekly, Monday 06:00 UTC
-  workflow_dispatch: {}
+    # Weekly, Monday 08:00 UTC (staggered after the Mist/Central syncs).
+    - cron: "0 8 * * 1"
+  workflow_dispatch: # manual run via the Actions UI
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: write # peter-evans needs this to push the sync branch
+  pull-requests: write # to open / update the sync PR
+  issues: write # to file an issue if the sync fails
+
+concurrency:
+  group: sync-greenlake-oas
+  cancel-in-progress: false
 
 jobs:
-  refresh:
+  sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.MIST_SYNC_PAT }}
 
-      - name: Download specs from sources.json
-        run: |
-          set -euo pipefail
-          dir=vendor/greenlake
-          fail=0
-          # emit "file<TAB>url"
-          python3 - "$dir/sources.json" > /tmp/specs.tsv <<'PY'
-          import json, sys
-          for s in json.load(open(sys.argv[1]))["specs"]:
-              print(s["file"] + "\t" + s["url"])
-          PY
-          while IFS=$'\t' read -r file url; do
-            out="$dir/$file"
-            code=$(curl -sS --retry 3 --max-time 60 -o "$out.tmp" -w "%{http_code}" "$url" || echo 000)
-            if [ "$code" = "200" ] && python3 -c 'import sys,json; d=json.load(open(sys.argv[1])); assert d.get("openapi") and d.get("paths")' "$out.tmp" 2>/dev/null; then
-              # pretty-print for stable diffs
-              python3 -c 'import sys,json; d=json.load(open(sys.argv[1])); json.dump(d, open(sys.argv[2],"w"), indent=2, sort_keys=True); open(sys.argv[2],"a").write("\n")' "$out.tmp" "$out"
-              rm -f "$out.tmp"
-              echo "ok   $file"
-            else
-              echo "FAIL $file (HTTP $code)"; rm -f "$out.tmp"; fail=1
-            fi
-          done < /tmp/specs.tsv
-          if [ "$fail" -ne 0 ]; then
-            echo "::error::One or more GreenLake specs failed to download"; exit 1
-          fi
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Detect newly-published services (llms.txt drift)
-        run: |
-          set -euo pipefail
-          curl -sS --retry 3 --max-time 60 https://developer.greenlake.hpe.com/llms.txt -o /tmp/llms.txt
-          # services that have a real (non-changelog) public openapi page
-          grep -oE '/services/[a-z0-9-]+/public/openapi/[^)]+' /tmp/llms.txt \
-            | grep -viE 'changelog|getting-help' \
-            | sed -E 's#/services/([a-z0-9-]+)/.*#\1#' | sort -u > /tmp/portal_services.txt
-          python3 - <<'PY' > /tmp/known_services.txt
-          import json
-          print("\n".join(sorted({s["service"] for s in json.load(open("vendor/greenlake/sources.json"))["specs"]})))
-          PY
-          new=$(comm -23 /tmp/portal_services.txt <(sort /tmp/known_services.txt) || true)
-          if [ -n "$new" ]; then
-            echo "::warning::New GreenLake services on the portal not in sources.json:"; echo "$new"
-            echo "$new" > /tmp/new_services.txt
-          else
-            echo "No new services."
-          fi
+      - name: Fetch + validate GreenLake OAS
+        run: python3 .github/scripts/fetch_greenlake_oas.py
 
-      - name: Open PR if specs changed
+      - name: Stamp UTC date
+        id: date
+        run: echo "today=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update sync PR
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.MIST_SYNC_PAT }}
+          branch: chore/sync-greenlake-oas
+          delete-branch: true
+          add-paths: |
+            vendor/greenlake/**
+          commit-message: |
+            chore(vendor): sync HPE GreenLake OAS (${{ steps.date.outputs.today }}) (auto)
+
+            Source: https://developer.greenlake.hpe.com (Redocly /_bundle/<spec>.json)
+
+            Tool regeneration not run by this workflow — maintainer regenerates the
+            GreenLake tool surface at release time before tagging.
+          title: "chore(vendor): sync HPE GreenLake OAS"
+          body: |
+            Automated weekly sync of the HPE GreenLake public northbound OpenAPI specs.
+
+            - **Source**: https://developer.greenlake.hpe.com (`/_bundle/.../<spec>.json?download`)
+            - **Vendored to**: `vendor/greenlake/` (driven by `sources.json`)
+            - Check the run log for `::warning::` lines about **newly-published
+              services** to add to `sources.json`.
+
+            Tool regeneration is **not** triggered by this PR — the maintainer
+            regenerates the GreenLake tool surface at release time so tool-surface
+            changes are reviewed before shipping.
+
+            This PR has auto-merge enabled and will merge once required status
+            checks pass.
+
+      - name: Enable auto-merge on the sync PR
+        if: steps.cpr.outputs.pull-request-number
+        run: gh pr merge --auto --squash "${{ steps.cpr.outputs.pull-request-number }}"
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if [ -z "$(git status --porcelain vendor/greenlake)" ]; then
-            echo "No spec changes."; exit 0
-          fi
-          branch="chore/greenlake-specs-refresh-$(date -u +%Y%m%d)"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b "$branch"
-          git add vendor/greenlake
-          note=""
-          [ -f /tmp/new_services.txt ] && note="
+          GH_TOKEN: ${{ secrets.MIST_SYNC_PAT }}
 
-          **New services on the portal not yet vendored** (add to sources.json):
-          $(sed 's/^/- /' /tmp/new_services.txt)"
-          git commit -m "chore(greenlake): refresh vendored OpenAPI specs"
-          git push -u origin "$branch"
-          gh pr create --title "chore(greenlake): refresh vendored OpenAPI specs" \
-            --body "Automated refresh of \`vendor/greenlake/\` from the HPE GreenLake developer portal (driven by \`sources.json\`).$note" \
-            --base main --head "$branch"
+      - name: File issue on sync failure
+        if: failure()
+        run: |
+          gh issue create \
+            --title "GreenLake OAS sync failed on $(date -u +%Y-%m-%d)" \
+            --body "The scheduled GreenLake OAS sync failed today. The vendored copies under \`vendor/greenlake/\` were NOT updated.
+
+          Possible causes:
+          - The portal changed how it serves specs (the \`/_bundle/.../<spec>.json?download\` paths moved or casing changed)
+          - A spec stopped parsing as OpenAPI (upstream regression)
+          - Network failure mid-sync
+
+          Action: re-run the workflow once the portal is stable, or update \`vendor/greenlake/sources.json\` / \`.github/scripts/fetch_greenlake_oas.py\` if the portal structure changed." \
+            --label "ci/cd"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
