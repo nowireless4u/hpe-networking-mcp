@@ -1865,12 +1865,15 @@ The 10 read tools are always available. The 1 write tool (`greenlake_bulk_add_de
 
 #### `greenlake_bulk_add_devices` *(write — requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`)*
 
-> Bulk-add HPE GreenLake devices from a CSV file or inline CSV text. POSTs in batches of 5 at 5/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint on re-invocation. Returns an 18-field envelope with per-phase counts and per-row failure reasons.
+> Bulk-add HPE GreenLake devices from a CSV. The operator chooses the source — **file upload** (read server-side; never enters model context — best for large/10k lists), **copy/paste**, or a **local path**. POSTs in batches of 5 at 5/min; enrichment PATCHes at 20/min. Resumes from a `.cache.json` checkpoint on re-invocation. Returns an 18-field envelope with per-phase counts and per-row failure reasons. The tool description asks the AI to confirm which source the operator prefers.
+
+Provide **exactly one** of the three sources:
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| csv_path | str | No | Absolute path to a local CSV file. Mutually exclusive with `csv_text`. |
-| csv_text | str | No | Raw CSV text as a string. Mutually exclusive with `csv_path`. |
+| csv_filename | str | No | Name of a CSV the operator uploaded via the `file_manager` widget; read **server-side** (the content never enters model context — use for large lists). Requires `MCP_APP_ENABLE` + an MCP-Apps client. Mutually exclusive with `csv_path` / `csv_text`. |
+| csv_path | str | No | Absolute path to a local CSV file (CLI / same-host). Mutually exclusive with `csv_filename` / `csv_text`. |
+| csv_text | str | No | Raw CSV text (copy/paste) — the AI sees this content, so use only for small lists. Mutually exclusive with `csv_filename` / `csv_path`. |
 
 Mandatory CSV columns: `serialNumber` (aliases: `serial`, `sn`, `serial_number`) and `macAddress` (aliases: `mac`, `mac_address`). Optional: `partNumber`, `service`, `subscriptionKey`, `location`, `tags`.
 

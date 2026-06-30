@@ -1374,7 +1374,7 @@ class TestReadUploadedCsv:
     so a (10k-row) upload never enters the model context."""
 
     def test_reads_content_from_provider(self) -> None:
-        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import _read_uploaded_csv
 
         provider = MagicMock()
         provider.on_read.return_value = {"name": "d.csv", "content": "serialNumber,macAddress\nSN1,11:22:33:44:55:66\n"}
@@ -1385,7 +1385,7 @@ class TestReadUploadedCsv:
     def test_provider_missing_raises_400(self) -> None:
         from fastmcp.exceptions import ToolError
 
-        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import _read_uploaded_csv
 
         with pytest.raises(ToolError) as e:
             _read_uploaded_csv(_ctx_with_provider(None), "d.csv")
@@ -1394,7 +1394,7 @@ class TestReadUploadedCsv:
     def test_file_not_found_raises_404(self) -> None:
         from fastmcp.exceptions import ToolError
 
-        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import _read_uploaded_csv
 
         provider = MagicMock()
         provider.on_read.side_effect = ValueError("File 'd.csv' not found. Available: []")
@@ -1405,7 +1405,7 @@ class TestReadUploadedCsv:
     def test_non_text_or_empty_raises_400(self) -> None:
         from fastmcp.exceptions import ToolError
 
-        from hpe_networking_mcp.platforms.greenlake.tools.bulk_add import _read_uploaded_csv
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import _read_uploaded_csv
 
         provider = MagicMock()
         provider.on_read.return_value = {"name": "d.bin", "content_base64": "QUJD..."}  # no text content

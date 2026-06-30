@@ -31,48 +31,13 @@ from hpe_networking_mcp.platforms.greenlake.tools._bulk_assignment import (
     setup_resume,
 )
 from hpe_networking_mcp.platforms.greenlake.tools._bulk_enrichment import _enrich_for_row
+from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import resolve_csv_source
 from hpe_networking_mcp.platforms.greenlake.utils.csv_parser import parse_csv
 from hpe_networking_mcp.redaction.rules import TokenKind
 from hpe_networking_mcp.redaction.tokenizer import Tokenizer
 
 POLL_INTERVAL_SECONDS = 5
 MAX_POLL_ATTEMPTS = 24  # = 120s total per batch
-
-
-def _read_uploaded_csv(ctx: Context, name: str) -> str:
-    """Read an operator-uploaded CSV server-side from the FileUpload session store.
-
-    Uses the ``FileUpload`` provider's ``on_read`` (the same path the ``read_file``
-    tool uses) so the CSV — up to 10k rows — is fetched INSIDE the server and never
-    enters the model context. The provider handle is placed on ``lifespan_context``
-    by ``server.create_server`` only when ``MCP_APP_ENABLE=true``.
-
-    Raises ToolError (400/404/502) on missing capability / file / read failure.
-    """
-    try:
-        provider = ctx.lifespan_context.get("file_upload_provider")
-    except Exception:  # pragma: no cover - defensive
-        provider = None
-    if provider is None:
-        raise ToolError(
-            {
-                "status_code": 400,
-                "message": (
-                    "File upload is not available on this server (MCP_APP_ENABLE is not set, or the "
-                    "client has no MCP-Apps support). Paste the CSV via csv_text, or use csv_path."
-                ),
-            }
-        )
-    try:
-        entry = provider.on_read(name, ctx)
-    except ValueError as exc:  # provider raises ValueError for not-found (lists available)
-        raise ToolError({"status_code": 404, "message": f"uploaded file {name!r} not found: {exc}"}) from exc
-    except Exception as exc:  # pragma: no cover - defensive
-        raise ToolError({"status_code": 502, "message": f"failed to read uploaded file {name!r}: {exc}"}) from exc
-    content = entry.get("content") if isinstance(entry, dict) else None
-    if not isinstance(content, str) or not content.strip():
-        raise ToolError({"status_code": 400, "message": f"uploaded file {name!r} is empty or not readable as text CSV"})
-    return content
 
 
 def _write_cache_atomic(path: pathlib.Path, data: dict) -> None:
@@ -255,28 +220,9 @@ async def greenlake_bulk_add_devices(
         len(csv_text) if csv_text else 0,
     )
 
-    # Exactly one source required (upload / local path / paste).
-    provided = [s for s in (csv_filename, csv_path, csv_text) if s is not None]
-    if not provided:
-        raise ToolError(
-            {
-                "status_code": 400,
-                "message": "provide exactly one of csv_filename (upload), csv_path, or csv_text (paste)",
-            }
-        )
-    if len(provided) > 1:
-        raise ToolError(
-            {
-                "status_code": 400,
-                "message": "provide exactly ONE of csv_filename / csv_path / csv_text, not several",
-            }
-        )
-
-    # File-upload path: read the CSV server-side from the session upload store so
-    # the (possibly 10k-row) content never enters the model context. Resolves to
-    # csv_text for the shared parse/cache path below.
-    if csv_filename is not None:
-        csv_text = _read_uploaded_csv(ctx, csv_filename)
+    # Validate exactly-one-source and resolve an upload to text server-side
+    # (see _bulk_source — keeps the 10k-row CSV out of the model context).
+    csv_path, csv_text = resolve_csv_source(ctx, csv_filename, csv_path, csv_text)
 
     result = parse_csv(csv_path=csv_path, csv_text=csv_text)
     if result.error:
