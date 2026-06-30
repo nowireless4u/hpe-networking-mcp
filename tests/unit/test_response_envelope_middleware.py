@@ -38,11 +38,16 @@ def _make_context(tool_name: str):
     return context
 
 
-def _make_tool_result(structured: object | None, content: list | None = None) -> ToolResult:
-    """Build a ToolResult with the given structured_content."""
+def _make_tool_result(
+    structured: object | None,
+    content: list | None = None,
+    meta: dict | None = None,
+) -> ToolResult:
+    """Build a ToolResult with the given structured_content (and optional meta)."""
     return ToolResult(
         content=content if content is not None else [],
         structured_content=structured,
+        meta=meta,
     )
 
 
@@ -678,6 +683,50 @@ class TestDiscoveryToolBypass:
         assert "ok" not in result.structured_content
         assert "data" not in result.structured_content
         assert "tool" not in result.structured_content
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("tool_name", ["list_files", "read_file", "some_future_tool"])
+    async def test_wrap_result_tool_passes_through_via_meta_marker(self, tool_name: str):
+        """v3.4.6.1: wrap-result tools are bypassed STRUCTURALLY, not by name.
+
+        FastMCP stamps ``meta={"fastmcp": {"wrap_result": True}}`` on the
+        ToolResult of any tool whose output schema carries
+        ``x-fastmcp-wrap-result`` (a non-dict return wrapped as
+        ``{"result": ...}``). The MCP-Apps FileUpload tools (``list_files`` ->
+        ``list[dict]``, ``read_file`` -> ``dict``) are of this kind. Enveloping
+        strips the top-level ``result`` and FastMCP's output validation then
+        fails with "'result' is a required property" — observed live when the
+        model called ``list_files`` to discover an uploaded CSV's name for
+        ``greenlake_bulk_add_devices``. Detecting the marker means an arbitrary
+        future wrap-result tool name passes through too (no name list to forget).
+        """
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context(tool_name)
+        native = {"result": [{"name": "devices.csv", "size": 1234}]}
+        original = _make_tool_result(structured=native, meta={"fastmcp": {"wrap_result": True}})
+        call_next = AsyncMock(return_value=original)
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result is original
+        assert result.structured_content == native
+        assert "ok" not in result.structured_content
+        assert "data" not in result.structured_content
+
+    @pytest.mark.asyncio
+    async def test_result_shaped_dict_without_marker_still_wrapped(self):
+        """Guard against over-bypass: a tool that legitimately returns a dict with
+        a ``result`` key but is NOT a wrap-result tool (no meta marker) must still
+        be enveloped. The bypass keys on the marker, not on the payload shape."""
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_get_result")
+        raw = {"result": "a real data field that happens to be named result"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw, meta=None))
+
+        result = await middleware.on_call_tool(ctx, call_next)
+
+        assert result.structured_content["ok"] is True
+        assert result.structured_content["data"] == raw
 
     @pytest.mark.asyncio
     async def test_non_discovery_tool_still_gets_wrapped(self):

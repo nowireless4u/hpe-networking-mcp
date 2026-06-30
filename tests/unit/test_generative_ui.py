@@ -95,6 +95,27 @@ def test_search_prefab_components_not_enveloped(monkeypatch: pytest.MonkeyPatch)
     assert "ok" not in sc, "prefab tool got enveloped; it must be in _NO_ENVELOPE_TOOLS"
 
 
+def test_list_files_not_enveloped(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Regression (v3.4.6.1): the FileUpload provider's ``list_files`` declares the
+    same ``x-fastmcp-wrap-result`` output schema requiring a top-level ``result``
+    key. Calling it through the real server stack must succeed — the envelope must
+    NOT wrap it, or FastMCP's own output validation raises "'result' is a required
+    property" (observed live in an MCP-Apps client when the model called list_files
+    to discover an uploaded CSV's name for greenlake_bulk_add_devices).
+
+    This drives the REAL FileUpload tool through the REAL middleware chain (no
+    mock) so it actually reproduces the production failure if the bypass regresses.
+    """
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
+    mcp = _build("code")
+    # Empty session store → the provider returns {"result": []}; the point is that
+    # the call completes through output validation rather than raising.
+    res = asyncio.run(mcp.call_tool("list_files", {}))  # type: ignore[attr-defined]
+    sc = getattr(res, "structured_content", None) or {}
+    assert "result" in sc, "wrap-result 'result' key stripped — envelope wrapped list_files"
+    assert "ok" not in sc, "list_files got enveloped; it must be in _NO_ENVELOPE_TOOLS"
+
+
 def test_description_augmented_with_dashboard_guidance(monkeypatch: pytest.MonkeyPatch) -> None:
     """The tool description (not INSTRUCTIONS.md) is what steers tool selection, so
     generate_prefab_ui's description must carry the dashboard guidance AND keep the

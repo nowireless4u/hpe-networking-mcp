@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.6.1] - 2026-06-29
+
+**Patch — fix `list_files` / `read_file` failing with "'result' is a required property" under the response envelope.** Restores the MCP-Apps file-upload discovery UX: after a user uploads a CSV via the `file_manager` widget, the model can call `list_files` to discover the uploaded filename for `greenlake_bulk_add_devices` instead of being told the name. Closes #544.
+
+### Fixed
+- `ResponseEnvelopeMiddleware` now bypasses **wrap-result** tools structurally via FastMCP's `meta={"fastmcp": {"wrap_result": True}}` marker (the same approach as the existing `$prefab` UI bypass), instead of a hand-maintained name list. Tools that return a non-dict (e.g. `list_files` → `list[dict]`, `read_file` → `dict`) get auto-wrapped by FastMCP as `structured_content={"result": ...}` with an `x-fastmcp-wrap-result` output schema; enveloping them stripped the top-level `result` and FastMCP's own output validation rejected the call with "'result' is a required property" (same failure class as #293 / #302, which the FileUpload tools were missing from `_NO_ENVELOPE_TOOLS`). The marker covers every current and future wrap-result tool with no list to keep in sync.
+
+### Notes
+- No tool/parameter/count changes. Internal middleware fix only.
+- Validated against the real `FileUpload` provider through the real middleware chain (the tool is intentionally not name-listed, so it passes purely via the marker), plus an over-bypass guard ensuring a `{"result": ...}` dict *without* the marker is still enveloped normally.
+
 ## [3.4.6.0] - 2026-06-29
 
 **Minor — GreenLake bulk device onboarding (`greenlake_bulk_add_devices`) with a choose-your-source data flow.** First GreenLake write tool: onboard up to 10,000 devices from a CSV in one call, with rate-limiting, resume-on-failure, and optional subscription/service/location/tags assignment. The operator chooses how to provide the list — **file upload** (read server-side; never enters model context — best for large lists), **copy/paste**, or a local path. Builds on PR #379.

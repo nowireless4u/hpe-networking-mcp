@@ -247,6 +247,26 @@ class ResponseEnvelopeMiddleware(Middleware):
             logger.debug("response_envelope: {} is a discovery tool, pass-through", tool_name)
             return result  # type: ignore[return-value]
 
+        # Wrap-result tools — detected structurally, NOT by name. When a tool
+        # returns a non-dict (a bare ``list``/``str``) and declares an output
+        # schema, FastMCP wraps the value as ``structured_content={"result": ...}``
+        # and stamps ``meta={"fastmcp": {"wrap_result": True}}`` on the ToolResult
+        # (see fastmcp ``tools/base.py``). Enveloping such a result strips the
+        # top-level ``result`` key, so FastMCP's own output-schema validation then
+        # rejects it with "'result' is a required property". The MCP-Apps
+        # ``FileUpload`` tools (``list_files`` returns ``list[dict]``, ``read_file``
+        # returns ``dict`` via the same path) and the discovery/prefab tools are all
+        # of this kind. Detecting the marker (like the ``$prefab`` check below)
+        # covers every current and future wrap-result tool without a name list to
+        # keep in sync — the ``list_files`` regression that motivated this slipped
+        # through precisely because ``_NO_ENVELOPE_TOOLS`` was hand-maintained.
+        meta = getattr(result, "meta", None)
+        if isinstance(meta, dict):
+            fastmcp_meta = meta.get("fastmcp")
+            if isinstance(fastmcp_meta, dict) and fastmcp_meta.get("wrap_result"):
+                logger.debug("response_envelope: {} is a wrap-result tool, pass-through", tool_name)
+                return result  # type: ignore[return-value]
+
         # Determine the raw structured payload, if any.
         raw = getattr(result, "structured_content", None)
 
