@@ -18,6 +18,7 @@ import contextlib
 import os
 import pathlib
 import tempfile
+from collections.abc import Callable
 from typing import Any
 
 from aiolimiter import AsyncLimiter
@@ -434,8 +435,15 @@ def build_result_envelope(
     cache_path: pathlib.Path,
     skipped_count: int,
     total_valid: int,
+    safe_serial: Callable[[str], str] = lambda _s: "[serial]",
 ) -> dict:
-    """Aggregate cache counts and assemble the final return envelope (Sections 7-10)."""
+    """Aggregate cache counts and assemble the final return envelope (Sections 7-10).
+
+    ``safe_serial`` tokenizes/redacts each serial before it appears in the returned
+    ``failures`` / ``enrichment_failures`` lists — the result is model-visible, and
+    device serials must not leak into context. Defaults to a non-leaking placeholder
+    so a caller that forgets to pass it can never expose a raw serial.
+    """
 
     def _count(key: str, val: str) -> int:
         return sum(1 for v in cache.values() if v.get(key) == val)
@@ -451,10 +459,12 @@ def build_result_envelope(
         cache_path_str = str(cache_path)
 
     failures = [
-        {"serial": sn, "reason": v["reason"]} for sn, v in cache.items() if v["status"] in ("failed", "timed_out")
+        {"serial": safe_serial(sn), "reason": v["reason"]}
+        for sn, v in cache.items()
+        if v["status"] in ("failed", "timed_out")
     ]
     enrichment_failures = [
-        {"serial": sn, "phase": phase, "reason": v[f"{phase}_reason"]}
+        {"serial": safe_serial(sn), "phase": phase, "reason": v[f"{phase}_reason"]}
         for sn, v in cache.items()
         for phase in ("subscription", "service", "location", "tags")
         if v.get(f"{phase}_status") == "failed"

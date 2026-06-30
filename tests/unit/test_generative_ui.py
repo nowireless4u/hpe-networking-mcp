@@ -28,7 +28,9 @@ from hpe_networking_mcp.server import create_server
 pytestmark = pytest.mark.unit
 
 _PREFAB_TOOLS = {"generate_prefab_ui", "search_prefab_components"}
-_FILE_UPLOAD_TOOLS = {"file_manager", "list_files", "read_file"}
+# read_file is DELIBERATELY excluded — it returns raw uploaded content to the
+# model and is removed via a Visibility transform (see test_read_file_removed).
+_FILE_UPLOAD_TOOLS = {"file_manager", "list_files"}
 _APP_TOOLS = _PREFAB_TOOLS | _FILE_UPLOAD_TOOLS
 
 
@@ -80,6 +82,26 @@ def test_enabled_dynamic_mode_exposes_tools(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setenv("MCP_APP_ENABLE", "true")
     names = _tool_names(_build("dynamic"))
     assert names >= _APP_TOOLS, f"MCP-Apps tools missing in dynamic mode: {_APP_TOOLS - names}"
+
+
+@pytest.mark.parametrize("mode", ["code", "dynamic"])
+def test_read_file_removed_security(monkeypatch: pytest.MonkeyPatch, mode: str) -> None:
+    """SECURITY: even with MCP_APP_ENABLE=true, ``read_file`` must NOT be exposed
+    and must NOT be callable. It returns raw uploaded file content to the model —
+    uploads exist so that content (device serials/MACs, AOS 8 PSKs / RADIUS
+    secrets) never enters the model context. The provider still registers it, so
+    a Visibility transform removes it; ``file_manager`` (UI) and ``list_files``
+    (metadata only) remain. Consumers read uploads server-side via on_read.
+    """
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
+    mcp = _build(mode)
+    names = _tool_names(mcp)
+    assert "read_file" not in names, "read_file is exposed — it leaks raw upload content to the model"
+    assert {"file_manager", "list_files"} <= names, "file_manager/list_files should remain available"
+    # And it must be uncallable, not merely hidden from listing.
+    with pytest.raises(Exception) as exc:  # noqa: PT011 - fastmcp NotFoundError / ToolError
+        asyncio.run(mcp.call_tool("read_file", {"name": "anything"}))  # type: ignore[attr-defined]
+    assert "read_file" in str(exc.value) or "Unknown tool" in str(exc.value)
 
 
 def test_search_prefab_components_not_enveloped(monkeypatch: pytest.MonkeyPatch) -> None:

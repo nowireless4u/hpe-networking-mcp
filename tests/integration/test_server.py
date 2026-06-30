@@ -160,14 +160,18 @@ class TestCreateServer:
             f"Found transforms: {transforms}"
         )
 
-    def test_no_visibility_transform_when_write_tools_enabled(self, mist_secrets):
+    def test_no_visibility_transform_when_write_tools_enabled(self, mist_secrets, monkeypatch):
         """create_server() does NOT add per-platform write-tool Visibility transforms when every write flag is enabled.
 
         Scoped to code mode (the v3.0.0.0 default) — the catalog is replaced
         by CodeMode and no `dynamic_managed` Visibility transform is added,
         so the test isolates the write-tool gating logic. The intent of this
         test is the write-tool gating logic, not the tool-mode visibility logic.
+
+        MCP_APP_ENABLE is cleared so the MCP-Apps `read_file` security Visibility
+        transform (unrelated to write gating) doesn't confound the assertion.
         """
+        monkeypatch.delenv("MCP_APP_ENABLE", raising=False)
         config = ServerConfig(
             mist=mist_secrets,
             enable_mist_write_tools=True,

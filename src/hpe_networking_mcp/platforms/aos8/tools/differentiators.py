@@ -18,6 +18,7 @@ import asyncio
 from typing import Any
 
 from fastmcp import Context
+from fastmcp.exceptions import ToolError
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.aos8._registry import tool
@@ -28,6 +29,7 @@ from hpe_networking_mcp.platforms.aos8.tools._helpers import (
     get_object,
     run_show,
 )
+from hpe_networking_mcp.utils.uploads import read_uploaded_text
 
 __all__ = [
     "aos8_get_md_hierarchy",
@@ -113,16 +115,27 @@ async def aos8_get_effective_config(
 
 
 @tool(name="aos8_parse_config", capability=Capability.READ)
-async def aos8_parse_config(ctx: Context, cli_text: str) -> dict[str, Any]:
-    """Parse pasted AOS 8 running-config CLI into canonical translation records.
+async def aos8_parse_config(
+    ctx: Context,
+    cli_text: str | None = None,
+    filename: str | None = None,
+) -> dict[str, Any]:
+    """Parse AOS 8 running-config CLI into canonical translation records.
 
-    This is the offline, paste-driven counterpart to
-    ``aos8_get_effective_config``. Where that tool pulls config records from a
-    live Conductor via the REST API, this one turns AOS 8 CLI **text** — the
-    kind an operator copies out of ``show running-config`` or a captured
-    config file — into the **same record shapes the translation engine
-    consumes**. It is a pure offline parse: it does **not** call the tenant or
-    use ``ctx`` at all, so it works with no AOS 8 connection configured.
+    The offline counterpart to ``aos8_get_effective_config``: instead of pulling
+    config records from a live Conductor, it turns AOS 8 CLI **text** — the kind
+    an operator copies out of ``show running-config`` or a captured config file —
+    into the **same record shapes the translation engine consumes**.
+
+    Provide the config via EXACTLY ONE source:
+
+    * ``filename`` — an operator-uploaded config file (via the ``file_manager``
+      widget). Read **server-side** so the raw config — including PSKs and
+      RADIUS/TACACS secrets — **never enters the model context**. This is the
+      right choice for real configs; prefer it over paste.
+    * ``cli_text`` — pasted CLI text. The operator chose to paste it, so it is
+      already in context; fine for small snippets, but a full config contains
+      secrets, so upload is preferred.
 
     It recognises ``netdestination`` / ``netdestination6``,
     ``ip access-list session`` / ``ipv6 access-list session``, and
@@ -137,19 +150,34 @@ async def aos8_parse_config(ctx: Context, cli_text: str) -> dict[str, Any]:
 
     The result is interchangeable with the output of
     ``aos8_get_effective_config``: hand it straight to the ``central:*``
-    translations exactly the same way, enabling the "paste your AOS 8 config
-    into the AI" migration flow without live controller access.
+    translations exactly the same way.
 
     Args:
-        ctx: FastMCP request context (unused — this is an offline parse, but
-            kept for tool-signature consistency with the AOS 8 platform).
+        ctx: FastMCP request context (used to read an uploaded file server-side
+            when ``filename`` is given).
         cli_text: AOS 8 running-config CLI text (``!``-delimited stanzas).
+            Mutually exclusive with ``filename``.
+        filename: Name of an operator-uploaded config file, read server-side.
+            Mutually exclusive with ``cli_text``.
 
     Returns:
         ``{"netdst": [...], "acl_sess": [...], "role": [...],
         "_warnings": [...]}`` — translation-ready records plus warnings.
+
+    Raises:
+        ToolError: 400 if neither or both sources are given (the server-side
+            read may also raise 400/404/502 — see ``read_uploaded_text``).
     """
-    return parse_aos8_cli(cli_text)
+    provided = [s for s in (cli_text, filename) if s is not None]
+    if not provided:
+        raise ToolError({"status_code": 400, "message": "provide exactly one of filename (upload) or cli_text (paste)"})
+    if len(provided) > 1:
+        raise ToolError({"status_code": 400, "message": "provide exactly ONE of filename / cli_text, not both"})
+    # File-upload path: read the config server-side so its contents (PSKs,
+    # RADIUS/TACACS secrets, ...) never enter the model context.
+    text = read_uploaded_text(ctx, filename) if filename is not None else cli_text
+    assert text is not None  # narrowed by the exactly-one check above
+    return parse_aos8_cli(text)
 
 
 # ---------------------------------------------------------------------------

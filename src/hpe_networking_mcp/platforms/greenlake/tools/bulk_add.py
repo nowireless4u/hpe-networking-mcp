@@ -480,4 +480,4 @@ async def greenlake_bulk_add_devices(
     finally:
         await client.close()
 
-    return build_result_envelope(cache, cache_path, skipped_count, len(result.valid_rows))
+    return build_result_envelope(cache, cache_path, skipped_count, len(result.valid_rows), safe_serial=_safe_serial)

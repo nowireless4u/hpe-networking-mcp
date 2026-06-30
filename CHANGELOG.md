@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.6.2] - 2026-06-29
+
+**Patch — SECURITY: uploaded file contents never reach the model.** Removes the model-visible `read_file` tool, which returned raw uploaded file content to the LLM — defeating the whole purpose of uploads (a device CSV's serials/MACs, or an AOS 8 config carrying PSKs and RADIUS/TACACS secrets, would land in the model context). Uploaded files are now read **server-side only**; the model discovers a file's name via `list_files` (metadata only) and hands it to a consuming tool that reads it inside the server.
+
+### Security
+- **`read_file` removed** (when `MCP_APP_ENABLE=true`) via a `Visibility(False, names={"read_file"})` transform — it is hidden from listing AND uncallable (a direct call fails with "Unknown tool"). `remove_tool` does not work on provider-registered tools, so the transform is the enforcement. `file_manager` (upload UI) and `list_files` (name/size/type only — no content) remain.
+- **`greenlake_bulk_add_devices` result no longer echoes raw serials** — `build_result_envelope` now tokenizes serials in its `failures`/`enrichment_failures` lists (it has a non-leaking `[serial]` default so a caller that forgets can't expose one). GreenLake is not yet in the PII tokenization ruleset, so this path previously returned raw serials.
+
+### Added
+- **`aos8_parse_config(filename=...)`** — server-side read of an operator-uploaded AOS 8 config. Reads the file inside the server (via the shared `read_uploaded_text` helper) so the raw config — PSKs, RADIUS/TACACS secrets and all — never enters the model context. `cli_text` (paste) still works; exactly one source required. This replaces the `read_file` fallback the `aos-migration` skill previously used for its upload path.
+- `utils/uploads.read_uploaded_text(ctx, name)` — the single shared server-side upload read used by `greenlake_bulk_add_devices` and `aos8_parse_config` (400 no-capability / 404 not-found / 502 read-fail).
+
+### Changed
+- `aos-migration` skill + `INSTRUCTIONS.md`: drop `read_file`; document the server-side-only model (discover names with `list_files`, parse with `aos8_parse_config(filename=...)`).
+
+### Notes
+- No change to the 3178 tool count (the MCP-Apps `read_file` is a provider tool, not part of the platform count).
+
 ## [3.4.6.1] - 2026-06-29
 
 **Patch — fix `list_files` / `read_file` failing with "'result' is a required property" under the response envelope.** Restores the MCP-Apps file-upload discovery UX: after a user uploads a CSV via the `file_manager` widget, the model can call `list_files` to discover the uploaded filename for `greenlake_bulk_add_devices` instead of being told the name. Closes #544.

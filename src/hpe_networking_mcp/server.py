@@ -407,9 +407,14 @@ def create_server(config: ServerConfig) -> FastMCP:
     # ChatGPT / claude.ai); they're no-op visuals in Claude Code.
     #
     # FileUpload: exposes a `file_manager` drag/pick upload tool (carrying MCP-Apps
-    # `ui` render metadata) plus `list_files` / `read_file`. In code mode the
-    # CodeMode transform would hide them, so _register_code_mode() re-exposes them
-    # top-level via discovery_tools (their `ui` metadata rides through intact).
+    # `ui` render metadata) plus `list_files`. In code mode the CodeMode transform
+    # would hide them, so _register_code_mode() re-exposes them top-level via
+    # discovery_tools (their `ui` metadata rides through intact). The provider's
+    # `read_file` tool is DELIBERATELY removed below (Visibility transform): it
+    # returns raw uploaded content to the model, which would defeat the whole point
+    # of uploads (device serials/MACs, AOS 8 configs with PSKs and RADIUS/TACACS
+    # secrets must never enter the model context). Consuming tools instead read
+    # server-side via `provider.on_read` (see utils/uploads.read_uploaded_text).
     #
     # GenerativeUI: exposes `generate_prefab_ui` — the model writes Prefab Python
     # that renders as a live dashboard from data it collected (e.g. AP health across
@@ -428,7 +433,19 @@ def create_server(config: ServerConfig) -> FastMCP:
         # through the model context. ``greenlake_bulk_add_devices`` uses this
         # for large CSVs (up to 10k rows). Surfaced on lifespan_context below.
         mcp._hpe_file_upload = _file_upload  # type: ignore[attr-defined]
-        logger.info("MCP Apps: FileUpload provider registered (MCP_APP_ENABLE=true)")
+        # SECURITY: remove the model-visible `read_file` tool. It returns raw
+        # uploaded file CONTENT to the LLM — uploads exist precisely so that
+        # content (device serials/MACs, AOS 8 configs carrying PSKs and
+        # RADIUS/TACACS secrets) never reaches the model. Tools that need the
+        # data read it server-side via `provider.on_read`. A Visibility(False)
+        # transform both hides it from listing AND makes a direct call fail with
+        # "Unknown tool" (verified) — `remove_tool` does not work on
+        # provider-registered tools. `list_files` (metadata only) + `file_manager`
+        # (upload UI) stay.
+        from fastmcp.server.transforms import Visibility
+
+        mcp.add_transform(Visibility(False, names={"read_file"}, components={"tool"}))
+        logger.info("MCP Apps: FileUpload registered (MCP_APP_ENABLE=true); read_file removed (server-side reads only)")
 
         mcp.add_provider(GenerativeUI())
         logger.info("MCP Apps: GenerativeUI provider registered (MCP_APP_ENABLE=true)")
@@ -944,9 +961,12 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     # If the MCP-Apps providers are registered (MCP_APP_ENABLE), re-expose their
     # model-visible tools top-level so CodeMode doesn't bury them behind `execute`:
     #   FileUpload  — file_manager (renders the upload UI; carries MCP-Apps `ui`
-    #                 meta) + list_files / read_file (the aos-migration upload
-    #                 branch's read_file fallback path). store_files is app-only
-    #                 (UI-internal) and intentionally NOT re-exposed.
+    #                 meta) + list_files (metadata only — name/size/type, no
+    #                 content). read_file is NOT re-exposed and is removed entirely
+    #                 (Visibility transform above): it would return raw uploaded
+    #                 content to the model. store_files is app-only (UI-internal)
+    #                 and intentionally NOT re-exposed. Consuming tools read uploads
+    #                 server-side via provider.on_read (utils/uploads).
     #   GenerativeUI — generate_prefab_ui (carries the streaming-renderer `ui`
     #                 meta) + search_prefab_components.
     # A discovery factory is `(get_catalog) -> Tool`; ours ignores the catalog and
@@ -960,7 +980,6 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         for app_tool_name in (
             "file_manager",
             "list_files",
-            "read_file",
             "generate_prefab_ui",
             "search_prefab_components",
         ):
