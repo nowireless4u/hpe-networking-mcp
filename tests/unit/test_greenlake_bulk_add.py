@@ -528,6 +528,45 @@ class TestGreenlakeBulkAddDevices:
         assert "SN-AAA-1" not in repr(result), "raw serial leaked into result"
         assert serial != "[serial]", "fell back to placeholder — token_store not used"
 
+    async def test_full_keymap_does_not_crash_write_tool(self, mock_ctx: MagicMock, tmp_path: pathlib.Path) -> None:
+        """A full session keymap must NOT crash the tool after it has done its
+        POST/assignment work. _safe_serial catches KeymapFullError and falls back
+        to the non-leaking ``[serial]`` placeholder (Casey review on #549)."""
+        from hpe_networking_mcp.redaction.token_store import TokenStore
+
+        # max_entries_per_session=0 → the first tokenize() hits the cap immediately.
+        mock_ctx.lifespan_context["token_store"] = TokenStore(max_entries_per_session=0)
+
+        csv_file = tmp_path / "devices.csv"
+        csv_file.write_text("serialNumber,macAddress\nSN-CAP-1,11:22:33:44:55:09\n", encoding="utf-8")
+
+        fail_response = MagicMock()
+        fail_response.status_code = 422
+        fail_response.text = "device already exists"
+        fail_response.headers = {}
+
+        mock_client_instance = MagicMock()
+        mock_client_instance.post_raw = AsyncMock(return_value=fail_response)
+        mock_client_instance.close = AsyncMock()
+        mock_limiter = self._make_limiter_mock()
+        with (
+            patch(
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                return_value=mock_client_instance,
+            ),
+            patch("hpe_networking_mcp.platforms.greenlake.tools.bulk_add.AsyncLimiter", return_value=mock_limiter),
+            patch(
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.make_patch_limiter",
+                return_value=mock_limiter,
+            ),
+            patch("hpe_networking_mcp.platforms.greenlake.tools.bulk_add._write_cache_atomic"),
+        ):
+            # Must complete, not raise KeymapFullError.
+            result = await greenlake_bulk_add_devices(mock_ctx, csv_path=str(csv_file))
+
+        assert result["failures"][0]["serial"] == "[serial]"
+        assert "SN-CAP-1" not in repr(result), "raw serial leaked into result"
+
 
 # ---------------------------------------------------------------------------
 # TestBulkAddPhase20Integration

@@ -34,6 +34,7 @@ from hpe_networking_mcp.platforms.greenlake.tools._bulk_enrichment import _enric
 from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import resolve_csv_source
 from hpe_networking_mcp.platforms.greenlake.utils.csv_parser import parse_csv
 from hpe_networking_mcp.redaction.rules import TokenKind
+from hpe_networking_mcp.redaction.token_store import KeymapFullError
 from hpe_networking_mcp.redaction.tokenizer import Tokenizer
 
 POLL_INTERVAL_SECONDS = 5
@@ -267,9 +268,19 @@ async def greenlake_bulk_add_devices(
         )
 
     def _safe_serial(value: str) -> str:
-        """Return tokenized serial number or fallback placeholder."""
+        """Return tokenized serial number or non-leaking fallback placeholder.
+
+        This is a MANUAL tokenization path (not behind the walker's catch), so it
+        must absorb ``KeymapFullError`` itself: the session token cap can be hit
+        mid-run, and a write tool must never crash AFTER doing its POST/assignment
+        work just because it couldn't tokenize a serial for the result. Falls back
+        to the non-leaking ``[serial]`` placeholder — never the raw serial.
+        """
         if tokenizer is not None:
-            return tokenizer.tokenize(TokenKind.SERIAL, value)
+            try:
+                return tokenizer.tokenize(TokenKind.SERIAL, value)
+            except KeymapFullError:
+                return "[serial]"
         return "[serial]"
 
     # SECTION 5 — Client setup
