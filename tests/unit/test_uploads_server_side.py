@@ -91,6 +91,36 @@ class TestAos8ParseConfigSource:
         assert e.value.args[0]["status_code"] == 400
 
 
+class TestUniformAssignment:
+    """apply_uniform_assignment fills enrichment fields on rows lacking them, but a
+    per-row CSV column always wins. Lets the onboarding runbook subscribe + assign an
+    uploaded list (which the AI can't edit) by passing one value for the whole batch."""
+
+    def test_fills_missing_fields(self) -> None:
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import apply_uniform_assignment
+
+        rows = [{"serialNumber": "SN1", "macAddress": "11:22:33:44:55:66"}]
+        apply_uniform_assignment(rows, subscription_key="SUB-1", service_id="SVC-1", location="LOC-1", tags="t1")
+        assert rows[0]["subscriptionKey"] == "SUB-1"
+        assert rows[0]["serviceId"] == "SVC-1"
+        assert rows[0]["location"] == "LOC-1"
+        assert rows[0]["tags"] == "t1"
+
+    def test_per_row_column_wins(self) -> None:
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import apply_uniform_assignment
+
+        rows = [{"serialNumber": "SN1", "subscriptionKey": "ROW-SUB"}]
+        apply_uniform_assignment(rows, subscription_key="UNIFORM-SUB", service_id=None, location=None, tags=None)
+        assert rows[0]["subscriptionKey"] == "ROW-SUB", "uniform value must not override an explicit per-row column"
+
+    def test_none_uniform_leaves_rows_untouched(self) -> None:
+        from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import apply_uniform_assignment
+
+        rows = [{"serialNumber": "SN1"}]
+        apply_uniform_assignment(rows, subscription_key=None, service_id=None, location=None, tags=None)
+        assert "subscriptionKey" not in rows[0]
+
+
 class TestEnvelopeSerialTokenization:
     """build_result_envelope must not echo raw serials into the model-visible result."""
 

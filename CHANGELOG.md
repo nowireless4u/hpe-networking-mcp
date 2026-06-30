@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.7.0] - 2026-06-30
+
+**Minor — `greenlake-device-onboarding` runbook + batch-uniform assignment params.** "Add devices to GreenLake" is a lifecycle, not a single write — operators want to add, subscribe, and assign devices to a service in one flow, not add now and come back later. A bare `greenlake_bulk_add_devices` call also skipped the choose-your-source step and never warned that pasted data is visible to the AI. This adds a guided skill and the tool support it needs.
+
+### Added
+- **`greenlake-device-onboarding` skill** — the guided front-end for adding devices to GreenLake (18 bundled skills now). Stages: (1) get the list — choose **upload** (read server-side, never enters the chat) vs **paste**, with the **mandatory paste-visibility warning**; (2) pick a subscription (`greenlake_get_subscriptions`); (3) assign a service; (4) optional location/tags; (5) run the bulk add; (6) verify. Write-gated + confirmation-gated. The AI is told NOT to call the bare tool for onboarding requests.
+- **Batch-uniform assignment params on `greenlake_bulk_add_devices`** — `subscription_key`, `service_id`, `location`, `tags` apply to every device that doesn't already carry that column (per-row CSV column wins). This lets an **uploaded** serial/MAC list — which the AI can't edit, because it's read server-side — be subscribed + service-assigned in a single call.
+
+### Notes
+- No change to the 3178 tool count (new params on an existing tool; the skill is not a platform tool). Onboarding flow honors the v3.4.6.x upload-security model (server-side reads, no `read_file`) and serial tokenization.
+- `bulk_add.py` stays under the 500-line module limit: the tool description, uniform-assignment helper, and the serial-redactor factory live in `_bulk_source.py`.
+
 ## [3.4.6.3] - 2026-06-30
 
 **Patch — GreenLake device serials become round-trippable tokens (fixes a latent tokenization gap).** The live upload test for v3.4.6.2 confirmed no raw serial/MAC reaches the model, but the bulk-add result redacted serials to a bare `[serial]` placeholder — which (a) an MCP-Apps client misread as "the CSV has unfilled template text," and (b) makes a real multi-device failure list useless (every failure shows identical `[serial]`). Root cause: `token_store` was never placed on `lifespan_context`, so `greenlake_bulk_add_devices`' serial tokenization silently no-op'd to the fallback.

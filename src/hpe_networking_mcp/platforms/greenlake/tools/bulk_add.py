@@ -31,11 +31,13 @@ from hpe_networking_mcp.platforms.greenlake.tools._bulk_assignment import (
     setup_resume,
 )
 from hpe_networking_mcp.platforms.greenlake.tools._bulk_enrichment import _enrich_for_row
-from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import resolve_csv_source
+from hpe_networking_mcp.platforms.greenlake.tools._bulk_source import (
+    BULK_ADD_DESCRIPTION,
+    apply_uniform_assignment,
+    make_safe_serial,
+    resolve_csv_source,
+)
 from hpe_networking_mcp.platforms.greenlake.utils.csv_parser import parse_csv
-from hpe_networking_mcp.redaction.rules import TokenKind
-from hpe_networking_mcp.redaction.token_store import KeymapFullError
-from hpe_networking_mcp.redaction.tokenizer import Tokenizer
 
 POLL_INTERVAL_SECONDS = 5
 MAX_POLL_ATTEMPTS = 24  # = 120s total per batch
@@ -156,25 +158,7 @@ async def _poll_async_operation(
 
 @tool(
     name="greenlake_bulk_add_devices",
-    description=(
-        "Bulk-add HPE GreenLake devices from a CSV.\n\n"
-        "HOW TO PROVIDE THE LIST — ASK THE OPERATOR which they prefer before calling:\n"
-        "  • FILE UPLOAD (best for large lists, up to 10k rows): have the operator upload "
-        'the CSV via the `file_manager` widget, then call with `csv_filename="<uploaded name>"`. '
-        "The tool reads it SERVER-SIDE — the CSV never enters the model context. Requires the "
-        "server's MCP-Apps capability (MCP_APP_ENABLE) + an MCP-Apps-capable client.\n"
-        "  • COPY / PASTE: pass the CSV as `csv_text`. The AI WILL see the pasted content — fine "
-        "for small lists, but do NOT paste thousands of rows; use file upload for those.\n"
-        '  • LOCAL PATH (CLI / same-host only): `csv_path="/abs/path.csv"`.\n'
-        "Provide EXACTLY ONE of csv_filename / csv_text / csv_path.\n\n"
-        "Mandatory CSV columns: serialNumber (aliases: serial, sn, serial_number) "
-        "and macAddress (aliases: mac, mac_address). Column headers are matched "
-        "case-insensitively.\n\n"
-        "Rate limit: 5 POST/min (device-add), 20 PATCH/min (enrichment); batch size: 5 devices/request. "
-        "A 10,000-device run takes ~400 min at ceiling; enrichment adds up to 4 PATCH/device. "
-        "Resume-on-failure: a .cache.json file is written beside the input CSV "
-        "and deleted after a fully successful run."
-    ),
+    description=BULK_ADD_DESCRIPTION,
     capability=Capability.WRITE,
     tags={"greenlake"},
     annotations={"title": "Bulk add GreenLake devices from CSV"},
@@ -212,8 +196,24 @@ async def greenlake_bulk_add_devices(
             ),
         ),
     ] = None,
+    subscription_key: Annotated[
+        str | None,
+        Field(default=None, description="Subscription key applied to EVERY device lacking a subscriptionKey column."),
+    ] = None,
+    service_id: Annotated[
+        str | None,
+        Field(default=None, description="Service/application ID applied to EVERY device lacking a serviceId column."),
+    ] = None,
+    location: Annotated[
+        str | None,
+        Field(default=None, description="Location ID applied to EVERY device lacking a location column."),
+    ] = None,
+    tags: Annotated[
+        str | None,
+        Field(default=None, description="Tags applied to EVERY device lacking a tags column."),
+    ] = None,
 ) -> dict[str, Any] | str:
-    """Bulk-add GreenLake devices from CSV input (upload / paste / local path)."""
+    """Bulk-add GreenLake devices from CSV; see BULK_ADD_DESCRIPTION for the AI-facing contract."""
     logger.debug(
         "greenlake_bulk_add_devices called, csv_filename={}, csv_path={}, csv_text_len={}",
         csv_filename,
@@ -237,6 +237,17 @@ async def greenlake_bulk_add_devices(
             )  # noqa: E501
         raise ToolError({"status_code": 400, "message": "no valid rows found in CSV"})
 
+    # Apply batch-uniform subscription/service/location/tags to rows that don't
+    # already specify them (per-row CSV column wins) — lets the onboarding runbook
+    # enrich an uploaded list the AI can't edit.
+    apply_uniform_assignment(
+        result.valid_rows,
+        subscription_key=subscription_key,
+        service_id=service_id,
+        location=location,
+        tags=tags,
+    )
+
     # SECTION 2-3 — Cache path + resume-skip setup
     # Confirmation is handled structurally by the universal gate in
     # greenlake_invoke_tool (confirm_gated_invoke) before dispatch.
@@ -256,32 +267,8 @@ async def greenlake_bulk_add_devices(
     _sub_cache: dict[str, str | None] = {}
     _app_cache: dict[str, Any] = {}
 
-    # SECTION 4 — PII tokenizer setup (D-02)
-    token_store = ctx.lifespan_context.get("token_store")
-    tokenizer: Tokenizer | None = None
-    if token_store is not None:
-        keymap = token_store.get_or_create(ctx.session_id)
-        tokenizer = Tokenizer(
-            keymap,
-            session_id=ctx.session_id,
-            max_entries=token_store.max_entries_per_session,
-        )
-
-    def _safe_serial(value: str) -> str:
-        """Return tokenized serial number or non-leaking fallback placeholder.
-
-        This is a MANUAL tokenization path (not behind the walker's catch), so it
-        must absorb ``KeymapFullError`` itself: the session token cap can be hit
-        mid-run, and a write tool must never crash AFTER doing its POST/assignment
-        work just because it couldn't tokenize a serial for the result. Falls back
-        to the non-leaking ``[serial]`` placeholder — never the raw serial.
-        """
-        if tokenizer is not None:
-            try:
-                return tokenizer.tokenize(TokenKind.SERIAL, value)
-            except KeymapFullError:
-                return "[serial]"
-        return "[serial]"
+    # SECTION 4 — PII serial redactor (D-02): [[SERIAL:uuid]] token or [serial] fallback.
+    _safe_serial = make_safe_serial(ctx)
 
     # SECTION 5 — Client setup
     token_manager = ctx.lifespan_context["greenlake_token_manager"]
