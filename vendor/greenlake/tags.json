@@ -1,0 +1,1265 @@
+{
+  "components": {
+    "examples": {
+      "GetMultipleTaggedResourcesResponseExample": {
+        "summary": "Multiple tagged resources retrieved",
+        "value": {
+          "count": 2,
+          "items": [
+            {
+              "createdAt": "2024-02-02T17:22:35.844Z",
+              "generation": 2,
+              "id": "e3fd124a-8edb-45ed-a047-2db075cdc9d4",
+              "resource": {
+                "resourceType": "DEVICE",
+                "resourceUri": "/devices/v1beta1/devices/e3fd124a-8edb-45ed-a047-2db075cdc9d4"
+              },
+              "tags": {
+                "Resource No": "K220",
+                "deployment": "pending",
+                "updated location": "San Jose"
+              },
+              "type": "tags/tag-resource",
+              "updatedAt": "2024-02-15T07:16:36.283Z"
+            },
+            {
+              "createdAt": "2024-03-01T17:22:35.844Z",
+              "generation": 1,
+              "id": "9c1245c5-220f-4fc1-9b80-1808e7481700",
+              "resource": {
+                "resourceType": "DEVICE_SUBSCRIPTION",
+                "resourceUri": "/subscriptions/v1beta1/subscriptions/9c1245c5-220f-4fc1-9b80-1808e7481700"
+              },
+              "tags": {
+                "Resource No": "undefined",
+                "updated location": "San Jose"
+              },
+              "type": "tags/tag-resource",
+              "updatedAt": "2024-03-11T07:16:36.283Z"
+            }
+          ],
+          "offset": 0,
+          "total": 2
+        }
+      },
+      "GetMultipleTagsResponseExample": {
+        "summary": "Multiple tags retrieved",
+        "value": {
+          "count": 2,
+          "items": [
+            {
+              "createdAt": "2024-02-27T17:04:44.799Z",
+              "generation": 0,
+              "id": "1236ea90-5914-4e1f-9d29-75541839c877",
+              "key": "location",
+              "resourceCount": 4,
+              "type": "tags/tag",
+              "updatedAt": "2024-02-27T17:05:10.589Z",
+              "value": "San Jose"
+            },
+            {
+              "createdAt": "2024-02-08T09:08:35.823Z",
+              "generation": 0,
+              "id": "eeaf2fc8-2536-4373-a2e7-bcb37ae9ad0d",
+              "key": "region",
+              "resourceCount": 2,
+              "type": "tags/tag",
+              "updatedAt": "2024-02-16T14:16:51.901Z",
+              "value": "us-west"
+            }
+          ],
+          "offset": 4,
+          "total": 20
+        }
+      },
+      "GetOneTagResponseExample": {
+        "summary": "One tag retrieved",
+        "value": {
+          "count": 1,
+          "items": [
+            {
+              "createdAt": "2024-02-27T17:04:44.799Z",
+              "generation": 0,
+              "id": "e0987f86-72e5-45ac-81b4-93c525a139ac",
+              "key": "location",
+              "resourceCount": 4,
+              "type": "tags/tag",
+              "updatedAt": "2024-02-27T17:05:10.589Z",
+              "value": "San Jose"
+            }
+          ],
+          "offset": 0,
+          "total": 1
+        }
+      },
+      "GetOneTaggedResourceResponseExample": {
+        "summary": "One tagged resource retrieved",
+        "value": {
+          "count": 1,
+          "items": [
+            {
+              "createdAt": "2024-02-02T17:22:35.844Z",
+              "generation": 2,
+              "id": "055b5ff2-cb2c-4551-9a5d-28d3f73ddf49",
+              "resource": {
+                "resourceType": "DEVICE",
+                "resourceUri": "/devices/v1beta1/devices/055b5ff2-cb2c-4551-9a5d-28d3f73ddf49"
+              },
+              "tags": {
+                "Resource No": "K220",
+                "deployment": "pending",
+                "updated location": "San Jose"
+              },
+              "type": "tags/tag-resource",
+              "updatedAt": "2024-02-15T07:16:36.283Z"
+            }
+          ],
+          "offset": 2,
+          "total": 10
+        }
+      }
+    },
+    "responses": {
+      "400-badRequestResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "Error_Bad_Request": {
+                "value": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                  "errorDetails": [
+                    {
+                      "issues": [
+                        {
+                          "description": "Invalid filter expression. Expected format is 'field-name operator value'.",
+                          "source": "query.parameter",
+                          "subject": "filter"
+                        }
+                      ],
+                      "type": "hpe.greenlake.tags.bad_request"
+                    }
+                  ],
+                  "httpStatusCode": 400,
+                  "message": "BAD REQUEST"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "Bad Request"
+      },
+      "401-unauthorizedResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "Error_Unauthorized": {
+                "value": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                  "errorDetails": [
+                    {
+                      "metadata": {
+                        "access_token": "expired"
+                      },
+                      "source": "hpe.greenlake.tag-resources",
+                      "type": "hpe.greenlake.metadata"
+                    }
+                  ],
+                  "httpStatusCode": 401,
+                  "message": "UNAUTHORIZED"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "Unauthorized"
+      },
+      "403-forbiddenResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "Error_Forbidden": {
+                "value": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                  "errorDetails": [
+                    {
+                      "metadata": {
+                        "access_token": "expired"
+                      },
+                      "source": "hpe.greenlake.tag-resources",
+                      "type": "hpe.greenlake.metadata"
+                    }
+                  ],
+                  "httpStatusCode": 403,
+                  "message": "FORBIDDEN"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "The operation is forbidden"
+      },
+      "429-tooManyRequestsResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "Error_Too_Many_Requests": {
+                "value": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+                  "httpStatusCode": 429,
+                  "message": "TOO_MANY_REQUESTS"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "Too many requests"
+      },
+      "500-internalServerErrorResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "Error_Internal_Server_Error": {
+                "value": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                  "errorDetails": [
+                    {
+                      "metadata": {
+                        "access_token": "Internal server error"
+                      },
+                      "source": "hpe.greenlake.tag-resources",
+                      "type": "hpe.greenlake.metadata"
+                    }
+                  ],
+                  "httpStatusCode": 500,
+                  "message": "INTERNAL SERVER ERROR"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        },
+        "description": "Internal server error"
+      }
+    },
+    "schemas": {
+      "ErrorDetail": {
+        "properties": {
+          "metadata": {
+            "description": "Any additional key value pairs that the service defines.",
+            "properties": {
+              "recommendedActions": {
+                "items": {
+                  "description": "Action recommended to the user",
+                  "examples": [
+                    "Contact admin to perform operation"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "source": {
+            "description": "The source of the error, typically a registered API group.",
+            "examples": [
+              "hpe.greenlake.organizations"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of error details.",
+            "examples": [
+              "hpe.greenlake.metadata"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "source",
+          "metadata"
+        ],
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-friendly identifier for the error",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "default": 400,
+            "description": "HTTP equivalent status code",
+            "format": "int32",
+            "maximum": 599,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "GetResourceDetail": {
+        "properties": {
+          "createdAt": {
+            "description": "The timestamp of the tag resource creation.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Revision number of the record",
+            "examples": [
+              0
+            ],
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the tagged resource.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "resource": {
+            "$ref": "#/components/schemas/GetTagResource",
+            "type": "object"
+          },
+          "tags": {
+            "additionalProperties": {
+              "description": "A tag is a key-value pair attached to a HPE GreenLake platform and services resource.",
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "type": {
+            "description": "The resource type.",
+            "examples": [
+              "tags/tag-resource"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The timestamp of the last update to the tag resource.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "resource",
+          "createdAt",
+          "updatedAt",
+          "generation",
+          "tags"
+        ],
+        "type": "object"
+      },
+      "GetTagResource": {
+        "properties": {
+          "resourceType": {
+            "description": "The type of the resource to which the tag is associated.",
+            "enum": [
+              "DEVICE",
+              "DEVICE_SUBSCRIPTION",
+              "SERVICE_SUBSCRIPTION",
+              "LOCATION"
+            ],
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The resource URL.",
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceUri",
+          "resourceType"
+        ],
+        "type": "object"
+      },
+      "PaginatedTagResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "format": "int32",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TagResponse"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items in the collection that match the filter query, if one was provided in the request.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset",
+          "total"
+        ],
+        "type": "object"
+      },
+      "TagResourceResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "format": "int32",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GetResourceDetail"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items in the collection that match the filter query, if one was provided in the request.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset",
+          "total"
+        ],
+        "type": "object"
+      },
+      "TagResponse": {
+        "properties": {
+          "createdAt": {
+            "description": "The timestamp of the tag creation.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Revision number of the record",
+            "examples": [
+              0
+            ],
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the tag.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "key": {
+            "description": "The tag key. A tag key is the name used to refer to the tag.",
+            "type": "string"
+          },
+          "resourceCount": {
+            "description": "The number of resources associated with the tag.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": {
+            "description": "The resource type.",
+            "examples": [
+              "tags/tag"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The timestamp of the last update to the tag.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "value": {
+            "description": "The tag value. A tag value is a value applied to the tag key.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "key",
+          "value",
+          "resourceCount",
+          "createdAt",
+          "updatedAt",
+          "generation"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "With the HPE GreenLake for Tags APIs, you can view and filter all tags and all supported tagged resources in a workspace.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE GreenLake for Tags APIs",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/tags/v1/tag-resources": {
+      "get": {
+        "description": "Retrieve all the tagged resources for a workspace. Various query parameters can be passed to filter, limit, or sort the returned tagged resources.",
+        "operationId": "getTagResourcesV1",
+        "parameters": [
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined\nby logical operators. <br>\n| CLASS      |   EXAMPLES                                         |\n|------------|----------------------------------------------------|\n| Types      | string                                             |\n| Operations | eq                                                 |\n| Logic      | and, or                                            |\n| Properties | `id`, `resourceType`                               |\n\n**NOTE:** Use the `filter-tags` query parameter to filter tags. <br>\n\nThe examples are not an exhaustive list of all possible filtering options.\n",
+            "examples": {
+              "Multiple exact matches combined with 'and'": {
+                "description": "Match any tagged resource with a resource ID equal to \"43215678\" and a resource type equal to device.",
+                "value": "id eq '43215678' and resourceType eq 'DEVICE'"
+              },
+              "Multiple exact matches separated with 'or'": {
+                "description": "Match any tagged resource with a resource ID equal to \"28481264\" or a resource type equal to service subscription.",
+                "value": "id eq '28481264' or resourceType eq 'SERVICE_SUBSCRIPTION'"
+              },
+              "Single exact match - equality": {
+                "description": "Match all tagged resources with a resource type equal to device.",
+                "value": "resourceType eq 'DEVICE'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter expressions consisting of simple comparison operations applied on the assigned tags or their values. The comparison operations are case-insensitive. <br>\n| CLASS      |   EXAMPLES                                         |\n|------------|----------------------------------------------------|\n| Types      | string                                             |\n| Operations | eq, ne, contains()                                 |\n\n**NOTE:** Logical operators are not currently supported.  <br>\n\nThe examples are not an exhaustive list of all possible filtering on tags options.\n",
+            "examples": {
+              "Multiple partial matches separated with 'or'": {
+                "description": "Match any tags with key containing substring \"loc\" or value containing substring \"loc\" if either exists.",
+                "value": "contains(key,'loc') or contains(value,'loc')"
+              },
+              "Single exact match - tag key and tag value equality": {
+                "description": "Match any tagged resource with a tag with a tag key equal to \"location\" and a tag value equal to \"Bangalore\". The match is case-insensitive.",
+                "value": "'location' eq 'Bangalore'"
+              },
+              "Single exact match - tag key and tag value inequality": {
+                "description": "Match any tagged resource with a tag with a tag key equal to \"location\" and a tag value not equal to \"SanJose\". The match is case-insensitive.",
+                "value": "'location' ne 'SanJose'"
+              },
+              "Single partial match": {
+                "description": "Match all tags with a key containing the substring \"loc\" if it exists, such as \"location\" or \"allocation\".",
+                "value": "contains(key,'loc')"
+              }
+            },
+            "in": "query",
+            "name": "filter-tags",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of sort expressions. A sort expression is a property name optionally followed by a direction indicator `asc` or `desc`. If no direction is provided, ascending order is followed by default. If no sort expressions are specified for this query parameter, the response will be sorted by the `createdAt` timestamp in descending order. Only `id`, `createdAt`, and `updatedAt` are supported for sorting.",
+            "examples": {
+              "Sort by multiple properties with the specified order": {
+                "value": "id,createdAt desc"
+              },
+              "Sort by one property with the default asc order": {
+                "value": "updatedAt"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of select properties to display in the response. The default is that all properties are returned.",
+            "examples": {
+              "Select multiple properties to display": {
+                "value": [
+                  "id,type,updatedAt,generation"
+                ]
+              },
+              "Select only one property to display": {
+                "value": [
+                  "type"
+                ]
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "style": "form"
+          },
+          {
+            "description": "Specifies the number of results to be returned. The default value is 100.",
+            "examples": {
+              "Limit the returned response to at most 50 tagged resources": {
+                "value": 50
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+            "examples": {
+              "Start the returned response from the 5th tagged resource": {
+                "description": "Skip the first four tagged resources and start the response from the fifth tagged resource.",
+                "value": 4
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "DisplayMultipleTaggedResources": {
+                    "$ref": "#/components/examples/GetMultipleTaggedResourcesResponseExample"
+                  },
+                  "DisplayOneTaggedResource": {
+                    "$ref": "#/components/examples/GetOneTaggedResourceResponseExample"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/TagResourceResponse"
+                }
+              }
+            },
+            "description": "Get all the tagged resources for a workspace."
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/429-tooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "Get all the tagged resources for a workspace",
+        "tags": [
+          "Tags - v1"
+        ]
+      }
+    },
+    "/tags/v1/tags": {
+      "get": {
+        "description": "Retrieve a list of tags associated to a workspace. Various query parameters can be passed to filter, limit, or sort the returned tags.",
+        "operationId": "getTagsV1",
+        "parameters": [
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined\nby logical operators. <br>\n| CLASS      |   EXAMPLES                                         |\n|------------|----------------------------------------------------|\n| Types      | string                                             |\n| Operations | eq, contains()                                     |\n| Logic      | and, or                                            |\n| Properties | `id`, `key`, `value`                               |\n\nThe examples are not an exhaustive list of all possible filtering options.\n",
+            "examples": {
+              "Multiple exact matches combined with 'and'": {
+                "description": "Match all tags with key equal to \"location\" and the value equal to \"San Jose\" if the combination exists.",
+                "value": "key eq 'location' and value eq 'San Jose'"
+              },
+              "Multiple exact matches separated with 'or'": {
+                "description": "Match any tags with value equal to \"San Jose\" or the tag with the id equal to \"87651234\" if either exists.",
+                "value": "value eq 'San Jose' or id eq '87651234'"
+              },
+              "Multiple partial matches separated with 'or'": {
+                "description": "Match any tags with key containing substring \"loc\" or value containing substring \"loc\" if either exists.",
+                "value": "contains(key,'loc') or contains(value,'loc')"
+              },
+              "Single exact match - equality": {
+                "description": "Match all tags with key equal to \"location\" if it exists.",
+                "value": "key eq 'location'"
+              },
+              "Single partial match": {
+                "description": "Match all tags with a key containing the substring \"loc\" if it exists, such as \"location\" or \"allocation\".",
+                "value": "contains(key,'loc')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of sort expressions. A sort expression is a property name optionally followed by a direction indicator 'asc' or 'desc'. If no direction is provided, ascending order is followed by  default. If no sort expressions are specified for this query parameter, the response will be sorted by the `createdAt` timestamp in descending order. `type` and `resourceCount` are not supported for sorting.",
+            "examples": {
+              "Sort by multiple properties with the specified order": {
+                "value": "createdAt,key,value desc"
+              },
+              "Sort by one property with the default asc order": {
+                "value": "key"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of select properties to display in the response. The default is that all properties are returned.",
+            "examples": {
+              "Select multiple properties to display": {
+                "value": [
+                  "key,value,updatedAt"
+                ]
+              },
+              "Select only one property to display": {
+                "value": [
+                  "key"
+                ]
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "style": "form"
+          },
+          {
+            "description": "Specifies the number of results to be returned. The default value is 100.",
+            "examples": {
+              "Limit the returned response to at most 50 tags": {
+                "value": 50
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+            "examples": {
+              "Start the returned response from the 4th tag": {
+                "description": "Skip the first three tags and start the response from the fourth tag.",
+                "value": 3
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "DisplayMultiTags": {
+                    "$ref": "#/components/examples/GetMultipleTagsResponseExample"
+                  },
+                  "DisplayOneTag": {
+                    "$ref": "#/components/examples/GetOneTagResponseExample"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTagResponse"
+                }
+              }
+            },
+            "description": "Get tags associated to a workspace"
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/429-tooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "Get tags associated to a workspace",
+        "tags": [
+          "Tags - v1"
+        ]
+      }
+    },
+    "/tags/v1beta1/tag-resources": {
+      "get": {
+        "deprecated": true,
+        "description": "Retrieve all the tagged resources for a workspace. Various query parameters can be passed to filter, limit, or sort the returned tagged resources.",
+        "operationId": "getTagResourcesV1beta1",
+        "parameters": [
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined\nby logical operators. <br>\n| CLASS       | EXAMPLES                                          |\n|------------|----------------------------------------------------|\n| Types       | string                                            |\n| Operations  | eq                                                |\n| Logic       | and, or                                           |\n| Properties  | `id`, `resourceType`                              |\n**NOTE:** Use the `filter-tags` query parameter to filter tags. <br>\nThe examples are not an exhaustive list of all possible filtering options.\n",
+            "examples": {
+              "Multiple exact matches combined with 'and'": {
+                "description": "Match any tagged resource with resource ID being \"43215678\" and resource type being device.",
+                "value": "id eq '43215678' and resourceType eq 'DEVICE'"
+              },
+              "Multiple exact matches separated with 'or'": {
+                "description": "Match any tagged resource with resource ID being \"28481264\" or resource type being service subscription.",
+                "value": "id eq '28481264' or resourceType eq 'SERVICE_SUBSCRIPTION'"
+              },
+              "Single exact match - equality": {
+                "description": "Match all tagged resources with resource type being device.",
+                "value": "resourceType eq 'DEVICE'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined by logical operators to be applied on the assigned tags or their values. The comparison operations are case-insensitive. <br>\n| CLASS       | EXAMPLES                                          |\n|------------|----------------------------------------------------|\n| Types       | string                                            |\n| Operations  | eq, ne                                            |\n**NOTE:** Logical operators are not supported. <br>\nThe examples are not an exhaustive list of all possible filtering on tags options.\n",
+            "examples": {
+              "Single exact match - tag key and tag value equality": {
+                "description": "Match any tagged resource that has a tag with tag key being \"location\" and tag value being \"Bangalore\". The match is case-insensitive.",
+                "value": "'location' eq 'Bangalore'"
+              },
+              "Single exact match - tag key and tag value inequality": {
+                "description": "Match any tagged resource that has a tag with tag key being \"location\" and tag value not being \"SanJose\". The match is case-insensitive.",
+                "value": "'location' ne 'SanJose'"
+              }
+            },
+            "in": "query",
+            "name": "filter-tags",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of sort expressions. A sort expression is a property name optionally followed by a direction indicator 'asc' or 'desc'. If no direction is provided, ascending order is followed by default. If no sort expressions are specified for this query parameter, the response will be sorted by the `createdAt` timestamp in descending order. Only `id`, `createdAt`, and `updatedAt` are supported for sorting.",
+            "examples": {
+              "Sort by multiple properties with the specified order": {
+                "value": "id,createdAt desc"
+              },
+              "Sort by one property with the default asc order": {
+                "value": "updatedAt"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of select properties to display in the response. The default is that all properties are returned.",
+            "examples": {
+              "Select multiple properties to display": {
+                "value": [
+                  "id,type,updatedAt,generation"
+                ]
+              },
+              "Select only one property to display": {
+                "value": [
+                  "type"
+                ]
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "style": "form"
+          },
+          {
+            "description": "Specifies the number of results to be returned. The default value is 100.",
+            "examples": {
+              "Limit the returned response to at most 50 tagged resources": {
+                "value": 50
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+            "examples": {
+              "Start the returned response from the 5th tagged resource": {
+                "description": "Skip the first four tagged resources and start the response from the fifth tagged resource.",
+                "value": 4
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "DisplayMultipleTaggedResources": {
+                    "$ref": "#/components/examples/GetMultipleTaggedResourcesResponseExample"
+                  },
+                  "DisplayOneTaggedResource": {
+                    "$ref": "#/components/examples/GetOneTaggedResourceResponseExample"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/TagResourceResponse"
+                }
+              }
+            },
+            "description": "Get all the tagged resources for a workspace.",
+            "headers": {
+              "Deprecation": {
+                "description": "Wed, 15 Jan 2025 23:59:59 GMT\n",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "description": "Tue, 15 Apr 2025 23:59:59 GMT\n",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/429-tooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "Get all the tagged resources for a workspace",
+        "tags": [
+          "Tags - v1beta1"
+        ]
+      }
+    },
+    "/tags/v1beta1/tags": {
+      "get": {
+        "deprecated": true,
+        "description": "Retrieve a list of tags associated to a workspace. Various query parameters can be passed to filter, limit, or sort the returned tags.",
+        "operationId": "getTagsV1beta1",
+        "parameters": [
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined\nby logical operators. <br>\n| CLASS      |   EXAMPLES                                         |\n|------------|----------------------------------------------------|\n| Types      | string                                             |\n| Operations | eq, contains()                                     |\n| Logic      | and, or                                            |\n| Properties | `id`, `key`, `value`                               |\n\nThe examples are not an exhaustive list of all possible filtering options.\n",
+            "examples": {
+              "Multiple exact matches combined with 'and'": {
+                "description": "Match all tags with key being \"location\" and value being \"San Jose\" if the combination exists.",
+                "value": "key eq 'location' and value eq 'San Jose'"
+              },
+              "Multiple exact matches separated with 'or'": {
+                "description": "Match any tags with value being \"San Jose\" or the tag with id being \"87651234\" if either exists.",
+                "value": "value eq 'San Jose' or id eq '87651234'"
+              },
+              "Multiple partial matches separated with 'or'": {
+                "description": "Match any tags with key containing substring \"loc\" or value containing substring \"loc\" if either exists.",
+                "value": "contains(key,'loc') or contains(value,'loc')"
+              },
+              "Single exact match - equality": {
+                "description": "Match all tags with key being \"location\" if it exists.",
+                "value": "key eq 'location'"
+              },
+              "Single partial match": {
+                "description": "Match all tags with key containing substring \"loc\" if it exists, such as \"location\", \"allocation\".",
+                "value": "contains(key,'loc')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of sort expressions. A sort expression is a property name optionally followed by a direction indicator `asc` or `desc`. If no direction is provided, the ascending (`asc`) order is followed by default. If no sort expressions are specified for this query parameter, the response will be sorted by the `createdAt` timestamp in descending order. `type` and `resourceCount` are not supported for sorting.",
+            "examples": {
+              "Sort by multiple properties with the specified order": {
+                "value": "createdAt,key,value desc"
+              },
+              "Sort by one property with the default asc order": {
+                "value": "key"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A comma separated list of select properties to display in the response. The default is that all properties are returned.",
+            "examples": {
+              "Select multiple properties to display": {
+                "value": [
+                  "key,value,updatedAt"
+                ]
+              },
+              "Select only one property to display": {
+                "value": [
+                  "key"
+                ]
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "style": "form"
+          },
+          {
+            "description": "Specifies the number of results to be returned. The default value is 100.",
+            "examples": {
+              "Limit the returned response to at most 50 tags": {
+                "value": 50
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+            "examples": {
+              "Start the returned response from the 4th tag": {
+                "description": "Skip the first three tags and start the response from the fourth tag.",
+                "value": 3
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "DisplayMultiTags": {
+                    "$ref": "#/components/examples/GetMultipleTagsResponseExample"
+                  },
+                  "DisplayOneTag": {
+                    "$ref": "#/components/examples/GetOneTagResponseExample"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTagResponse"
+                }
+              }
+            },
+            "description": "Get tags associated to a workspace",
+            "headers": {
+              "Deprecation": {
+                "description": "Wed, 15 Jan 2025 23:59:59 GMT\n",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "description": "Tue, 15 Apr 2025 23:59:59 GMT\n",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/429-tooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "Get tags associated to a workspace",
+        "tags": [
+          "Tags - v1beta1"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "HPE GreenLake URL for accessing Tags APIs",
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ]
+}

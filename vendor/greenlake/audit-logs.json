@@ -1,0 +1,1502 @@
+{
+  "components": {
+    "schemas": {
+      "Error": {
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error.",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-friendly identifier for the error.",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code for the error.",
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "message",
+          "debugId",
+          "httpStatusCode"
+        ],
+        "type": "object"
+      },
+      "ErrorBadRequestDetails": {
+        "properties": {
+          "errorDetails": {
+            "description": "Additional detailed information about the error.",
+            "items": {
+              "properties": {
+                "issues": {
+                  "description": "List of bad request issues",
+                  "items": {
+                    "properties": {
+                      "description": {
+                        "description": "A user-friendly description of the issue.",
+                        "type": "string"
+                      },
+                      "source": {
+                        "description": "The part of the request with an issue.",
+                        "type": "string"
+                      },
+                      "subject": {
+                        "description": "The specific issue key. For example, if the source property is field, the subject is the dot-separated property name the issue is about",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "subject"
+                    ]
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "default": "hpe.greenlake.bad_request",
+                  "description": "Error type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "issues"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ErrorGeneralDetails": {
+        "properties": {
+          "errorDetails": {
+            "description": "Additional detailed information about the error.",
+            "items": {
+              "properties": {
+                "metadata": {
+                  "description": "Additional key value pairs that provide information about this error.",
+                  "type": "object"
+                },
+                "source": {
+                  "description": "Source of the error, typically the API group",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "Error type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "source",
+                "metadata"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ErrorNotFoundDetails": {
+        "properties": {
+          "errorDetails": {
+            "description": "Additional detailed information about the error.",
+            "items": {
+              "properties": {
+                "metadata": {
+                  "description": "Additional key value pairs that provide information about this error.",
+                  "type": "object"
+                },
+                "source": {
+                  "description": "Source of the error, typically the API group",
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "source",
+                "metadata"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ErrorRetryDetails": {
+        "properties": {
+          "errorDetails": {
+            "description": "Additional detailed information about the error.",
+            "items": {
+              "properties": {
+                "retryAfterSeconds": {
+                  "type": "integer"
+                },
+                "type": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "retryAfterSeconds"
+              ]
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "UI-Application": {
+        "properties": {
+          "app_slug": {
+            "example": "CCS",
+            "type": "string"
+          },
+          "application_customer_id": {
+            "example": "3e35c938fb5911edbb4c660832a054ff",
+            "type": "string"
+          },
+          "application_id": {
+            "example": "da7f1156-ddd9-41c2-8f34-64c0d0f764f7",
+            "type": "string"
+          },
+          "application_name": {
+            "example": "App Catalog",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UI-Applications": {
+        "properties": {
+          "AUTHORIZED_APPS": {
+            "items": {
+              "$ref": "#/components/schemas/UI-Application"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "UI-AuditLog": {
+        "properties": {
+          "additional_info": {
+            "description": "Returns additional attributes.",
+            "example": {
+              "ip_address": "127.0.0.1"
+            },
+            "type": "object"
+          },
+          "app_instance_id": {
+            "description": "Unique application instance ID",
+            "example": "123132-4b3b-4b3b-4b3b-4b3b4b3b4b3b",
+            "type": "string"
+          },
+          "app_slug": {
+            "description": "Application slug",
+            "example": "CCS",
+            "type": "string"
+          },
+          "application_customer_id": {
+            "description": "Unique Application customer ID",
+            "example": "3e35c938fb5911edbb4c660832a054ff",
+            "type": "string"
+          },
+          "audit_created_at": {
+            "description": "The time the audit log was created in epoch time.",
+            "example": 1630000000,
+            "type": "number"
+          },
+          "audit_id": {
+            "description": "Unique audit log ID",
+            "example": "5f7b1b3b-4b3b-4b3b-4b3b-4b3b4b3b4b3b",
+            "type": "string"
+          },
+          "category": {
+            "description": "The category of the audit log.",
+            "example": "User Management",
+            "type": "string"
+          },
+          "customer_id": {
+            "description": "Unique workspace ID",
+            "example": "3e35c938fb5911edbb4c660832a054ff",
+            "type": "string"
+          },
+          "customer_name": {
+            "description": "The workspace name associated with the audit log.",
+            "example": "Audit trail ws",
+            "type": "string"
+          },
+          "description": {
+            "description": "A short description of the changes such as subscription assignment, firmware upgrade, and configuration updates.",
+            "example": "User logged in",
+            "type": "string"
+          },
+          "has_details": {
+            "description": "If set to `true`, additional details are available for the audit log.",
+            "type": "boolean"
+          },
+          "msp_application_customer_id": {
+            "description": "MSP application customer id",
+            "example": "345345-4b3b-4b3b-4b3b-4b3b4b3b4b3b",
+            "type": "string"
+          },
+          "msp_id": {
+            "description": "MSP workspace ID",
+            "example": "dfdgdff-4b3b-4b3b-4b3b-4b3b4b3b4b3b",
+            "type": "string"
+          },
+          "username": {
+            "description": "The user who performed the action.",
+            "example": "test@test.com",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UI-AuditLogConfigRequest": {
+        "properties": {
+          "app_audit_info": {
+            "properties": {
+              "app_type": {
+                "description": "Type of an external application.",
+                "example": "COMPUTE",
+                "type": "string"
+              },
+              "categories": {
+                "example": [
+                  "Alert Configuration",
+                  "API Gateway",
+                  "Augmentation Method",
+                  "Authentication and Policy",
+                  "AW8 Migration",
+                  "Backup Restore",
+                  "Classification Precedence",
+                  "CLI Access",
+                  "Client Match",
+                  "Collector",
+                  "Configuration"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "dashboard_columns": {
+                "properties": {
+                  "all": {
+                    "example": {
+                      "Category": "category",
+                      "Customer Name": "customer_name",
+                      "Description": "description",
+                      "Device Type": "device_type",
+                      "IP Address": "ip_address",
+                      "Source": "tenant_name",
+                      "Target": "target",
+                      "Time": "audit_created_at",
+                      "Username": "username",
+                      "Workspace Name": "account_name"
+                    },
+                    "type": "object"
+                  },
+                  "default": {
+                    "example": {
+                      "Category": "category",
+                      "Description": "description",
+                      "Time": "audit_created_at"
+                    },
+                    "type": "object"
+                  },
+                  "fixed": {
+                    "example": {
+                      "Category": "category",
+                      "Description": "description",
+                      "Source": "tenant_name",
+                      "Target": "target",
+                      "Time": "audit_created_at",
+                      "Username": "username"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "order": {
+                "example": {
+                  "Category": 0,
+                  "Customer Name": 2,
+                  "Description": 1,
+                  "Device Type": 3,
+                  "IP Address": 4,
+                  "Source": 5,
+                  "Target": 6,
+                  "Time": 8,
+                  "Username": 7
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "app_customer_id": {
+            "description": "Application customer id",
+            "example": "e6ddab54409c11eebd5682fab5035386",
+            "type": "string"
+          },
+          "app_id": {
+            "description": "Application id",
+            "example": "373b7710-cd79-4a22-b583-bc4aa7e42fcd",
+            "type": "string"
+          },
+          "app_instance_id": {
+            "description": "Application instance id",
+            "example": "da7f1156-ddd9-41c2-8f34-64c0d0f764f7",
+            "type": "string"
+          },
+          "app_name": {
+            "description": "Application name",
+            "example": "COMPUTE App (US West)",
+            "type": "string"
+          },
+          "app_slug": {
+            "description": "Application slug",
+            "example": "HPECC",
+            "type": "string"
+          },
+          "platform_customer_id": {
+            "description": "Platform customer id",
+            "example": "e1b852943cd911eeb8586e98c33ed4b9",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UI-AuditLogConfigs": {
+        "properties": {
+          "configs": {
+            "properties": {
+              "AUDIT_EXPORT_FIELDS": {
+                "properties": {
+                  "CSV": {
+                    "example": {
+                      "Category": "category",
+                      "Customer Name": "customer_name",
+                      "Description": "description",
+                      "Device Type": "device_type",
+                      "Group ID": "group_id",
+                      "IP Address": "ip_address",
+                      "Source": "tenant_name",
+                      "Target": "target",
+                      "Time": "audit_created_at",
+                      "Username": "username"
+                    },
+                    "type": "object"
+                  },
+                  "PDF": {
+                    "example": {
+                      "Category": "category",
+                      "Customer Name": "customer_name",
+                      "Description": "description",
+                      "Device Type": "device_type",
+                      "Group ID": "group_id",
+                      "IP Address": "ip_address",
+                      "Source": "tenant_name",
+                      "Target": "target",
+                      "Time": "audit_created_at",
+                      "Username": "username"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "CATEGORIES": {
+                "example": [
+                  "Alert Configuration",
+                  "API Gateway",
+                  "Augmentation Method",
+                  "Authentication and Policy",
+                  "AW8 Migration",
+                  "Backup Restore",
+                  "Classification Precedence",
+                  "CLI Access",
+                  "Client Match",
+                  "Collector",
+                  "Configuration"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "DASHBOARD_COLUMNS": {
+                "properties": {
+                  "ALL": {
+                    "example": {
+                      "Category": "category",
+                      "Customer Name": "customer_name",
+                      "Description": "description",
+                      "Device Type": "device_type",
+                      "IP Address": "ip_address",
+                      "Source": "tenant_name",
+                      "Target": "target",
+                      "Time": "audit_created_at",
+                      "Username": "username",
+                      "Workspace Name": "account_name"
+                    },
+                    "type": "object"
+                  },
+                  "DEFAULT": {
+                    "example": {
+                      "Category": "category",
+                      "Description": "description",
+                      "Source": "tenant_name",
+                      "Target": "target",
+                      "Time": "audit_created_at",
+                      "Username": "username"
+                    },
+                    "type": "object"
+                  },
+                  "FIXED": {
+                    "example": {
+                      "Category": "category",
+                      "Description": "description",
+                      "Time": "audit_created_at"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "ORDER": {
+                "example": {
+                  "Category": 0,
+                  "Customer Name": 2,
+                  "Description": 1,
+                  "Device Type": 3,
+                  "IP Address": 4,
+                  "Source": 5,
+                  "Target": 6,
+                  "Time": 8,
+                  "Username": 7
+                },
+                "type": "object"
+              },
+              "UI_SEARCH_FIELDS": {
+                "example": {
+                  "Description": "description",
+                  "IP Address": "ip_address",
+                  "Target": "target",
+                  "Username": "username",
+                  "Workspace Name": "account_name"
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "UI-AuditLogDetails": {
+        "properties": {
+          "body": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "header": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "header",
+          "body"
+        ],
+        "type": "object"
+      },
+      "UI-AuditLogs": {
+        "allOf": [
+          {
+            "properties": {
+              "audits": {
+                "items": {
+                  "$ref": "#/components/schemas/UI-AuditLog"
+                },
+                "type": "array"
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/UI-PaginatedApiResponse",
+                "type": "object"
+              },
+              "remaining_records": {
+                "description": "This boolean flag shows whether there are more records available",
+                "type": "boolean"
+              },
+              "timestamp": {
+                "description": "The start and end time of the response",
+                "properties": {
+                  "end_time": {
+                    "description": "The end time of the audit logs in epoch time",
+                    "type": "number"
+                  },
+                  "start_time": {
+                    "description": "The start time of the audit logs in epoch time",
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        ]
+      },
+      "UI-PaginatedApiResponse": {
+        "properties": {
+          "count_per_page": {
+            "description": "Number of returned items",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Specifies the offset of the returned page. Only when offset based pagination is used.",
+            "type": "integer"
+          },
+          "total_count": {
+            "description": "Total number of items in the collection.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count_per_page",
+          "offset",
+          "total_count"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      },
+      "CookieAuth": {
+        "in": "cookie",
+        "name": "ccs-session",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "The HPE GreenLake Audit Log Service offers a collection of RESTful APIs for publishing audit logs and querying both application-specific and overall platform logs.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "GLCP Audit Logs API",
+    "version": "v1"
+  },
+  "openapi": "3.0.1",
+  "paths": {
+    "/auditligs/ui/v1/configs/{audit-id}": {
+      "delete": {
+        "operationId": "deleteAuditLogConfigs",
+        "parameters": [
+          {
+            "description": "Audit id",
+            "in": "path",
+            "name": "audit-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "message": {
+                      "description": "Audit Id.",
+                      "example": "eUmWt44B1k6acmrQBqvH",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Audit log configurations deleted successfully."
+          }
+        },
+        "summary": "Delete external application audit logs specific configurations.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/applications": {
+      "get": {
+        "operationId": "getApplications",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UI-Applications"
+                }
+              }
+            },
+            "description": "All the application instance details."
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Internal-Server-Error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "INTERNAL_SERVER_ERROR"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRetryDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get all the application instance details.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/configs": {
+      "post": {
+        "operationId": "createAuditLogConfigs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UI-AuditLogConfigRequest",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "message": {
+                      "description": "Audit Id.",
+                      "example": "eUmWt44B1k6acmrQBqvH",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Audit log configurations created successfully."
+          }
+        },
+        "summary": "Post external application audit logs specific configurations.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      },
+      "put": {
+        "operationId": "updateAuditLogConfigs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "audit_id": {
+                    "description": "Existing audit id of the configuration",
+                    "example": "eUmWt44B1k6acmrQBqvH",
+                    "type": "string"
+                  },
+                  "config": {
+                    "$ref": "#/components/schemas/UI-AuditLogConfigRequest",
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "message": {
+                      "description": "Audit Id.",
+                      "example": "eUmWt44B1k6acmrQBqvH",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Audit log configurations updated successfully."
+          }
+        },
+        "summary": "Update external application audit logs specific configurations.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/count": {
+      "get": {
+        "operationId": "getAuditLogsCount",
+        "parameters": [
+          {
+            "description": "Start time for filtering. Expects a epoch time integer value",
+            "in": "query",
+            "name": "start_time",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "description": "End time for filtering. Expects a epoch time integer value",
+            "in": "query",
+            "name": "end_time",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "description": "Application slug",
+            "in": "query",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Application customer id of the application instance.",
+            "in": "query",
+            "name": "application_customer_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "total": {
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                  "errorDetails": [
+                    {
+                      "issues": [
+                        {
+                          "description": "App slug is required.",
+                          "source": "query.parameter",
+                          "subject": "app_slug"
+                        }
+                      ],
+                      "type": "hpe.greenlake.bad_request"
+                    }
+                  ],
+                  "httpStatusCode": 400,
+                  "message": "Bad request error"
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorBadRequestDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Bad request"
+          }
+        },
+        "summary": "Get the number of audit logs in the system for the current customer-id from given timestamp",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/details": {
+      "get": {
+        "operationId": "getAuditLogDetails",
+        "parameters": [
+          {
+            "description": "Unique audit log id",
+            "in": "query",
+            "name": "audit_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Elasticsearch index for the entry.",
+            "in": "query",
+            "name": "index_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UI-AuditLogDetails"
+                }
+              }
+            },
+            "description": "Audit log details."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Unauthorized": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "expired"
+                          },
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "UNAUTHORIZED"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorGeneralDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "invalid"
+                          },
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "FORBIDDEN"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Invalid_audit-record-id": {
+                    "value": {
+                      "debugId": "25e86df4-e2cd-4996-a2eb-895166174941",
+                      "errorCode": "HPE_GL_ERROR_NOT_FOUND",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "id": "not found"
+                          },
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.not_found"
+                        }
+                      ],
+                      "httpStatusCode": 404,
+                      "message": "Audit details not found."
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorNotFoundDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Record Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Internal-Server-Error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "INTERNAL_SERVER_ERROR"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRetryDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get additional detail of an audit log.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/download": {
+      "get": {
+        "operationId": "downloadAuditLogs",
+        "parameters": [
+          {
+            "description": "Application slug",
+            "in": "query",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The columns which are to be present in the requested file.",
+            "in": "query",
+            "name": "columns",
+            "required": true,
+            "schema": {
+              "example": [
+                "category",
+                "description",
+                "ip_address",
+                "target",
+                "tenant_name",
+                "username"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "description": "The file extension implying the format in which the audit-trail has to be downloaded",
+            "in": "query",
+            "name": "file_extension",
+            "required": true,
+            "schema": {
+              "enum": [
+                "csv",
+                "pdf"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Audit logs in CSV or PDF format."
+          }
+        },
+        "summary": "Download audit logs in CSV or PDF format.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/search": {
+      "get": {
+        "operationId": "getAuditLogs",
+        "parameters": [
+          {
+            "description": "Application slug",
+            "example": "CCS",
+            "in": "query",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Application customer id of the application instance.",
+            "in": "query",
+            "name": "application_customer_id",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start time for filtering. Expects a epoch time integer value",
+            "in": "query",
+            "name": "start_time",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "End time for filtering. Expects a epoch time integer value",
+            "in": "query",
+            "name": "end_time",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Audit log category",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Audit log description",
+            "in": "query",
+            "name": "description",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP address contained within the additional details of the log.",
+            "in": "query",
+            "name": "ip_address",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "User's email address",
+            "in": "query",
+            "name": "username",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the Workspace to which the audit log belong",
+            "in": "query",
+            "name": "account_name",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter for all fields",
+            "in": "query",
+            "name": "_all",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Offset for pagination",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of items per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Field to sort by",
+            "in": "query",
+            "name": "sort_by",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort direction (asc or desc)",
+            "in": "query",
+            "name": "sort_dir",
+            "required": false,
+            "schema": {
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "example": "asc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UI-AuditLogs"
+                }
+              }
+            },
+            "description": "All audit logs."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                  "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                  "errorDetails": [
+                    {
+                      "issues": [
+                        {
+                          "description": "App slug is required.",
+                          "source": "query.parameter",
+                          "subject": "app_slug"
+                        }
+                      ],
+                      "type": "hpe.greenlake.bad_request"
+                    }
+                  ],
+                  "httpStatusCode": 400,
+                  "message": "Bad request error"
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorBadRequestDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Unauthorized": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "expired"
+                          },
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "UNAUTHORIZED"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorGeneralDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "invalid"
+                          },
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "FORBIDDEN"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Internal-Server-Error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "source": "hpe.greenlake.audit-log",
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "INTERNAL_SERVER_ERROR"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorRetryDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get all audit logs of an application instance or workspace.",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    },
+    "/auditlogs/ui/v1/{application-id}/configs": {
+      "get": {
+        "operationId": "getAuditLogConfigs",
+        "parameters": [
+          {
+            "description": "Application id",
+            "in": "path",
+            "name": "application-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UI-AuditLogConfigs"
+                }
+              }
+            },
+            "description": "Audit log configurations."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Invalid-Application-Id": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid app slug or ID c44b9dc2-7568-4f6b-bac0-6b08612fa6d"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Error"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorBadRequestDetails"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Bad request"
+          }
+        },
+        "summary": "Get the audit log configurations related to an application",
+        "tags": [
+          "UI-AuditLogs"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    },
+    {
+      "CookieAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://hoku-default-user-api.ccs.arubathena.com"
+    },
+    {
+      "url": "https://mira-default-user-api.ccs.arubathena.com"
+    },
+    {
+      "url": "https://polaris-default-user-api.ccs.arubathena.com"
+    },
+    {
+      "url": "https://pavo-default-user-api.ccs.arubathena.com"
+    }
+  ]
+}

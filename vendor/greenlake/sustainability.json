@@ -1,0 +1,2995 @@
+{
+  "components": {
+    "schemas": {
+      "apiError": {
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-friendly identifier for the error.",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP equivalent status code.",
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "message",
+          "debugId",
+          "httpStatusCode"
+        ],
+        "type": "object"
+      },
+      "cloudEntity": {
+        "properties": {
+          "co2eMetricTon": {
+            "description": "CO2 equivalent generation in metric tons.",
+            "examples": [
+              0.2
+            ],
+            "type": "number"
+          },
+          "entityId": {
+            "description": "ID of the entity.",
+            "examples": [
+              "1"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "description": "ID of the entity.",
+            "examples": [
+              "1"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the entity.",
+            "examples": [
+              "nebraska.server.web"
+            ],
+            "type": "string"
+          },
+          "serviceAccount": {
+            "description": "Service account id of the entity.",
+            "examples": [
+              "012345678901"
+            ],
+            "type": "string"
+          },
+          "serviceName": {
+            "description": "Service name of the entity.",
+            "examples": [
+              "S3"
+            ],
+            "type": "string"
+          },
+          "serviceProvider": {
+            "description": "Cloud service provider of the entity.",
+            "examples": [
+              "AWS"
+            ],
+            "type": "string"
+          },
+          "serviceRegion": {
+            "description": "Service region of the entity.",
+            "examples": [
+              "EMEA"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of return object.",
+            "examples": [
+              "sustainability-insight-ctr/cloud-entities"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "cloudTimeseries": {
+        "properties": {
+          "co2eMetricTon": {
+            "description": "CO2 equivalent generation in metric tons for this time bucket.",
+            "examples": [
+              0.2
+            ],
+            "type": "number"
+          },
+          "id": {
+            "description": "ID of the returned time-bucketed aggregate.",
+            "examples": [
+              "2023-12-20T01:00:00Z"
+            ],
+            "type": "string"
+          },
+          "timeBucket": {
+            "description": "Starting time of the returned time-bucketed aggregate in ISO8601 format.",
+            "examples": [
+              "2023-12-20T01:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of returned aggregate.",
+            "examples": [
+              "sustainability-insight-ctr/cloud-timeseries"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "cloudTotal": {
+        "properties": {
+          "co2eMetricTon": {
+            "description": "Total CO2 equivalent generation in metric tons.",
+            "examples": [
+              0.2
+            ],
+            "type": "number"
+          },
+          "type": {
+            "description": "Type of returned aggregate.",
+            "examples": [
+              "sustainability-insight-ctr/cloud-totals"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "coefficient": {
+        "properties": {
+          "associatedLocation": {
+            "description": "A reference to the Location resource that this coefficient is bound to.",
+            "properties": {
+              "locationId": {
+                "description": "The location id that the coefficients apply to.",
+                "examples": [
+                  "00000000-0000-0000-0000-0000000000000"
+                ],
+                "type": "string"
+              },
+              "locationName": {
+                "description": "The location name that the coefficients apply to",
+                "examples": [
+                  "Location A"
+                ],
+                "type": "string"
+              },
+              "resourceUri": {
+                "examples": [
+                  "/locations/v1beta1/locations/00000000-0000-0000-0000-0000000000000"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "locationId",
+              "locationName",
+              "resourceUri"
+            ],
+            "type": "object"
+          },
+          "co2eGramsPerKwh": {
+            "description": "The CO2 equivalent generation coefficient in grams per kilowatt-hour for this location. Null if default for this location.",
+            "examples": [
+              0.5
+            ],
+            "type": "number"
+          },
+          "costPerKwh": {
+            "description": "The cost coefficient per kilowatt-hour for this location. Null if default for this location.",
+            "examples": [
+              0.5
+            ],
+            "type": "number"
+          },
+          "costUsdPerKwh": {
+            "deprecated": true,
+            "description": "The cost coefficient in USD per kilowatt-hour for this location. Null if default for this location.",
+            "examples": [
+              0.5
+            ],
+            "type": "number"
+          },
+          "createdAt": {
+            "description": "The server-side creation time of this resource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/currencyComponent",
+            "description": "The currency code and currency name of the returned cost"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter",
+            "examples": [
+              0
+            ],
+            "type": "integer"
+          },
+          "id": {
+            "description": "ID of the returned coefficient mapping",
+            "examples": [
+              "00000000-0000-0000-0000-0000000000000"
+            ],
+            "format": "uuid",
+            "type": "string"
+          },
+          "startTime": {
+            "description": "The date in which this coefficient mapping takes effect for this location in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of returned coefficient mapping",
+            "examples": [
+              "sustainability-insight-ctr/coefficient"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The server-side last updated time of this resource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "coefficientCostInput": {
+        "properties": {
+          "currencyCode": {
+            "$ref": "#/components/schemas/currencyCode",
+            "description": "The 3 letter currency code the cost returned will be in, case insensitive. Currency calculations are done via a factor queried at the beginning of the day.\n"
+          },
+          "useCurrent": {
+            "description": "Whether or not to use the preexisting coefficient for this location. Cannot be true if useDefault is also true. Will throw an error if there is no preexisting coefficient.",
+            "examples": [
+              true,
+              false
+            ],
+            "type": "boolean"
+          },
+          "useDefault": {
+            "description": "Whether or not to use the default coefficient for this location. Cannot be true if useCurrent is also true.",
+            "examples": [
+              true,
+              false
+            ],
+            "type": "boolean"
+          },
+          "value": {
+            "description": "The coefficient mapping for this location. Used if neither useDefault or useCurrent flags are true.",
+            "examples": [
+              0.1
+            ],
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "useDefault",
+          "useCurrent"
+        ],
+        "type": "object"
+      },
+      "coefficientInput": {
+        "properties": {
+          "useCurrent": {
+            "description": "Whether or not to use the preexisting coefficient for this location. Cannot be true if useDefault is also true. Will throw an error if there is no preexisting coefficient.",
+            "examples": [
+              true,
+              false
+            ],
+            "type": "boolean"
+          },
+          "useDefault": {
+            "description": "Whether or not to use the default coefficient for this location. Cannot be true if useCurrent is also true.",
+            "examples": [
+              true,
+              false
+            ],
+            "type": "boolean"
+          },
+          "value": {
+            "description": "The coefficient mapping for this location. Used if neither useDefault or useCurrent flags are true.",
+            "examples": [
+              0.1
+            ],
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "useDefault",
+          "useCurrent"
+        ],
+        "type": "object"
+      },
+      "currencyCode": {
+        "description": "The three letter currency code the costs will be stored or returned in. Supported currencies are: THB - Thai Baht (Thailand) CHF - Swiss Franc (Switzerland) INR - Indian Rupee (India) EUR - Euro Italy, (Germany, Spain, Netherlands, Slovakia, Belgium, Greece, Austria, Slovenia, Finland, Portugal, Estonia) GBP - Pound Sterling (United Kingdom) NOK - Norwegian Krone (Norway) USD - US Dollar (United States, American Samoa, Puerto Rico, Myanmar) AUD - Australian Dollar (Australia) SEK - Swedish Krona (Sweden) HKD - Hong Kong Dollar (Hong Kong) AED - UAE Dirham (United Arab Emirates) NZD - New Zealand Dollar (New Zealand) BGN - Bulgarian Lev (Bulgaria) RON - Romanian Leu (Romania) CAD - Canadian Dollar (Canada) UAH - Ukrainian Hryvnia (Ukraine) MXN - Mexican Peso (Mexico) KRW - South Korean Won (South Korea) JPY - Japanese Yen (Japan) TRY - Turkish Lira (Turkey) DKK - Danish Krone (Denmark) PLN - Polish Zloty (Poland) CZK - Czech Koruna (Czech Republic) CLP - Chilean Peso (Chile) CNY - Chinese Yuan (China) ILS - Israeli New Shekel (Israel) HRK - Croatian Kuna (Croatia) BAM - Convertible Mark (Bosnia and Herzegovina) TWD - New Taiwan Dollar (Taiwan) MYR - Malaysian Ringgit (Malaysia)\n",
+        "enum": [
+          "THB",
+          "CHF",
+          "INR",
+          "EUR",
+          "GBP",
+          "NOK",
+          "USD",
+          "AUD",
+          "SEK",
+          "HKD",
+          "AED",
+          "NZD",
+          "BGN",
+          "RON",
+          "CAD",
+          "UAH",
+          "MXN",
+          "KRW",
+          "JPY",
+          "TRY",
+          "DKK",
+          "PLN",
+          "CZK",
+          "CLP",
+          "CNY",
+          "ILS",
+          "HRK",
+          "BAM",
+          "TWD",
+          "MYR"
+        ],
+        "type": "string"
+      },
+      "currencyComponent": {
+        "properties": {
+          "currencyCode": {
+            "$ref": "#/components/schemas/currencyCode",
+            "description": "The currency code of the returned cost"
+          },
+          "currencyName": {
+            "description": "The name of the currency",
+            "examples": [
+              "Chilean Peso"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "currencyCode",
+          "currencyName"
+        ],
+        "type": "object"
+      },
+      "datasource": {
+        "properties": {
+          "createdAt": {
+            "description": "The server-side creation time of this resource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          },
+          "firstCollectionTime": {
+            "description": "Time of the first collected data for this datasource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter",
+            "examples": [
+              0
+            ],
+            "type": "integer"
+          },
+          "id": {
+            "description": "ID of the returned datasource record",
+            "examples": [
+              "00000000-0000-0000-0000-0000000000000"
+            ],
+            "type": "string"
+          },
+          "lastCollectionTime": {
+            "description": "Time of the last collected data for this datasource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the datasource",
+            "examples": [
+              "HPE Aruba Central"
+            ],
+            "type": "string"
+          },
+          "provider": {
+            "description": "Provider name",
+            "examples": [
+              "HPE"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of returned datasource",
+            "examples": [
+              "sustainability-insight-ctr/datasource"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The server-side last updated time of this resource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "entity": {
+        "properties": {
+          "co2eMetricTon": {
+            "description": "CO2 equivalent generation in metric tons.",
+            "examples": [
+              0.2
+            ],
+            "type": "number"
+          },
+          "cost": {
+            "description": "Energy cost in the provided currency type.",
+            "examples": [
+              60.3
+            ],
+            "type": "number"
+          },
+          "costUsd": {
+            "deprecated": true,
+            "description": "Energy cost in USD.",
+            "examples": [
+              60.3
+            ],
+            "type": "number"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/currencyCode",
+            "description": "The currency code of the returned cost"
+          },
+          "entityId": {
+            "description": "ID of the entity.",
+            "examples": [
+              "AQ-1234567"
+            ],
+            "type": "string"
+          },
+          "entityMake": {
+            "description": "Make of the entity.",
+            "examples": [
+              "HPE"
+            ],
+            "type": "string"
+          },
+          "entityManufacturerTimestamp": {
+            "description": "Manufacturing timestamp of the entity.",
+            "examples": [
+              "2023-12-20T03:50:23Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "entityModel": {
+            "description": "Model of the entity.",
+            "examples": [
+              "PROLIANT DL380 GEN10"
+            ],
+            "type": "string"
+          },
+          "entityProductId": {
+            "description": "Product ID of the entity.",
+            "examples": [
+              "A59961995"
+            ],
+            "type": "string"
+          },
+          "entitySerialNum": {
+            "description": "Serial number of the entity.",
+            "examples": [
+              "ABCDEFGGG"
+            ],
+            "type": "string"
+          },
+          "entityType": {
+            "description": "Type of the entity.",
+            "examples": [
+              "COMPUTE"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "description": "ID of the entity.",
+            "examples": [
+              "AQ-1234567"
+            ],
+            "type": "string"
+          },
+          "kwh": {
+            "description": "Power consumption in kWh.",
+            "examples": [
+              400.1
+            ],
+            "type": "number"
+          },
+          "locationCity": {
+            "description": "City that the the entity is located in.",
+            "examples": [
+              "Omaha"
+            ],
+            "type": "string"
+          },
+          "locationCountry": {
+            "description": "Country that the the entity is located in.",
+            "examples": [
+              "United States"
+            ],
+            "type": "string"
+          },
+          "locationId": {
+            "description": "ID of the entity location.",
+            "examples": [
+              "a324a06e-c5fc-43b0-ab92-cc8bc14566f5"
+            ],
+            "type": "string"
+          },
+          "locationName": {
+            "description": "The entity location name.",
+            "examples": [
+              "Somewhere in Omaha, NE"
+            ],
+            "type": "string"
+          },
+          "locationState": {
+            "description": "State that the the entity is located in.",
+            "examples": [
+              "Nebraska"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the entity.",
+            "examples": [
+              "nebraska.server.web"
+            ],
+            "type": "string"
+          },
+          "tags": {
+            "description": "List of the entity's tags",
+            "items": {
+              "$ref": "#/components/schemas/tag"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "Type of return object.",
+            "examples": [
+              "sustainability-insight-ctr/entities"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ingest": {
+        "properties": {
+          "createdAt": {
+            "description": "The server-side creation time of this resource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of the ingest",
+            "examples": [
+              "Description A"
+            ],
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter",
+            "examples": [
+              0
+            ],
+            "type": "integer"
+          },
+          "id": {
+            "description": "ID of the returned record",
+            "examples": [
+              "00000000-0000-0000-0000-0000000000000"
+            ],
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the record",
+            "examples": [
+              "3rd party data"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of returned record",
+            "examples": [
+              "sustainability-insight-ctr/ingest"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The server-side last updated time of this resource in ISO8601 format.",
+            "examples": [
+              "2024-01-01T00:00:00.000Z"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "tag": {
+        "properties": {
+          "name": {
+            "description": "The name of the tag",
+            "examples": [
+              "OS"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "description": "The value of the tag",
+            "examples": [
+              "Linux"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "type": "object"
+      },
+      "timeseries": {
+        "properties": {
+          "co2eMetricTon": {
+            "description": "CO2 equivalent generation in metric tons for this time bucket.",
+            "examples": [
+              0.2
+            ],
+            "type": "number"
+          },
+          "cost": {
+            "description": "Energy cost for this time bucket in the queried for currency type.",
+            "examples": [
+              100
+            ],
+            "type": "number"
+          },
+          "costUsd": {
+            "description": "Energy cost in USD for this time bucket.",
+            "examples": [
+              60.3
+            ],
+            "type": "number"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/currencyCode",
+            "description": "The currency code of the returned cost"
+          },
+          "id": {
+            "description": "ID of the returned time-bucketed aggregate.",
+            "examples": [
+              "2023-12-20T01:00:00Z"
+            ],
+            "type": "string"
+          },
+          "kwh": {
+            "description": "Power consumption in kWh for this time bucket.",
+            "examples": [
+              400.1
+            ],
+            "type": "number"
+          },
+          "timeBucket": {
+            "description": "Starting time of the returned time-bucketed aggregate in ISO8601 format.",
+            "examples": [
+              "2023-12-20T01:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of returned aggregate.",
+            "examples": [
+              "sustainability-insight-ctr/timeseries"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "total": {
+        "properties": {
+          "co2eMetricTon": {
+            "description": "Total CO2 equivalent generation in metric tons.",
+            "examples": [
+              0.2
+            ],
+            "type": "number"
+          },
+          "cost": {
+            "description": "Total energy cost in the provided currency type.",
+            "examples": [
+              60.3
+            ],
+            "type": "number"
+          },
+          "costUsd": {
+            "deprecated": true,
+            "description": "Total energy cost in USD.",
+            "examples": [
+              60.3
+            ],
+            "type": "number"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/currencyCode",
+            "description": "The currency code of the returned cost"
+          },
+          "kwh": {
+            "description": "Total power consumption in kWh.",
+            "examples": [
+              400.1
+            ],
+            "type": "number"
+          },
+          "type": {
+            "description": "Type of returned aggregate.",
+            "examples": [
+              "sustainability-insight-ctr/totals"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "description": "Personal Access Token issued by the GLC platform.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "The HPE Sustainability Insight Center API enables users to manage power consumption data that helps to reduce costs and achieve IT sustainability goals.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Sustainability-Insight-Center",
+    "version": "v1beta1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/sustainability-insight-ctr/v1beta1/cloud-usage-by-entity": {
+      "get": {
+        "description": "Retrieves aggregated carbon footprint usage in a list grouped by individual cloud entities, such as, cloud services, over a\ndefined time frame and supports filtering, sorting, and offset-based pagination.\n",
+        "externalDocs": {
+          "description": "OData 4.0 Documentation",
+          "url": "https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html"
+        },
+        "operationId": "getCloudUsageByEntity",
+        "parameters": [
+          {
+            "description": "Limit the cloud entities operated on by this endpoint, returning only the subset of entities that match the filter. The\nfilter grammar is a subset of OData 4.0 supporting \"eq\", \"in\", and \"and\" operators only.\n\nCloud entities can be filtered by:\n- entityId\n- serviceProvider\n- serviceName\n- serviceRegion\n- serviceAccount\n- name\n",
+            "examples": {
+              "serviceProvider": {
+                "summary": "Filter to only entities with the service AWS",
+                "value": "serviceProvider eq 'AWS'"
+              },
+              "serviceRegion": {
+                "summary": "Filter to only entities that a service region of EMEA or AMERICAS",
+                "value": "serviceRegion in ('EMEA', 'AMERICAS')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Odata 4.0 field to sort entities on. Allowed fields are the strings \"entityId\", \"serviceProvider\", \"serviceName\", \"serviceRegion\", \"serviceAccount\", \"name\". Must be of the format \"property order\".",
+            "examples": {
+              "entity-id": {
+                "summary": "Sort by entityId in descending order",
+                "value": "entityId desc"
+              },
+              "service-account": {
+                "summary": "Sort by entity serviceAccount in ascending order",
+                "value": "serviceAccount asc"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "examples": {
+              "page-size-ten": {
+                "summary": "Start querying from 10 usages in.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of usages to return.",
+            "examples": {
+              "limit-ten": {
+                "summary": "Query for up to 10 items.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Start of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-start": {
+                "summary": "Start querying from the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-28T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "start-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-end": {
+                "summary": "Aggregate until the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-29T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "end-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/cloudEntity"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "total": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Aggregated carbon footprint usage for cloud entities",
+        "tags": [
+          "usages"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/cloud-usage-series": {
+      "get": {
+        "description": "Retrieves aggregated carbon footprint usage statistics grouped by time bucket over a defined time frame and\nsupports filtering by entities. Behavior is non-deterministic if the time range does not divide evenly by your selected\ninterval.\n",
+        "externalDocs": {
+          "description": "OData 4.0 Documentation",
+          "url": "https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html"
+        },
+        "operationId": "getCloudUsageBySeries",
+        "parameters": [
+          {
+            "description": "Limit the cloud entities operated on by this endpoint, returning only the subset of entities that match the filter. The\nfilter grammar is a subset of OData 4.0 supporting \"eq\", \"in\", and \"and\" operators only.\n\nCloud entities can be filtered by:\n- entityId\n- serviceProvider\n- serviceName\n- serviceRegion\n- serviceAccount\n- name\n",
+            "examples": {
+              "serviceProvider": {
+                "summary": "Filter to only entities with the service AWS",
+                "value": "serviceProvider eq 'AWS'"
+              },
+              "serviceRegion": {
+                "summary": "Filter to only entities that a service region of EMEA or AMERICAS",
+                "value": "serviceRegion in ('EMEA', 'AMERICAS')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Interval of the created time series. Must be of the format \"integer unit\". Valid units are day(s), hour\n(s), week(s), month(s), and year(s). Cloud usage typically is measured in months, so the smaller time units are\nlikely to be approximations.\n",
+            "examples": {
+              "month": {
+                "summary": "Each time bucket would be 1 month in length",
+                "value": "1 month"
+              },
+              "months": {
+                "summary": "Each time bucket would be 3 months in length",
+                "value": "3 months"
+              }
+            },
+            "in": "query",
+            "name": "interval",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-start": {
+                "summary": "Start aggregating from the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-28T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "start-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-end": {
+                "summary": "Aggregate until the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-29T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "end-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/cloudTimeseries"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Timeseries of cloud carbon footprint usage over time",
+        "tags": [
+          "usages"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/cloud-usage-totals": {
+      "get": {
+        "description": "Returns the total carbon footprint over a defined time frame and supports filtering by cloud entities.",
+        "externalDocs": {
+          "description": "OData 4.0 Documentation",
+          "url": "https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html"
+        },
+        "operationId": "getCloudUsageTotals",
+        "parameters": [
+          {
+            "description": "Limit the cloud entities operated on by this endpoint, returning only the subset of entities that match the filter. The\nfilter grammar is a subset of OData 4.0 supporting \"eq\", \"in\", and \"and\" operators only.\n\nCloud entities can be filtered by:\n- entityId\n- serviceProvider\n- serviceName\n- serviceRegion\n- serviceAccount\n- name\n",
+            "examples": {
+              "serviceProvider": {
+                "summary": "Filter to only entities with the service AWS",
+                "value": "serviceProvider eq 'AWS'"
+              },
+              "serviceRegion": {
+                "summary": "Filter to only cloud entities that a service region of EMEA or AMERICAS",
+                "value": "serviceRegion in ('EMEA', 'AMERICAS')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-start": {
+                "summary": "Start aggregating from the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-28T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "start-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the aggregate's time range in ISO8601 format.",
+            "examples": {
+              "january-end": {
+                "summary": "Aggregate until the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-29T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "end-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/cloudTotal"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Total aggregated cloud carbon footprint usage",
+        "tags": [
+          "usages"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/coefficients": {
+      "get": {
+        "description": "Get a list of all costs (amount per kWh) and co2 coefficients of all locations. Supports filtering by locationId.",
+        "operationId": "getCoefficients",
+        "parameters": [
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "examples": {
+              "offset-ten": {
+                "summary": "Start querying from 10 coefficients in.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of entities to return.",
+            "examples": {
+              "limit-ten": {
+                "summary": "Query for up to 10 coefficients.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Limit the coefficients operated on by this endpoint, returning only the subset of entities that match the filter. The filter grammar is a subset of OData 4.0 supporting \"eq\" operator only.\nCoefficients can be filtered by:\n- locationId\n",
+            "examples": {
+              "default-filter": {
+                "summary": "Filter to only coefficients using locationId 00000000-0000-0000-0000-0000000000000",
+                "value": "locationId eq '00000000-0000-0000-0000-0000000000000'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/coefficient"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "total": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Get all cost and co2 coefficients",
+        "tags": [
+          "coefficients"
+        ]
+      },
+      "post": {
+        "description": "Create cost and co2 coefficients for a specific location's data. If a coefficient is provided, either the value must be provided of one of the use default or use current flags must be set. Takes effect after the returned start time.",
+        "operationId": "addCoefficients",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "co2eGramsPerKwh": {
+                    "$ref": "#/components/schemas/coefficientInput"
+                  },
+                  "costPerKwh": {
+                    "$ref": "#/components/schemas/coefficientCostInput"
+                  },
+                  "costUsdPerKwh": {
+                    "$ref": "#/components/schemas/coefficientInput",
+                    "deprecated": true,
+                    "description": "Deprecated feature replaced by costPerKwh. Cannot be used in conjunction with costPerKwh and currency fields."
+                  },
+                  "locationId": {
+                    "description": "The location URI.",
+                    "examples": [
+                      "/locations/v1beta1/locations/00000000-0000-0000-0000-0000000000000"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "locationId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/coefficient"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Location": {
+                "description": "Resource URI of the created coefficient",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Create cost and co2 coefficients for a location",
+        "tags": [
+          "coefficients"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/coefficients/{id}": {
+      "get": {
+        "description": "Get a single cost and co2 coefficient for an id",
+        "operationId": "getCoefficient",
+        "parameters": [
+          {
+            "description": "UUID of the coefficient mapping",
+            "examples": {
+              "first-coefficient": {
+                "description": "ID for the coefficient mapping being accessed is \"00000000-0000-0000-0000-0000000000000\"",
+                "value": "00000000-0000-0000-0000-0000000000000"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/coefficient"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Get a single cost and co2 coefficient for an id",
+        "tags": [
+          "coefficients"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/datasources": {
+      "get": {
+        "description": "This returns information such as name and data collection times for each SIC data source.",
+        "operationId": "getDatasources",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/datasource"
+                      },
+                      "type": "array"
+                    },
+                    "total": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Get all information for SIC data sources.",
+        "tags": [
+          "datasources"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/datasources/{id}": {
+      "get": {
+        "description": "Get information such as name and data collection times for a SIC data source.",
+        "operationId": "getDatasource",
+        "parameters": [
+          {
+            "description": "ID of the data source",
+            "examples": {
+              "first-ingest": {
+                "description": "ID for the data source being accessed is \"00000000-0000-0000-0000-0000000000000\"",
+                "value": "00000000-0000-0000-0000-0000000000000"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/datasource"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Get information for a SIC data source.",
+        "tags": [
+          "datasources"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/ingests": {
+      "get": {
+        "description": "This returns the associated metadata of each uploaded 3rd party device measurement.",
+        "operationId": "getIngests",
+        "parameters": [
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "examples": {
+              "offset-ten": {
+                "summary": "Start querying from 10 records of uploads in.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of ingested records to return.",
+            "examples": {
+              "limit-ten": {
+                "summary": "Query for up to 10 items.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/ingest"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "total": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Get all metadata of uploaded 3rd party device measurements.",
+        "tags": [
+          "ingests"
+        ]
+      },
+      "post": {
+        "description": "Allows a user to upload power measurements for 3rd party devices from their own configured ITOM applications.",
+        "operationId": "addIngest",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "description": {
+                    "description": "Description for this record",
+                    "examples": [
+                      "Description A"
+                    ],
+                    "type": "string"
+                  },
+                  "file": {
+                    "description": "The 3rd party device measurement file. Must be .csv and matching the SIC third party data template. Maximum size is 300MB. Files that are invalid will not be consumed.",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "name": {
+                    "description": "The name of the device measurements being uploaded.",
+                    "examples": [
+                      "3rd Party Data A"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ingest"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Location": {
+                "description": "Resource URI of the created ingest metadata",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Upload a document with 3rd party device measurement data.",
+        "tags": [
+          "ingests"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/ingests/{id}": {
+      "get": {
+        "description": "Get metadata for an ingested 3rd party device measurement.",
+        "operationId": "getIngest",
+        "parameters": [
+          {
+            "description": "UUID of the record",
+            "examples": {
+              "first-ingest": {
+                "description": "ID for the ingest metadata being accessed is \"00000000-0000-0000-0000-0000000000000\"",
+                "value": "00000000-0000-0000-0000-0000000000000"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ingest"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Get metadata for a 3rd party device measurement.",
+        "tags": [
+          "ingests"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/usage-by-entity": {
+      "get": {
+        "description": "Retrieves an aggregated energy usage list grouped by individual entities over a defined time frame and supports filtering, sorting, and offset-based pagination.",
+        "externalDocs": {
+          "description": "OData 4.0 Documentation",
+          "url": "https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html"
+        },
+        "operationId": "getUsageByEntity",
+        "parameters": [
+          {
+            "description": "Limit the entities operated on by this endpoint, returning only the subset of entities that match the filter. The filter grammar is a subset of OData 4.0 supporting \"eq\", \"in\", and \"and\" operators only.\nUsage entities can be filtered by:\n- entityId\n- entityMake\n- entityModel\n- entityType\n- entitySerialNum\n- entityProductId\n- locationName\n- locationId\n- locationCity\n- locationState\n- locationCountry\n- name\n",
+            "examples": {
+              "country": {
+                "summary": "Filter to only entities in Germany using country code DE",
+                "value": "locationCountry eq 'DE'"
+              },
+              "entityModel": {
+                "summary": "Filter to only entities that have a model of ProLiant DL325 Gen11 or ProLiant DL380 Gen10",
+                "value": "entityModel in ('ProLiant DL325 Gen11', 'ProLiant DL380 Gen10')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit the entities operated on by this endpoint, returning only the subset of entities that contain the tags. The filter grammar is a subset of OData 4.0 supporting \"eq\" and \"or\" operators only.\nThe tag key is on the left of the operator, the value is on the right.\n",
+            "examples": {
+              "operating-system-or-tag": {
+                "summary": "true if the case-insensitive tag key 'OS' has a case-insensitive value 'Linux' or 'Windows'",
+                "value": "'OS' eq 'Linux' or 'OS' eq 'Windows'"
+              },
+              "operating-system-tag": {
+                "summary": "true if the case-insensitive tag key 'OS' has a case-insensitive value 'Linux'.",
+                "value": "'OS' eq 'Linux'"
+              },
+              "traditional-tag": {
+                "summary": "true if the case-insensitive tag key 'Tagged' has an empty value.",
+                "value": "'Tagged' eq ''"
+              }
+            },
+            "in": "query",
+            "name": "filter-tags",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The 3 letter currency code the cost returned will be in, case insensitive. Currency calculations are done via a factor queried at the beginning of the day. Defaults to USD.\n",
+            "examples": {
+              "canadian-conversion": {
+                "summary": "Return results in Canadian dollars",
+                "value": "CAD"
+              }
+            },
+            "in": "query",
+            "name": "currency",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/currencyCode",
+              "default": "USD"
+            }
+          },
+          {
+            "description": "Odata 4.0 field to sort entities on. Allowed fields are the strings \"locationName\", \"locationCountry\", \"locationState\", \"entityId\", \"entityMake\", \"entityModel\", \"entityType\", \"entitySerialNum\", \"entityProductId\", \"name\". Must be of the format \"property order\".",
+            "examples": {
+              "entity-id": {
+                "summary": "Sort by entityId in descending order",
+                "value": "entityId desc"
+              },
+              "name": {
+                "summary": "Sort by entity name in ascending order",
+                "value": "name asc"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "examples": {
+              "page-size-ten": {
+                "summary": "Start querying from 10 usages in.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of usages to return.",
+            "examples": {
+              "limit-ten": {
+                "summary": "Query for up to 10 items.",
+                "value": 10
+              }
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Start of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-start": {
+                "summary": "Start querying from the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-28T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "start-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-end": {
+                "summary": "Aggregate until the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-29T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "end-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/entity"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "total": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Aggregated energy use for entities",
+        "tags": [
+          "usages"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/usage-series": {
+      "get": {
+        "description": "Retrieves aggregated energy usage statistics grouped by time bucket over a defined time frame and supports filtering by entities. Behavior is non-deterministic if the time range does not divide evenly by your selected interval.",
+        "externalDocs": {
+          "description": "OData 4.0 Documentation",
+          "url": "https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html"
+        },
+        "operationId": "getUsageBySeries",
+        "parameters": [
+          {
+            "description": "Limit the entities operated on by this endpoint, returning only the usage for entities that match the filter. The filter grammar is a subset of OData 4.0 supporting \"eq\", \"in\", and \"and\" operators only.\nUsage entities can be filtered by:\n- entityId\n- entityMake\n- entityModel\n- entityType\n- entitySerialNum\n- entityProductId\n- locationName\n- locationId\n- locationCity\n- locationState\n- locationCountry\n",
+            "examples": {
+              "country": {
+                "summary": "Filter to only entities in Germany using country code DE",
+                "value": "locationCountry eq 'DE'"
+              },
+              "entityModel": {
+                "summary": "Filter to only entities that have a model of ProLiant DL325 Gen11 or ProLiant DL380 Gen10",
+                "value": "entityModel in ('ProLiant DL325 Gen11', 'ProLiant DL380 Gen10')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit the entities operated on by this endpoint, returning only the subset of entities that contain the tags. The filter grammar is a subset of OData 4.0 supporting \"eq\" and \"or\" operators only.\nThe tag key is on the left of the operator, the value is on the right.\n",
+            "examples": {
+              "operating-system-or-tag": {
+                "summary": "true if the case-insensitive tag key 'OS' has a case-insensitive value 'Linux' or 'Windows'",
+                "value": "'OS' eq 'Linux' or 'OS' eq 'Windows'"
+              },
+              "operating-system-tag": {
+                "summary": "true if the case-insensitive tag key 'OS' has a case-insensitive value 'Linux'.",
+                "value": "'OS' eq 'Linux'"
+              },
+              "traditional-tag": {
+                "summary": "true if the case-insensitive tag key 'Tagged' has an empty value.",
+                "value": "'Tagged' eq ''"
+              }
+            },
+            "in": "query",
+            "name": "filter-tags",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The 3 letter currency code the cost returned will be in, case insensitive. Currency calculations are done via a factor queried at the beginning of the day. Defaults to USD.\n",
+            "examples": {
+              "canadian-conversion": {
+                "summary": "Return results in Canadian dollars",
+                "value": "CAD"
+              }
+            },
+            "in": "query",
+            "name": "currency",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/currencyCode",
+              "default": "USD"
+            }
+          },
+          {
+            "description": "Interval of the created time series. Must be of the format \"integer unit\". Valid units are day(s), hour(s), week(s), month(s), and year(s).",
+            "examples": {
+              "day": {
+                "summary": "Each time bucket would be 1 day in length",
+                "value": "1 day"
+              },
+              "hour": {
+                "summary": "Each time bucket would be 2 hours in length",
+                "value": "2 hours"
+              }
+            },
+            "in": "query",
+            "name": "interval",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Start of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-start": {
+                "summary": "Start aggregating from the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-28T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "start-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-end": {
+                "summary": "Aggregate until the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-29T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "end-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        5
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/timeseries"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Timeseries of energy usage over time",
+        "tags": [
+          "usages"
+        ]
+      }
+    },
+    "/sustainability-insight-ctr/v1beta1/usage-totals": {
+      "get": {
+        "description": "Returns the total aggregated power cost, power consumption, and carbon emissions over a defined time frame and supports filtering by entities.",
+        "externalDocs": {
+          "description": "OData 4.0 Documentation",
+          "url": "https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part2-url-conventions.html"
+        },
+        "operationId": "getUsageTotals",
+        "parameters": [
+          {
+            "description": "Limit the entities operated on by this endpoint, returning only the usage for entities that match the filter. The filter grammar is a subset of OData 4.0 supporting \"eq\", \"in\", and \"and\" operators only.\nUsage entities can be filtered by:\n- entityId\n- entityMake\n- entityModel\n- entityType\n- entitySerialNum\n- entityProductId\n- locationName\n- locationId\n- locationCity\n- locationState\n- locationCountry\n",
+            "examples": {
+              "country": {
+                "summary": "Filter to only entities in Germany using country code DE",
+                "value": "locationCountry eq 'DE'"
+              },
+              "entityModel": {
+                "summary": "Filter to only entities that have a model of ProLiant DL325 Gen11 or ProLiant DL380 Gen10",
+                "value": "entityModel in ('ProLiant DL325 Gen11', 'ProLiant DL380 Gen10')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Limit the entities operated on by this endpoint, returning only the subset of entities that contain the tags. The filter grammar is a subset of OData 4.0 supporting \"eq\" and \"or\" operators only.\nThe tag key is on the left of the operator, the value is on the right.\n",
+            "examples": {
+              "operating-system-or-tag": {
+                "summary": "true if the case-insensitive tag key 'OS' has a case-insensitive value 'Linux' or 'Windows'",
+                "value": "'OS' eq 'Linux' or 'OS' eq 'Windows'"
+              },
+              "operating-system-tag": {
+                "summary": "true if the case-insensitive tag key 'OS' has a case-insensitive value 'Linux'.",
+                "value": "'OS' eq 'Linux'"
+              },
+              "traditional-tag": {
+                "summary": "true if the case-insensitive tag key 'Tagged' has an empty value.",
+                "value": "'Tagged' eq ''"
+              }
+            },
+            "in": "query",
+            "name": "filter-tags",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The 3 letter currency code the cost returned will be in, case insensitive. Currency calculations are done via a factor queried at the beginning of the day. Defaults to USD.\n",
+            "examples": {
+              "canadian-conversion": {
+                "summary": "Return results in Canadian dollars",
+                "value": "CAD"
+              }
+            },
+            "in": "query",
+            "name": "currency",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/currencyCode",
+              "default": "USD"
+            }
+          },
+          {
+            "description": "Start of the query's time range in ISO8601 format.",
+            "examples": {
+              "january-start": {
+                "summary": "Start aggregating from the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-28T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "start-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "End of the aggregate's time range in ISO8601 format.",
+            "examples": {
+              "january-end": {
+                "summary": "Aggregate until the 2024-01-28T08:00:00Z timestamp.",
+                "value": "2024-01-29T08:00:00Z"
+              }
+            },
+            "in": "query",
+            "name": "end-time",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "examples": [
+                        10
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/total"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad Request. Incorrect Input."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Exceeded the allowed rate limit.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error"
+          }
+        },
+        "summary": "Total aggregated data",
+        "tags": [
+          "usages"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://us-west.api.greenlake.hpe.com"
+    },
+    {
+      "url": "https://eu-central.api.greenlake.hpe.com"
+    },
+    {
+      "url": "https://ap-northeast.api.greenlake.hpe.com"
+    },
+    {
+      "url": "https://eu-west.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Aggregate usage data",
+      "name": "usages"
+    },
+    {
+      "description": "Create and retrieve custom coefficients for locations",
+      "name": "coefficients"
+    },
+    {
+      "description": "Upload and retrieve records of 3rd party ingests",
+      "name": "ingests"
+    },
+    {
+      "description": "Retrieve information about where data comes from",
+      "name": "datasources"
+    }
+  ]
+}

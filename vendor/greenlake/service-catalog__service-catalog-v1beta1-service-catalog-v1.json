@@ -1,0 +1,2134 @@
+{
+  "components": {
+    "examples": {
+      "filter-example1": {
+        "description": "Return service managers when msp supported equals true",
+        "summary": "Filter by mspSupported Service managers",
+        "value": "mspSupported eq true"
+      },
+      "filter-example2": {
+        "description": "Return service managers when msp supported equals false",
+        "summary": "Filter by mspSupported Service managers",
+        "value": "mspSupported eq false"
+      },
+      "provision-filter-example1": {
+        "description": "Returns service managers with a specific service manager ID.",
+        "summary": "Filter by serviceManagerId",
+        "value": "serviceManagerId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "provision-filter-example2": {
+        "description": "Returns service managers that are provisioned.",
+        "summary": "Filter by status equals PROVISIONED.",
+        "value": "status eq 'PROVISIONED'"
+      },
+      "provision-filter-example3": {
+        "description": "Returns service managers that are not provisioned.",
+        "summary": "Filter by status equals UNPROVISIONED.",
+        "value": "status eq 'UNPROVISIONED'"
+      },
+      "provision-filter-example4": {
+        "description": "Returns service managers in a specified region.",
+        "summary": "Filter by region",
+        "value": "region eq 'us-west'"
+      },
+      "region-example1": {
+        "summary": "US West",
+        "value": "us-west"
+      },
+      "region-example2": {
+        "summary": "US East",
+        "value": "us-east"
+      }
+    },
+    "headers": {
+      "Location": {
+        "required": true,
+        "schema": {
+          "examples": [
+            "/service-catalog/v1/service-manager-provisions/2fa85f64-5717-4562-b3fc-2c963f66afa1"
+          ],
+          "format": "url",
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenError"
+            }
+          }
+        },
+        "description": "403 Forbidden"
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalError"
+            }
+          }
+        },
+        "description": "500 Internal Server Error"
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "404 Not Found"
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedError"
+            }
+          }
+        },
+        "description": "401 Unauthorized"
+      }
+    },
+    "schemas": {
+      "BadRequestError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseError"
+          }
+        ]
+      },
+      "BaseError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error.",
+            "examples": [
+              "12312-123123-123123-1231212"
+            ],
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error.",
+            "examples": [
+              "HPE_GLCP_ERROR_EXPIRED_TOKEN"
+            ],
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "examples": [
+              401
+            ],
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "examples": [
+              "Authentication error - token expired"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ConflictError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          }
+        ]
+      },
+      "Error": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseError"
+          }
+        ]
+      },
+      "ForbiddenError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          }
+        ]
+      },
+      "InternalError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseError"
+          }
+        ]
+      },
+      "MSPConversionStatus": {
+        "allOf": [
+          {
+            "type": "string"
+          }
+        ],
+        "description": "The current status of Managed Service Provider conversion.",
+        "enum": [
+          "MSP_CONVERSION_INITIATED",
+          "MSP_CONVERTED",
+          "MSP_CONVERSION_FAILED"
+        ],
+        "title": "MSPConversionStatus"
+      },
+      "NotFoundError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          }
+        ]
+      },
+      "PreConditionFailedError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          }
+        ]
+      },
+      "ProvisionStatus": {
+        "allOf": [
+          {
+            "type": "string"
+          }
+        ],
+        "description": "The current provisioning status.",
+        "enum": [
+          "PROVISION_INITIATED",
+          "PROVISIONED",
+          "PROVISION_FAILED",
+          "UNPROVISION_INITIATED",
+          "UNPROVISIONED",
+          "UNPROVISION_FAILED"
+        ],
+        "title": "ProvisionStatus"
+      },
+      "ServiceManagerProvisionCreateBase": {
+        "description": "Service manager provision request details",
+        "properties": {
+          "region": {
+            "description": "HPE GreenLake platform defined region code.",
+            "examples": [
+              "us-west"
+            ],
+            "title": "Region code",
+            "type": "string"
+          },
+          "serviceManagerId": {
+            "description": "The unique identifier of the service manager.",
+            "examples": [
+              "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "format": "uuid",
+            "title": "Service manager ID",
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceManagerId",
+          "region"
+        ],
+        "title": "ServiceManagerProvisionCreateBase",
+        "type": "object"
+      },
+      "ServiceManagerProvisionCreateResponse": {
+        "description": "Service manager provision details when provision is initiated.",
+        "properties": {
+          "createdBy": {
+            "description": "The HPE GreenLake platform username that provisioned the service manager.",
+            "examples": [
+              "john@acme.com"
+            ],
+            "title": "username",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update",
+            "examples": [
+              1
+            ],
+            "title": "generation",
+            "type": "integer"
+          },
+          "id": {
+            "examples": [
+              "2fa85f64571745627b3fc2c963f66afa1"
+            ],
+            "title": "Service manager provisioned ID",
+            "type": "string"
+          },
+          "region": {
+            "examples": [
+              "us-west"
+            ],
+            "title": "Region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager provision resource",
+            "examples": [
+              "/service-catalog/v1/service-manager-provisions/2fa85f64571745627b3fc2c963f66afa1"
+            ],
+            "title": "Resource URI",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "type": {
+            "description": "Type of resource",
+            "examples": [
+              "/service-catalog/service-manager-provision"
+            ],
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceManager",
+          "region",
+          "createdBy",
+          "generation",
+          "type"
+        ],
+        "title": "ServiceManagerProvisionCreateResponse",
+        "type": "object"
+      },
+      "ServiceManagerProvisionRead": {
+        "description": "Service manager provisioned details",
+        "properties": {
+          "createdAt": {
+            "description": "Date and time the service offer was created or upgraded.",
+            "examples": [
+              "2021-04-23T07:50:30.400Z"
+            ],
+            "title": "createdAt",
+            "type": "string"
+          },
+          "createdBy": {
+            "description": "The HPE GreenLake platform username that provisioned the service manager.",
+            "examples": [
+              "john@acme.com"
+            ],
+            "title": "username",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "examples": [
+              1
+            ],
+            "title": "generation",
+            "type": "integer"
+          },
+          "id": {
+            "examples": [
+              "2fa85f6457174562b3fc2c963f66afa1"
+            ],
+            "title": "Service manager provisioned ID",
+            "type": "string"
+          },
+          "provisionStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProvisionStatus"
+              }
+            ]
+          },
+          "region": {
+            "examples": [
+              "us-west"
+            ],
+            "title": "Region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager provision resource",
+            "examples": [
+              "/service-catalog/v1/service-manager-provisions/2fa85f6457174562b3fc2c963f66afa1"
+            ],
+            "title": "Resource URI",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "type": {
+            "description": "Type of resource",
+            "examples": [
+              "/service-catalog/service-manager-provision"
+            ],
+            "title": "type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date and time the service offer was updated.",
+            "examples": [
+              "2021-04-29T07:50:30.400Z"
+            ],
+            "title": "updatedAt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceManager",
+          "region",
+          "provisionStatus",
+          "createdBy",
+          "createdAt",
+          "updatedAt",
+          "generation",
+          "type"
+        ],
+        "title": "ServiceManagerProvisionRead",
+        "type": "object"
+      },
+      "ServiceManagerProvisionReadList": {
+        "description": "List of service managers provisioned details.",
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "examples": [
+              1
+            ],
+            "title": "Count per page",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceManagerProvisionRead"
+            },
+            "title": "Service manager provision list",
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "examples": [
+              0
+            ],
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count of items in the collection after applying the provided query parameters.",
+            "examples": [
+              10
+            ],
+            "title": "Total count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "title": "ServiceManagerProvisionReadList",
+        "type": "object"
+      },
+      "ServiceManagerRead": {
+        "description": "Service manager details",
+        "properties": {
+          "createdAt": {
+            "description": "Date and time the service was created.",
+            "examples": [
+              "2021-04-23T07:50:30.400Z"
+            ],
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of the service manager.",
+            "examples": [
+              "Manage your wired, wireless, and WAN infrastructure"
+            ],
+            "maxLength": 1024,
+            "title": "Description",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "examples": [
+              1
+            ],
+            "title": "generation",
+            "type": "integer"
+          },
+          "honorUnprovisionResponse": {
+            "description": "Honor Unprovision or not",
+            "examples": [
+              true
+            ],
+            "title": "Honor Unprovision Response",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "The unique ID of the service manager.",
+            "examples": [
+              "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "format": "uuid",
+            "title": "Service manager ID",
+            "type": "string"
+          },
+          "mspOnlySupported": {
+            "description": "Service Manager supports only Managed Service Provider (MSP) or not",
+            "examples": [
+              false
+            ],
+            "title": "MSP only Supported",
+            "type": "boolean"
+          },
+          "mspSupported": {
+            "description": "Service manager supports Managed Service Provider (MSP) or not",
+            "examples": [
+              true
+            ],
+            "title": "MSP Supported",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Name of the service manager",
+            "examples": [
+              "Aruba Central"
+            ],
+            "maxLength": 64,
+            "title": "Name",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager resource",
+            "examples": [
+              "/service-catalog/v1/service-managers/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "title": "Resource URI",
+            "type": "string"
+          },
+          "standaloneSupported": {
+            "description": "Service manager supports Standalone or not",
+            "examples": [
+              true
+            ],
+            "title": "Standalone Supported",
+            "type": "boolean"
+          },
+          "tenantOnlySupported": {
+            "description": "Service manager supports Tenant only Supported or not",
+            "examples": [
+              false
+            ],
+            "title": "Tenant Only Supported",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "Type of resource",
+            "examples": [
+              "/service-catalog/service-manager"
+            ],
+            "title": "type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date and time the service manager metadata was updated.",
+            "examples": [
+              "2021-04-29T07:50:30.400Z"
+            ],
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "workspaceOpModesSupported": {
+            "description": "Types of tenants supported by the service manager",
+            "examples": [
+              "ALL"
+            ],
+            "title": "Workspace Ops Mode Supported",
+            "type": "string"
+          },
+          "workspaceTransferSupported": {
+            "description": "Service Manager supports Workspace Transfer or not",
+            "examples": [
+              false
+            ],
+            "title": "Workspace Transfer Supported",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "name",
+          "standaloneSupported",
+          "mspSupported",
+          "honorUnprovisionResponse",
+          "tenantOnlySupported",
+          "createdAt",
+          "updatedAt",
+          "generation",
+          "type"
+        ],
+        "title": "ServiceManagerRead",
+        "type": "object"
+      },
+      "ServiceManagerReadList": {
+        "description": "List of service managers",
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "examples": [
+              1
+            ],
+            "title": "Count per page",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceManagerRead"
+            },
+            "title": "Service manager list",
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "examples": [
+              0
+            ],
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total count of items in the collection after applying the provided query parameters.",
+            "examples": [
+              10
+            ],
+            "title": "Total count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "title": "ServiceManagerReadList",
+        "type": "object"
+      },
+      "ServiceManagerResourceLink": {
+        "description": "A reference to a service manager resource.",
+        "properties": {
+          "id": {
+            "examples": [
+              "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "format": "uuid",
+            "title": "ServiceManagerId",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager resource",
+            "examples": [
+              "/service-catalog/v1/service-managers/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "title": "Resource URI",
+            "type": "string"
+          }
+        },
+        "title": "ServiceManagerResourceLink",
+        "type": "object"
+      },
+      "ServiceManagersForARegion": {
+        "description": "List of service managers for a specified region.",
+        "properties": {
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "examples": [
+              1
+            ],
+            "title": "generation",
+            "type": "integer"
+          },
+          "id": {
+            "description": "HPE GreenLake platform defined region where the service manager is available.",
+            "examples": [
+              "us-west"
+            ],
+            "title": "Region code",
+            "type": "string"
+          },
+          "regionName": {
+            "description": "The name of geographical region where the service manager is available.",
+            "examples": [
+              "US West"
+            ],
+            "title": "Region name",
+            "type": "string"
+          },
+          "serviceManagers": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceManagerRead"
+            },
+            "title": "Service managers",
+            "type": "array"
+          },
+          "type": {
+            "description": "Type of resource",
+            "examples": [
+              "/service-catalog/service-manager"
+            ],
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "regionName",
+          "serviceManagers",
+          "generation",
+          "type"
+        ],
+        "title": "ServiceManagersForARegion",
+        "type": "object"
+      },
+      "ServiceManagersPerRegion": {
+        "description": "List of service managers grouped by region.",
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "examples": [
+              1
+            ],
+            "title": "Count per page",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceManagersForARegion"
+            },
+            "title": "Service managers per region",
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "examples": [
+              0
+            ],
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items  that match the filter query, if one was provided in the request",
+            "examples": [
+              10
+            ],
+            "title": "Total count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "title": "ServiceManagersPerRegion",
+        "type": "object"
+      },
+      "UnauthorizedError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          }
+        ]
+      },
+      "ValidationError": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          }
+        ]
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "The HPE GreenLake for Service Catalog service offers a collection of RESTful APIs to fetch, provision service managers and to delete a service manager provisioned in a workspace.",
+    "license": {
+      "name": "HPE End User License Agreement",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Service Manager Management",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/service-catalog/v1/per-region-service-managers": {
+      "get": {
+        "description": "Retrieve a list of available service managers categorized by region.",
+        "operationId": "per_region_service_managers_v1",
+        "parameters": [
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Zero-based resource offset to start the response from.",
+              "minimum": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The maximum number of records to return.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "The maximum number of records to return.",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          {
+            "allowReserved": true,
+            "description": "Limit the resources operated on by an endpoint and return only the subset of resources that match the filter using an [OData V4](https://www.odata.org/documentation/) formatted filter string. Service manager by region can be filtered by `mspsupported` See examples of filtering options.",
+            "examples": {
+              "filter-example1": {
+                "$ref": "#/components/examples/filter-example1"
+              },
+              "filter-example2": {
+                "$ref": "#/components/examples/filter-example2"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagersPerRegion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestInvalidFilterOperation": {
+                    "summary": "Unsupported filter operation",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Unsupported filter operator, 'mspsupported we', refer example: '?filter=mspsupported eq true' for field filter"
+                    }
+                  },
+                  "BadRequestInvalidMspType": {
+                    "summary": "Invalid mspSupported filter type",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Query 'mspSupported' needs to be a boolean value, refer example: '?filter=mspsupported eq true' for field filter"
+                    }
+                  },
+                  "BadRequestLimit1": {
+                    "summary": "Bad request limit 0",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Ensure this value is greater than or equal to 1 for field limit"
+                    }
+                  },
+                  "BadRequestLimit2": {
+                    "summary": "Bad request limit 2001",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Ensure this value is less than or equal to 2000 for field limit"
+                    }
+                  },
+                  "BadRequestMissingMspSupportedFilter": {
+                    "summary": "Missing mspSupported filter operation",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Query 'mspsupported' not present in the filtered data, refer example: '?filter=mspsupported eq true' for field filter"
+                    }
+                  },
+                  "BadRequestOffset": {
+                    "summary": "Bad request offset -1",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Ensure this value is greater than or equal to 0 for field offset"
+                    }
+                  }
+                },
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Bad request error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "ExpiredToken": {
+                    "summary": "Expired token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, JWT verification failed for claims: Signature has expired."
+                    }
+                  },
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Error decoding token claims."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestLimit1": {
+                    "summary": "Internal server error 1",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Failed to get account_type for customer 035779c2-267f-46e2-a501-8cf808a6a36d"
+                    }
+                  },
+                  "BadRequestLimit2": {
+                    "summary": "Internal server error 2",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Fatal error while fetching specific service manager"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get service managers by region",
+        "tags": [
+          "Service Manager"
+        ]
+      }
+    },
+    "/service-catalog/v1/per-region-service-managers/{id}": {
+      "get": {
+        "description": "Retrieve a list of service managers deployed to a particular region.",
+        "operationId": "service_managers_for_a_region_v1",
+        "parameters": [
+          {
+            "description": "HPE GreenLake platform defined region code.",
+            "examples": {
+              "region-example1": {
+                "$ref": "#/components/examples/region-example1"
+              },
+              "region-example2": {
+                "$ref": "#/components/examples/region-example2"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "HPE GreenLake platform defined region code.",
+              "title": "ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagersForARegion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestError": {
+                    "summary": "Bad request error",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Bad Request."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Bad request error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "ExpiredToken": {
+                    "summary": "Expired token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, JWT verification failed for claims: Signature has expired."
+                    }
+                  },
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Error decoding token claims."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NotFound": {
+                    "summary": "Region not found",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Provided region not found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Not found error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestLimit1": {
+                    "summary": "Internal server error 1",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Failed to get account_type for customer 035779c2-267f-46e2-a501-8cf808a6a36d"
+                    }
+                  },
+                  "BadRequestLimit2": {
+                    "summary": "Internal server error 2",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Fatal error while fetching specific service manager"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get service managers deployed in a specific region.",
+        "tags": [
+          "Service Manager"
+        ]
+      }
+    },
+    "/service-catalog/v1/service-manager-provisions": {
+      "get": {
+        "description": "Retrieve a list of all service manager provision entries.",
+        "operationId": "get_service_manager_provisions_v1",
+        "parameters": [
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Zero-based resource offset to start the response from.",
+              "minimum": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The maximum number of records to return.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "The maximum number of records to return.",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "limit",
+              "type": "integer"
+            }
+          },
+          {
+            "allowReserved": true,
+            "examples": {
+              "provision-filter-example1": {
+                "$ref": "#/components/examples/provision-filter-example1"
+              },
+              "provision-filter-example2": {
+                "$ref": "#/components/examples/provision-filter-example2"
+              },
+              "provision-filter-example3": {
+                "$ref": "#/components/examples/provision-filter-example3"
+              },
+              "provision-filter-example4": {
+                "$ref": "#/components/examples/provision-filter-example4"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagerProvisionReadList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Cannot find valid KID in JWT token.."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequest": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Internal server error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get service manager provisions",
+        "tags": [
+          "Service Manager Provision"
+        ]
+      },
+      "post": {
+        "description": "Provision a service manager deployed in a region. Provisioning of a service manager is an async process and you can monitor the ` provisionStatus` field to know the current status.",
+        "operationId": "create_service_manager_provision",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceManagerProvisionCreateBase"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagerProvisionCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Location": {
+                "$ref": "#/components/headers/Location"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid service id": {
+                    "summary": "Invalid service manager id",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Unable to provision service-manager for given service-manager-id: 5aa0d7b7-5896-4a24-9090-71334a95db38 in region: us-west."
+                    }
+                  },
+                  "invalid uuid": {
+                    "summary": "Invalid UUID",
+                    "value": {
+                      "debugId": "61140ba0-c0b2-4b43-9972-28c5cb6e3a2c",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Value is not a valid uuid for field serviceManagerId"
+                    }
+                  },
+                  "missing region": {
+                    "summary": "Missing region",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Field required for field region"
+                    }
+                  },
+                  "missing service id": {
+                    "summary": "Missing service manager id",
+                    "value": {
+                      "debugId": "61140ba0-c0b2-4b43-9972-28c5cb6e3a2c",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Field required for field serviceManagerId"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Bad request error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Cannot find valid KID in JWT token.."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Conflict": {
+                    "summary": "Conflict",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GLCP_SERVICE_CATALOG_CONFLICT",
+                      "httpStatusCode": 409,
+                      "message": "Provision of the application is not allowed as application is already provisioned."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Conflict error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequest1": {
+                    "summary": "Internal server error 1",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Internal server error"
+                    }
+                  },
+                  "BadRequest2": {
+                    "summary": "Internal server error 2",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Fatal error during provision request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Provision a service manager in a given region",
+        "tags": [
+          "Service Manager Provision"
+        ]
+      }
+    },
+    "/service-catalog/v1/service-manager-provisions/{id}": {
+      "delete": {
+        "description": "Delete a service manager provision entry.",
+        "operationId": "delete_service_manager_provision_v1",
+        "parameters": [
+          {
+            "description": "Service manager provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service manager provision ID",
+              "title": "ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response when delete was triggered."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid service id": {
+                    "summary": "Invalid service manager id",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Unable to provision service-manager for given service-manager-id: 5aa0d7b7-5896-4a24-9090-71334a95db38 in region: us-west."
+                    }
+                  },
+                  "invalid uuid": {
+                    "summary": "Invalid uuid",
+                    "value": {
+                      "debugId": "61140ba0-c0b2-4b43-9972-28c5cb6e3a2c",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Value is not a valid uuid for field serviceManagerId"
+                    }
+                  },
+                  "missing region": {
+                    "summary": "Missing region",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Field required for field region"
+                    }
+                  },
+                  "missing service id": {
+                    "summary": "Missing service manager id",
+                    "value": {
+                      "debugId": "61140ba0-c0b2-4b43-9972-28c5cb6e3a2c",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Field required for field serviceManagerId"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Bad request error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Cannot find valid KID in JWT token.."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NotFound": {
+                    "summary": "Service manager not found",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "The provision details doesn't exists for application_customer_id: da9fd386ca5c11ee84dffa088147ac1b."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Not found error"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "PreConditionFailed": {
+                    "summary": "Pre-condition failed",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_PRECONDITION_FAILED",
+                      "httpStatusCode": 412,
+                      "message": "service-manager-provision has devices associated with it in the user's workspace."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "PreCondition Failed error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequest1": {
+                    "summary": "Internal server error 1",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Internal server error"
+                    }
+                  },
+                  "BadRequest2": {
+                    "summary": "Internal server error 2",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Fatal error during provision request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a service manager provision entry",
+        "tags": [
+          "Service Manager Provision"
+        ]
+      },
+      "get": {
+        "description": "Retrieve details for a specific service manager provision entry using the ID for the entry.",
+        "operationId": "get_service_manager_provision_v1",
+        "parameters": [
+          {
+            "description": "Service manager provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service manager provision ID",
+              "title": "ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagerProvisionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Cannot find valid KID in JWT token.."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NotFound": {
+                    "summary": "Service manager not found",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "The provision details doesn't exists for application_customer_id: da9fd386ca5c11ee84dffa088147ac1b."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Not found error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequest": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Internal server error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a specific service manager provision entry",
+        "tags": [
+          "Service Manager Provision"
+        ]
+      }
+    },
+    "/service-catalog/v1/service-managers": {
+      "get": {
+        "description": "Get a list of available service managers.",
+        "operationId": "get_service_managers_v1",
+        "parameters": [
+          {
+            "description": "Specify pagination offset",
+            "example": 0,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Zero-based resource offset to start the response from.",
+              "minimum": 0,
+              "title": "offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The maximum number of records to return.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "The maximum number of records to return.",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagerReadList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestLimit1": {
+                    "summary": "Bad request limit 0",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Ensure this value is greater than or equal to 1 for field limit"
+                    }
+                  },
+                  "BadRequestLimit2": {
+                    "summary": "Bad request limit 2001",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Ensure this value is less than or equal to 2000 for field limit"
+                    }
+                  },
+                  "BadRequestOffset": {
+                    "summary": "Bad request offset -1",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Ensure this value is greater than or equal to 0 for field offset"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Bad request error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "ExpiredToken": {
+                    "summary": "Expired token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, JWT verification failed for claims: Signature has expired."
+                    }
+                  },
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Error decoding token claims."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestLimit1": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Fatal error while fetching specific service manager"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get service managers",
+        "tags": [
+          "Service Manager"
+        ]
+      }
+    },
+    "/service-catalog/v1/service-managers/{id}": {
+      "get": {
+        "description": "Retrieve details for a specific service manager by passing the service manager ID.",
+        "operationId": "get_service_manager_v1",
+        "parameters": [
+          {
+            "description": "Service manager ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique identifier of the service manager.",
+              "format": "uuid",
+              "title": "ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceManagerRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestInvalidUuid": {
+                    "summary": "Invalid UUID",
+                    "value": {
+                      "debugId": "61140ba0-c0b2-4b43-9972-28c5cb6e3a2c",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Value is not a valid uuid for field id"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Bad request error"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "ExpiredToken": {
+                    "summary": "Expired token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, JWT verification failed for claims: Signature has expired."
+                    }
+                  },
+                  "InvalidToken": {
+                    "summary": "Invalid token",
+                    "value": {
+                      "debugId": "vjf4Vd27fnIA4jPmn_w4F3AsOrz9z3aB3bpvcl6AescakhonHCxE5g==",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "JWT verification failed, Error decoding token claims."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Unauthorized error"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Forbidden": {
+                    "summary": "Forbidden",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Not authorized."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Forbidden error"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NotFound": {
+                    "summary": "Region not found",
+                    "value": {
+                      "debugId": "935779c2-467f-46f2-a501-8cf908b6a36d",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Service-manager with id 0f5f41c4-7c35-41e8-afa3-302042b9911e is not present in workspace with id 035779c2-267f-46e2-a501-8cf808a6a36d"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Not found error"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "BadRequestLimit1": {
+                    "summary": "Internal server error",
+                    "value": {
+                      "debugId": "02dc7fdc-33c6-4e9f-9811-c2c76dba9113",
+                      "errorCode": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Fatal error while fetching specific service manager"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BaseError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a specific service manager",
+        "tags": [
+          "Service Manager"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "APIs to get service managers for the user's workspace.",
+      "name": "Service Manager",
+      "x-displayName": "Service Manager"
+    },
+    {
+      "description": "APIs to provision, un-provision and get the service manager provisioned.",
+      "name": "Service Manager Provision",
+      "x-displayName": "Service Manager Provision"
+    }
+  ]
+}

@@ -1,0 +1,899 @@
+{
+  "components": {
+    "examples": {
+      "NBUserExample": {
+        "value": {
+          "createdAt": "2025-09-10T18:22:24.530Z",
+          "firstName": "First",
+          "generation": 1,
+          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "lastLogin": "2025-09-10T18:22:24.530Z",
+          "lastName": "Last",
+          "resourceUri": "/identity/v1/users/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "type": "user",
+          "updatedAt": "2025-09-11T10:20:19.530Z",
+          "userStatus": "UNVERIFIED",
+          "username": "user@example.com"
+        }
+      },
+      "NBUserListExample": {
+        "value": {
+          "count": 1,
+          "items": [
+            {
+              "createdAt": "2025-09-10T18:22:24.530Z",
+              "firstName": "First",
+              "generation": 1,
+              "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "lastLogin": "2025-09-10T18:22:24.530Z",
+              "lastName": "Last",
+              "resourceUri": "/identity/v1/users/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "type": "user",
+              "updatedAt": "2025-09-11T10:20:19.530Z",
+              "userStatus": "UNVERIFIED",
+              "username": "user@example.com"
+            }
+          ],
+          "offset": 0,
+          "total": 1
+        }
+      }
+    },
+    "schemas": {
+      "Body_invite_user_to_account_identity_v1_users_post": {
+        "properties": {
+          "email": {
+            "description": "Email address of the invited user.",
+            "title": "Email",
+            "type": "string"
+          },
+          "sendWelcomeEmail": {
+            "default": true,
+            "description": "If enabled, a welcome email is sent to the invited user.",
+            "title": "Send welcome e-mail.",
+            "type": "boolean"
+          }
+        },
+        "title": "Body_invite_user_to_account_identity_v1_users_post",
+        "type": "object"
+      },
+      "Message": {
+        "properties": {
+          "message": {
+            "description": "Message",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "Message",
+        "type": "object"
+      },
+      "NBUser": {
+        "description": "User's information for north bound apis.",
+        "properties": {
+          "createdAt": {
+            "description": "The time the resource was created.",
+            "format": "date-time",
+            "title": "Resource created time",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "User's first name",
+            "title": "First Name",
+            "type": "string"
+          },
+          "generation": {
+            "default": 0,
+            "description": "Resource history of updates",
+            "title": "Generation",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Resource unique identification",
+            "format": "uuid",
+            "title": "Resource unique ID",
+            "type": "string"
+          },
+          "lastLogin": {
+            "description": "Time when this user had last logged in.",
+            "format": "date-time",
+            "title": "User Last Login time",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "User's last name",
+            "title": "Last Name",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Full path of the resource",
+            "title": "Resource Uri",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of data",
+            "title": "Type of data",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The time the resource was last updated.",
+            "format": "date-time",
+            "title": "Resource update time",
+            "type": "string"
+          },
+          "userStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              }
+            ],
+            "description": "On-Boarding Status of a user",
+            "title": "User Status"
+          },
+          "username": {
+            "description": "User's Email Address",
+            "format": "email",
+            "title": "Email Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "username"
+        ],
+        "title": "NBUser",
+        "type": "object"
+      },
+      "NBUserPaginate": {
+        "properties": {
+          "count": {
+            "description": "The number of returned items",
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of users",
+            "items": {
+              "$ref": "#/components/schemas/NBUser"
+            },
+            "title": "List of Users",
+            "type": "array"
+          },
+          "offset": {
+            "description": "Specifies the offset of the returned page",
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of items in the result set",
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "offset",
+          "count",
+          "total",
+          "items"
+        ],
+        "title": "NBUserPaginate",
+        "type": "object"
+      },
+      "NBUserPreferences": {
+        "properties": {
+          "idleTimeout": {
+            "default": 1800,
+            "description": "The user's session idle timeout in seconds.",
+            "title": "Idle timeout",
+            "type": "integer"
+          },
+          "language": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserLanguages"
+              }
+            ],
+            "default": "en",
+            "description": "The preferred language of the user.",
+            "title": "Language"
+          }
+        },
+        "title": "NBUserPreferences",
+        "type": "object"
+      },
+      "StandardErrorResponse": {
+        "description": "Standard GreenLake error response model",
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for this error used to help with troubleshooting.",
+            "title": "Debugid",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "HPE GreenLake standard error code",
+            "title": "Errorcode",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code",
+            "title": "Httpstatuscode",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "debugId",
+          "httpStatusCode",
+          "errorCode",
+          "message"
+        ],
+        "title": "StandardErrorResponse",
+        "type": "object"
+      },
+      "UserLanguages": {
+        "description": "An enumeration.",
+        "enum": [
+          "en",
+          "de",
+          "es",
+          "fr",
+          "jp",
+          "br",
+          "cn",
+          "ko",
+          "ru",
+          "it"
+        ],
+        "title": "UserLanguages"
+      },
+      "UserStatus": {
+        "description": "An enumeration.",
+        "enum": [
+          "UNVERIFIED",
+          "VERIFIED",
+          "BLOCKED",
+          "DELETE_IN_PROGRESS",
+          "DELETED",
+          "SUSPENDED"
+        ],
+        "title": "UserStatus"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "With the HPE GreenLake for Identity Management APIs you can view, update preferences, and remove users from your workspace.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE GreenLake for User Management API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/identity/v1/users": {
+      "get": {
+        "description": "Retrieve list of users with filtering, and pagination options. All users are returned when no filters are provided. \n**Note**: User view all permission is required to invoke this API. \nRate limit: 300 requests per minute per workspace, resulting in a `429` error if exceeded.\n",
+        "operationId": "get_users_identity_v1_users_get",
+        "parameters": [
+          {
+            "description": "Filter data using a subset of OData 4.0 and return only the subset of resources that match the filter.\n\nSupported classes and examples include:\n- **Types**: timestamp, string\n- **Comparison**: eq, ne, gt, ge, lt\n- **Logical Expressions**: and, or, not\n\nThe Get users API can be filtered by:\n- id\n- username\n- firstName\n- lastName\n- userStatus\n- createdAt\n- updatedAt\n- lastLogin\n\nuserStatus can be one of the following:\n- UNVERIFIED\n- VERIFIED\n- BLOCKED\n- DELETE_IN_PROGRESS\n- DELETED\n- SUSPENDED\n\n**Note**: The userStatus filter is case-sensitive.",
+            "examples": {
+              "FilterWithCreatedAt": {
+                "description": "Returns users created after 2020-09-21T14:19:09.769747",
+                "summary": "Filter with createdAt",
+                "value": "createdAt gt '2020-09-21T14:19:09.769747'"
+              },
+              "FilterWithEmail": {
+                "description": "Returns the user with a specific email.",
+                "summary": "Filter with email",
+                "value": "username eq 'user@example.com'"
+              },
+              "FilterWithFirstname": {
+                "description": "Returns the user with a specific first name.",
+                "summary": "Filter with first name",
+                "value": "firstName eq 'First'"
+              },
+              "FilterWithId": {
+                "description": "Returns the user with a specific ID.",
+                "summary": "Filter with id",
+                "value": "id eq '7600415a-8876-5722-9f3c-b0fd11112283'"
+              },
+              "FilterWithLastLogin": {
+                "description": "Returns users that logged in before 2020-09-21T14:19:09.769747",
+                "summary": "Filter with lastLogin",
+                "value": "lastLogin lt '2020-09-21T14:19:09.769747'"
+              },
+              "FilterWithLastname": {
+                "description": "Returns the user with a specific last name.",
+                "summary": "Filter with last name",
+                "value": "lastName eq 'Last'"
+              },
+              "FilterWithUpdatedAt": {
+                "description": "Returns users updated after 2020-09-21T14:19:09.769747",
+                "summary": "Filter with updatedAt",
+                "value": "updatedAt gt '2020-09-21T14:19:09.769747'"
+              },
+              "FilterWithUserStatus": {
+                "description": "Returns users that are not unverified.",
+                "summary": "Filter with userStatus",
+                "value": "userStatus ne 'UNVERIFIED'"
+              },
+              "FilterWithUsername": {
+                "description": "Returns the user with a specific username.",
+                "summary": "Filter with username",
+                "value": "username eq 'user@example.com'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "default": "",
+              "description": "Filter data using a subset of OData 4.0 and return only the subset of resources that match the filter.\n\nThe Get users API can be filtered by:\n- id\n- username\n- firstName\n- lastName\n- userStatus\n- createdAt\n- updatedAt\n- lastLogin",
+              "title": "Filter",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specify pagination offset. An offset argument defines how many pages to skip before returning results.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Specify pagination offset. An offset argument defines how many pages to skip before returning results.",
+              "minimum": 0,
+              "title": "Pagination offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specify the maximum number of entries per page. NOTE: The maximum value accepted is 600.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 300,
+              "description": "Specify the maximum number of entries per page. NOTE: The maximum value accepted is 600.",
+              "maximum": 600,
+              "minimum": 1,
+              "title": "Pagination limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NBWorkspaceList": {
+                    "$ref": "#/components/examples/NBUserListExample"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NBUserPaginate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get users",
+        "tags": [
+          "NB-Api-User"
+        ]
+      },
+      "post": {
+        "description": "Invite a user to a workspace.",
+        "operationId": "invite_user_to_account_identity_v1_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_invite_user_to_account_identity_v1_users_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Location": {
+                "description": "Endpoint to get the invited user resource",
+                "schema": {
+                  "title": "Location",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "451": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unavailable For Legal Reasons"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Invite a user",
+        "tags": [
+          "NB-Api-User"
+        ]
+      }
+    },
+    "/identity/v1/users/{id}": {
+      "delete": {
+        "description": "Delete a user from a workspace.",
+        "operationId": "disassociate_platform_user_identity_v1_users__id__delete",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user to be deleted.",
+            "example": "7600415a-8876-5722-9f3c-b0fd11112283",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique identifier of the user to be deleted.",
+              "format": "uuid",
+              "title": "User ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Disassociate a user",
+        "tags": [
+          "NB-Api-User"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a single user based on a given user ID.",
+        "operationId": "get_user_detailed_identity_v1_users__id__get",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique identifier of the user.",
+              "format": "uuid",
+              "title": "User ID",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "NBUser": {
+                    "$ref": "#/components/examples/NBUserExample"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NBUser"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get a user",
+        "tags": [
+          "NB-Api-User"
+        ]
+      },
+      "put": {
+        "description": "Update an existing user's preferences.",
+        "operationId": "update_user_preferences_identity_v1_users__id__put",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user to be updated.",
+            "example": "7600415a-8876-5722-9f3c-b0fd11112283",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique identifier of the user to be updated.",
+              "format": "uuid",
+              "title": "User ID",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NBUserPreferences"
+                  }
+                ],
+                "description": "User preferences to update",
+                "title": "User preferences"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Precondition Failed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update a user",
+        "tags": [
+          "NB-Api-User"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "User management operations specific to HPE GreenLake.",
+      "name": "NB-Api-User",
+      "x-displayName": "User Management"
+    }
+  ]
+}

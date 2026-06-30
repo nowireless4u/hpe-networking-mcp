@@ -1,0 +1,2577 @@
+{
+  "components": {
+    "examples": {
+      "roleAssignmentMultipleScopeAPIClientSubjectV1beta1": {
+        "summary": "API-client principal identifier",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "api-client:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/api-client"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/e54415a9-4f46-43c0-893e-67ec778c6c45"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeScopeGroupV1beta1": {
+        "summary": "Scope group scope",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/e54415a9-4f46-43c0-893e-67ec778c6c45"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeTenantGroupAndScopeGroupV1beta1": {
+        "summary": "Tenant group scope and Scope group scope",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/10e60abe-e51f-411d-9a92-e64119e28586",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/409596bf-11ba-4a6b-8080-3dda91ef55ea",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/0928bc56-d6be-4f2d-a396-5e8fb5be2bf3",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/0ff7ddb2-fa71-481a-8275-f7f22e90db3f"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeTenantGroupV1beta1": {
+        "summary": "Tenant group scope",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/e54415a9-4f46-43c0-893e-67ec778c6c45"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeUserGroupSubjectV1beta1": {
+        "summary": "User-group principal identifier",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user-group:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user-group"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/e54415a9-4f46-43c0-893e-67ec778c6c45",
+            ""
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeUserSubjectV1beta1": {
+        "summary": "User principal identifier",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/e54415a9-4f46-43c0-893e-67ec778c6c45"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeWorkspaceAndTenantGroupV1beta1": {
+        "summary": "Workspace scope and Tenant group scope",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/ab315a9e-4a76-44c0-93ea-7ec800c6c458",
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/e54415a9-4f46-43c0-893e-67ec778c6c45"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      },
+      "roleAssignmentMultipleScopeWorkspaceV1beta1": {
+        "summary": "Workspace scope",
+        "value": {
+          "createdAt": "2023-04-06T22:45:59.759943+00:00",
+          "generation": 1,
+          "id": "05f2523c-fe03-47fc-981b-9c4333a37b01",
+          "principal": "user:123981y2zxhiz1890",
+          "principalMetadata": {
+            "id": "123981y2zxhiz1890",
+            "type": "identity/user"
+          },
+          "role": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+          "roleMetadata": {
+            "id": "e54415a9-4f46-43c0-893e-67ec778c6c45",
+            "type": "authorization/role"
+          },
+          "scope": [
+            "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b60"
+          ],
+          "type": "authorization/role-assignment",
+          "updatedAt": "2023-04-06T22:45:59.759943+00:00"
+        }
+      }
+    },
+    "parameters": {
+      "LimitV1beta1": {
+        "description": "Total number of results to be returned",
+        "in": "query",
+        "name": "limit",
+        "schema": {
+          "default": 100,
+          "maximum": 200,
+          "type": "integer"
+        }
+      },
+      "Offset": {
+        "description": "Zero-based resource offset to start the response from",
+        "in": "query",
+        "name": "offset",
+        "schema": {
+          "default": 0,
+          "type": "integer"
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BadRequestError"
+            }
+          }
+        },
+        "description": "Bad request"
+      },
+      "Conflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "Conflict"
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenError"
+            }
+          }
+        },
+        "description": "Forbidden"
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalError"
+            }
+          }
+        },
+        "description": "Internal Server Error"
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "Not found"
+      },
+      "PreconditionFailed": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PreconditionFailedError"
+            }
+          }
+        },
+        "description": "Precondition Failed"
+      },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service Unavailable"
+      },
+      "TooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TooManyRequestsError"
+            }
+          }
+        },
+        "description": "Too Many Requests",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "description": "Limit of requests per period or created objects.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Remaining number of requests for the current period or objects to create.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "description": "Time remaining in the current period in seconds.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedError"
+            }
+          }
+        },
+        "description": "Unauthorized"
+      }
+    },
+    "schemas": {
+      "BadRequestError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.",
+            "example": "HPE_AUTHZ_INVALID_FORMAT",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "properties": {
+                "issues": {
+                  "description": "Array of bad request issues",
+                  "items": {
+                    "$ref": "#/components/schemas/BadRequestIssues"
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "description": "The type of error details.",
+                  "example": "hpe.greenlake.bad_request",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "issues"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "Invalid format of field \"foo\"",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "BadRequestIssues": {
+        "properties": {
+          "description": {
+            "description": "An elaborate description of the issue. This can be used by developers to understand how the failure can be addressed.",
+            "example": "Invalid format: field \"foo\" is incompatible",
+            "type": "string"
+          },
+          "source": {
+            "description": "The part of the request with an issue.",
+            "enum": [
+              "field",
+              "header",
+              "query.parameter"
+            ],
+            "example": "field",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The specific issue key.",
+            "example": "foo.bar",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "subject"
+        ],
+        "type": "object"
+      },
+      "ConflictError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.\n<dl>\n  <dt>HPE_GL_AUTHORIZATION_ALREADY_CREATED:</dt>\n  <dd>An exact copy of this resource already exists</dd>\n  <dt>HPE_GL_AUTHORIZATION_RESOURCE_CONFLICT:</dt>\n  <dd>An instance with same unique identifier(s) already exists</dd>\n</dl>\n",
+            "enum": [
+              "HPE_GL_AUTHORIZATION_ALREADY_CREATED",
+              "HPE_GL_AUTHORIZATION_RESOURCE_CONFLICT"
+            ],
+            "example": "HPE_GL_AUTHORIZATION_ALREADY_CREATED",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 409,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "There is a conflict with the current state of the target resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Count": {
+        "description": "The number of items returned.",
+        "example": 1,
+        "type": "integer"
+      },
+      "CreatedAt": {
+        "description": "The date and time the resource was created.",
+        "example": "2023-04-06T22:45:59.759943+00:00",
+        "format": "date-time",
+        "readOnly": true,
+        "type": "string"
+      },
+      "CustomKindV1beta1": {
+        "description": "Determines the type of role. Kind is immutable.",
+        "enum": [
+          "CUSTOM"
+        ],
+        "example": "CUSTOM",
+        "readOnly": true,
+        "type": "string"
+      },
+      "CustomRoleCommonV1beta1": {
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "description": {
+            "example": "Storage Limited Admin",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/428466023dbe11eeb7837e8589f701ca/regions/default/providers/authorization/custom-roles/123e4567-e89b-12d3-a456-426614174002",
+            "readOnly": true,
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CustomKindV1beta1",
+            "description": "Specifies the type of role"
+          },
+          "name": {
+            "description": "Friendly name to be displayed to users. Allowed characters are [a-z A-Z 0-9 -(dash) (space)].",
+            "example": "Storage Limited Admin",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "releaseStage": {
+            "description": "Empty string for `CUSTOM` roles.",
+            "enum": [
+              "ALPHA",
+              "BETA",
+              "STABLE",
+              "DEPRECATED"
+            ],
+            "example": "",
+            "readOnly": true,
+            "type": "string"
+          },
+          "serviceMetadata": {
+            "$ref": "#/components/schemas/ServiceMetadata"
+          },
+          "slug": {
+            "description": "Defined only for `PREDEFINED` roles.",
+            "example": "",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "authorization/role"
+            ],
+            "example": "authorization/role",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "generation",
+          "grn",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "CustomRoleV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/UUID"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/CustomRoleCommonV1beta1"
+          }
+        ]
+      },
+      "DebugId": {
+        "description": "A unique identifier for the instance of this error.",
+        "example": "12312-123123-123123-1231212",
+        "type": "string"
+      },
+      "ErrorDetailScopeAdd": {
+        "properties": {
+          "issues": {
+            "description": "Details about specific issues related to the scope being added",
+            "items": {
+              "properties": {
+                "description": {
+                  "description": "A detailed message about the error",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "Indicates the source of the error",
+                  "type": "string"
+                },
+                "subject": {
+                  "description": "The specific value that caused the error",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "description": "Present if type is hpe.greenlake.metadata.",
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "source": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "ForbiddenError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.",
+            "example": "HPE_AUTHZ_BLOCKED_USER",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 403,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "Action is blocked for this user",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Generation": {
+        "example": 1,
+        "format": "int64",
+        "readOnly": true,
+        "type": "integer"
+      },
+      "InternalError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings.",
+            "example": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/RetryData"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 500,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "The server encountered an unexpected condition which prevented it from fulfilling the request.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "KindV1beta1": {
+        "description": "Determines the type of role. Kind is immutable.",
+        "enum": [
+          "CUSTOM",
+          "PREDEFINED"
+        ],
+        "example": "CUSTOM",
+        "type": "string"
+      },
+      "NotFoundError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.",
+            "example": "HPE_GL_ERROR_NOT_FOUND",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 404,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "The resource was not found",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Offset": {
+        "description": "The zero-based resource offset.",
+        "example": 0,
+        "type": "integer"
+      },
+      "PreconditionFailedError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.",
+            "example": "HPE_GL_AUTHORIZATION_ALREADY_CREATED",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional data on why the request is bad.",
+            "items": {
+              "properties": {
+                "issues": {
+                  "description": "Array of precondition issues",
+                  "items": {
+                    "$ref": "#/components/schemas/PreconditionFailedIssues"
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "description": "The type of error details.",
+                  "example": "hpe.greenlake.precondition_failed",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "issues"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 412,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "Precondition Failed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "PreconditionFailedIssues": {
+        "properties": {
+          "description": {
+            "description": "An elaborate description of how the precondition failed. This can be used by developers to understand how the failure can be fixed.",
+            "example": "Scope Group used in role assignment.",
+            "type": "string"
+          },
+          "source": {
+            "description": "A service specific type.",
+            "example": "hpe.greenlake.organizations.verification",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The specific issue key.",
+            "example": "Not allowed to delete object in use",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "subject"
+        ],
+        "type": "object"
+      },
+      "RetryData": {
+        "properties": {
+          "retryAfterSeconds": {
+            "description": "Seconds to wait before retrying.",
+            "example": 30,
+            "type": "integer"
+          },
+          "type": {
+            "description": "The type of error details.",
+            "example": "hpe.greenlake.retry_info",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "retryAfterSeconds"
+        ],
+        "type": "object"
+      },
+      "RoleAssignmentGetV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/UUID"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/RoleAssignmentV1beta1Common"
+          },
+          {
+            "properties": {
+              "source": {
+                "$ref": "#/components/schemas/Source"
+              }
+            },
+            "type": "object"
+          }
+        ]
+      },
+      "RoleAssignmentListV1beta1": {
+        "properties": {
+          "count": {
+            "$ref": "#/components/schemas/Count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RoleAssignmentGetV1beta1"
+            },
+            "maxItems": 200,
+            "type": "array"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Total"
+          }
+        },
+        "required": [
+          "items",
+          "offset",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "RoleAssignmentV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/UUID"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/RoleAssignmentV1beta1Common"
+          }
+        ]
+      },
+      "RoleAssignmentV1beta1Common": {
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
+          "principal": {
+            "description": "The security principal identifier `{type}:{id}`. A principal is the entity that receives a role. The supported types are `user`, `user-group`, and `api-client`.",
+            "example": "user:123981y2zxhiz1890",
+            "type": "string"
+          },
+          "principalMetadata": {
+            "allOf": [
+              {
+                "properties": {
+                  "id": {
+                    "description": "The unique identifier of the principal.",
+                    "example": "123981y2zxhiz1890",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "The type of the principal.",
+                    "enum": [
+                      "identity/user",
+                      "identity/user-group",
+                      "identity/api-client"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ],
+                "type": "object"
+              }
+            ],
+            "readOnly": true
+          },
+          "role": {
+            "description": "The unique role identifier in GRN syntax. A role is a collection of permissions defining what actions the principal can perform.",
+            "example": "grn:glp/providers/authorization/roles/storageservices.LimitedAdmin",
+            "type": "string"
+          },
+          "roleMetadata": {
+            "allOf": [
+              {
+                "properties": {
+                  "id": {
+                    "description": "The unique identifier of the role.",
+                    "example": "44f0443c-fd03-47fc-981b-9c4333a37b44",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "The type of the role.",
+                    "example": "authorization/role",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "type"
+                ],
+                "type": "object"
+              }
+            ],
+            "readOnly": true
+          },
+          "scope": {
+            "description": "Fully qualified scope string in GRN syntax. A scope is the specific resource or set of resources to which the role and its permissions apply. The scopes can be at the workspace level (limited to 1), tenant groups (up to 10), and scope groups (up to 10), and can be combined: `Workspace + Tenant Group` or `Tenant Group + Scope Group`.",
+            "example": [
+              "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/msp/tenant-groups/d88d38c9-8cf7-4ab8-a808-126b47bb787d",
+              "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/21e582d3-fb24-4162-9fca-350defe24d3c"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "enum": [
+              "authorization/role-assignment"
+            ],
+            "example": "authorization/role-assignment",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          }
+        },
+        "required": [
+          "type",
+          "principal",
+          "scope",
+          "role",
+          "principalMetadata",
+          "roleMetadata",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RoleAssignmentV1beta1Update": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "description": "The unique identifier of the object. Immutable.",
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/RoleAssignmentV1beta1Common"
+          }
+        ]
+      },
+      "RoleCommonV1beta1": {
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "description": {
+            "example": "Storage Limited Admin",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/428466023dbe11eeb7837e8589f701ca/regions/default/providers/authorization/custom-roles/123e4567-e89b-12d3-a456-426614174002",
+            "readOnly": true,
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/KindV1beta1",
+            "description": "Specifies the type of role"
+          },
+          "name": {
+            "description": "Friendly name to be displayed to users. Allowed characters are [a-z A-Z 0-9 -(dash) (space)].",
+            "example": "Storage Limited Admin",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "releaseStage": {
+            "description": "It is only defined for `PREDEFINED` roles.",
+            "enum": [
+              "ALPHA",
+              "BETA",
+              "STABLE",
+              "DEPRECATED"
+            ],
+            "example": "",
+            "readOnly": true,
+            "type": "string"
+          },
+          "serviceMetadata": {
+            "$ref": "#/components/schemas/ServiceMetadata"
+          },
+          "slug": {
+            "description": "Empty for `CUSTOM` roles. Unique name for `PREDEFINED` roles and the pattern is provider name followed by the actual name (`<providerName>.<name>`).",
+            "example": "",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "authorization/role"
+            ],
+            "example": "authorization/role",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "kind",
+          "generation",
+          "grn",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RoleGetV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/UUID"
+              },
+              "source": {
+                "description": "Source of the role.",
+                "enum": [
+                  "LOCAL",
+                  "EXTERNAL"
+                ],
+                "example": "LOCAL",
+                "readOnly": true,
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "source"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/RoleCommonV1beta1"
+          }
+        ]
+      },
+      "RoleUpdateV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "description": "The unique identifier of the object. Immutable.",
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/CustomRoleCommonV1beta1"
+          }
+        ]
+      },
+      "ScopeGroupCommonV1beta1": {
+        "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "description": {
+            "description": "A short description of the scope group.",
+            "example": "This group gives access to resource \"host/123\"",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
+          "grn": {
+            "description": "The HPE GreenLake Resource Notation (GRN) is the standardized, URI-compatible syntax used to define and specify this scope within the HPE GreenLake.",
+            "example": "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b60/regions/default/providers/authorization/scope-groups/497f6eca-6276-4993-bfeb-53cbbbba6f08",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Must be unique within the context it is being created (organization or organization + workspace). Most ASCII characters are allowed, except [`&`, `<`, `>`, `|`, `:`, `,`] and leading or trailing space.",
+            "example": "sg1",
+            "maxLength": 150,
+            "type": "string"
+          },
+          "serviceMetadata": {
+            "$ref": "#/components/schemas/ServiceMetadata"
+          },
+          "type": {
+            "enum": [
+              "authorization/scope-group"
+            ],
+            "example": "authorization/scope-group",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          }
+        },
+        "required": [
+          "type",
+          "name"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupListV1beta1": {
+        "properties": {
+          "count": {
+            "$ref": "#/components/schemas/Count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupV1beta1"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Total"
+          }
+        },
+        "required": [
+          "items",
+          "offset",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopeAddErrorsV1beta1": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings.",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetailScopeAdd"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopeIdsAddV1beta1": {
+        "properties": {
+          "allScopes": {
+            "example": false,
+            "type": "boolean"
+          },
+          "description": {
+            "example": "host 123",
+            "type": "string"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b60/regions/us-east-2/providers/bmaas/host/123",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "region": {
+            "example": "us-east-2",
+            "type": "string"
+          },
+          "resourceTypeDisplayName": {
+            "example": "Hosts",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "authorization/scope-group/scope"
+            ],
+            "example": "authorization/scope-group/scope",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "grn",
+          "description",
+          "region",
+          "allScopes",
+          "resourceTypeDisplayName"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopeIdsErrorsV1beta1": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings.",
+            "example": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 500,
+            "type": "integer"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "The server encountered an unexpected condition which prevented it from fulfilling the request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopeIdsV1beta1": {
+        "properties": {
+          "id": {
+            "example": "e7b8f8e1-9ad5-432d-a858-499d9f279647",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesAddResponseV1beta1": {
+        "properties": {
+          "errorCount": {
+            "description": "How many items were not processed and resulted in errors",
+            "example": 2,
+            "type": "integer"
+          },
+          "errors": {
+            "example": [
+              {
+                "debugId": "",
+                "errorCode": "HPE_GL_AUTHORIZATION_RESOURCE_CONFLICT",
+                "errorDetails": [
+                  {
+                    "metadata": [
+                      {
+                        "description": "scope 2 description",
+                        "grn": "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/us-east-2/providers/bmaas/host/456"
+                      }
+                    ],
+                    "source": "hpe.greenlake.authorization",
+                    "type": "hpe.greenlake.metadata"
+                  }
+                ],
+                "httpStatusCode": 409,
+                "message": "Scope already exists in scope group"
+              },
+              {
+                "debugId": "",
+                "errorCode": "HPE_GLERROR_BAD_REQUEST",
+                "errorDetails": [
+                  {
+                    "issues": [
+                      {
+                        "description": "field \"items[0].description\" must not be empty",
+                        "source": "field",
+                        "subject": "items[0].description"
+                      },
+                      {
+                        "description": "field \"items[0].grn\" with value \"\" must be a GRN: missing GRN root tag",
+                        "source": "field",
+                        "subject": "items[0].grn"
+                      }
+                    ],
+                    "type": "hpe.greenlake.bad_request"
+                  }
+                ],
+                "httpStatusCode": 400,
+                "message": "field \\\"items[0].description\\\" must not be empty: field \\\"items[0].grn\\\" with value \\\"\\\" must be a GRN: missing GRN root tag"
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopeAddErrorsV1beta1"
+            },
+            "type": "array"
+          },
+          "successCount": {
+            "description": "How many items were processed successfully",
+            "example": 1,
+            "type": "integer"
+          },
+          "successes": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopeIdsAddV1beta1"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "successCount",
+          "errorCount",
+          "successes",
+          "errors"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesAddV1beta1": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopesV1beta1"
+            },
+            "maxItems": 500,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesDeleteResponseV1beta1": {
+        "properties": {
+          "errorCount": {
+            "description": "How many items were not processed and resulted in errors",
+            "example": 1,
+            "type": "integer"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopeIdsErrorsV1beta1"
+            },
+            "type": "array"
+          },
+          "successCount": {
+            "description": "How many items were processed successfully",
+            "example": 1,
+            "type": "integer"
+          },
+          "successes": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopeIdsV1beta1"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "successCount",
+          "errorCount",
+          "successes",
+          "errors"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesDeleteV1beta1": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopeIdsV1beta1"
+            },
+            "maxItems": 500,
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesGetV1beta1": {
+        "properties": {
+          "allScopes": {
+            "example": false,
+            "readOnly": true,
+            "type": "boolean"
+          },
+          "description": {
+            "example": "host 123",
+            "type": "string"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b60/regions/us-east-2/providers/bmaas/host/123",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "region": {
+            "example": "us-east-2",
+            "readOnly": true,
+            "type": "string"
+          },
+          "resourceTypeDisplayName": {
+            "example": "Hosts",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "authorization/scope-group/scope"
+            ],
+            "example": "authorization/scope-group/scope",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "grn",
+          "description",
+          "region",
+          "allScopes",
+          "resourceTypeDisplayName"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesListV1beta1": {
+        "properties": {
+          "count": {
+            "$ref": "#/components/schemas/Count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScopeGroupScopesGetV1beta1"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Total"
+          }
+        },
+        "required": [
+          "items",
+          "offset",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupScopesV1beta1": {
+        "properties": {
+          "allScopes": {
+            "example": false,
+            "readOnly": true,
+            "type": "boolean"
+          },
+          "description": {
+            "example": "host 123",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b60/regions/us-east-2/providers/bmaas/host/123",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "region": {
+            "example": "us-east-2",
+            "readOnly": true,
+            "type": "string"
+          },
+          "resourceTypeDisplayName": {
+            "example": "Hosts",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "authorization/scope-group/scope"
+            ],
+            "example": "authorization/scope-group/scope",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "grn",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ScopeGroupUpdateV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "description": "The unique identifier of the object. Immutable",
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/ScopeGroupCommonV1beta1"
+          }
+        ]
+      },
+      "ScopeGroupV1beta1": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/UUID"
+              }
+            },
+            "required": [
+              "id"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/ScopeGroupCommonV1beta1"
+          }
+        ]
+      },
+      "ServiceMetadata": {
+        "allOf": [
+          {
+            "properties": {
+              "id": {
+                "description": "It can be empty if the object was just created.",
+                "example": "44f0443c-fd03-47fc-981b-9c4333a37b44",
+                "type": "string"
+              },
+              "type": {
+                "description": "It can be empty if the object was just created.",
+                "enum": [
+                  "/service-catalog/service-manager",
+                  "/service-catalog/service-offer"
+                ],
+                "example": "/service-catalog/service-offer",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "type"
+            ],
+            "type": "object"
+          }
+        ],
+        "readOnly": true
+      },
+      "ServiceUnavailableError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.",
+            "example": "HPE_GL_ERROR_SERVICE_UNAVAILABLE",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/RetryData"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 503,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "The server is not ready to handle the request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Source": {
+        "description": "The location where the configuration item is defined and managed\n<dl>\n  <dt>LOCAL:</dt>\n  <dd>The object is managed in the current workspace.</dd>\n  <dt>EXTERNAL:</dt>\n  <dd>The object is managed in another workspace or organization and projected into the current context.</dd>\n</dl>\n",
+        "enum": [
+          "LOCAL",
+          "EXTERNAL"
+        ],
+        "type": "string"
+      },
+      "TooManyRequestsError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings.",
+            "example": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 429,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "User sent too many requests",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Total": {
+        "description": "The total number of items in the collection that match the filter query, if one was provided in the request.",
+        "example": 1,
+        "type": "integer"
+      },
+      "UUID": {
+        "description": "The unique identifier of the object.",
+        "format": "uuid",
+        "readOnly": true,
+        "type": "string"
+      },
+      "UnauthorizedError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error.",
+            "example": "HPE_AUTHZ_EXPIRED_TOKEN",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 401,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "Authentication error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UpdatedAt": {
+        "description": "The date and time the resource was last updated.",
+        "example": "2023-04-06T22:45:59.759943+00:00",
+        "format": "date-time",
+        "readOnly": true,
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "The HPE GreenLake for Authorization API provides a unified way to manage the authorization function for HPE GreenLake cloud.",
+    "license": {
+      "name": "HPE End User License Agreement",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE GreenLake for Authorization API",
+    "version": "1.0.0-beta"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/authorization/v1beta1/role-assignments": {
+      "get": {
+        "description": "Retrieves role assignments by applying [OData 4.0](https://www.odata.org/documentation/) filters. Use the `filter` parameter to provide a filter string. Supports `in` and `and` operators on `role`, `scope` and `principal` attributes. <br>*Example Request:* <br>`/authorization/v1beta1/role-assignments?filter=role in ('grn:glp/providers/authorization/roles/storageservices.LimitedAdmin') and principal in ('user:123981y2zxhiz1890')`\n<br><br>**Note:**\n<br>- **No duplicate attributes in OData filter**: Each attribute (`role`, `scope`, `principal`) can only appear once in the OData filter expression. Multiple occurrences will result in a `400 Bad Request` error.\n<br>- **Supported operators**: Only the `in` and `and` operators are supported.\n",
+        "operationId": "getRoleAssignmentsV1beta1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/LimitV1beta1"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "description": "The filter query parameter is used to filter the set of resources returned in a collection-level GET. The returned set of resources matches the criteria in the filter query parameter. <br><br>Supports `in` and `and` operators on `role`, `scope` and `principal` attributes.\n",
+            "example": "role in ('grn:glp/providers/authorization/roles/storageservices.LimitedAdmin') and principal in ('user:123981y2zxhiz1890')",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleAssignmentListV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Retrieve all role assignments",
+        "tags": [
+          "Role Assignments"
+        ]
+      },
+      "post": {
+        "description": "Create a role assignment.\n<br><br>By creating a role assignment, you grant access to resources. Role assignments allow for controlled management of permissions and responsibilities.\n<br><br>**Note:** For assistance finding the `principal`, `scope`, and `role` identifiers, see the [developer guide](https://developer.greenlake.hpe.com/docs/greenlake/services/authorization/guide#making-it-all-work).",
+        "operationId": "createRoleAssignmentV1beta1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssignmentV1beta1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "apiClientSubject": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeAPIClientSubjectV1beta1"
+                  },
+                  "scopeGroupScope": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeScopeGroupV1beta1"
+                  },
+                  "tenantGroupAndScopeGroup": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeTenantGroupAndScopeGroupV1beta1"
+                  },
+                  "tenantGroupScope": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeTenantGroupV1beta1"
+                  },
+                  "userGroupSubject": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeUserGroupSubjectV1beta1"
+                  },
+                  "userSubject": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeUserSubjectV1beta1"
+                  },
+                  "workspaceAndTenantGroup": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeWorkspaceAndTenantGroupV1beta1"
+                  },
+                  "workspaceScope": {
+                    "$ref": "#/components/examples/roleAssignmentMultipleScopeWorkspaceV1beta1"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/RoleAssignmentV1beta1"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "URL to the newly created resource.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreconditionFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Create a role assignment",
+        "tags": [
+          "Role Assignments"
+        ]
+      }
+    },
+    "/authorization/v1beta1/role-assignments/{id}": {
+      "delete": {
+        "operationId": "deleteRoleAssignmentV1beta1",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Delete a role assignment instance by ID",
+        "tags": [
+          "Role Assignments"
+        ]
+      },
+      "get": {
+        "operationId": "getRoleAssignmentV1beta1",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleAssignmentGetV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Retrieve a role assignment instance by ID",
+        "tags": [
+          "Role Assignments"
+        ]
+      },
+      "parameters": [
+        {
+          "description": "The role assignment instance identifier. The ID can be found in the response body of POST `/authorization/v1beta1/role-assignments`.",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ],
+      "put": {
+        "description": "Allows updating scopes of an existing role assignment. Request body must contain `id`, `principal` and `role` attributes even though they are immutable. <br><br> The `id` can be found in the response body of POST `/authorization/v1beta1/role-assignments`. <br><br> **Note:** For assistance finding the `principal`, `scope`, and `role` identifiers, see the [developer guide](https://developer.greenlake.hpe.com/docs/greenlake/services/authorization/guide#making-it-all-work).\n",
+        "operationId": "updateRoleAssignmentV1beta1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleAssignmentV1beta1Update"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleAssignmentV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Update a role assignment instance by ID",
+        "tags": [
+          "Role Assignments"
+        ]
+      }
+    },
+    "/authorization/v1beta1/scope-groups": {
+      "get": {
+        "description": "Retrieves scope groups by applying [OData 4.0](https://www.odata.org/documentation/) filters. Use the `filter` parameter to provide a filter string. Supports `in` operator on `serviceMetadata/id`, `name` or `grn` attributes. <br>*Example Request:* <br>`/authorization/v1beta1/scope-groups?filter=grn in ('grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/123')`\n<br><br>**Note:**\n<br>- **No duplicate attributes in OData filter**: Each attribute (`serviceMetadata/id`, `name`, `grn`) can only appear once in the OData filter expression. Multiple occurrences will result in a `400 Bad Request` error.\n<br>- **Only one attribute in OData filter**: Only one attribute (`serviceMetadata/id`, `name` or `grn`) can be used at a time, otherwise it will result in a `400 Bad Request` error.\n<br>- **Supported operators**: Only `in` operator is supported.\n",
+        "operationId": "getScopeGroupsV1beta1",
+        "parameters": [
+          {
+            "description": "Total number of results to be returned. If the parameter is not provided, it will return all records found.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 0,
+              "maximum": 200,
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          },
+          {
+            "description": "OData style filter for filtering scope groups. Supports `in` operator on `serviceMetadata/id`, `name` or `grn` attributes.\n",
+            "example": "grn in ('grn:glp/workspaces/05f0523c-fd03-47fc-981b-9c4333a37b70/regions/default/providers/authorization/scope-groups/123')",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sort results by a single attribute and allow setting a sorting direction as ascending (asc) or descending (desc). Sorting is valid only for `name` attribute. Default sorting direction if omitted is ascending.\n",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "example": "name desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupListV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Retrieve all scope groups",
+        "tags": [
+          "Scope Groups"
+        ]
+      },
+      "post": {
+        "description": "A scope group is a collection of scopes that can be assigned to a role assignment. This allows a single role assignment to cover multiple scopes. <br><br>**Note:** <ul> <li>\nA scope group cannot contain another scope group (no nesting).\nOnce created, a scope group will belong to a organization/workspace based on the caller context.\nThe returned `grn` attribute will include this context and can be used as a global unique identifier.</li>\n</ul>\n",
+        "operationId": "createScopeGroupV1beta1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeGroupV1beta1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupV1beta1"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "URL to the newly created resource.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Create a scope group",
+        "tags": [
+          "Scope Groups"
+        ]
+      }
+    },
+    "/authorization/v1beta1/scope-groups/{id}": {
+      "delete": {
+        "operationId": "deleteScopeGroupV1beta1",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreconditionFailed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Delete a scope group instance by ID",
+        "tags": [
+          "Scope Groups"
+        ]
+      },
+      "get": {
+        "operationId": "getScopeGroupV1beta1",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Retrieve a scope group instance by ID",
+        "tags": [
+          "Scope Groups"
+        ]
+      },
+      "parameters": [
+        {
+          "description": "The scope group instance identifier. The ID can be found in the response body of POST `/authorization/v1beta1/scope-groups`.",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ],
+      "put": {
+        "description": "Request body must contain `id` attribute even though it is immutable.\n",
+        "operationId": "updateScopeGroupV1beta1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeGroupUpdateV1beta1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Update a scope group instance by ID",
+        "tags": [
+          "Scope Groups"
+        ]
+      }
+    },
+    "/authorization/v1beta1/scope-groups/{id}/scopes": {
+      "get": {
+        "description": "Retrieves a list of scopes for a specific scope group. Results are sorted by description and GRN alphabetically by default.",
+        "operationId": "getScopeGroupScopesV1beta1",
+        "parameters": [
+          {
+            "description": "Total number of results to be returned. If the parameter is not provided, it will return all records found.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 0,
+              "maximum": 500,
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupScopesListV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Retrieve the scope group scopes list",
+        "tags": [
+          "Scope Groups"
+        ]
+      },
+      "parameters": [
+        {
+          "description": "The scope group instance identifier. The ID can be found in the response body of POST `/authorization/v1beta1/scope-groups`.",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ]
+    },
+    "/authorization/v1beta1/scope-groups/{id}/scopes/batch": {
+      "parameters": [
+        {
+          "description": "The scope group instance identifier. ID can be found in the response body of POST `/authorization/v1beta1/scope-groups`.",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ],
+      "post": {
+        "description": "Add new scopes to an existing scope group. This operation is synchronous and non-atomic.",
+        "operationId": "addScopeGroupScopesV1beta1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeGroupScopesAddV1beta1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupScopesAddResponseV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Add scopes to a scope group",
+        "tags": [
+          "Scope Groups"
+        ]
+      }
+    },
+    "/authorization/v1beta1/scope-groups/{id}/scopes/bulk": {
+      "delete": {
+        "description": "Delete scopes from an existing scope group. The scope group ID can be found in the response body of GET `/authorization/v1beta1/scope-groups` while the scope ID to be deleted can be found in the response body of GET `/authorization/v1beta1/scope-groups/{id}/scopes`. This operation is synchronous and non-atomic.",
+        "operationId": "deleteScopeGroupScopesV1beta1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeGroupScopesDeleteV1beta1"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeGroupScopesDeleteResponseV1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Delete scopes from a scope group",
+        "tags": [
+          "Scope Groups"
+        ]
+      },
+      "parameters": [
+        {
+          "description": "The scope group instance identifier. ID can be found in the response body of POST `/authorization/v1beta1/scope-groups`.",
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ]
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Role assignments are composed of three pieces (principal, role, and scope). Role assigments associate a user, group, or service (principal) with a specific role (along with its permissions) at a particular scope (a resource or group of resources) to grant them access and specify their responsibilities within HPE GreenLake.\n<br><br>**Note:** There is a maximum limit of 50 role assignments per user per workspace. <br><br>**Note:** Users can manage roles and retrieve a role identifier (ID / GRN) using the Web Interface. Once the role ID / GRN is retrieved then a role assignment can be created using the API described below.",
+      "name": "Role Assignments"
+    },
+    {
+      "description": "A scope group is composed of scopes and allows a single role assignment against multiple scopes.\n<br><br> Known limitations <ul> <li>There is a max limit of 500 scopes per scope group.</li> <li>There is a max limit of 500 scope groups per workspace.</li> </ul>",
+      "name": "Scope Groups"
+    }
+  ]
+}

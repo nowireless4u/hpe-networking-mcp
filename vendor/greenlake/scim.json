@@ -1,0 +1,2224 @@
+{
+  "components": {
+    "schemas": {
+      "CreateGroup": {
+        "properties": {
+          "displayName": {
+            "description": "The display name of the user group.",
+            "example": "Demo Group",
+            "maxLength": 201,
+            "type": "string"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource.\nEach URI represents a schema that determines which properties can be included and how they should be formatted.\n",
+            "example": [
+              "urn:ietf:params:scim:schemas:core:2.0:Group",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group"
+            ],
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:schemas:core:2.0:Group",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "required": [
+              "urn:ietf:params:scim:schemas:core:2.0:Group"
+            ],
+            "type": "array"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group": {
+            "$ref": "#/components/schemas/GroupExtension"
+          }
+        },
+        "required": [
+          "displayName",
+          "schemas"
+        ],
+        "type": "object"
+      },
+      "CreateUser": {
+        "properties": {
+          "active": {
+            "default": false,
+            "description": "Indicates the current status of the user account. `true` indicates that the user is active.",
+            "readOnly": false,
+            "type": "boolean"
+          },
+          "displayName": {
+            "description": "The display name of a user.",
+            "example": "Barbara Jensen",
+            "maxLength": 201,
+            "type": "string"
+          },
+          "emails": {
+            "items": {
+              "$ref": "#/components/schemas/Email"
+            },
+            "type": "array"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource. Each URI represents a schema that determines which properties can be included and how they should be formatted.",
+            "example": [
+              "urn:ietf:params:scim:schemas:core:2.0:User",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User"
+            ],
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:schemas:core:2.0:User",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:posix:User"
+              ],
+              "type": "string"
+            },
+            "minItems": 2,
+            "type": "array"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User": {
+            "$ref": "#/components/schemas/UserCreateExtension"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:posix:User": {
+            "$ref": "#/components/schemas/PosixUserExtension"
+          },
+          "userName": {
+            "description": "Must be the same as the primary email address and must be a valid email address. This serves as the unique identifier for the user.",
+            "example": "abc@xyz.com",
+            "maxLength": 100,
+            "minLength": 5,
+            "type": "string"
+          }
+        },
+        "required": [
+          "userName",
+          "name",
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User",
+          "schemas"
+        ],
+        "type": "object"
+      },
+      "Email": {
+        "properties": {
+          "primary": {
+            "description": "A boolean declaring if the email is the primary email or not. The first email provided is considered the primary email.",
+            "example": true,
+            "type": "boolean"
+          },
+          "value": {
+            "description": "The email address of the user. Must be a valid email address.",
+            "example": "abc@xyz.com",
+            "maxLength": 100,
+            "minLength": 5,
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "detail": {
+            "description": "Additional detailed information about the error.",
+            "example": "Request is unparsable, syntactically incorrect, or violates schema.",
+            "type": "string"
+          },
+          "schemas": {
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:api:messages:2.0:Error",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Error"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scimType": {
+            "description": "A machine-readable error type that indicates the nature of the error.\nThis is a SCIM-specific error type.\n",
+            "example": "invalidSyntax",
+            "type": "string"
+          },
+          "status": {
+            "description": "The HTTP status code",
+            "example": "400",
+            "type": "string"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Error": {
+            "$ref": "#/components/schemas/GLPErrorExtension"
+          }
+        },
+        "required": [
+          "schemas",
+          "status",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "GLPErrorExtension": {
+        "description": "The HPE GreenLake error extension defines additional attributes and structure\nfor error responses in the SCIM API.\n",
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error. This can be used to help with troubleshooting.",
+            "example": "a1f13ec0-8391-46ed-8517-f13ef13da145",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error.",
+            "example": "HPE_GL_IDENTITY_BAD_REQUEST",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "http error code",
+            "example": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "example": "Bad request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "GroupExtension": {
+        "description": "The SCIM group extension defines additional attributes and structure\nfor group resources in the SCIM API. This extension is compliant\nwith [SCIM 2.0](https://tools.ietf.org/html/rfc7644).\n",
+        "properties": {
+          "groupDescription": {
+            "description": "A description of the user group. This might include the group's purpose or responsibilities. This helps administrators understand the group's role in the Organization.",
+            "example": "Office users",
+            "type": "string"
+          },
+          "hpe_principal": {
+            "description": "The security principal for role assignments.",
+            "example": "user-group:448ebfdb-7bc9-402f-9eb0-f9a86c06ca5a",
+            "readOnly": true,
+            "type": "string"
+          },
+          "source": {
+            "description": "The source of the user group, defines where the user's group lifecycle is being controlled from.",
+            "enum": [
+              "Local",
+              "SCIM",
+              "External"
+            ],
+            "example": "Local",
+            "readOnly": true,
+            "type": "string"
+          },
+          "sourceInstance": {
+            "description": "The source instance is set according to the source of the user group.\nIt will be the following according to the source type:\n\n- **Local**\u2014A group managed by the current organization. \n  - **Source instance**\u2014The current organization's `orgId`.\n\n- **SCIM**\u2014A group managed by a SCIM integration, for example, Azure.\n  - **Source instance**\u2014The SCIM Integration's `scimId`.\n\n- **External**\u2014A group managed by a different organization.\n  - **Source instance**\u2014The external controlling organization's ID.\n",
+            "example": "d27e9581-f879-4c3d-b902-29c0a48f0002",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "GroupList": {
+        "properties": {
+          "Resources": {
+            "description": "A list of user group objects.",
+            "items": {
+              "$ref": "#/components/schemas/SCIMGroup"
+            },
+            "type": "array"
+          },
+          "itemsPerPage": {
+            "description": "The number of resources returned in a list response page.",
+            "type": "integer"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource.\nEach URI represents a schema that determines which properties can be included and how they should be formatted.\n",
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+              ],
+              "type": "string"
+            },
+            "required": [
+              "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+            ],
+            "type": "array"
+          },
+          "startIndex": {
+            "description": "Specifies the pagination start index. Index starts at 1.",
+            "type": "integer"
+          },
+          "totalResults": {
+            "description": "The total number of results returned by the query including pages not shown.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "Resources",
+          "schemas",
+          "totalResults"
+        ],
+        "type": "object"
+      },
+      "GroupMeta": {
+        "description": "resource metadata",
+        "properties": {
+          "created": {
+            "description": "The date and time the resource was created.",
+            "example": "2022-01-01T00:00:00Z",
+            "readOnly": true,
+            "type": "string"
+          },
+          "lastModified": {
+            "description": "The date and time the resource was last modified.",
+            "example": "2022-01-01T00:00:00Z",
+            "readOnly": true,
+            "type": "string"
+          },
+          "location": {
+            "description": "The resource location URI.",
+            "example": "/identity/v2beta1/scim/v2/Groups/12345ef4-c6d5-4288-b5f7-71730bd12345",
+            "readOnly": true,
+            "type": "string"
+          },
+          "resourceType": {
+            "description": "The type of the resource.",
+            "enum": [
+              "Group"
+            ],
+            "example": "Group",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Name": {
+        "description": "An object that includes the given name and family name of a user.",
+        "properties": {
+          "familyName": {
+            "example": "Jensen",
+            "maxLength": 50,
+            "type": "string"
+          },
+          "givenName": {
+            "example": "Barbara",
+            "maxLength": 50,
+            "type": "string"
+          }
+        },
+        "required": [
+          "familyName",
+          "givenName"
+        ],
+        "type": "object"
+      },
+      "Operation": {
+        "properties": {
+          "op": {
+            "description": "Operation performed by patch.\n- `add` or `Add`\u2014If the user was already a member of this group, no changes will be made to the resource and a success response will be returned.\n- `remove` or `Remove`\u2014If any of the requested users to be removed are not a member of this group, a success (204) response will be returned.\n- `replace` or `Replace`\u2014Change the name or description of the group.\n",
+            "enum": [
+              "add",
+              "Add",
+              "remove",
+              "Remove",
+              "replace",
+              "Replace"
+            ],
+            "example": "add",
+            "type": "string"
+          },
+          "path": {
+            "description": "Attribute path describing the target of the operation.",
+            "enum": [
+              "members",
+              "displayName",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:groupDescription"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "description": "New value for the attribute being modified.",
+                "type": "string"
+              },
+              {
+                "description": "A list of users to patch the user group with.",
+                "items": {
+                  "description": "Users to be added to the group or removed from the group.",
+                  "properties": {
+                    "$ref": {
+                      "description": "URI to the resource.",
+                      "example": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+                      "type": "string"
+                    },
+                    "display": {
+                      "description": "The display name of the resource.",
+                      "example": "Babs Jensen",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "User ID.",
+                      "example": "2819c223-7f76-453a-919d-413861904646",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "display",
+                    "$ref",
+                    "value"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ]
+          }
+        },
+        "required": [
+          "op",
+          "path",
+          "value"
+        ],
+        "type": "object"
+      },
+      "PatchOperation": {
+        "properties": {
+          "Operations": {
+            "items": {
+              "$ref": "#/components/schemas/Operation"
+            },
+            "type": "array"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource.\nEach URI represents a schema that determines which properties can be included and how they should be formatted.\n",
+            "example": [
+              "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+            ],
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemas",
+          "Operations"
+        ],
+        "type": "object"
+      },
+      "PosixUserExtension": {
+        "description": "The POSIX user extension enables integration with Unix/Linux systems by providing \nsystem-level user account attributes. POSIX (Portable Operating System Interface) \nis a standard for Unix-like operating systems. \n\nIf your organization does not use Unix/Linux systems, this extension can be omitted. Posix attributes are disabled by default, but can be included if they're enabled within the target organization.\n",
+        "properties": {
+          "gid": {
+            "description": "Primary group identifier for the user on Unix/Linux systems. This numeric \nID determines the user's default group membership and is used for file \npermissions and access control.\n",
+            "example": 2001,
+            "readOnly": false,
+            "type": "integer"
+          },
+          "homeDirectory": {
+            "description": "Full path to the user's home directory on Unix/Linux systems. This is \nwhere the user's personal files are stored and where they are placed \nwhen logging in via SSH or terminal.\n",
+            "example": "/home/jdoe",
+            "type": "string"
+          },
+          "shell": {
+            "description": "Default command shell for the user on Unix/Linux systems. This determines \nthe command interpreter used when the user logs in via SSH or terminal. \nCommon shells include ``/bin/bash``, ``/bin/sh``, or ``/bin/zsh``.\n",
+            "example": "/bin/bash",
+            "type": "string"
+          },
+          "uid": {
+            "description": "Numeric user identifier used by Unix/Linux systems to identify users at the \noperating system level. This number (typically 1000+) is used for file \nownership and process permissions. Required for users who need access to \nUnix/Linux systems or file shares.\n",
+            "example": 1001,
+            "readOnly": false,
+            "type": "integer"
+          },
+          "userName": {
+            "description": "Login name for the user on Unix/Linux systems. This is the name used for \nSSH connections, terminal sessions, and system authentication. Should be \nlowercase and contain only alphanumeric characters and underscores.\n",
+            "example": "jdoe",
+            "readOnly": false,
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "userName",
+          "gid"
+        ],
+        "type": "object"
+      },
+      "SCIMGroup": {
+        "properties": {
+          "displayName": {
+            "description": "Unique display name for the user group. A valid `displayName` can contain alphanumeric characters, space, \n      or any of the following: `-`, `/`, `_`, `.`, `!`, `(`, `)`, `[`, `]`, `<`, `>`\n",
+            "example": "Sales Group",
+            "maxLength": 201,
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier for an HPE GreenLake user group.",
+            "example": "448ebfdb-7bc9-402f-9eb0-f9a86c06ca5a",
+            "readOnly": true,
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/GroupMeta"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource.\nEach URI represents a schema that determines which properties can be included and how they should be formatted.\n",
+            "example": [
+              "urn:ietf:params:scim:schemas:core:2.0:Group",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group"
+            ],
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:schemas:core:2.0:Group",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group"
+              ],
+              "type": "string"
+            },
+            "required": [
+              "urn:ietf:params:scim:schemas:core:2.0:Group",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group"
+            ],
+            "type": "array"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group": {
+            "$ref": "#/components/schemas/GroupExtension"
+          }
+        },
+        "required": [
+          "schemas",
+          "id",
+          "displayName",
+          "meta",
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group"
+        ],
+        "type": "object"
+      },
+      "SCIMUser": {
+        "description": "The SCIM user schema defines the attributes and structure for user resources\nin the SCIM API. This schema is compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).\n",
+        "properties": {
+          "active": {
+            "default": false,
+            "description": "A boolean indicating whether the user is active in the system. When `true`, the user is active.",
+            "readOnly": true,
+            "type": "boolean"
+          },
+          "displayName": {
+            "description": "The display name for the user.",
+            "example": "Joe Smith",
+            "type": "string"
+          },
+          "emails": {
+            "items": {
+              "$ref": "#/components/schemas/Email"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "HPE GreenLake global user ID unique resource identifier randomly generated by the system.",
+            "example": "448ebfdb-7bc9-402f-9eb0-f9a86c06ca5a",
+            "readOnly": true,
+            "type": "string"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/UserMeta"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Name"
+          },
+          "schemas": {
+            "description": "Collection of URIs that identify the schemas used to define the structure and attributes of this User resource. These schemas determine which properties are valid for the resource.",
+            "example": [
+              "urn:ietf:params:scim:schemas:core:2.0:User",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User"
+            ],
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:schemas:core:2.0:User",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User",
+                "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:posix:User"
+              ],
+              "type": "string"
+            },
+            "required": [
+              "urn:ietf:params:scim:schemas:core:2.0:User",
+              "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User"
+            ],
+            "type": "array"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User": {
+            "$ref": "#/components/schemas/UserExtension"
+          },
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:posix:User": {
+            "$ref": "#/components/schemas/PosixUserExtension"
+          },
+          "userName": {
+            "description": "Must be the same as work type email address.",
+            "example": "abc@xyz.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schemas",
+          "id",
+          "active",
+          "userName",
+          "displayName",
+          "meta",
+          "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:User",
+          "name"
+        ],
+        "type": "object"
+      },
+      "UserCreateExtension": {
+        "description": "The SCIM user creation extension defines additional attributes and structure\nfor creating user resources in the SCIM API. This extension is compliant\nwith [SCIM 2.0](https://tools.ietf.org/html/rfc7644).\n",
+        "properties": {
+          "countryCode": {
+            "description": "Specifies the user's country using a two-letter ISO country code.",
+            "example": "US",
+            "pattern": "[A-Z]{2}",
+            "type": "string"
+          },
+          "hpe_principal": {
+            "description": "The unique identifier of the security principal for role-based access control (RBAC) assignments.",
+            "example": "user:448ebfdb-7bc9-402f-9eb0-f9a86c06ca5a",
+            "readOnly": true,
+            "type": "string"
+          },
+          "primaryEmailVerified": {
+            "description": "A boolean declaring if the user's primary email was verified. `true` if the email is verified.",
+            "example": true,
+            "readOnly": true,
+            "type": "boolean"
+          },
+          "status": {
+            "description": "Indicates the current status of the user account. This field is automatically managed by the system based on the user's lifecycle events.",
+            "enum": [
+              "STAGED",
+              "ACTIVE"
+            ],
+            "example": "STAGED",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "countryCode"
+        ],
+        "type": "object"
+      },
+      "UserExtension": {
+        "description": "The SCIM user extension defines additional attributes and structure for user resources in the SCIM API. This extension is compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "properties": {
+          "countryCode": {
+            "description": "Specifies the user's country using a two-letter ISO code.",
+            "example": "US",
+            "type": "string"
+          },
+          "hpe_principal": {
+            "description": "The security principal for role assignments.",
+            "example": "user:448ebfdb-7bc9-402f-9eb0-f9a86c06ca5a",
+            "readOnly": true,
+            "type": "string"
+          },
+          "primaryEmailVerified": {
+            "description": "A boolean declaring if the user's primary email was verified. `true` if the email is verified.",
+            "example": true,
+            "readOnly": true,
+            "type": "boolean"
+          },
+          "source": {
+            "description": "The source of the user, defines where the user's lifecycle is being controlled from.",
+            "enum": [
+              "Local",
+              "SCIM",
+              "External"
+            ],
+            "example": "Local",
+            "readOnly": true,
+            "type": "string"
+          },
+          "sourceInstance": {
+            "description": "The source instance is set according to the source of the user.\nIt will be the following according to the source type:\n\n- **Local**\u2014A user managed by the current organization. \n  A user was directly added to the organization from the **Organization users** page on the platform. \n  Alternatively, A user was automatically added to the organization\n    when they were added to an organization workspace.\n  - **Source instance**\u2014The current organization's `orgId`.\n\n- **SCIM**\u2014Users were added to the organization through a SCIM integration with an external IdP. For example, Azure.\n  - **Source instance**\u2014The SCIM integration's `scimId`\n\n- **External**\u2014A user managed by a different organization. Users were automatically added to the organization when they were added to an organization workspace through propagation from an external organization.\n  - **Source instance**\u2014The external controlling organization's `orgId`.\n",
+            "example": "d27e9581-f879-4c3d-b902-29c0a48f0002",
+            "readOnly": true,
+            "type": "string"
+          },
+          "status": {
+            "description": "Indicates the current status of the user account.",
+            "enum": [
+              "STAGED",
+              "ACTIVE",
+              "ACTIVATING"
+            ],
+            "example": "STAGED",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "countryCode",
+          "primaryEmailVerified"
+        ],
+        "type": "object"
+      },
+      "UserMeta": {
+        "description": "resource metadata",
+        "properties": {
+          "created": {
+            "description": "The date and time the resource was created.",
+            "example": "2022-01-01T00:00:00Z",
+            "readOnly": true,
+            "type": "string"
+          },
+          "lastLogin": {
+            "description": "The date and time the user last logged in.",
+            "example": "2022-01-01T00:00:00Z",
+            "readOnly": true,
+            "type": "string"
+          },
+          "lastModified": {
+            "description": "The date and time the resource was last modified.",
+            "example": "2022-01-01T00:00:00Z",
+            "readOnly": true,
+            "type": "string"
+          },
+          "location": {
+            "description": "The resource location URI.",
+            "example": "/identity/v2beta1/scim/v2/Users/12345161346147c6bc2bdeae11012345",
+            "readOnly": true,
+            "type": "string"
+          },
+          "resourceType": {
+            "enum": [
+              "User"
+            ],
+            "example": "User",
+            "readOnly": true,
+            "type": "string"
+          },
+          "version": {
+            "description": "The version of the resource.",
+            "example": 1,
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UserPatch": {
+        "properties": {
+          "Operations": {
+            "description": "List of operations to be performed on the user. See [RFC 7644, Section 3.5.2](https://www.rfc-editor.org/rfc/rfc7644#section-3.5.2).",
+            "items": {
+              "$ref": "#/components/schemas/UserPatchOp"
+            },
+            "type": "array"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource. Each URI represents a schema that determines which properties can be included and how they should be formatted.",
+            "example": [
+              "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+            ],
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "schemas",
+          "Operations"
+        ],
+        "type": "object"
+      },
+      "UserPatchOp": {
+        "properties": {
+          "op": {
+            "description": "Operations performed by patch.\n  - `add` or `Add`\u2014The user object has the specified attribute added to it or updated if it already exists.\n  - `remove` or `Remove`\u2014The user object has the specified attribute removed from it.\n  - `replace` or `Replace`\u2014The user object has the specified attribute replaced with the new value.\n",
+            "enum": [
+              "add",
+              "Add",
+              "remove",
+              "Remove",
+              "replace",
+              "Replace"
+            ],
+            "type": "string"
+          },
+          "path": {
+            "description": "Attribute path describing the target of the operation. \nThis optional attribute must be only one path to a valid target in \nthe user schemas.\n",
+            "example": "emails",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Email"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "$ref": "#/components/schemas/Name"
+              },
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ],
+            "description": "The value of the attribute or attributes to be added, removed, or replaced.",
+            "example": [
+              {
+                "primary": true,
+                "value": "babs@jensen.org"
+              }
+            ]
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "type": "object"
+      },
+      "UsersList": {
+        "properties": {
+          "Resources": {
+            "description": "A list of user objects.",
+            "items": {
+              "$ref": "#/components/schemas/SCIMUser"
+            },
+            "type": "array"
+          },
+          "itemsPerPage": {
+            "description": "The number of resources returned in a list response page.",
+            "type": "integer"
+          },
+          "schemas": {
+            "description": "Collection of schema URIs that define the structure and valid attributes for this resource.",
+            "items": {
+              "enum": [
+                "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "startIndex": {
+            "description": "Specifies the pagination start index. Index starts at 1.",
+            "type": "integer"
+          },
+          "totalResults": {
+            "description": "The total number of results returned by the query including pages not shown.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "Resources",
+          "schemas",
+          "totalResults"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "description": "Access token compliant with [RFC8725](https://datatracker.ietf.org/doc/html/rfc8725). Issued by HPE GreenLake.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "User and Group Management APIs compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE GreenLake SCIM User and Group Management APIs",
+    "version": "v2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/identity/v2beta1/scim/v2/Groups": {
+      "get": {
+        "description": "Get a list of user groups. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "listGroupsSCIM",
+        "parameters": [
+          {
+            "description": "Return only the subset of groups that match the filter. \nThe filter grammar is a subset of OData 4.0.\n<br><br>**NOTE:** The filter query parameter must use [URL\nencoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients\ndo this automatically with inputs provided to them specifically as\nquery parameters. Encoding must be done manually for any query\nparameters provided as part of the URL. The reserved characters `!`\n`#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]`\nmust be encoded with percent encoded equivalents. <br><br>\n\n**The Get Groups API filters enabled are**:\n\nSupported filters:\n- `displayName` (operators: `sw`, `eq`, `co`)\n- `urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:source` (operators: `eq`)\n",
+            "examples": {
+              "Equals Filter with displayName": {
+                "description": "Search for groups whose display name exactly matches the specified text. This filter is useful for finding specific groups when you know the exact group name, ensuring exact matches and no partial results.",
+                "summary": "Use the equals filter with displayName",
+                "value": "displayName eq \"sample\""
+              },
+              "Equals Filter with source": {
+                "description": "Returns groups whose source equals \"Local\"",
+                "summary": "Use the equals filter with source",
+                "value": "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:source eq \"Local\""
+              },
+              "StartsWith Filter with displayName": {
+                "description": "Search for groups whose display names start with specific text. Useful for finding groups by specific prefixes or searching for groups with common naming patterns.",
+                "summary": "Use the StartsWith filter with displayName",
+                "value": "displayName sw \"sample\""
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of results to return in a page.",
+            "in": "query",
+            "name": "count",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 200,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination start index. Index starts at 1.",
+            "in": "query",
+            "name": "startIndex",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupList"
+                }
+              }
+            },
+            "description": "Returned a list of user groups."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List user groups",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      },
+      "post": {
+        "description": "Create a user group. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "createGroupSCIM",
+        "requestBody": {
+          "content": {
+            "application/scim+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroup"
+              }
+            }
+          },
+          "description": "Create user group object.",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMGroup"
+                }
+              }
+            },
+            "description": "User group successfully created.",
+            "headers": {
+              "Location": {
+                "description": "URL of the created user group.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request. Request is unparsable, syntactically incorrect, or violates schema."
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authorization failure"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict. Group with given name already exists."
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Create a user group",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      }
+    },
+    "/identity/v2beta1/scim/v2/Groups/{groupId}": {
+      "delete": {
+        "description": "Delete a user group. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "deleteGroupSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake user group ID. Retrieve the ID from the `CREATE Group` endpoint or the `GET Group` endpoint.",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User group deleted successfully."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete a user group",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      },
+      "get": {
+        "description": "Get a user group. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "getGroupSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake user group ID. Retrieve the ID from the `CREATE Group` endpoint or the `GET Group` endpoint.",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMGroup"
+                }
+              }
+            },
+            "description": "Returned user group."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get a user group",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      },
+      "patch": {
+        "description": "Add or remove users from a user group, or update the group name or description. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "patchGroupSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake user group ID. Retrieve the ID from the `CREATE Group` endpoint or the `GET Group` endpoint.",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/scim+json": {
+              "examples": {
+                "AddUsers": {
+                  "value": {
+                    "Operations": [
+                      {
+                        "op": "add",
+                        "path": "members",
+                        "value": [
+                          {
+                            "$ref": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+                            "display": "Babs Jensen",
+                            "value": "2819c223-7f76-453a-919d-413861904646"
+                          }
+                        ]
+                      }
+                    ],
+                    "schemas": [
+                      "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+                    ]
+                  }
+                },
+                "RemoveUsers": {
+                  "value": {
+                    "Operations": [
+                      {
+                        "op": "remove",
+                        "path": "members",
+                        "value": [
+                          {
+                            "$ref": "https://example.com/v2/Users/2819c223-7f76-453a-919d-413861904646",
+                            "display": "Babs Jensen",
+                            "value": "2819c223-7f76-453a-919d-413861904646"
+                          }
+                        ]
+                      }
+                    ],
+                    "schemas": [
+                      "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+                    ]
+                  }
+                },
+                "UpdateGroupDescription": {
+                  "value": {
+                    "Operations": [
+                      {
+                        "op": "replace",
+                        "path": "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:groupDescription",
+                        "value": "New group description"
+                      }
+                    ],
+                    "schemas": [
+                      "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+                    ]
+                  }
+                },
+                "UpdateGroupName": {
+                  "value": {
+                    "Operations": [
+                      {
+                        "op": "replace",
+                        "path": "displayName",
+                        "value": "New group name"
+                      }
+                    ],
+                    "schemas": [
+                      "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+                    ]
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/PatchOperation"
+              }
+            }
+          },
+          "description": "Add or remove users from a user group, or update the group name or description. The replace operation is not supported for group members.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMGroup"
+                }
+              }
+            },
+            "description": "Group patched successfully."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Update user group",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      }
+    },
+    "/identity/v2beta1/scim/v2/Users": {
+      "get": {
+        "description": "List users. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "listUsersSCIM",
+        "parameters": [
+          {
+            "description": "Return only the subset of users that match the filter. \nThe filter grammar is a subset of OData 4.0.\n<br><br>**NOTE:** The filter query parameter must use [URL\nencoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients\ndo this automatically with inputs provided to them specifically as\nquery parameters. Encoding must be done manually for any query\nparameters provided as part of the URL. The reserved characters `!`\n`#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]`\nmust be encoded with percent encoded equivalents. <br><br>\n\n**The Get Users API filters enabled are**:\n- displayName\n- userName\n\n**Supported operators**:\n- sw (starts with)\n- eq (equals)\n- co (contains)\n",
+            "examples": {
+              "Filter contains displayName": {
+                "description": "Find users with specific text in their user name. For example, searching for \"admin\" is useful for identifying administrative accounts across the organization.",
+                "summary": "Filter contains displayName",
+                "value": "displayName co \"sample\""
+              },
+              "Filter contains userName": {
+                "description": "Find users with specific text anywhere in their user name (email address). This search is useful for identifying users with common email domains or patterns in their email addresses, such as finding all users with \"admin\" or team identifiers in their addresses.",
+                "summary": "Filter contains userName",
+                "value": "userName co \"sample\""
+              },
+              "Filter equals displayName": {
+                "description": "Search for users whose display name exactly matches the specified text. This filter is useful for finding specific users when you know the exact display name, ensuring exact matches and no partial results.",
+                "summary": "Filter equals displayName",
+                "value": "displayName eq \"sample\""
+              },
+              "Filter equals userName": {
+                "description": "Search for users whose user name (email address) exactly matches the specified text. This filter is useful for finding a specific user when you know their exact email address, ensuring precise user identification.",
+                "summary": "Filter equals userName",
+                "value": "userName eq \"sample@example.com\""
+              },
+              "Filter starts with displayName": {
+                "description": "Search for users whose display names start with specific text. Useful for finding users by specific prefixes or searching for users with common name patterns.",
+                "summary": "Filter starts with displayName",
+                "value": "displayName sw \"sample\""
+              },
+              "Filter starts with userName": {
+                "description": "Search for users whose user names start with specific text. Useful for finding users by specific prefixes or searching for users with common name patterns.",
+                "summary": "Filter starts with userName",
+                "value": "userName sw \"sample\""
+              },
+              "Filter with both displayName and userName": {
+                "description": "Returns users whose email or name start with \"sample\" text.",
+                "summary": "Filter with both displayName and userName",
+                "value": "displayName sw \"sample\" or userName sw \"sample\""
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of query results to be returned in a query response page.",
+            "in": "query",
+            "name": "count",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination start index. Index starts at 1.",
+            "in": "query",
+            "name": "startIndex",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the attribute to sort the returned results by.",
+            "in": "query",
+            "name": "sortBy",
+            "required": false,
+            "schema": {
+              "enum": [
+                "displayName",
+                "meta.lastLogin"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the sort order.",
+            "in": "query",
+            "name": "sortOrder",
+            "required": false,
+            "schema": {
+              "enum": [
+                "ascending",
+                "descending"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersList"
+                }
+              }
+            },
+            "description": "A list of user objects."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authorization failure"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List users",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      },
+      "post": {
+        "description": "Creates a user. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "createUserSCIM",
+        "requestBody": {
+          "content": {
+            "application/scim+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUser"
+              }
+            }
+          },
+          "description": "Creates a user.",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMUser"
+                }
+              }
+            },
+            "description": "User is successfully created.",
+            "headers": {
+              "Location": {
+                "description": "The URL that points to the newly created user resource.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request. Request is unparsable, syntactically incorrect, or violates schema."
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authorization failure"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict. User with given user name already exists."
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Create a user",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      }
+    },
+    "/identity/v2beta1/scim/v2/Users/{userId}": {
+      "delete": {
+        "description": "Delete a user. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "deleteUserSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake global user ID. Retrieve the ID from the `CREATE User` endpoint or the `GET User` endpoint.",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted successfully."
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authorization failure"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden."
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Resource does not exist."
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Delete a user",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      },
+      "get": {
+        "description": "Retrieve a user. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
+        "operationId": "getUserSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake global user ID. Retrieve the ID from the `CREATE User` endpoint or the `GET User` endpoint.",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMUser"
+                }
+              }
+            },
+            "description": "User is successfully returned."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request. Request is unparsable, syntactically incorrect, or violates schema."
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authorization failure"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get a user",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      },
+      "patch": {
+        "description": "Updates one or more user attributes. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644), except the `attributes` field is not supported.",
+        "operationId": "patchUserSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake global user ID. Retrieve the ID from the `CREATE User` endpoint or the `GET User` endpoint.",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/scim+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPatch"
+              }
+            }
+          },
+          "description": "Add, remove, or replace one or more attributes on a specified user.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Operation performed successfully. Changed user returned."
+          },
+          "204": {
+            "description": "Operation performed successfully. No content returned."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "User does not exist"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Patch user attributes",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      }
+    },
+    "/identity/v2beta1/scim/v2/extensions/Groups/{groupId}/users": {
+      "get": {
+        "description": "Get users assigned to a user group.",
+        "operationId": "groupMembersSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake user group ID. Retrieve the ID from the `CREATE Group` endpoint or the `GET Group` endpoint.",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of query results to be returned in a query response page.",
+            "in": "query",
+            "name": "count",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 200,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination start index. Index starts at 1.",
+            "in": "query",
+            "name": "startIndex",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersList"
+                }
+              }
+            },
+            "description": "Returns users assigned to the group."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List users assigned to a user group",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      }
+    },
+    "/identity/v2beta1/scim/v2/extensions/Users/{userId}/groups": {
+      "get": {
+        "description": "Get user groups assigned to a user.",
+        "operationId": "userGroupMembersSCIM",
+        "parameters": [
+          {
+            "description": "The HPE GreenLake global user ID. Retrieve the ID from the `CREATE User` endpoint or the `GET User` endpoint.",
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of query results to be returned in a query response page.",
+            "in": "query",
+            "name": "count",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination start index. Index starts at 1.",
+            "in": "query",
+            "name": "startIndex",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupList"
+                }
+              }
+            },
+            "description": "Returns a list of user groups assigned to the user."
+          },
+          "400": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "429": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/scim+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "List user groups assigned to a user",
+        "tags": [
+          "SCIM v2beta1"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "[SCIM 2.0](https://tools.ietf.org/html/rfc7644)-compliant management operations for users and groups.",
+      "name": "SCIM v2beta1"
+    }
+  ]
+}

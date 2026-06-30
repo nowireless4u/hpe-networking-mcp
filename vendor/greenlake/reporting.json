@@ -1,0 +1,1397 @@
+{
+  "components": {
+    "requestBodies": {
+      "generateReportRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/generateReportBody"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "asyncOperationResponse": {
+        "properties": {
+          "endedAt": {
+            "description": "The date and time the operation completed in the `SUCCEEDED`, `FAILED`, or `CANCELLED` states.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "properties": {
+              "debugId": {
+                "description": "Unique identifier for the instance of this error",
+                "type": "string"
+              },
+              "message": {
+                "description": "User-friendly error message",
+                "type": "string"
+              },
+              "timestamp": {
+                "description": "The date and time the error message was created.",
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "id": {
+            "description": "The primary identifier for the resource.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "logMessages": {
+            "description": "List of progress update objects. This array can be empty.",
+            "items": {
+              "properties": {
+                "message": {
+                  "description": "The log message describing the progress update.",
+                  "type": "string"
+                },
+                "timestamp": {
+                  "description": "The date and time the log messag was created.",
+                  "format": "date-time",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "progressPercent": {
+            "description": "Percent progress of the operation as an integer value of 0 to 100.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "results": {
+            "description": "List of references to resources (other than the source resource) which were created, updated, or deleted during the operation.",
+            "items": {
+              "properties": {
+                "name": {
+                  "description": "The name of the effect resource.",
+                  "type": "string"
+                },
+                "resourceUri": {
+                  "description": "URI to the effected resources.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "sourceResourceUri": {
+            "description": "The URI reference to the resource or resource collection that initiated the operation",
+            "type": "string"
+          },
+          "startedAt": {
+            "description": "The date and time the operation entered the `RUNNING` state.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "The state of the operation.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "state",
+          "startAt",
+          "endAt",
+          "logMessages",
+          "progressPercent",
+          "sourceResourceUri"
+        ],
+        "type": "object"
+      },
+      "delivery": {
+        "properties": {
+          "email": {
+            "properties": {
+              "recipients": {
+                "description": "The email address of the recipients of the report.",
+                "items": {
+                  "description": "The email address of the recipients of the report.",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "subject": {
+                "description": "The subject line of the email.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "format": {
+            "description": "The file type of the report.",
+            "enum": [
+              "CSV",
+              "TXT",
+              "PDF",
+              "EXCEL"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "enrollment": {
+        "properties": {
+          "delivery": {
+            "$ref": "#/components/schemas/delivery"
+          }
+        },
+        "type": "object"
+      },
+      "error": {
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP equivalent status code",
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "filterCriteria": {
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "operator": {
+            "enum": [
+              "EQ",
+              "NE",
+              "GT",
+              "GE",
+              "LT",
+              "LE",
+              "IN"
+            ]
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "generateDocResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/reportDoc"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset to start the response from",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items in the collection that match the filter query, if one was provided in the request.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "generateReportBody": {
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/reportDefinition"
+          },
+          "description": {
+            "description": "A short summary of the report.",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the report.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "generateResponse": {
+        "properties": {
+          "id": {
+            "description": "UUID of generated resource",
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the resource",
+            "format": "string",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "queryElements": {
+        "properties": {
+          "columns": {
+            "description": "An array containing the supported columns.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "filterCriteria": {
+            "$ref": "#/components/schemas/filterCriteria",
+            "description": "An array comprising of filter names and their corresponding data types.",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "reportDefinition": {
+        "properties": {
+          "enrollment": {
+            "$ref": "#/components/schemas/enrollment"
+          },
+          "queryElements": {
+            "$ref": "#/components/schemas/queryElements"
+          }
+        },
+        "type": "object"
+      },
+      "reportDoc": {
+        "properties": {
+          "columns": {
+            "items": {
+              "properties": {
+                "dataType": {
+                  "description": "The classification of data accepted by the column.",
+                  "type": "string"
+                },
+                "displayName": {
+                  "description": "The display name of the column.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "The internal name of the column.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "displayName",
+                "name",
+                "dataType"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "filterCriteria": {
+            "items": {
+              "properties": {
+                "dataType": {
+                  "description": "The classification of data accepted by the column.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "The name of the filter criteria.",
+                  "type": "string"
+                },
+                "supportedOperators": {
+                  "description": "The classification of the logical operator supported by the filter criteria.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "name",
+                "dataType",
+                "supportedOperators"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "The unique identifier of the report.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the report.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "type",
+          "name",
+          "columns",
+          "filterCriteria"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "The HPE GreenLake for Reporting service provides a collection of RESTful APIs for generating reports, retrieving supported columns and filters, monitoring asynchronous operations, and querying the status of reports.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE GreenLake for Reporting",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/reporting/v1/async-operations/{id}": {
+      "get": {
+        "description": "\nRetrieve information about asynchronous operations within the reporting service. Provide the unique identifier of the operation in the parameter to monitor the progress of asynchronous tasks.  This API returns the following attributes:\n\n  - `status`\u2014Indicates the current status of the asynchronous task.\n  - `startedAt`\u2014Specifies the timestamp when the operation was initiated.\n  - `endedAt`\u2014Indicates the timestamp when the operation was completed.\n  - `logMessages`\u2014Provides a list of progress updates for the asynchronous operation.\n  - `progressPercent`\u2014Represents the progress of the operation as a percentage value ranging from 0 to 100.\n  - `sourceResourceUri`\u2014References the source URI that triggered the asynchronous task.\n  - `results`\u2014The results array provides a link to /reporting/v1/statuses/{id} to get the complete details of the report status.\n",
+        "parameters": [
+          {
+            "description": "The unique identifier returned by an asynchronous API call.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^[a-zA-Z0-9-]+$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/asyncOperationResponse"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_AUTHORIZATION_ERROR",
+                    "httpStatusCode": 401,
+                    "message": "Not authorized to get async operation details"
+                  }
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_FORBIDDEN_ERROR",
+                    "httpStatusCode": 403,
+                    "message": "Incorrect permission to retrieve report of id = \"1fa85f64-5434-9980-b3fc-3c963f44fgh9\""
+                  }
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_NOT_FOUND_ERROR",
+                    "httpStatusCode": 404,
+                    "message": "Invalid id: 4ca85f64-9878-1234-b3fc-2c963f66afy7"
+                  }
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_INTERNAL_SERVER_ERROR",
+                    "httpStatusCode": 500,
+                    "message": "Failed to retrieve async operation details"
+                  }
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Asynchronous operation details",
+        "tags": [
+          "Async operations"
+        ]
+      }
+    },
+    "/reporting/v1/report-exports": {
+      "post": {
+        "description": "Use this API to asynchronously generate reports across supported report types. After you submit your report generation requests, they are processed in the background. Once complete, you receive a unique URI in the response header.  <br><br>**NOTE:** You need to specify the columns you want to return in the report, and apply filter criteria to refine the data returned. To find out what columns and filter criteria are available, call the Report Exports Metadata API.\n",
+        "requestBody": {
+          "$ref": "#/components/requestBodies/generateReportRequest"
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/generateResponse"
+                }
+              }
+            },
+            "description": "Request accepted",
+            "headers": {
+              "Location": {
+                "description": "URL where the generated resource can be accessed",
+                "example": "/reporting/v1/async-operations/1fa85f64-5434-9980-b3fc-3c963f44fgh9",
+                "schema": {
+                  "format": "uri",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "GLP_GL_REPORTING_INVALID_ATTRIBUTE_ERROR",
+                    "httpStatusCode": 400,
+                    "message": "Invalid column name \"SUBSCRIPTION_KEY1\""
+                  }
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_AUTHORIZATION_ERROR",
+                    "httpStatusCode": 401,
+                    "message": "Not authorized to initiate report export"
+                  }
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_FORBIDDEN_ERROR",
+                    "httpStatusCode": 403,
+                    "message": "Incorrect permissions to initiate report export for report type \"subscriptions\""
+                  }
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_NOT_FOUND_ERROR",
+                    "httpStatusCode": 404,
+                    "message": "Invalid datasource \"subscription1\""
+                  }
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_INTERNAL_SERVER_ERROR",
+                    "httpStatusCode": 500,
+                    "message": "Failed to initiate report exports"
+                  }
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Report exports",
+        "tags": [
+          "Report exports"
+        ]
+      }
+    },
+    "/reporting/v1/report-exports-metadata": {
+      "get": {
+        "description": "This API is a support tool that assists with generating a report. Use it to find the supported columns, filter criteria, and values for a report type.  In a response, the API returns:\n\n  - `columns`&mdash;An array containing the supported columns.\n  - `filterCriteria`&mdash;An array comprising of filter names and their corresponding data types.\n  - `supportedOperators`&mdash;A collection of supported operators assisting you in selecting the correct operator to use in a filter attribute. The following operators are supported:\n    - `EQ`&mdash;Checks if a field is equal to a value.\n    - `NE`&mdash;Checks if a field is not equal to a value.\n    - `LT`&mdash;Checks if a field is less than a value.\n    - `LE`&mdash;Checks if a field is less than or equal to a value.\n    - `GT`&mdash;Checks if a field is greater than a value.\n    - `GE`&mdash;Checks if a field is greater than or equals to a value.\n    - `IN`&mdash;Checks if a value is in a list.\n",
+        "parameters": [
+          {
+            "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\n**NOTE:** The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.  \nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\n\nFor example: the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n",
+            "examples": {
+              "equals": {
+                "description": "Return activities where a property equals a value.\n\\<property> eq \\<value>\n",
+                "summary": "Filter with multiple operations",
+                "value": "name ne Subscriptions and group eq Device inventory"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The select query parameter is used to limit the properties returned for a resource. The value of the select query parameter is a comma-separated list of properties.",
+            "example": {
+              "equals": {
+                "description": "Return activities where a property equals a value.\n",
+                "summary": "select with equality check",
+                "value": "select=name"
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The order in which to return the resources in the collection. The value of the sort query parameter is a comma separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending). The first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted, the default direction is ascending.",
+            "examples": {
+              "name-asc": {
+                "description": "Order ascending by name",
+                "summary": "Ascending by name",
+                "value": "name asc"
+              },
+              "name-createdAt-desc": {
+                "description": "Order resources ascending by name and then by descending by createdAt",
+                "summary": "Ascending by name and then by descending by createdAt",
+                "value": "name,createdAt desc"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The maximum number of reports to return.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 20,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/generateDocResponse"
+                }
+              }
+            },
+            "description": "Request accepted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "GLP_GL_REPORTING_INVALID_ATTRIBUTE_ERROR",
+                    "httpStatusCode": 400,
+                    "message": "Invalid attribute: type1"
+                  }
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_AUTHORIZATION_ERROR",
+                    "httpStatusCode": 401,
+                    "message": "Not authorized to retrieve report export metadata"
+                  }
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_FORBIDDEN_ERROR",
+                    "httpStatusCode": 403,
+                    "message": "Incorrect permission to retrieve report export metadata for report type \"subscriptions\""
+                  }
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_NOT_FOUND_ERROR",
+                    "httpStatusCode": 404,
+                    "message": "Invalid type \"subscription1\""
+                  }
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_INTERNAL_SERVER_ERROR",
+                    "httpStatusCode": 500,
+                    "message": "Failed to retrieve report exports metadata"
+                  }
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Report exports metadata",
+        "tags": [
+          "Report exports"
+        ]
+      }
+    },
+    "/reporting/v1/statuses": {
+      "get": {
+        "description": "This API is designed to fetch the status of all reports for a specific workspace. Only reports belonging to the workspace ID and username are returned. This API supports pagination, allowing you to use offset and limit parameters.\n",
+        "operationId": "getReportingStatuses",
+        "parameters": [
+          {
+            "examples": {
+              "equals": {
+                "description": "Return results where a property equals a value.\n\\<property> eq \\<value>\n",
+                "summary": "Filter with equality check",
+                "value": "type eq \"REPORT\""
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\n**NOTE:** The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.  \nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\n\nFor example, the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The order in which to return the resources in the collection.The value of the sort query parameter is a comma separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).The first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.",
+            "examples": {
+              "name-asc": {
+                "description": "Order ascending by name",
+                "summary": "Ascending by name",
+                "value": "name asc"
+              },
+              "name-createdAt-desc": {
+                "description": "Order resources ascending by name and then by descending by createdAt",
+                "summary": "Ascending by name and then by descending by createdAt",
+                "value": "name,createdAt desc"
+              }
+            },
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The maximum number of reports to return.",
+            "example": 50,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 20,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "description": "Number of items returned",
+                      "required": [
+                        "count"
+                      ],
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "createdAt": {
+                            "description": "The date and time the report was created.",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "description": {
+                            "description": "A description of the report supplied by a user.",
+                            "type": "string"
+                          },
+                          "id": {
+                            "description": "Unique identifier of the report",
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "isExpired": {
+                            "description": "A boolean that declares if the report has expired or not.",
+                            "type": "string"
+                          },
+                          "message": {
+                            "description": "Short description of the progress, which may be empty.",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "The display name of the report.",
+                            "type": "string"
+                          },
+                          "recipientEmailId": {
+                            "description": "The email address the report was sent to.",
+                            "type": "string"
+                          },
+                          "reportDownloadUrl": {
+                            "description": "The URL at which you can view the report.",
+                            "type": "string"
+                          },
+                          "reportType": {
+                            "description": "The type of report.",
+                            "type": "string"
+                          },
+                          "resourceUri": {
+                            "description": "URI to the report metadata resource itself.",
+                            "type": "string"
+                          },
+                          "stage": {
+                            "description": "The current stage in the report generation process.",
+                            "type": "string"
+                          },
+                          "startTime": {
+                            "description": "The date and time the report request was initiated.",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "status": {
+                            "description": "The current status of the report generation stage, indicating whether the report stage is, for example, in progress or completed.",
+                            "type": "string"
+                          },
+                          "statusTimestamp": {
+                            "description": "The date and time the report status last changed.",
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "type": {
+                            "description": "Type of the resource",
+                            "type": "string"
+                          },
+                          "userName": {
+                            "description": "The username of whoever created the report.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "status",
+                          "stage",
+                          "message",
+                          "reportType",
+                          "userName",
+                          "recipientEmailId",
+                          "startTime",
+                          "statusTimestamp"
+                        ],
+                        "type": "object"
+                      },
+                      "required": [
+                        "items"
+                      ],
+                      "type": "array"
+                    },
+                    "limit": {
+                      "description": "The maximum number of reports to return.",
+                      "type": "integer"
+                    },
+                    "offset": {
+                      "description": "Zero-based resource offset",
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Invalid filter": {
+                    "value": {
+                      "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "errorCode": "GLP_GL_REPORTING_BAD_REQUEST_ERROR",
+                      "httpStatusCode": 400,
+                      "message": "Invalid filter. Use filter=type eq 'REPORT'."
+                    }
+                  },
+                  "Invalid limit": {
+                    "value": {
+                      "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "errorCode": "GLP_GL_REPORTING_BAD_REQUEST_ERROR",
+                      "httpStatusCode": 400,
+                      "message": "Invalid 'limit' value. It must be integers within the specified limits."
+                    }
+                  }
+                },
+                "schema": {
+                  "properties": {
+                    "debugId": {
+                      "description": "Unique identifier for the instance of this error",
+                      "type": "string"
+                    },
+                    "errorCode": {
+                      "description": "A unique machine-friendly, but human-readable identifier for the error",
+                      "type": "string"
+                    },
+                    "httpStatusCode": {
+                      "description": "HTTP equivalent status code",
+                      "type": "integer"
+                    },
+                    "message": {
+                      "description": "User-friendly error message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "httpStatusCode",
+                    "errorCode",
+                    "message",
+                    "debugId"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_AUTHORIZATION_ERROR",
+                    "httpStatusCode": 401,
+                    "message": "Not authorized to get report statuses\""
+                  }
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_NOT_FOUND_ERROR",
+                    "httpStatusCode": 404,
+                    "message": "Report status not found. No reports match the given criteria."
+                  },
+                  "properties": {
+                    "debugId": {
+                      "description": "Unique identifier for the instance of this error",
+                      "type": "string"
+                    },
+                    "errorCode": {
+                      "description": "A unique machine-friendly, but human-readable identifier for the error",
+                      "type": "string"
+                    },
+                    "httpStatusCode": {
+                      "description": "HTTP equivalent status code",
+                      "type": "integer"
+                    },
+                    "message": {
+                      "description": "User-friendly error message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "httpStatusCode",
+                    "errorCode",
+                    "message",
+                    "debugId"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_INTERNAL_SERVER_ERROR",
+                    "httpStatusCode": 500,
+                    "message": "Failed to fetch status"
+                  },
+                  "properties": {
+                    "debugId": {
+                      "description": "Unique identifier for the instance of this error",
+                      "type": "string"
+                    },
+                    "errorCode": {
+                      "description": "A unique machine-friendly, but human-readable identifier for the error",
+                      "type": "string"
+                    },
+                    "httpStatusCode": {
+                      "description": "HTTP equivalent status code",
+                      "type": "integer"
+                    },
+                    "message": {
+                      "description": "User-friendly error message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "httpStatusCode",
+                    "errorCode",
+                    "message",
+                    "debugId"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get statuses of all the reports belonging to a workspace",
+        "tags": [
+          "Report Status"
+        ]
+      }
+    },
+    "/reporting/v1/statuses/{id}": {
+      "get": {
+        "description": "Retrieve the status of a specific report by passing the report status ID.\n",
+        "operationId": "getReportingStatusById",
+        "parameters": [
+          {
+            "description": "The report status identifier.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "pattern": "^[a-zA-Z0-9-]+$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "createdAt": {
+                      "description": "The date and time the report request was initiated.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "description": "Unique identifier of the report",
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "isExpired": {
+                      "description": "A boolean that declares if the report has expired or not.",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "A short description of the current progress. This field may be empty.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "recipientEmailId": {
+                      "description": "The email address the report was sent to.",
+                      "type": "string"
+                    },
+                    "reportDownloadUrl": {
+                      "description": "The URL at which you can view the report.",
+                      "type": "string"
+                    },
+                    "reportType": {
+                      "description": "The type of report.",
+                      "type": "string"
+                    },
+                    "resourceUri": {
+                      "description": "URI to the report status resource itself.",
+                      "type": "string"
+                    },
+                    "stage": {
+                      "description": "The current stage in the report generation process.",
+                      "type": "string"
+                    },
+                    "startTime": {
+                      "description": "The date and time the report request was initiated.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "The current status of the report generation stage, indicating whether the stage is, for example, in progress or completed.",
+                      "type": "string"
+                    },
+                    "statusTimestamp": {
+                      "description": "The date and time the report request was initiated.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "Type of the resource",
+                      "type": "string"
+                    },
+                    "userName": {
+                      "description": "The username of whoever created the report.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "status",
+                    "stage",
+                    "message",
+                    "reportType",
+                    "userName",
+                    "recipientEmailId",
+                    "startTime",
+                    "statusTimestamp"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_NOT_FOUND_ERROR",
+                    "httpStatusCode": 400,
+                    "message": "Invalid characters in 'id'. Only alphanumeric and hyphens are allowed."
+                  },
+                  "properties": {
+                    "debugId": {
+                      "description": "Unique identifier for the instance of this error",
+                      "type": "string"
+                    },
+                    "errorCode": {
+                      "description": "A unique machine-friendly, but human-readable identifier for the error",
+                      "type": "string"
+                    },
+                    "httpStatusCode": {
+                      "description": "HTTP equivalent status code",
+                      "type": "integer"
+                    },
+                    "message": {
+                      "description": "User-friendly error message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "httpStatusCode",
+                    "errorCode",
+                    "message",
+                    "debugId"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error",
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_FORBIDDEN_ERROR",
+                    "httpStatusCode": 401,
+                    "message": "Not authorized to get report status of id = \"1fa85f64-5434-9980-b3fc-3c963f44fgh9\""
+                  }
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_NOT_FOUND_ERROR",
+                    "httpStatusCode": 404,
+                    "message": "Report status not found. No reports match the given criteria."
+                  },
+                  "properties": {
+                    "debugId": {
+                      "description": "Unique identifier for the instance of this error",
+                      "type": "string"
+                    },
+                    "errorCode": {
+                      "description": "A unique machine-friendly, but human-readable identifier for the error",
+                      "type": "string"
+                    },
+                    "httpStatusCode": {
+                      "description": "HTTP equivalent status code",
+                      "type": "integer"
+                    },
+                    "message": {
+                      "description": "User-friendly error message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "httpStatusCode",
+                    "errorCode",
+                    "message",
+                    "debugId"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "errorCode": "HPE_GL_REPORTING_INTERNAL_SERVER_ERROR",
+                    "httpStatusCode": 500,
+                    "message": "Failed to fetch status"
+                  },
+                  "properties": {
+                    "debugId": {
+                      "description": "Unique identifier for the instance of this error",
+                      "type": "string"
+                    },
+                    "errorCode": {
+                      "description": "A unique machine-friendly, but human-readable identifier for the error",
+                      "type": "string"
+                    },
+                    "httpStatusCode": {
+                      "description": "HTTP equivalent status code",
+                      "type": "integer"
+                    },
+                    "message": {
+                      "description": "User-friendly error message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "httpStatusCode",
+                    "errorCode",
+                    "message",
+                    "debugId"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Get Report Status by ID",
+        "tags": [
+          "Report Status"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ]
+}

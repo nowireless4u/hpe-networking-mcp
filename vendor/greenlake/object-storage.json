@@ -1,0 +1,3541 @@
+{
+  "components": {
+    "parameters": {
+      "bucketId": {
+        "description": "A unique identifier assigned to each bucket created in the ObjectStore",
+        "example": "bucket1",
+        "in": "path",
+        "name": "bucketId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "groupIdUi": {
+        "description": "A unique identifier assigned to each group created in the ObjectStore",
+        "example": "testGroup",
+        "in": "path",
+        "name": "groupId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "limit": {
+        "description": "Number of items to return at a time",
+        "example": 10,
+        "in": "query",
+        "name": "limit",
+        "required": false,
+        "schema": {
+          "default": 100,
+          "maximum": 5000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "objFilterParams": {
+        "allowReserved": true,
+        "description": "oData query to filter bucket by Key.",
+        "example": "id eq \"abc\"",
+        "in": "query",
+        "name": "filter",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "objPolicyId": {
+        "description": "A unique identifier assigned to each access policy created in the ObjectStore",
+        "example": "policy1",
+        "in": "path",
+        "name": "policyId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "objSystemId": {
+        "description": "A unique identifier assigned to each object service device",
+        "example": "8UW0002928",
+        "in": "path",
+        "name": "systemId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "objectUserId": {
+        "description": "A unique identifier assigned to each user created in the ObjectStore",
+        "example": "testUser",
+        "in": "path",
+        "name": "userId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "offset": {
+        "description": "The offset of the first item in the collection to return",
+        "example": 5,
+        "in": "query",
+        "name": "offset",
+        "required": false,
+        "schema": {
+          "default": 0,
+          "maximum": 100000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "range": {
+        "allowReserved": true,
+        "description": "The range specifies the start and end time for executing the query.",
+        "example": "startTime eq 1605063600 and endTime eq 1605186000",
+        "in": "query",
+        "name": "range",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "select": {
+        "allowReserved": true,
+        "description": "A query to retrieve only the specified parameters. Use . to denote nested fields.",
+        "example": "id",
+        "in": "query",
+        "name": "select",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "timeIntervalInMinParam": {
+        "description": "It defines granularity in minutes.",
+        "in": "query",
+        "name": "time-interval-min",
+        "schema": {
+          "enum": [
+            5,
+            60,
+            1440
+          ],
+          "type": "integer"
+        }
+      }
+    },
+    "schemas": {
+      "AccessPolicies": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/AccessPolicy"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "AccessPolicy": {
+        "description": "Response body for access policy",
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": "string"
+          },
+          "generation": {
+            "format": "Uint64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Identifier of the access policy resource",
+            "example": "123456",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the policy",
+            "example": "testPolicy",
+            "type": "string"
+          },
+          "statement": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatement"
+            },
+            "type": "array"
+          },
+          "systemUid": {
+            "description": "Identifier of the storage system",
+            "example": "2FF70002AC0263D0",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of resource",
+            "example": "access-policy",
+            "type": "string"
+          },
+          "version": {
+            "description": "Version of the policy",
+            "example": "2012-10-17",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ApplyPolicy": {
+        "description": "Apply Policy body",
+        "properties": {
+          "name": {
+            "description": "Name of the user or group",
+            "example": "NewAccessPolicy1",
+            "type": "string"
+          },
+          "policies": {
+            "description": "List of policies to apply",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "user or group",
+            "enum": [
+              "USER",
+              "GROUP"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "policies"
+        ],
+        "type": "object"
+      },
+      "BucketCapacityHistory": {
+        "description": "Bucket capacity trends based on the specified granularity and time range.",
+        "properties": {
+          "capacityData": {
+            "$ref": "#/components/schemas/BucketsCapacityHistoricalMetricData"
+          },
+          "endTime": {
+            "description": "End time for historical data.",
+            "example": 162564271,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier of the bucket resource",
+            "example": "bucket1",
+            "type": "string"
+          },
+          "startTime": {
+            "description": "Start time for historical data.",
+            "example": 1625556314,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "Type of the resource",
+            "example": "bucket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketCapacityHistoryList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/BucketCapacityHistory"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "BucketTags": {
+        "description": "Tags for the bucket",
+        "items": {
+          "properties": {
+            "key": {
+              "description": "Key of the Tag",
+              "example": "location",
+              "maxLength": 128,
+              "type": "string"
+            },
+            "value": {
+              "default": "",
+              "description": "Value for the Key",
+              "example": "us",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ]
+        },
+        "type": [
+          "array",
+          "null"
+        ]
+      },
+      "Buckets": {
+        "description": "Response body for get buckets call",
+        "properties": {
+          "bucketTags": {
+            "$ref": "#/components/schemas/BucketTags"
+          },
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "compression": {
+            "description": "Field to check if compression is  enabled or disabled",
+            "example": false,
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": "string"
+          },
+          "generation": {
+            "format": "Uint64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Identifier of the bucket resource",
+            "example": "id1",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the bucket",
+            "example": "myBucketName",
+            "type": "string"
+          },
+          "notificationService": {
+            "description": "Indicates whether the Notification Service is enabled for this bucket.",
+            "example": "DISABLED",
+            "type": "string"
+          },
+          "notificationServiceConfiguration": {
+            "$ref": "#/components/schemas/EventConfigurations"
+          },
+          "objectLockConfiguration": {
+            "$ref": "#/components/schemas/ObjectLockConfiguration"
+          },
+          "systemUid": {
+            "description": "Identifier of the storage system",
+            "example": "system1",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the resource",
+            "type": "string"
+          },
+          "versioning": {
+            "description": "Indicates whether versioning is enabled for this bucket.",
+            "example": "Disabled",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "BucketsCapacityHistoricalMetricData": {
+        "description": "Timeseries data for particular metric type",
+        "properties": {
+          "bucketId": {
+            "description": "Identifier of the bucket resource",
+            "example": "bucket1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BucketsCapacityMetricSeriesData"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "systemId": {
+            "description": "Identifier of the storage system",
+            "example": "HF2B93C1UG",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "count of series data",
+            "example": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketsCapacityMetricSeriesData": {
+        "properties": {
+          "timestampMs": {
+            "description": "epoch timestamp",
+            "example": 1605063600,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "usageMiB": {
+            "description": "Represents the average logical usage value at a specific timestamp.",
+            "example": 46,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketsList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/Buckets"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "CommonListResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in this response.",
+            "type": "integer"
+          },
+          "offset": {
+            "description": "The offset query parameter from the request.",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items matching the filter parameter in the request.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "offset"
+        ]
+      },
+      "CommonResourceAttributes": {
+        "properties": {
+          "cloudState": {
+            "description": "Cloud connectivity status of the system to which the resource belongs.",
+            "example": "CONNECTED",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errCode": {
+            "description": "Error code of the blocked status of the system where the resource belongs",
+            "example": "E01",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errMessage": {
+            "description": "Reason of the blocked status of the system where the resource belongs",
+            "example": "This storage system is not actively monitored in the cloud portal. Data Services Cloud Console proactively disabled monitoring and management of storage system with serial number {systemId} for sending excessive cloud events or for not responding to requests.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "CreateAccessPolicyBody": {
+        "description": "Access Policy create request body",
+        "properties": {
+          "name": {
+            "description": "Name of the Access Policy to be created",
+            "example": "NewAccessPolicy1",
+            "type": "string"
+          },
+          "statement": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementInput"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "Access policy version",
+            "example": "2012-10-17",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "statement"
+        ],
+        "type": "object"
+      },
+      "CreateBucketBody": {
+        "description": "Bucket creation request body",
+        "properties": {
+          "bucketTags": {
+            "$ref": "#/components/schemas/BucketTags"
+          },
+          "compression": {
+            "description": "Field to enable or disable compression for the bucket",
+            "enum": [
+              "ENABLED",
+              "DISABLED"
+            ],
+            "example": "DISABLED",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the bucket to be created",
+            "example": "myBucketName",
+            "type": "string"
+          },
+          "notificationService": {
+            "description": "Enables or disables the bucket\u2019s Notification Service.",
+            "enum": [
+              "ENABLED",
+              "DISABLED"
+            ],
+            "example": "DISABLED",
+            "type": "string"
+          },
+          "notificationServiceConfiguration": {
+            "$ref": "#/components/schemas/EventConfigurationsInput"
+          },
+          "objectLockConfiguration": {
+            "$ref": "#/components/schemas/ObjectLockConfigurationInput"
+          },
+          "versioning": {
+            "description": "Enables or disables versioning for this bucket.",
+            "enum": [
+              "ENABLED"
+            ],
+            "example": "ENABLED",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "DefaultRetention": {
+        "description": "Default retention period applied to new objects under the bucket\u2019s object lock.",
+        "properties": {
+          "days": {
+            "description": "Days for the retention",
+            "example": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "mode": {
+            "description": "Mode for the retention",
+            "example": "GOVERNANCE",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "years": {
+            "description": "Years for the retention",
+            "example": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "DefaultRetentionInput": {
+        "description": "Default retention period applied to new objects under the bucket\u2019s object lock.",
+        "properties": {
+          "days": {
+            "description": "Days for the retention",
+            "example": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "mode": {
+            "description": "Mode for the retention",
+            "enum": [
+              "GOVERNANCE",
+              "COMPLIANCE"
+            ],
+            "example": "GOVERNANCE",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "years": {
+            "description": "Years for the retention",
+            "example": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "EditBucketBody": {
+        "description": "Edit bucket request body",
+        "properties": {
+          "bucketTags": {
+            "$ref": "#/components/schemas/BucketTags"
+          },
+          "compression": {
+            "description": "Field to enable or disable compression for the bucket",
+            "enum": [
+              "ENABLED",
+              "DISABLED"
+            ],
+            "example": "DISABLED",
+            "type": "string"
+          },
+          "notificationService": {
+            "description": "Enables or disables the bucket\u2019s Notification Service.",
+            "enum": [
+              "ENABLED",
+              "DISABLED"
+            ],
+            "example": "DISABLED",
+            "type": "string"
+          },
+          "notificationServiceConfiguration": {
+            "$ref": "#/components/schemas/EventConfigurationsInput"
+          },
+          "objectLockConfiguration": {
+            "$ref": "#/components/schemas/ObjectLockConfigurationInput"
+          }
+        },
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the request",
+            "example": "f57dcca3345820eb579c9317ce36dd92",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A machine friendly identifier for the error response",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code of the response",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "An example error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "message",
+          "errorCode",
+          "debugId"
+        ]
+      },
+      "EventConfigurations": {
+        "description": "Event configurations for the bucket.",
+        "items": {
+          "properties": {
+            "endpointId": {
+              "description": "Unique string to represent external endpoint",
+              "example": "Endpoint1",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "event": {
+              "description": "Events types",
+              "example": "SampleTopic",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "topic": {
+              "description": "Name of the external topic",
+              "example": "SampleTopic",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "EventConfigurationsInput": {
+        "description": "Event configurations for the bucket.",
+        "items": {
+          "properties": {
+            "endpointId": {
+              "description": "Unique string to represent external endpoint",
+              "example": "Endpoint1",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "event": {
+              "description": "Events types for which the notification should be sent",
+              "example": "S3:Sample:*",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "topic": {
+              "description": "Name of the external topic the notification should be sent",
+              "example": "SampleTopic",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "GetGroupDetails": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/GroupItem"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "GroupItem": {
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": "string"
+          },
+          "generation": {
+            "format": "Uint64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Identifier of the group resource",
+            "example": "MINIO162_Group",
+            "type": "string"
+          },
+          "members": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "example": "NewGroup1",
+            "type": "string"
+          },
+          "policy": {
+            "type": "string"
+          },
+          "status": {
+            "example": "enabled",
+            "type": "string"
+          },
+          "systemUid": {
+            "description": "Identifier of the storage system",
+            "example": "MINIO162",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "HomeUsersList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/UserListDetails"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ObjectCreateGroupBody": {
+        "description": "Group creation request body",
+        "properties": {
+          "name": {
+            "description": "Name of the group to be created",
+            "example": "NewGroup1",
+            "type": "string"
+          },
+          "users": {
+            "description": "A list of user names to be added to the group.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "ObjectLockConfiguration": {
+        "description": "Locking details for the bucket",
+        "properties": {
+          "objectLockEnabled": {
+            "description": "Field to check if object lock is enabled",
+            "example": "Enabled",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rule": {
+            "$ref": "#/components/schemas/Rule"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "ObjectLockConfigurationInput": {
+        "description": "Object Locking details for the bucket",
+        "properties": {
+          "objectLockEnabled": {
+            "description": "Field to enable object lock",
+            "enum": [
+              "ENABLED"
+            ],
+            "example": "ENABLED",
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/RuleInput"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "ObjectUpdateGroupBody": {
+        "description": "Group update request body",
+        "properties": {
+          "users": {
+            "description": "A list of user names to be added to the group.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "PolicyCondition": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "description": "Access policy statement conditions schema for create/update input",
+        "type": "object"
+      },
+      "PolicyStatement": {
+        "description": "Access policy statement",
+        "properties": {
+          "action": {
+            "description": "Specifies the action that is allowed or denied",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "condition": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PolicyCondition"
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "effect": {
+            "description": "Specifies whether the statement results in an allow or deny",
+            "type": "string"
+          },
+          "resource": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "sid": {
+            "description": "Identifier of the statement",
+            "example": "bucket-policy1:readonly",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "PolicyStatementInput": {
+        "description": "Access policy statements schema for create/update input",
+        "properties": {
+          "action": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "condition": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/PolicyCondition"
+            },
+            "type": "object"
+          },
+          "effect": {
+            "enum": [
+              "ALLOW",
+              "DENY"
+            ],
+            "example": "ALLOW",
+            "type": "string"
+          },
+          "resource": {
+            "oneOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "sid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource",
+          "action",
+          "effect"
+        ],
+        "type": "object"
+      },
+      "Rule": {
+        "description": "Rule for the object lock",
+        "properties": {
+          "defaultRetention": {
+            "$ref": "#/components/schemas/DefaultRetention"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "RuleInput": {
+        "description": "Rule for the object lock",
+        "properties": {
+          "defaultRetention": {
+            "$ref": "#/components/schemas/DefaultRetentionInput"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "UpdateAccessPolicyBody": {
+        "description": "Access Policy update request body",
+        "properties": {
+          "statement": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementInput"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "Access policy version",
+            "example": "2012-10-17",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "statement"
+        ],
+        "type": "object"
+      },
+      "UserDetails": {
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "UserDetailsEdit": {
+        "properties": {
+          "resetPassword": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "resetPassword"
+        ],
+        "type": "object"
+      },
+      "UserListDetails": {
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": "string"
+          },
+          "generation": {
+            "format": "Uint64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier of the resource",
+            "type": "string"
+          },
+          "memberOf": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Name of the resource",
+            "example": "NewUser1",
+            "type": "string"
+          },
+          "policyName": {
+            "description": "Name of the policy",
+            "type": "string"
+          },
+          "systemUid": {
+            "description": "Identifier of the storage system",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      },
+      "UserResponseDetails": {
+        "properties": {
+          "secretKey": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "taskResponse": {
+        "properties": {
+          "message": {
+            "description": "Task Message.",
+            "example": "Successfully submitted",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status of the task.",
+            "example": "SUBMITTED",
+            "type": "string"
+          },
+          "taskUri": {
+            "description": "Task URI which can be used to monitor the status of the operation.",
+            "example": "/rest/vega/v1/tasks/4969a568-6fed-4915-bcd5-e4566a75e00c",
+            "type": "string"
+          }
+        },
+        "required": [
+          "taskUri"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "description": "Storage Fleet API uses a JWT bearer token for authentication.\nAn authentication token can be obtained from the HPE GreenLake console.\n",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "HPE Greenlake For Object Storage REST APIs.",
+    "license": {
+      "name": "HPE End User License Agreement",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE Greenlake For Object Storage REST APIs.",
+    "version": "1.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/access-policies": {
+      "get": {
+        "description": "Retrieves all access policies associated with the HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}. The response can be filtered, sorted, and paginated using query parameters.",
+        "operationId": "DeviceType7ListAccessPolicies",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objFilterParams"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          },
+          {
+            "allowReserved": true,
+            "description": "A list of properties defining the sort order. This takes a single property name followed\nby the direction to sort in, separated by a space.\nThe supported properties are `id`, `systemUid` and `generation`. If not specified,\nthe default behaviour is to sort by `generation`. The supported directions are\n`asc` and `desc` for ascending and descending respectively.\n",
+            "example": "id desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "generation desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPolicies"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get all access policies for HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "access-policies"
+        ]
+      },
+      "post": {
+        "description": "Create new access policy for HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
+        "operationId": "DeviceType7CreateAccessPolicy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessPolicyBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Create new access policy for HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "access-policies"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/access-policies/{policyId}": {
+      "delete": {
+        "description": "Delete HPE Alletra Storage MP X10000 ObjectStore access policy identified by {policyId}",
+        "operationId": "DeviceType7DeleteAccessPolicyById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objPolicyId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Delete HPE Alletra Storage MP X10000 ObjectStore access policy",
+        "tags": [
+          "access-policies"
+        ]
+      },
+      "get": {
+        "description": "Get HPE Alletra Storage MP X10000 ObjectStore access policy identified by {policyId}",
+        "operationId": "DeviceType7GetAccessPolicyById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objPolicyId"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessPolicy"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get single HPE Alletra Storage MP X10000 ObjectStore access policy",
+        "tags": [
+          "access-policies"
+        ]
+      },
+      "put": {
+        "description": "Update HPE Alletra Storage MP X10000 ObjectStore access policy identified by {policyId}",
+        "operationId": "DeviceType7UpdateAccessPolicyById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objPolicyId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccessPolicyBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Update HPE Alletra Storage MP X10000 ObjectStore access policy",
+        "tags": [
+          "access-policies"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/apply-policy": {
+      "put": {
+        "description": "Apply policy to existing user or group in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
+        "operationId": "ApplyPolicy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyPolicy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Apply policy to existing user or group in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "access-policies"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/buckets": {
+      "get": {
+        "description": "Retrieves a list of buckets associated with a specific HPE Alletra Storage MP X10000 ObjectStore. The results can be filtered, sorted, and paginated using query parameters to customize the response based on your requirements.",
+        "operationId": "DeviceType7ListBuckets",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objFilterParams"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          },
+          {
+            "allowReserved": true,
+            "description": "A list of properties defining the sort order. This takes a single property name followed\nby the direction to sort in, separated by a space.\nThe supported properties are `systemUid`, `id` and `generation`. If not specified,\nthe default behaviour is to sort by `generation`. The supported directions are\n`asc` and `desc` for ascending and descending respectively.\n",
+            "example": "id desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "generation desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketsList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get all buckets for HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "buckets"
+        ]
+      },
+      "post": {
+        "description": "Create new bucket in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
+        "operationId": "DeviceType7CreateBucket",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBucketBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Create new bucket in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "buckets"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/buckets/{bucketId}": {
+      "delete": {
+        "description": "Delete bucket from HPE Alletra Storage MP X10000 ObjectStore identified by {bucketId}",
+        "operationId": "DeviceType7DeleteBucketById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/bucketId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Delete bucket from HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "buckets"
+        ]
+      },
+      "get": {
+        "description": "Get HPE Alletra Storage MP X10000 ObjectStore bucket identified by {bucketId}",
+        "operationId": "DeviceType7SingleBuckets",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/bucketId"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Buckets"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get single HPE Alletra Storage MP X10000 ObjectStore bucket",
+        "tags": [
+          "buckets"
+        ]
+      },
+      "put": {
+        "description": "Edit bucket properties in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId} and {bucketId}",
+        "operationId": "DeviceType7EditBucket",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/bucketId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditBucketBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Edit the properties of an existing bucket in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "buckets"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/buckets/{bucketId}/capacity-history": {
+      "get": {
+        "description": "Get capacity trend data of buckets",
+        "operationId": "BucketCapacityHistory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/bucketId"
+          },
+          {
+            "$ref": "#/components/parameters/range"
+          },
+          {
+            "$ref": "#/components/parameters/timeIntervalInMinParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketCapacityHistoryList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get capacity trend data of buckets",
+        "tags": [
+          "buckets"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/groups": {
+      "get": {
+        "description": "Get all groups for HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
+        "operationId": "DeviceType7ListGroups",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          },
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objFilterParams"
+          },
+          {
+            "allowReserved": true,
+            "description": "A list of properties defining the sort order. This takes a single property name followed\nby the direction to sort in, separated by a space.\nThe supported properties are `systemUid` and `generation`. If not specified,\nthe default behaviour is to sort by `generation`. The supported directions are\n`asc` and `desc` for ascending and descending respectively.\n",
+            "example": "generation desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "generation desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetGroupDetails"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get all groups for HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "groups"
+        ]
+      },
+      "post": {
+        "description": "Create new group in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
+        "operationId": "DeviceType7CreateGroup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectCreateGroupBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Create new group in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/groups/{groupId}": {
+      "delete": {
+        "description": "Delete group from HPE Alletra Storage MP X10000 ObjectStore identified by {groupId}",
+        "operationId": "DeviceType7DeleteGroupById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/groupIdUi"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Delete group from HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "groups"
+        ]
+      },
+      "get": {
+        "description": "Get single group details for HPE Alletra Storage MP X10000 ObjectStore identified by {groupId}",
+        "operationId": "DeviceType7GetGroupById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/groupIdUi"
+          },
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupItem"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get single group details for HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "groups"
+        ]
+      },
+      "put": {
+        "description": "Update group details in HPE Alletra Storage MP X10000 ObjectStore identified by {groupId}\n",
+        "operationId": "DeviceType7UpdateGroupById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/groupIdUi"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ObjectUpdateGroupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Update group details in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/users": {
+      "get": {
+        "description": "Get users properties in ObjectStore identified by {systemId}",
+        "operationId": "DeviceType7GetUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objFilterParams"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          },
+          {
+            "allowReserved": true,
+            "description": "A list of properties defining the sort order. This takes a single property name followed\nby the direction to sort in, separated by a space.\nThe supported properties are `systemUid`, `id` and `generation`. If not specified,\nthe default behaviour is to sort by `generation`. The supported directions are\n`asc` and `desc` for ascending and descending respectively.\n",
+            "example": "id desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "generation desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeUsersList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get the properties of existing users in ObjectStore",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "description": "Create new user in HPE Alletra Storage MP X10000 device identified by {systemId}",
+        "operationId": "DeviceType7CreateUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDetails"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDetails"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Create new user in HPE Alletra Storage MP X10000 device",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/users/{userId}": {
+      "delete": {
+        "description": "Delete user from HPE Alletra Storage MP X10000 ObjectStore identified by {bucketId}",
+        "operationId": "DeviceType7DeleteUserById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objectUserId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Delete user from HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "users"
+        ]
+      },
+      "get": {
+        "description": "Get user properties in ObjectStore identified by {systemId} and {userId}",
+        "operationId": "DeviceType7GetSingleUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objectUserId"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListDetails"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get the properties of an existing user in ObjectStore",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "Edit user properties in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId} and {userId}",
+        "operationId": "DeviceType7EditUser",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objectUserId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserDetailsEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Edit the properties of an existing user in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "users"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://eu1.data.cloud.hpe.com"
+    },
+    {
+      "url": "https://us1.data.cloud.hpe.com"
+    },
+    {
+      "url": "https://jp1.data.cloud.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "The Access Policies API provides endpoints for creating, managing, and configuring access policies. ",
+      "name": "access-policies"
+    },
+    {
+      "description": "The Buckets API provides endpoints for creating, managing, and configuring storage buckets.  Buckets are containers for organizing and storing data, and this API allows full control over their  lifecycle, including creation, updates, retrieval, and deletion.",
+      "name": "buckets"
+    },
+    {
+      "description": "The Groups API provides endpoints for creating, managing, and configuring groups.",
+      "name": "groups"
+    },
+    {
+      "description": "The Users API provides endpoints for creating, managing, and configuring users.",
+      "name": "users"
+    }
+  ]
+}

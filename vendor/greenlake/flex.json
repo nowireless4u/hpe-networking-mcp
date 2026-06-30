@@ -1,0 +1,1776 @@
+{
+  "components": {
+    "schemas": {
+      "BadRequestErrorDetail": {
+        "properties": {
+          "issues": {
+            "description": "An array of bad request issues.",
+            "items": {
+              "$ref": "#/components/schemas/ErrorIssue"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "The type of error details.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "issues"
+        ],
+        "type": "object"
+      },
+      "Device": {
+        "properties": {
+          "billingAccountName": {
+            "description": "Name of the associated billing account",
+            "example": "Hewlett Packard Enterprises",
+            "type": "string"
+          },
+          "billingTier": {
+            "description": "Name of the associated distributor account",
+            "example": "HPE Distributions",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Date of creation of the resource",
+            "example": "2023-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "deviceType": {
+            "description": "The type of the device.",
+            "enum": [
+              "ALS",
+              "AP",
+              "BLE",
+              "COMPUTE",
+              "CONTROLLER",
+              "DHCI_COMPUTE",
+              "DHCI_STORAGE",
+              "EINAR",
+              "EINR",
+              "GATEWAY",
+              "IAP",
+              "LTE_MODEM",
+              "MC",
+              "STORAGE",
+              "SWITCH",
+              "NW_THIRD_PARTY",
+              "PCE",
+              "SD_WAN_GW",
+              "OPSRAMP_SAAS",
+              "SD_SAAS",
+              "SENSOR",
+              "BRIDGES",
+              "UNKNOWN"
+            ],
+            "example": "DHCI_STORAGE",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter of the resource",
+            "example": 1,
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "description": "ID of the Device",
+            "example": "3b741a59-a22b-432f-b2cf-b72cc1a04c2d",
+            "format": "uuid",
+            "type": "string"
+          },
+          "macAddress": {
+            "description": "MAC address of the device",
+            "example": "CA:35:DC:4F:5D:FE",
+            "type": "string"
+          },
+          "make": {
+            "description": "The maker of the device",
+            "example": "HPE",
+            "type": "string"
+          },
+          "model": {
+            "description": "The model of the device.",
+            "example": "HPE Compute 6030X",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the device",
+            "example": "custom-device-name",
+            "type": "string"
+          },
+          "partNumber": {
+            "description": "Part number of the device",
+            "example": "JK130GT",
+            "type": "string"
+          },
+          "resourceId": {
+            "description": "Unique resource ID of the device",
+            "example": "3b741a59-a22b-432f-b2cf-b72cc1a04c2d",
+            "format": "uuid",
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "Serial number of the device",
+            "example": "CN134FD36",
+            "type": "string"
+          },
+          "tags": {
+            "description": "The tags associated with the device.",
+            "items": {
+              "$ref": "#/components/schemas/Tag"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "type of resource",
+            "example": "flex/devices",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date of last update of the resource",
+            "example": "2023-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "macAddress",
+          "serialNumber",
+          "resourceId",
+          "partNumber",
+          "deviceType",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "generation",
+          "model",
+          "make"
+        ],
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "issues": {
+            "items": {
+              "properties": {
+                "field": {
+                  "description": "Field that caused the error",
+                  "examples": [
+                    "name"
+                  ],
+                  "type": "string"
+                },
+                "message": {
+                  "description": "Message describing the error",
+                  "examples": [
+                    "Name is required"
+                  ],
+                  "type": "string"
+                },
+                "reason": {
+                  "description": "Reason for the error",
+                  "examples": [
+                    "Invalid value"
+                  ],
+                  "type": "string"
+                },
+                "source": {
+                  "description": "Source of the error",
+                  "examples": [
+                    "hpe.greenlake.organizations"
+                  ],
+                  "type": "string"
+                },
+                "subject": {
+                  "description": "Subject of the error",
+                  "examples": [
+                    "Order"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "subject"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "metadata": {
+            "description": "Any additional key value pairs that the service defines.",
+            "properties": {
+              "recommendedActions": {
+                "items": {
+                  "description": "Action recommended to the user",
+                  "examples": [
+                    "Contact admin to perform operation"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "retryAfterSeconds": {
+            "description": "The number of seconds to wait before retrying the request.",
+            "example": 60,
+            "type": "integer"
+          },
+          "source": {
+            "description": "The source of the error, typically a registered API group.",
+            "examples": [
+              "hpe.greenlake.organizations"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of error details.",
+            "examples": [
+              "hpe.greenlake.metadata"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "source",
+          "metadata",
+          "issues",
+          "retryAfterSeconds"
+        ],
+        "type": "object"
+      },
+      "ErrorIssue": {
+        "properties": {
+          "description": {
+            "description": "A brief explanation of the error.",
+            "type": "string"
+          },
+          "source": {
+            "description": "The source of the error.",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The specific issue key.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "subject"
+        ],
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-friendly identifier for the error",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "default": 400,
+            "description": "HTTP equivalent status code",
+            "format": "int64",
+            "maximum": 599,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "GeneralErrorDetail": {
+        "properties": {
+          "metadata": {
+            "description": "Additional key pairs.",
+            "type": "object"
+          },
+          "source": {
+            "description": "The source of the error.",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of error.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "source",
+          "metadata"
+        ],
+        "type": "object"
+      },
+      "HpeGreenLakeBadRequestError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error.",
+            "example": "64343c3c-3016-4234-baee-765651aa4bb3",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error.",
+            "type": "string"
+          },
+          "errorDetails": {
+            "items": {
+              "$ref": "#/components/schemas/BadRequestErrorDetail"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "HpeGreenLakeGeneralError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error.",
+            "example": "64343c3c-3016-4234-baee-765651aa4bb3",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error.",
+            "type": "string"
+          },
+          "errorDetails": {
+            "items": {
+              "$ref": "#/components/schemas/GeneralErrorDetail"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "HpeGreenLakeServerError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error.",
+            "example": "64343c3c-3016-4234-baee-765651aa4bb3",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error.",
+            "type": "string"
+          },
+          "errorDetails": {
+            "items": {
+              "$ref": "#/components/schemas/ServerErrorDetail"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "Order": {
+        "properties": {
+          "billingAccountId": {
+            "description": "Unique ID of the billing account",
+            "example": "HP-APJ-0012345678",
+            "type": "string"
+          },
+          "billingAccountName": {
+            "description": "Name of the billing account",
+            "example": "Hewlett Packard Enterprise Cloud Storage",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Date of creation of the resource",
+            "example": "2023-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "customerName": {
+            "description": "Name of the customer",
+            "example": "Some Company Inc.",
+            "type": "string"
+          },
+          "distributorName": {
+            "description": "Name of the distributor",
+            "example": "HPE Distributions",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter of the resource",
+            "example": 1,
+            "format": "int32",
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique ID of the order.",
+            "example": "3b741a59-a22b-432f-b2cf-b72cc1a04c2d",
+            "format": "uuid",
+            "type": "string"
+          },
+          "isFlexPartner": {
+            "description": "Whether the order is a Flex Partner order",
+            "example": true,
+            "type": "boolean"
+          },
+          "orderEndDate": {
+            "description": "Date of order expiration",
+            "example": "2035-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "orderStartDate": {
+            "description": "Date of order creation",
+            "example": "2025-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "partnerName": {
+            "description": "Name of partnered vendor",
+            "example": "Friendly Reseller LLC",
+            "type": "string"
+          },
+          "resellerName": {
+            "description": "Name of the reseller",
+            "example": "1st Street Resellers",
+            "type": "string"
+          },
+          "sowId": {
+            "description": "Unique ID of Start of Work (SOW) billing order",
+            "example": "OPE-0011261086",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of resource.",
+            "example": "flex/orders",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date of last update of the resource",
+            "example": "2023-01-01T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt",
+          "type",
+          "generation",
+          "billingAccountId",
+          "sowId",
+          "billingAccountName",
+          "orderStartDate",
+          "orderEndDate",
+          "customerName"
+        ],
+        "type": "object"
+      },
+      "OrderTransform": {
+        "properties": {
+          "billingAccountId": {
+            "description": "Unique billing account ID",
+            "example": "HP-123456789",
+            "type": "string"
+          },
+          "billingAccountName": {
+            "description": "Unique billing account name",
+            "example": "Hewlett Packard Enterprise Cloud Storage",
+            "type": "string"
+          },
+          "customerName": {
+            "description": "Unique customer name",
+            "example": "Some Company Inc.",
+            "type": "string"
+          },
+          "partnerName": {
+            "description": "Unique partner name",
+            "example": "HPE Distributions",
+            "type": "string"
+          },
+          "sowId": {
+            "description": "The unique SOW ID.",
+            "example": "OPE-123456789",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ServerErrorDetail": {
+        "properties": {
+          "retryAfterSeconds": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "retryAfterSeconds"
+        ],
+        "type": "object"
+      },
+      "Tag": {
+        "description": "A tag is a form of metadata applied to any resource and primarily used to categorize resources.",
+        "properties": {
+          "name": {
+            "description": "Name of the tag",
+            "example": "category1",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value of the tag",
+            "example": "value1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "This is the API reference document for the HPE Flex Solutions data service.\nIt provides endpoints to view and manage Flex device and orders solutions.\n",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE Flex Solutions",
+    "version": "v1beta1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/flex/v1beta1/devices": {
+      "get": {
+        "description": "This endpoint allows you to retrieve and search for devices.\nYou can filter, sort, and paginate the results.\n<br>\n**Pagination:** This endpoint supports offset-based pagination using `limit` and `offset` parameters.\n",
+        "operationId": "getDevices",
+        "parameters": [
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined by logical operators.\n<br>\nFor the v1beta1 API, the following fields are supported for filtering under the [ODATA specification](https://www.odata.org/documentation/):\n  * `id`\n  * `macAddress`\n  * `serialNumber`\n  * `resourceId`\n  * `partNumber`\n  * `name`\n  * `type`\n  * `model`\n  * `make`\n  * `billingAccountName`\n  * `billingTier`\n<br>\n",
+            "examples": {
+              "Filter example 1": {
+                "description": "Match all devices with given selected filters",
+                "value": "macAddress in ('35:CA:68:8C:B0:51', '8A:26:D2:82:65:D0') and make eq 'HPE'"
+              },
+              "Filter example 2": {
+                "description": "Match all devices with given selected filters",
+                "value": "resourceId eq '554c7740-355f-4ece-8334-3fe9ea9ee33e' and billingAccountName eq 'HPE Tech Care'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated list of fields to be returned in the response.\nIf not provided, all fields will be returned.\n<br>\nAll fields are supported.\n",
+            "example": "serialNumber,type,make,orderEndDate,billingTier",
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated list of fields to be sorted by in the response.\nThe default sorting order is by resourceId in ascending order.\n",
+            "example": "resourceId,model asc",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 10,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of entities to return with a maximum of 100.",
+            "example": 30,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/Device"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_bad_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "errorDetails": [
+                        {
+                          "issues": [
+                            {
+                              "description": "Invalid filter expression.",
+                              "source": "query.parameter",
+                              "subject": "filter"
+                            }
+                          ],
+                          "type": "hpe.greenlake.bad_request"
+                        }
+                      ],
+                      "httpStatusCode": 400,
+                      "message": "Bad Request."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeBadRequestError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unauthorized_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Token provided is invalid"
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "Unauthorized Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_forbidden_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Permission is denied to perform requested operation."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "Forbidden Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unprocessable_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_UNPROCESSABLE_CONTENT",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "content": "Could not process the content."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 422,
+                      "message": "Unprocessable Content"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_too_many_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "apiRateLimit": "Too Many Requests. Rate limit has exceeded a predefined value."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 429,
+                      "message": "Too Many Requests"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Too many requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "The number of requests allowed in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests remaining in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Number of seconds until the quota resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_internal_server_error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "Internal Server Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeServerError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get and search for Device",
+        "tags": [
+          "Device Data"
+        ]
+      }
+    },
+    "/flex/v1beta1/devices/{id}": {
+      "get": {
+        "description": "This endpoint allows you to retrieve a device by device resourceID.\n",
+        "operationId": "getDevice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique identifier (UUID) of the device resource.",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_bad_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "errorDetails": [
+                        {
+                          "issues": [
+                            {
+                              "description": "Parameter ID is missing.",
+                              "source": "path.parameter",
+                              "subject": "id"
+                            }
+                          ],
+                          "type": "hpe.greenlake.bad_request"
+                        }
+                      ],
+                      "httpStatusCode": 400,
+                      "message": "Bad Request."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeBadRequestError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unauthorized_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Token provided is invalid"
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "Unauthorized Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_forbidden_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Permission is denied to perform requested operation."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "Forbidden Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unprocessable_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_UNPROCESSABLE_CONTENT",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "content": "Could not process the content."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 422,
+                      "message": "Unprocessable Content"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_too_many_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "apiRateLimit": "Too Many Requests. Rate limit has exceeded a predefined value."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 429,
+                      "message": "Too Many Requests"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Too many requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "The number of requests allowed in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests remaining in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Number of seconds until the quota resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_internal_server_error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "Internal Server Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeServerError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get a single device by device resource ID",
+        "tags": [
+          "Device Data"
+        ]
+      }
+    },
+    "/flex/v1beta1/orders": {
+      "get": {
+        "description": "This endpoint allows you to retrieve and search for orders.\nYou can filter, sort, and paginate the results.\n<br>\n**Pagination:** This endpoint supports offset-based pagination using `limit` and `offset` parameters.\n",
+        "operationId": "getOrders",
+        "parameters": [
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined by logical operators.\n<br>\nFor the v1beta1 API, the following fields are supported for filtering under the [ODATA specification](https://www.odata.org/documentation/):\n  * `id`\n  * `billingAccountId`\n  * `sowId`\n  * `billingAccountName`\n  * `customerName`\n  * `resellerName`\n  * `partnerName`\n  * `distributorName`\n  * `isFlexPartner`\n<br>\n",
+            "examples": {
+              "Filter example 1": {
+                "description": "Match all orders with given selected filters",
+                "value": "billingAccountId in ('HP-APJ-999-JPN-00104', 'HP-APUS-787-EN-00100') and billingAccountName eq 'accountname'"
+              },
+              "Filter example 2": {
+                "description": "Match all orders with given selected filters",
+                "value": "sowId eq 'OPE-0011261086' and customerName eq 'HPE Tech Care'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated list of fields to be returned in the response.\nIf not provided, all fields will be returned.\n<br>\nAll fields are supported.\n",
+            "example": "resellerName,billingAccountName,orderEndDate",
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated list of fields to be sorted by in the response.\nThe default sorting order is by `orderEndDate` in ascending order.\n",
+            "example": "orderEndDate asc",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 10,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of entities to return with a maximum of 100.",
+            "example": 30,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "description": "The number of returned items.",
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/Order"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "description": "The offset of the returned page.",
+                      "type": "integer"
+                    },
+                    "total": {
+                      "description": "The total number of items in the collection that match the filter query, if one was provided in the request.",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_bad_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "errorDetails": [
+                        {
+                          "issues": [
+                            {
+                              "description": "Invalid filter expression.",
+                              "source": "query.parameter",
+                              "subject": "filter"
+                            }
+                          ],
+                          "type": "hpe.greenlake.bad_request"
+                        }
+                      ],
+                      "httpStatusCode": 400,
+                      "message": "Bad Request."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeBadRequestError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unauthorized_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Token provided is invalid"
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "Unauthorized Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_forbidden_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Permission is denied to perform requested operation."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "Forbidden Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unprocessable_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_UNPROCESSABLE_CONTENT",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "content": "Could not process the content."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 422,
+                      "message": "Unprocessable Content"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_too_many_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "apiRateLimit": "Too Many Requests. Rate limit has exceeded a predefined value."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 429,
+                      "message": "Too Many Requests"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Too many requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "The number of requests allowed in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests remaining in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Number of seconds until the quota resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_internal_server_error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "Internal Server Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeServerError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get and search for orders",
+        "tags": [
+          "Order Data"
+        ]
+      }
+    },
+    "/flex/v1beta1/orders/transform": {
+      "get": {
+        "description": "This endpoint allows distinct transformative queries for orders.\n<br>\nA transform query applies a logical function to a resource set, such as aggregating by a element.\n<br>\n**Pagination:** This endpoint supports offset-based pagination using `limit` and `offset` parameters.\n",
+        "operationId": "getOrdersTransform",
+        "parameters": [
+          {
+            "description": "Field to be grouped by. Will return unique results of that type.\n<br>\nSupported fields are:\n  * `sowId`\n  * `customerName`\n  * `billingAccountName`\n  * `billingAccountId`\n  * `partnerName`\n<br>\n(partnerName is a unique combined set of resellerName and distributorName)\n",
+            "example": "partnerName",
+            "in": "query",
+            "name": "group-by",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter expressions consisting of simple comparison operations joined by logical operators.\n<br>\nFor the v1beta1 API, the following fields are supported for filtering under the [ODATA specification](https://www.odata.org/documentation/):\n  * `billingAccountId`\n  * `sowId`\n  * `billingAccountName`\n  * `customerName`\n  * `resellerName`\n  * `distributorName`\n  * `partnerName`\n<br>\n",
+            "examples": {
+              "Filter example 1": {
+                "description": "Match all orders with given selected filters",
+                "value": "billingAccountId in ('HP-APJ-999-JPN-00104', 'HP-APUS-787-EN-00100') and billingAccountName eq 'accountname'"
+              },
+              "Filter example 2": {
+                "description": "Match all orders with given selected filters",
+                "value": "sowId eq 'OPE-0011261086' and customerName eq 'HPE Tech Care'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Fields to be sorted by in the response.\nThe default sorting order is by the group-by field in ascending order.\nThe sort field must be one of the group-by fields, if given.\n",
+            "example": "partnerName desc",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based resource offset to start the response from.",
+            "example": 10,
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of entities to return with a maximum of 100.",
+            "example": 30,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "$ref": "#/components/schemas/OrderTransform"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "total",
+                    "offset"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_bad_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "errorDetails": [
+                        {
+                          "issues": [
+                            {
+                              "description": "Required parameter is missing.",
+                              "source": "query.parameter",
+                              "subject": "group-by"
+                            }
+                          ],
+                          "type": "hpe.greenlake.bad_request"
+                        }
+                      ],
+                      "httpStatusCode": 400,
+                      "message": "Bad Request."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeBadRequestError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unauthorized_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Token provided is invalid"
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "Unauthorized Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_forbidden_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Permission is denied to perform requested operation."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "Forbidden Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unprocessable_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_UNPROCESSABLE_CONTENT",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "content": "Could not process the content."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 422,
+                      "message": "Unprocessable Content"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_too_many_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "apiRateLimit": "Too Many Requests. Rate limit has exceeded a predefined value."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 429,
+                      "message": "Too Many Requests"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Too many requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "The number of requests allowed in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests remaining in the current time window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Number of seconds until the quota resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_internal_server_error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "Internal Server Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeServerError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get distinct transformative data for orders",
+        "tags": [
+          "Order Data"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://us-west.api.greenlake.hpe.com"
+    }
+  ]
+}

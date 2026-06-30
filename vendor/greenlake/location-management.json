@@ -1,0 +1,2252 @@
+{
+  "components": {
+    "schemas": {
+      "apiError": {
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error for debugging purposes.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique error code identifier (e.g., HPE_GL_LM_BAD_REQUEST).",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional details about the error.",
+            "items": {
+              "$ref": "#/components/schemas/apiErrorDetail"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "HTTP equivalent status code.",
+            "type": "string"
+          },
+          "message": {
+            "description": "User-friendly error message.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "message",
+          "debugId",
+          "httpStatusCode"
+        ],
+        "type": "object"
+      },
+      "apiErrorDetail": {
+        "properties": {
+          "metadata": {
+            "description": "Additional metadata about the error.",
+            "properties": {
+              "error": {
+                "description": "Detailed error message.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "source": {
+            "description": "Source of the error (e.g., hpe.greenlake.lm).",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of error detail (e.g., hpe.greenlake.metadata).",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "db.AddressType": {
+        "enum": [
+          "street",
+          "shipping_receiving"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "AddressTypeStreet",
+          "AddressTypeShippingReceiving"
+        ]
+      },
+      "db.ContactType": {
+        "enum": [
+          "primary",
+          "shipping_receiving",
+          "security",
+          "operations"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "ContactTypePrimary",
+          "ContactTypeShippingReceiving",
+          "ContactTypeSecurity",
+          "ContactTypeOperations"
+        ]
+      },
+      "db.LocationType": {
+        "enum": [
+          "building"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "LocationTypeBuilding"
+        ]
+      },
+      "db.ValidationCycle": {
+        "enum": [
+          "",
+          "6",
+          "12",
+          "18"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "ValidationCycleValue0",
+          "ValidationCycle6",
+          "ValidationCycle12",
+          "ValidationCycle18"
+        ]
+      },
+      "db.csvUploadStatus": {
+        "enum": [
+          "INITIALIZED",
+          "IN_PROGRESS",
+          "SUCCEEDED",
+          "FAILED"
+        ],
+        "type": "string",
+        "x-enum-varnames": [
+          "INITIALIZED",
+          "IN_PROGRESS",
+          "SUCCEEDED",
+          "FAILED"
+        ]
+      },
+      "server.AddressItem": {
+        "properties": {
+          "city": {
+            "description": "City name.",
+            "type": "string"
+          },
+          "countryCode": {
+            "description": "ISO country code.",
+            "type": "string"
+          },
+          "countryName": {
+            "description": "Country name.",
+            "type": "string"
+          },
+          "county": {
+            "description": "County name.",
+            "type": "string"
+          },
+          "label": {
+            "description": "Full address label.",
+            "type": "string"
+          },
+          "lat": {
+            "description": "Latitude coordinate.",
+            "format": "double",
+            "type": "number"
+          },
+          "lng": {
+            "description": "Longitude coordinate.",
+            "format": "double",
+            "type": "number"
+          },
+          "postalCode": {
+            "description": "Postal or ZIP code.",
+            "type": "string"
+          },
+          "state": {
+            "description": "State or province name.",
+            "type": "string"
+          },
+          "stateCode": {
+            "description": "State or province code.",
+            "type": "string"
+          },
+          "street": {
+            "description": "Street address.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "server.AsyncOperationStatus": {
+        "properties": {
+          "endedAt": {
+            "description": "The date and time the CSV upload operation ended.",
+            "type": "string"
+          },
+          "id": {
+            "description": "CSV upload operation generated ID.",
+            "type": "string"
+          },
+          "progressPercent": {
+            "description": "Progress percentage of the CSV upload operation.",
+            "type": "integer"
+          },
+          "result": {
+            "$ref": "#/components/schemas/server.CreateListLocationResponse",
+            "type": "object"
+          },
+          "startedAt": {
+            "description": "The date and time the CSV upload operation started.",
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.csvUploadStatus"
+              }
+            ],
+            "description": "The status of the CSV upload operation."
+          },
+          "suggestedPollingIntervalSeconds": {
+            "description": "The polling interval of the CSV upload operation.",
+            "type": "integer"
+          },
+          "timeoutMinutes": {
+            "type": "integer"
+          },
+          "type": {
+            "const": "locations/asyncOperation",
+            "description": "The type of the resource.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "result",
+          "type"
+        ],
+        "type": "object"
+      },
+      "server.CreateAddressNBRequest": {
+        "properties": {
+          "city": {
+            "description": "The location's city.",
+            "maxLength": 60,
+            "type": "string"
+          },
+          "country": {
+            "description": "The location's country.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the address.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationId": {
+            "description": "The unique identifier of the location.",
+            "type": "string"
+          },
+          "postalCode": {
+            "description": "The location's postal code.",
+            "maxLength": 20,
+            "type": "string"
+          },
+          "state": {
+            "description": "The location's state or region.",
+            "maxLength": 60,
+            "type": "string"
+          },
+          "streetAddress": {
+            "description": "The location's street address.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "streetAddress2": {
+            "description": "The location's street address.",
+            "type": "string"
+          },
+          "type": {
+            "description": "Only addresses of type \u201cshipping_receiving\u201d can be added during an add operation.",
+            "enum": [
+              "shipping_receiving"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "city",
+          "country",
+          "postalCode",
+          "state",
+          "streetAddress",
+          "type"
+        ],
+        "type": "object"
+      },
+      "server.CreateContactsNBRequest": {
+        "properties": {
+          "email": {
+            "description": "The email address associated with the contact.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the contact.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationId": {
+            "description": "The unique identifier of the location.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the contact. For API-created locations with a non-GLP email, append \"NONGLP\" to the name (e.g., \"John Doe NONGLP\").",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "phoneNumber": {
+            "description": "The phone number associated with the contact.",
+            "type": "string"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.ContactType"
+              }
+            ],
+            "description": "The type of contact."
+          }
+        },
+        "required": [
+          "email",
+          "name",
+          "type"
+        ],
+        "type": "object"
+      },
+      "server.CreateListLocationResponse": {
+        "properties": {
+          "errorMessage": {
+            "type": "string"
+          },
+          "failedCount": {
+            "description": "The number of failed location creations.",
+            "type": "integer"
+          },
+          "failedRecords": {
+            "items": {
+              "$ref": "#/components/schemas/server.FailedCreateRecord"
+            },
+            "type": "array"
+          },
+          "succeededCount": {
+            "description": "Number of locations created successfully.",
+            "type": "integer"
+          },
+          "succeededRecords": {
+            "items": {
+              "$ref": "#/components/schemas/server.SuccessCreateRecord"
+            },
+            "type": "array"
+          },
+          "totalCount": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "server.CreateLocationNBRequest": {
+        "properties": {
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/server.CreateAddressNBRequest"
+            },
+            "type": "array"
+          },
+          "contacts": {
+            "description": "Locations must have one primary contact but can have more than one of the other contact types.",
+            "items": {
+              "$ref": "#/components/schemas/server.CreateContactsNBRequest"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "A long description of the location.",
+            "type": "string"
+          },
+          "expiredAt": {
+            "description": "The date the location expired.",
+            "type": "string"
+          },
+          "locationType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.LocationType"
+              }
+            ],
+            "description": "The type of the location.",
+            "value": "building"
+          },
+          "name": {
+            "description": "Provide a descriptive name for the location.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "validated": {
+            "default": true,
+            "description": "Boolean confirming whether the location has been validated or not.",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "type": "string"
+          },
+          "validatedByEmail": {
+            "description": "Email address of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validatedByName": {
+            "description": "The name of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validationCycle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.ValidationCycle"
+              }
+            ],
+            "description": "An integer that defines how long, in months, the location remains validated."
+          },
+          "validationExpired": {
+            "default": false,
+            "description": "A boolean confirming whether the location validation has expired or not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "addresses",
+          "contacts",
+          "name",
+          "locationType"
+        ],
+        "type": "object"
+      },
+      "server.ErrorResponse": {
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "server.FailedCreateRecord": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/server.ErrorResponse"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "server.GetAddressNBResponse": {
+        "properties": {
+          "city": {
+            "description": "The location's city.",
+            "type": "string"
+          },
+          "country": {
+            "description": "The location's country.",
+            "type": "string"
+          },
+          "id": {
+            "description": "A unique identifier for the address.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "lat": {
+            "description": "Latitude coordinate of the address.",
+            "type": "string"
+          },
+          "lng": {
+            "description": "Longitude coordinate of the address.",
+            "type": "string"
+          },
+          "postalCode": {
+            "description": "The locations postal code.",
+            "type": "string"
+          },
+          "state": {
+            "description": "The location's state or region.",
+            "type": "string"
+          },
+          "streetAddress": {
+            "description": "The location's address.",
+            "type": "string"
+          },
+          "streetAddress2": {
+            "description": "The location's address.",
+            "type": "string"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.AddressType"
+              }
+            ],
+            "description": "The type of address."
+          }
+        },
+        "type": "object"
+      },
+      "server.GetContactNBResponse": {
+        "properties": {
+          "email": {
+            "description": "The email address of the contact.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifer of the contact.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the contact.",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "description": "The phone number associated with the contact.",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/db.ContactType"
+          }
+        },
+        "type": "object"
+      },
+      "server.GetLocationNBResponse": {
+        "properties": {
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/server.GetAddressNBResponse"
+            },
+            "type": "array"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/server.GetContactNBResponse"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "A long description of the location.",
+            "type": "string"
+          },
+          "expiredAt": {
+            "description": "The date the location expired.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier for the location.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.LocationType"
+              }
+            ],
+            "description": "Type of location.",
+            "value": "building"
+          },
+          "name": {
+            "description": "The name of the location.",
+            "type": "string"
+          },
+          "validated": {
+            "default": true,
+            "description": "Boolean confirming whether the location has been validated or not.",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "type": "string"
+          },
+          "validatedByEmail": {
+            "description": "Email address of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validatedByName": {
+            "description": "The name of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validationCycle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.ValidationCycle"
+              }
+            ],
+            "description": "An integer in months that defines how long the location remains validated."
+          },
+          "validationExpired": {
+            "default": false,
+            "description": "A boolean confirming whether the location validation has expired or not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "server.GetLocationTagsNBResponse": {
+        "properties": {
+          "locationId": {
+            "description": "The unique identifier for the location.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationName": {
+            "description": "The name of the location.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "An array of tag names and values. The array is empty if the location has no associated tags.",
+            "items": {
+              "$ref": "#/components/schemas/server.GetTags"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "locationId",
+          "locationName"
+        ],
+        "type": "object"
+      },
+      "server.GetTags": {
+        "properties": {
+          "id": {
+            "description": "The unique identifier of the tag.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "The tag name.",
+            "type": "string"
+          },
+          "value": {
+            "description": "The tag value.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "server.ListLocationNBResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items returned",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/server.LocationWithNBAddress"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of items in the collection that match the filter query, if one was provided in the request.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "server.ListLocationTagsNBResponse": {
+        "properties": {
+          "count": {
+            "description": "The number of items returned.",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/server.LocationTags"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based resource offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of items in the collection that match the filter query, if one was provided in the request.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "server.LocationDetails": {
+        "properties": {
+          "description": {
+            "description": "A description of the location.",
+            "type": "string"
+          },
+          "expiredAt": {
+            "description": "The date and time the location expired.",
+            "type": "string"
+          },
+          "locationType": {
+            "$ref": "#/components/schemas/db.LocationType"
+          },
+          "name": {
+            "description": "The name of the location.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "validated": {
+            "description": "A boolean confirming whether the location has been validated or not.",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "type": "string"
+          },
+          "validatedByEmail": {
+            "description": "The email address of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validatedByName": {
+            "description": "The name of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validationCycle": {
+            "$ref": "#/components/schemas/db.ValidationCycle"
+          },
+          "validationExpired": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "server.LocationTags": {
+        "properties": {
+          "createdAt": {
+            "description": "The date the location was created.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The tag name.",
+            "type": "string"
+          },
+          "value": {
+            "description": "The tag value.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "server.LocationWithNBAddress": {
+        "properties": {
+          "city": {
+            "description": "The location's city.",
+            "type": "string"
+          },
+          "country": {
+            "description": "The location's country.",
+            "type": "string"
+          },
+          "expiredAt": {
+            "description": "The date the location expired.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the location.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "lat": {
+            "description": "Latitude coordinate of the location.",
+            "type": "string"
+          },
+          "lng": {
+            "description": "Longitude coordinate of the location.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the location.",
+            "type": "string"
+          },
+          "tags": {
+            "description": "Tags associated with the location.",
+            "items": {
+              "$ref": "#/components/schemas/server.GetTags"
+            },
+            "type": "array"
+          },
+          "validated": {
+            "default": true,
+            "description": "Boolean confirming whether the location has been validated or not.",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "type": "string"
+          },
+          "validatedByEmail": {
+            "description": "Email address of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validatedByName": {
+            "description": "The name of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validationCycle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.ValidationCycle"
+              }
+            ],
+            "description": "An integer that defines how long, in months, the location remains validated."
+          },
+          "validationExpired": {
+            "default": false,
+            "description": "A boolean confirming whether the location validation has expired or not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "server.SuccessCreateRecord": {
+        "properties": {
+          "id": {
+            "description": "The location ID created from a CSV upload.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The location name created from a CSV upload.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "server.UpdateAddressNBRequest": {
+        "properties": {
+          "city": {
+            "description": "The city the location is in.",
+            "maxLength": 60,
+            "type": "string"
+          },
+          "country": {
+            "description": "The country the location is in.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the address.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationId": {
+            "description": "The unique identifier of the location.",
+            "type": "string"
+          },
+          "postalCode": {
+            "description": "The location's postal code.",
+            "maxLength": 20,
+            "type": "string"
+          },
+          "state": {
+            "description": "The location's state.",
+            "maxLength": 60,
+            "type": "string"
+          },
+          "streetAddress": {
+            "description": "The location's address.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "streetAddress2": {
+            "description": "The location's address.",
+            "type": "string"
+          },
+          "type": {
+            "description": "Must match the existing address type. The address type cannot be changed during an update operation.",
+            "enum": [
+              "street",
+              "shipping_receiving"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "server.UpdateAddressesPatchRequest": {
+        "properties": {
+          "add": {
+            "description": "Add new location address information.",
+            "items": {
+              "$ref": "#/components/schemas/server.CreateAddressNBRequest"
+            },
+            "type": "array"
+          },
+          "delete": {
+            "description": "Delete location address information by providing the address ID (UUID). Note that \"street\" type addresses cannot be deleted.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "update": {
+            "description": "Update location address information.",
+            "items": {
+              "$ref": "#/components/schemas/server.UpdateAddressNBRequest"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "server.UpdateContactsNBRequest": {
+        "properties": {
+          "email": {
+            "description": "The email address of the contact.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the contact.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationId": {
+            "description": "The location ID related to the contact.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the contact.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "phoneNumber": {
+            "description": "The phone number associated with the contact.",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/db.ContactType"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "server.UpdateContactsPatchRequest": {
+        "properties": {
+          "add": {
+            "description": "Add location contact information.",
+            "items": {
+              "$ref": "#/components/schemas/server.CreateContactsNBRequest"
+            },
+            "type": "array"
+          },
+          "delete": {
+            "description": "Delete location contact information.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "server.UpdateLocationNBRequest": {
+        "properties": {
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/server.UpdateAddressNBRequest"
+            },
+            "type": "array"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/server.UpdateContactsNBRequest"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "A long description of the location.",
+            "type": "string"
+          },
+          "expiredAt": {
+            "description": "The date the location expired.",
+            "type": "string"
+          },
+          "locationType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.LocationType"
+              }
+            ],
+            "description": "Type of location.",
+            "value": "building"
+          },
+          "name": {
+            "description": "The name of location.",
+            "maxLength": 100,
+            "type": "string"
+          },
+          "validated": {
+            "default": true,
+            "description": "Boolean confirming whether the location has been validated or not.",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "type": "string"
+          },
+          "validatedByEmail": {
+            "description": "Email address of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validatedByName": {
+            "description": "The name of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validationCycle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.ValidationCycle"
+              }
+            ],
+            "description": "An integer that defines, in months, how long the location remains validated."
+          },
+          "validationExpired": {
+            "default": false,
+            "description": "A boolean confirming whether the location validation has expired or not.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "server.UpdateLocationNBResponse": {
+        "properties": {
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/server.GetAddressNBResponse"
+            },
+            "type": "array"
+          },
+          "contacts": {
+            "description": "Locations must have one primary contact but can have more than one of the other contact types.",
+            "items": {
+              "$ref": "#/components/schemas/server.GetContactNBResponse"
+            },
+            "type": "array"
+          },
+          "createdAt": {
+            "description": "The date and time the location was created.",
+            "type": "string"
+          },
+          "description": {
+            "description": "A long descriptions of the location.",
+            "type": "string"
+          },
+          "expiredAt": {
+            "description": "The date and time the location expired.",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the location.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "locationType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.LocationType"
+              }
+            ],
+            "description": "Type of location.",
+            "value": "building"
+          },
+          "name": {
+            "description": "The name of the location.",
+            "type": "string"
+          },
+          "type": {
+            "const": "locations/external-service",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Time of the last update to the location.",
+            "type": "string"
+          },
+          "validated": {
+            "default": true,
+            "description": "Boolean confirming whether the location has been validated or not.",
+            "type": "boolean"
+          },
+          "validatedAt": {
+            "description": "The date and time the location was validated in the format mm-dd-yyyy.",
+            "type": "string"
+          },
+          "validatedByEmail": {
+            "description": "Email address of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validatedByName": {
+            "description": "The name of the workspace user that validated the location.",
+            "type": "string"
+          },
+          "validationCycle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/db.ValidationCycle"
+              }
+            ],
+            "description": "An integer that defines, in months, how long the location remains validated."
+          },
+          "validationExpired": {
+            "default": false,
+            "description": "A boolean confirming whether the location validation has expired or not.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "generation"
+        ],
+        "type": "object"
+      },
+      "server.UpdateLocationPatchRequest": {
+        "properties": {
+          "addresses": {
+            "$ref": "#/components/schemas/server.UpdateAddressesPatchRequest"
+          },
+          "contacts": {
+            "$ref": "#/components/schemas/server.UpdateContactsPatchRequest"
+          },
+          "locationDetails": {
+            "$ref": "#/components/schemas/server.LocationDetails"
+          }
+        },
+        "type": "object"
+      },
+      "server.UpdateLocationTagsNBRequest": {
+        "properties": {
+          "createTags": {
+            "description": "An array of key-value pairs to create new tags.",
+            "items": {
+              "$ref": "#/components/schemas/server.GetTags"
+            },
+            "type": "array"
+          },
+          "deleteTags": {
+            "description": "An array of key-value pairs to delete existing tags.",
+            "items": {
+              "$ref": "#/components/schemas/server.GetTags"
+            },
+            "type": "array"
+          },
+          "locationId": {
+            "description": "The unique identifier of the location.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "server.UpdateLocationTagsNBResponse": {
+        "properties": {
+          "createTags": {
+            "description": "Location Tags to be created",
+            "items": {
+              "$ref": "#/components/schemas/server.GetTags"
+            },
+            "type": "array"
+          },
+          "createdAt": {
+            "description": "The date and time the tag was created.",
+            "type": "string"
+          },
+          "deleteTags": {
+            "description": "Location Tags to be deleted",
+            "items": {
+              "$ref": "#/components/schemas/server.GetTags"
+            },
+            "type": "array"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the tag.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "const": "locations/external-service",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date and time of the last update to the tag.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "generation"
+        ],
+        "type": "object"
+      },
+      "server.csvFile": {
+        "properties": {
+          "City(Required)": {
+            "description": "The city of the location to be created.",
+            "type": "string"
+          },
+          "Country(Required)": {
+            "description": "The country of the location to be created.",
+            "type": "string"
+          },
+          "First Name(Required)": {
+            "description": "First name of the primary contact. Required only when the email provided is a NON GLP email.",
+            "type": "string"
+          },
+          "Last Name(Required)": {
+            "description": "Last name of the primary contact. Required only when the email provided is a NON GLP email.",
+            "type": "string"
+          },
+          "Location Name(Required)": {
+            "description": "The name of the location to be created.",
+            "type": "string"
+          },
+          "Primary Contact Email(Required)": {
+            "description": "The email of the primary contact.",
+            "type": "string"
+          },
+          "State/Province(Required)": {
+            "description": "The state of the location to be created.",
+            "type": "string"
+          },
+          "Street Address(Required)": {
+            "description": "The street address of the location to be created.",
+            "type": "string"
+          },
+          "Tag 1 Name (optional)": {
+            "description": "Tag name associated with the location.",
+            "type": "string"
+          },
+          "Tag 1 Value (optional)": {
+            "description": "Tag value for the tag name associated with the location.",
+            "type": "string"
+          },
+          "Zip/Postal Code(Required)": {
+            "description": "The postal code of the location to be created.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "Location Name(Required)",
+          "Street Address(Required)",
+          "City(Required)",
+          "State/Province(Required)",
+          "Country(Required)",
+          "Zip/Postal Code(Required)",
+          "Primary Contact Email(Required)"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "description": "Personal access token issued by the HPE GreenLake platform.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "Service to manage location information for HPE GreenLake platform.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Locations API",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/locations/v1/locations": {
+      "get": {
+        "description": "Retrieve location information for all locations.",
+        "operationId": "listAllLocations",
+        "parameters": [
+          {
+            "description": "The zero-based resource offset to start the response from.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The maximum number of results to be returned.",
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "default": 100,
+              "maximum": 2000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint, return only the subset of resources that match the filter. The filter grammar is a subset of OData 4.0. <br><br>This API can be filtered by `name`. <br><br>**NOTE:** The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL. The reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents. <br><br>\n",
+            "examples": {
+              "contains": {
+                "description": "Return locations that contain a name that matches the one provided.",
+                "summary": "Filter by location name.",
+                "value": "contains(name, 'test')"
+              },
+              "eq": {
+                "description": "Return locations belonging to the city that matches the one provided.",
+                "summary": "Filter by location city.",
+                "value": "city eq 'test city'"
+              },
+              "equals": {
+                "description": "Return locations belonging to the country that matches the one provided.",
+                "summary": "Filter by location country.",
+                "value": "country eq 'test country'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.ListLocationNBResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {},
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Lists all locations",
+        "tags": [
+          "Locations"
+        ],
+        "x-codegen-request-body-name": "location"
+      },
+      "post": {
+        "description": "Create a location and store its associated information.",
+        "operationId": "CreateLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/server.CreateLocationNBRequest"
+              }
+            }
+          },
+          "description": "Location Information",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.UpdateLocationNBResponse",
+                  "required": [
+                    "id",
+                    "type"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create a Location",
+        "tags": [
+          "Locations"
+        ],
+        "x-codegen-request-body-name": "location"
+      }
+    },
+    "/locations/v1/locations/address/revgeocode": {
+      "get": {
+        "description": "Geolocate a location by providing the longitude and latitude. Optionally, provide an ISO language code to return the information in a language different from the default (English).",
+        "operationId": "reverseGeocode",
+        "parameters": [
+          {
+            "description": "Provide a latitude coordinate.",
+            "in": "query",
+            "name": "latitude",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Provide a longitude coordinate.",
+            "in": "query",
+            "name": "longitude",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "(Optional) Specify a language code to return the location information in that language. The default is English.",
+            "examples": {
+              "equals": {
+                "description": "Return the location description in Simplified Chinese.",
+                "summary": "Language",
+                "value": "zh-CN"
+              }
+            },
+            "in": "query",
+            "name": "language",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.AddressItem"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {},
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Retrieve location from latitude and longitude.",
+        "tags": [
+          "Locations"
+        ]
+      }
+    },
+    "/locations/v1/locations/async-operation/{id}": {
+      "get": {
+        "description": "Return status information for a CSV location upload by using the async location ID as a parameter.",
+        "operationId": "getCsvUploadStatus",
+        "parameters": [
+          {
+            "description": "The unique indentifier of the async operation location ID. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.AsyncOperationStatus",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Retrieve a CSV upload status",
+        "tags": [
+          "Locations"
+        ],
+        "x-codegen-request-body-name": "location"
+      }
+    },
+    "/locations/v1/locations/locations-csv-upload": {
+      "post": {
+        "description": "Create locations using a CSV file and store the associated information.",
+        "operationId": "CreateLocationCsv",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "description": "CSV file contents.",
+                "items": {
+                  "$ref": "#/components/schemas/server.csvFile"
+                },
+                "type": "array"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.AsyncOperationStatus"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create locations using CSV file",
+        "tags": [
+          "Locations"
+        ],
+        "x-codeSamples": [
+          {
+            "lang": "curl",
+            "source": "curl -i -X POST \\\n  'https://global.api.greenlake.hpe.com/locations/v1/locations/locations-csv-upload' \\\n  -H 'Authorization: Bearer <YOUR_JWT_HERE>' \\\n  -F 'file=@file.csv'\n"
+          }
+        ]
+      }
+    },
+    "/locations/v1/locations/status": {
+      "get": {
+        "description": "Get Locations Management service status",
+        "operationId": "getLocationServiceStatusV1",
+        "responses": {
+          "200": {
+            "content": {},
+            "description": "OK"
+          }
+        },
+        "summary": "Locations Management service status",
+        "tags": [
+          "Locations"
+        ]
+      }
+    },
+    "/locations/v1/locations/tags": {
+      "get": {
+        "description": "Retrieve tag information for your workspace.",
+        "operationId": "listAllTags",
+        "parameters": [
+          {
+            "description": "The zero-based resource offset to start the response from.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The maximum number of results to be returned.",
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "default": 100,
+              "maximum": 2000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.ListLocationTagsNBResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {},
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Get tags for a workspace",
+        "tags": [
+          "Locations"
+        ]
+      },
+      "patch": {
+        "description": "Use this API to create or delete a tag. In the request body, provide: <ul><li>The tag name and tag value in the appropriate array to create (`createTags`) or delete (`deleteTags`) tags as needed.</li><li>The location ID.</li></ul> \n",
+        "operationId": "UpdateTags",
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/server.UpdateLocationTagsNBRequest"
+              }
+            }
+          },
+          "description": "Update tags for a location",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.UpdateLocationTagsNBResponse",
+                  "required": [
+                    "id",
+                    "type"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Create or delete a tag",
+        "tags": [
+          "Locations"
+        ]
+      }
+    },
+    "/locations/v1/locations/tags/{id}": {
+      "get": {
+        "description": "Return a listing of all tag names and tag values for a given location. If a location has no tags, only the location ID and location name are returned.",
+        "operationId": "listTagsById",
+        "parameters": [
+          {
+            "description": "The unique identifier of the location. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.GetLocationTagsNBResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Retrieves tags for given a location",
+        "tags": [
+          "Locations"
+        ]
+      }
+    },
+    "/locations/v1/locations/update/{id}": {
+      "patch": {
+        "description": "Manage the location information for a location specified by its location ID. Provide information in the request body schema to create, update, or delete the location's address, contact, or location details. Only include the fields that need to be modified in the request body. Fields that are not included will remain unchanged.",
+        "operationId": "manageLocation",
+        "parameters": [
+          {
+            "description": "The unique identifier for the location. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/server.UpdateLocationPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.UpdateLocationNBResponse",
+                  "required": [
+                    "id",
+                    "type"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Manage a location",
+        "tags": [
+          "Locations"
+        ]
+      }
+    },
+    "/locations/v1/locations/{id}": {
+      "delete": {
+        "description": "Delete a location by providing a specific location ID.",
+        "operationId": "deleteLocation",
+        "parameters": [
+          {
+            "description": "The unique identifier for the location. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Delete a location",
+        "tags": [
+          "Locations"
+        ]
+      },
+      "get": {
+        "description": "Return information for a location specified by a location ID.",
+        "operationId": "getLocationBy",
+        "parameters": [
+          {
+            "description": "The unique indentifier of the location. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.GetLocationNBResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Retrieve a location",
+        "tags": [
+          "Locations"
+        ]
+      },
+      "patch": {
+        "description": "Update a location's information by specifying its location ID. Only include the fields that need to be updated in the request body. Fields that are not included in the request body will remain unchanged.\n<br><br>**Note:** The `name` and `locationType` fields are mandatory and cannot be set to empty or invalid values.\n",
+        "operationId": "UpdateLocation",
+        "parameters": [
+          {
+            "description": "The unique identifier for the location.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/server.UpdateLocationNBRequest"
+              }
+            }
+          },
+          "description": "Updated Location Information",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server.UpdateLocationNBResponse",
+                  "required": [
+                    "id",
+                    "type"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Forbidden - The location name or locationType is empty or invalid. Both fields are mandatory and must contain valid values."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Update a location",
+        "tags": [
+          "Locations"
+        ],
+        "x-codegen-request-body-name": "location"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ]
+}

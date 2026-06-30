@@ -1,0 +1,1464 @@
+{
+  "components": {
+    "responses": {
+      "BadRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BadRequestError"
+            }
+          }
+        },
+        "description": "Bad request"
+      },
+      "Conflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "Conflict"
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenError"
+            }
+          }
+        },
+        "description": "Forbidden"
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalError"
+            }
+          }
+        },
+        "description": "Internal Server Error"
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "Not found"
+      },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service Unavailable"
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedError"
+            }
+          }
+        },
+        "description": "Unauthorized"
+      }
+    },
+    "schemas": {
+      "AddRequest": {
+        "properties": {
+          "type": {
+            "description": "Type of the resource",
+            "enum": [
+              "/workspaces/workspace"
+            ],
+            "type": "string"
+          },
+          "workspaceId": {
+            "description": "HPE GreenLake unique workspace ID",
+            "example": "5a4af781011e423ba6bd554dc73ae5a5",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspaceId"
+        ],
+        "type": "object"
+      },
+      "BadRequestError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GROUPS_ERROR_BAD_REQUEST",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "properties": {
+                "issues": {
+                  "description": "Array of bad request issues",
+                  "items": {
+                    "$ref": "#/components/schemas/BadRequestIssues"
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "description": "The type of error details",
+                  "example": "hpe.greenlake.bad_request",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "issues"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "Invalid input of field 'foo'",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "BadRequestIssues": {
+        "properties": {
+          "description": {
+            "description": "An elaborate description of the issue. This can be used by developers to understand how the failure can be addressed",
+            "example": "Invalid format: field 'foo' is incompatible",
+            "type": "string"
+          },
+          "source": {
+            "description": "The part of the request with an issue",
+            "enum": [
+              "field",
+              "header",
+              "query.parameter"
+            ],
+            "example": "field",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The specific issue key",
+            "example": "foo.bar",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "subject"
+        ],
+        "type": "object"
+      },
+      "ConflictError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GROUPS_ERROR_CONFLICT",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 409,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "There is a conflict with the current state of the target resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "CreateGroupV2": {
+        "properties": {
+          "description": {
+            "description": "Description of the group",
+            "example": "Sales admin group",
+            "maxLength": 256,
+            "nullable": true,
+            "type": "string"
+          },
+          "groupType": {
+            "description": "Type of the group",
+            "enum": [
+              "TenantGroup"
+            ],
+            "example": "TenantGroup",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the group",
+            "example": "Demo Group",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "groupType"
+        ],
+        "type": "object"
+      },
+      "DebugId": {
+        "description": "A unique identifier for the instance of this error",
+        "example": "12312-123123-123123-1231212",
+        "type": "string"
+      },
+      "ForbiddenError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GROUPS_ERROR_FORBIDDEN",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 403,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "User is not authenticated to perform this action",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "GroupWorkspacesList": {
+        "properties": {
+          "count": {
+            "default": 200,
+            "title": "Count Per Page",
+            "type": "integer"
+          },
+          "items": {
+            "description": "list of member objects",
+            "items": {
+              "$ref": "#/components/schemas/SCIMGroupWorkspace"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "The starting offset from which to begin retrieving items",
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "GroupsListWithWorkspacesCount": {
+        "properties": {
+          "count": {
+            "default": 200,
+            "title": "Count Per Page",
+            "type": "integer"
+          },
+          "items": {
+            "description": "list of group objects",
+            "items": {
+              "$ref": "#/components/schemas/SCIMGroupWithWorkspaceCount"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "The page that should use the offset input to retrieve the set of page results",
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "type": "object"
+      },
+      "GroupsListWithWorkspacesCountV2": {
+        "properties": {
+          "count": {
+            "default": 200,
+            "title": "Count Per Page",
+            "type": "integer"
+          },
+          "items": {
+            "description": "list of group objects",
+            "items": {
+              "$ref": "#/components/schemas/SCIMGroupWithWorkspaceCountV2"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "The page that should use the offset input to retrieve the set of page results",
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count"
+        ],
+        "type": "object"
+      },
+      "InternalError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GROUPS_INTERNAL_SERVER_ERROR",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/RetryData"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 500,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "The server encountered an unexpected condition which prevented it from fulfilling the request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "NotFoundError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GROUPS_ERROR_NOT_FOUND",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 404,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "The resource was not found",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "RetryData": {
+        "properties": {
+          "retryAfterSeconds": {
+            "description": "Seconds to wait before retrying.",
+            "example": 30,
+            "type": "integer"
+          },
+          "type": {
+            "description": "The type of error details",
+            "example": "hpe.greenlake.retry_info",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "retryAfterSeconds"
+        ],
+        "type": "object"
+      },
+      "SCIMGroup": {
+        "properties": {
+          "createdAt": {
+            "example": "2024-01-08 22:59:17.424801 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Description for the tenant group",
+            "example": "Sales admin Group",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Number of times the resource updated",
+            "title": "Number of times the resource updated",
+            "type": "integer"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523cfd0347fc981b9c4333a37b60/regions/default/providers/msp/tenant-groups/93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "type": "string"
+          },
+          "groupType": {
+            "description": "Type of the group",
+            "example": "TenantGroup",
+            "type": "string"
+          },
+          "id": {
+            "description": "HPE GreenLake group ID resource identifier randomly generated by the system",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "unique name for the tenant group",
+            "example": "Demo Group",
+            "type": "string"
+          },
+          "type": {
+            "example": "/workspaces/group",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "example": "2024-01-08 23:00:22.320646 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "grn",
+          "groupType",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "SCIMGroupWithWorkspaceCount": {
+        "properties": {
+          "createdAt": {
+            "example": "2024-01-08 22:59:17.424801 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Description for the group",
+            "example": "Sales admin Group",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Number of times the resource updated",
+            "title": "Number of times the resource updated",
+            "type": "integer"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523cfd0347fc981b9c4333a37b60/regions/default/providers/msp/tenant-groups/93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "type": "string"
+          },
+          "groupType": {
+            "description": "Type of the group",
+            "example": "TenantGroup",
+            "type": "string"
+          },
+          "id": {
+            "description": "HPE GreenLake group ID resource identifier randomly generated by the system",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Unique name for the workspace group",
+            "example": "Demo Group",
+            "type": "string"
+          },
+          "totalMembers": {
+            "default": 0,
+            "title": "Total workspaces present in the group",
+            "type": "integer"
+          },
+          "type": {
+            "example": "/workspaces/group",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "example": "2024-01-08 23:00:22.320646 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "grn",
+          "groupType",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "totalWorkspaces"
+        ],
+        "type": "object"
+      },
+      "SCIMGroupWithWorkspaceCountV2": {
+        "properties": {
+          "createdAt": {
+            "example": "2024-01-08 22:59:17.424801 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Description for the group",
+            "example": "Sales admin Group",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Number of times the resource updated",
+            "title": "Number of times the resource updated",
+            "type": "integer"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523cfd0347fc981b9c4333a37b60/regions/default/providers/msp/tenant-groups/93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "type": "string"
+          },
+          "groupType": {
+            "description": "Type of the group",
+            "example": "TenantGroup",
+            "type": "string"
+          },
+          "id": {
+            "description": "HPE GreenLake group ID resource identifier randomly generated by the system",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Unique name for the workspace group",
+            "example": "Demo Group",
+            "type": "string"
+          },
+          "totalWorkspaces": {
+            "default": 0,
+            "title": "Total workspaces present in the group",
+            "type": "integer"
+          },
+          "type": {
+            "example": "/workspaces/group",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "example": "2024-01-08 23:00:22.320646 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "grn",
+          "groupType",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "totalWorkspaces"
+        ],
+        "type": "object"
+      },
+      "SCIMGroupWorkspace": {
+        "description": "resource metadata",
+        "properties": {
+          "createdAt": {
+            "example": "2024-01-08 22:59:17.424801 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "generation": {
+            "description": "Number of times the resource updated",
+            "title": "Number of times the resource updated",
+            "type": "integer"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523cfd0347fc981b9c4333a37b60/regions/default/providers/msp/tenant-groups/93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "type": "string"
+          },
+          "id": {
+            "description": "HPE GreenLake unique resource ID for this workspace belonging to the group",
+            "example": "119363f3-4408-44c4-840a-99e1c9db64c1",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "example": "/workspaces/group/group-workspace",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "example": "2024-01-08 23:00:22.320646 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/SCIMWorkspace"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "workspace",
+          "grn",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "SCIMWorkspace": {
+        "description": "workspace resource metadata",
+        "properties": {
+          "description": {
+            "description": "Description of the workspace",
+            "example": "US-E Workspace",
+            "type": "string"
+          },
+          "id": {
+            "description": "HPE GreenLake global ID unique resource identifier for workspace",
+            "example": "5a4af781011e423ba6bd554dc73ae5a5",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "name for the workspace",
+            "example": "US-E workspace",
+            "type": "string"
+          },
+          "type": {
+            "example": "/workspaces/workspace",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "description",
+          "name"
+        ],
+        "type": "object"
+      },
+      "SCIMWorkspaceGroupV2": {
+        "properties": {
+          "createdAt": {
+            "example": "2024-01-08 22:59:17.424801 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Description for the tenant group",
+            "example": "Sales admin Group",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Number of times the resource updated",
+            "title": "Number of times the resource updated",
+            "type": "integer"
+          },
+          "grn": {
+            "example": "grn:glp/workspaces/05f0523cfd0347fc981b9c4333a37b60/regions/default/providers/msp/tenant-groups/93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "type": "string"
+          },
+          "groupType": {
+            "description": "Type of the group",
+            "example": "TenantGroup",
+            "type": "string"
+          },
+          "id": {
+            "description": "HPE GreenLake group ID resource identifier randomly generated by the system",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "unique name for the tenant group",
+            "example": "Demo Group",
+            "type": "string"
+          },
+          "type": {
+            "example": "/workspaces/group",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "example": "2024-01-08 23:00:22.320646 +0000 UTC",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "grn",
+          "groupType",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ServiceUnavailableError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GL_ERROR_SERVICE_UNAVAILABLE",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/RetryData"
+            },
+            "type": "array"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 503,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "The server is not ready to handle the request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UnauthorizedError": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GROUPS_ERROR_UNAUTHORIZED",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 401,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "Authentication error",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UpdateGroupV2": {
+        "properties": {
+          "description": {
+            "description": "Description of the group",
+            "example": "Sales admin group",
+            "maxLength": 256,
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the group",
+            "example": "Demo Group",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "CRUD operations for Workspace Groups Management",
+    "license": {
+      "name": "HPE End User License Agreement",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Workspace Groups Management API",
+    "version": "1.0.0-beta"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/workspaces/v1beta1/groups": {
+      "get": {
+        "description": "Get the paginated list of Groups associated to the workspace",
+        "operationId": "getGroupsV2",
+        "parameters": [
+          {
+            "description": "The starting offset from which to begin retrieving items",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the number of query results to be returned in a query response page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "The maximum number of items to retrieve",
+              "maximum": 2000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupsListWithWorkspacesCountV2"
+                }
+              }
+            },
+            "description": "Return list of workspace groups"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "List of Paginated workspace groups",
+        "tags": [
+          "Groups"
+        ]
+      },
+      "post": {
+        "description": "Creates a group for various group types\n",
+        "operationId": "createNewGroupV2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGroupV2"
+              }
+            }
+          },
+          "description": "Create workspace group object",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMWorkspaceGroupV2"
+                }
+              }
+            },
+            "description": "Group successfully created",
+            "headers": {
+              "Location": {
+                "description": "URL of the created group",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Create a workspace group",
+        "tags": [
+          "Groups"
+        ]
+      }
+    },
+    "/workspaces/v1beta1/groups/{groupId}": {
+      "delete": {
+        "description": "Delete the existing workspace group from the account\n",
+        "operationId": "removeGroupV2",
+        "parameters": [
+          {
+            "description": "HPE GreenLake group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Group deleted successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Delete the workspace group",
+        "tags": [
+          "Groups"
+        ]
+      },
+      "get": {
+        "description": "Get the workspace group details by group ID\n",
+        "operationId": "fetchGroupV2",
+        "parameters": [
+          {
+            "description": "HPE GreenLake unique group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMWorkspaceGroupV2"
+                }
+              }
+            },
+            "description": "Return Group"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Get the workspace group details",
+        "tags": [
+          "Groups"
+        ]
+      },
+      "put": {
+        "description": "Updates group details name and description\n",
+        "operationId": "putGroupV2",
+        "parameters": [
+          {
+            "description": "HPE GreenLake unique group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGroupV2"
+              }
+            }
+          },
+          "description": "Update Group object",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMWorkspaceGroupV2"
+                }
+              }
+            },
+            "description": "Group sucessfully updated",
+            "headers": {
+              "Location": {
+                "description": "URL of the created group",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Update workspace group details",
+        "tags": [
+          "Groups"
+        ]
+      }
+    },
+    "/workspaces/v1beta1/groups/{groupId}/group-workspaces": {
+      "get": {
+        "description": "Get the paginated list of workspaces associated with the group ID\n",
+        "operationId": "listGroupWorkspaces",
+        "parameters": [
+          {
+            "description": "HPE GreenLake group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of query results to be returned in a query response page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "description": "The maximum number of items to retrieve",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The starting offset from which to begin retrieving items",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupWorkspacesList"
+                }
+              }
+            },
+            "description": "Return list of workspaces associated with this group"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "List of paginated workspaces associated with the group ID",
+        "tags": [
+          "Groups"
+        ]
+      },
+      "post": {
+        "description": "Add workspace to a group",
+        "operationId": "addWorkspaceToGroup",
+        "parameters": [
+          {
+            "description": "HPE GreenLake unique group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRequest"
+              }
+            }
+          },
+          "description": "Add workspace to a group",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMGroupWorkspace"
+                }
+              }
+            },
+            "description": "Workspace added to the group successfully",
+            "headers": {
+              "Location": {
+                "description": "URL of the created group",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Add a workspace to the group",
+        "tags": [
+          "Groups"
+        ]
+      }
+    },
+    "/workspaces/v1beta1/groups/{groupId}/group-workspaces/{groupWorkspaceId}": {
+      "delete": {
+        "description": "Remove workspace from a group",
+        "operationId": "deleteWorkspaceFromGroup",
+        "parameters": [
+          {
+            "description": "HPE GreenLake unique group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "HPE GreenLake unique resource ID for this workspace belonging to the group",
+            "example": "119363f3-4408-44c4-840a-99e1c9db64c1",
+            "in": "path",
+            "name": "groupWorkspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Delete operation from the group performed successfully"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Remove a workspace from the workspace group",
+        "tags": [
+          "Groups"
+        ]
+      },
+      "get": {
+        "description": "Get the workspace details by group ID\n",
+        "operationId": "getGroupWorkspace",
+        "parameters": [
+          {
+            "description": "HPE GreenLake unique group ID",
+            "example": "93313ca9-6a6a-48d3-8f91-da639c0b5173",
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "HPE GreenLake unique resource ID for this workspace belonging to the group",
+            "example": "119363f3-4408-44c4-840a-99e1c9db64c1",
+            "in": "path",
+            "name": "groupWorkspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SCIMGroupWorkspace"
+                }
+              }
+            },
+            "description": "Return Group"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "summary": "Get the workspace details",
+        "tags": [
+          "Groups"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Groups"
+    }
+  ]
+}

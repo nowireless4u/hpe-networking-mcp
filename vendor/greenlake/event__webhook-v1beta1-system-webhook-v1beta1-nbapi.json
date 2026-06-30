@@ -1,0 +1,2123 @@
+{
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "description": "A generic error schema used across the API for error handling.",
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error",
+            "format": "uuid",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique identifier for the instance of this error",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP equivalent status code",
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "message",
+          "debugId",
+          "httpStatusCode"
+        ],
+        "type": "object"
+      },
+      "SystemPatchSubscriptionInput": {
+        "description": "Schema for updating a subscription.",
+        "properties": {
+          "eventType": {
+            "description": "The type of event to subscribe. [Events Standard](https://developer.greenlake.hpe.com/docs/greenlake/services/event/public/events/)",
+            "examples": [
+              "com.hpe.greenlake.sample-publisher.v1beta1.sample-event1"
+            ],
+            "type": "string"
+          },
+          "subscriptionId": {
+            "description": "Subscription Id to update.",
+            "type": "string"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/SystemWebhookResourceInputRef"
+          }
+        },
+        "required": [
+          "subscriptionId",
+          "eventType",
+          "webhook"
+        ],
+        "type": "object"
+      },
+      "SystemSubscriptionInput": {
+        "description": "Schema for creating a new subscription.",
+        "properties": {
+          "eventType": {
+            "description": "The type of event to subscribe. [Events Standard](https://developer.greenlake.hpe.com/docs/greenlake/services/event/public/events/)",
+            "examples": [
+              "com.hpe.greenlake.sample-publisher.v1beta1.sample-event1"
+            ],
+            "type": "string"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/SystemWebhookResourceInputRef"
+          }
+        },
+        "required": [
+          "eventType",
+          "webhook"
+        ],
+        "type": "object"
+      },
+      "SystemSubscriptionListResponse": {
+        "description": "A list response format for subscriptions.",
+        "properties": {
+          "count": {
+            "description": "The number of subscription objects returned in the `items` array for the current request.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "An array of subscription objects, each representing a unique subscription.",
+            "items": {
+              "$ref": "#/components/schemas/SystemSubscriptionResponse"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "The zero-based index in the complete list of retrieved subscriptions that marks the beginning of the response.",
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of subscriptions available in the system that match the provided query or filters.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset",
+          "total"
+        ],
+        "type": "object"
+      },
+      "SystemSubscriptionResponse": {
+        "description": "Outlines the details of a subscription response.",
+        "properties": {
+          "createdAt": {
+            "description": "The date and time the subscription is created.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdBy": {
+            "description": "The user that created the subscription.",
+            "type": "string"
+          },
+          "eventType": {
+            "description": "The subscription type name.",
+            "examples": [
+              "com.hpe.greenlake.sample-publisher.v1beta1.sample-event1"
+            ],
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter to track the subscription version.",
+            "examples": [
+              1
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "hpePrincipal": {
+            "description": "Security principal subject notation.",
+            "examples": [
+              "user:<opaque-global-id>"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique identifier of the subscription.",
+            "examples": [
+              "0908777a-788f-45da-afb8-295c626e4d14"
+            ],
+            "format": "uuid",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the subscription.",
+            "examples": [
+              "/events/v1beta1/system-subscriptions/3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "const": "events/subscription",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The last date and time the subscription is updated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedBy": {
+            "description": "The user that updated the subscription.",
+            "type": "string"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/SystemWebhookResourceResponseRef"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "eventType",
+          "resourceUri",
+          "webhook",
+          "hpePrincipal",
+          "generation",
+          "createdBy",
+          "createdAt",
+          "updatedAt",
+          "updatedBy"
+        ],
+        "type": "object"
+      },
+      "SystemWebhookInput": {
+        "description": "Represents the data required to register a new webhook.",
+        "properties": {
+          "destination": {
+            "description": "The URL where events will be sent.",
+            "examples": [
+              "https://example.com/new-endpoint"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the webhook.",
+            "examples": [
+              "License Notification"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "destination"
+        ],
+        "type": "object"
+      },
+      "SystemWebhookResourceInputRef": {
+        "description": "A reference to a specific webhook resource, providing a link (URI) directly to the referenced webhook.",
+        "properties": {
+          "resourceUri": {
+            "description": "URI to the webhook",
+            "examples": [
+              "/events/v1beta1/system-webhooks/123e4567-e89b-12d3-a456-426614174000"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceUri"
+        ],
+        "type": "object"
+      },
+      "SystemWebhookResourceResponseRef": {
+        "description": "The response schema for WebhookSubscription.",
+        "properties": {
+          "resourceUri": {
+            "description": "URI to the webhook",
+            "examples": [
+              "/events/v1beta1/system-webhooks/123e4567-e89b-12d3-a456-426614174000"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceUri"
+        ],
+        "type": "object"
+      },
+      "SystemWebhookResponse": {
+        "description": "The response schema for webhook operations.",
+        "properties": {
+          "createdAt": {
+            "description": "The timestamp when the webhook was created.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdBy": {
+            "description": "The user that created the webhook.",
+            "type": "string"
+          },
+          "destination": {
+            "description": "The URL where events will be sent.",
+            "examples": [
+              "https://example.com/new-endpoint"
+            ],
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "examples": [
+              1
+            ],
+            "type": "integer"
+          },
+          "hpePrincipal": {
+            "description": "Security principal subject notation.",
+            "examples": [
+              "user:<opaque-global-id>"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the webhook.",
+            "examples": [
+              "123e4567-e89b-12d3-a456-426614174000"
+            ],
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the webhook.",
+            "examples": [
+              "License Notification"
+            ],
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the resource itself (i.e. a self link).",
+            "examples": [
+              "/events/v1beta1/system-webhooks/123e4567-e89b-12d3-a456-426614174000"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "const": "events/webhook",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The timestamp when the webhook was last updated",
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedBy": {
+            "description": "The user that updated the webhook.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "destination",
+          "hpePrincipal",
+          "resourceUri",
+          "generation",
+          "createdBy",
+          "createdAt",
+          "updatedBy",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "SystemWebhookResponseList": {
+        "description": "A collection of WebhookResponse items.",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SystemWebhookResponse"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset",
+          "total"
+        ],
+        "type": "object"
+      },
+      "SystemWebhookUpdate": {
+        "description": "Contains fields that can be updated for an existing webhook",
+        "properties": {
+          "destination": {
+            "description": "The URL where events will be sent.",
+            "examples": [
+              "https://example.com/new-endpoint"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the webhook.",
+            "examples": [
+              "License Notification"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "description": "Personal access token compliant with RFC8725 issued by the HPE GreenLake platform.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "API for registering and managing HTTP webhooks and subscriptions.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "System Webhook API - v1beta1",
+    "version": "v1beta1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/events/v1beta1/system-subscriptions": {
+      "delete": {
+        "description": "Delete the list of subscriptions by the IDs, stopping further event notification linked to the subscriptions",
+        "operationId": "DeleteSubscription",
+        "parameters": [
+          {
+            "description": "The ID of the subscription to delete.",
+            "examples": {
+              "equals": {
+                "description": "Delete all subscriptions based on the IDs",
+                "summary": "Example with specific subscription ID",
+                "value": [
+                  "0908777a-788f-45da-afb8-295c626e4d14",
+                  "0908777a-788f-45da-afb8-295c626e4d11",
+                  "0908777a-788f-45da-afb8-295c626e4d12"
+                ]
+              }
+            },
+            "explode": true,
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "default": "id=0908777a-788f-45da-afb8-295c626e4d14",
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Webhook not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request, A subscription doesn't exist with the given ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while creating subscription, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Delete subscription for a webhook",
+        "tags": [
+          "Subscriptions"
+        ]
+      },
+      "get": {
+        "description": "Retrieves a list of subscriptions associated to webhooks, organized in descending order based on their creation time. <br><br> **Pagination**: This endpoint exclusively supports offset-based pagination. <br><br> **Filtering**: Following are the supported filter parameters &#58; `webhookId`",
+        "operationId": "retrieveSubscriptions",
+        "parameters": [
+          {
+            "description": "Specifies the number of results to be returned. The default value is 10.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "format": "int64",
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter subscriptions events using an [OData V4](https://www.odata.org/documentation/) formatted filter string.\n",
+            "examples": {
+              "FilterWithWebhookId": {
+                "description": "Returns subscriptions for a user within a particular webhook.",
+                "summary": "Filter with webhookId",
+                "value": "webhookId eq '123e4567-e89b-12d3-a456-426614174000'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": true,
+            "schema": {
+              "default": "",
+              "description": "Filter data using a subset of OData 4.0 and return only the subset of resources that match the filter.\nGet list of subscriptions that can be filtered by:\n- webhookId\n",
+              "format": "uuid",
+              "title": "Filter",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSubscriptionListResponse"
+                }
+              }
+            },
+            "description": "Subscriptions retrieved successfully."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-body": {
+                    "summary": "Invalid request body error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_EVENTS_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 422,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Invalid request body"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while creating webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Get all subscriptions for a webhook",
+        "tags": [
+          "Subscriptions"
+        ]
+      },
+      "patch": {
+        "description": "Update all subscription identified by the given IDs.",
+        "operationId": "updateSubscription",
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/SystemPatchSubscriptionInput"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SystemSubscriptionResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successfully updated the given subscription"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Webhook not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request, A subscription doesn't exist with the given ID."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-body": {
+                    "summary": "Invalid request body error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_EVENTS_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 422,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Invalid request body"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while creating subscription, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Update subscription with specific IDs",
+        "tags": [
+          "Subscriptions"
+        ]
+      },
+      "post": {
+        "description": "Register a new subscription to start receiving event notifications through the configured webhook",
+        "operationId": "createSubscription",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/SystemSubscriptionInput"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SystemSubscriptionResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Subscription successfully registered.",
+            "headers": {
+              "Location": {
+                "description": "URI to get details of the subscription creation operation.",
+                "examples": {
+                  "get-sub": {
+                    "summary": "URI to retrieve the status of the Subscription Creation Operation",
+                    "value": "/events/v1beta1/system-subscriptions/123e4567-e89b-12d3-a456-426614174000"
+                  }
+                },
+                "schema": {
+                  "format": "uri-reference",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-body": {
+                    "summary": "Invalid request body error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_EVENTS_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 422,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Invalid request body"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while creating webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Create a new subscription",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/events/v1beta1/system-webhooks": {
+      "get": {
+        "description": "Retrieves a list of webhooks, organized in descending order based on their creation time. <br><br> **Pagination**: This endpoint exclusively supports offset-based pagination.",
+        "operationId": "retrieveWebhooks",
+        "parameters": [
+          {
+            "description": "Specifies the number of results to be returned. The default value is 200.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "format": "int64",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int64",
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemWebhookResponseList"
+                }
+              }
+            },
+            "description": "Webhooks retrieved successfully."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-query-params": {
+                    "summary": "Invalid query params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid query params"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while retrieving webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Get all webhooks",
+        "tags": [
+          "Webhooks"
+        ]
+      },
+      "post": {
+        "description": "This endpoint allows clients to create a new webhook to establish a callback mechanism for key events on GLCP services.",
+        "operationId": "createWebhook",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "register-webhook": {
+                  "summary": "Register Webhook",
+                  "value": {
+                    "destination": "https://example.com/new-endpoint",
+                    "name": "License Notification"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SystemWebhookInput"
+              }
+            }
+          },
+          "description": "Webhook payload",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "create-webhook-record": {
+                    "summary": "Register Webhook",
+                    "value": {
+                      "createdAt": "2024-04-29T15:25:06.194Z",
+                      "createdBy": "sample.user@example.com",
+                      "destination": "https://example.com/new-endpoint",
+                      "generation": 1,
+                      "hpePrincipal": "user:<opaque-global-id>",
+                      "id": "123e4567-e89b-12d3-a456-426614174000",
+                      "name": "License Notification",
+                      "resourceUri": "/events/v1beta1/system-webhooks/123e4567-e89b-12d3-a456-426614174000",
+                      "type": "events/webhook",
+                      "updatedAt": "2024-04-29T15:25:06.194Z",
+                      "updatedBy": "sample.user@example.com"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SystemWebhookResponse"
+                }
+              }
+            },
+            "description": "Webhook successfully registered.",
+            "headers": {
+              "Location": {
+                "description": "URI to get details of the webhook creation operation.",
+                "examples": {
+                  "async-op": {
+                    "summary": "URI to retrieve the status of the Webhook Creation Operation",
+                    "value": "/events/v1beta1/system-webhooks/123e4567-e89b-12d3-a456-426614174000"
+                  }
+                },
+                "schema": {
+                  "format": "uri-reference",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-body": {
+                    "summary": "Invalid request body error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_EVENTS_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 422,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Invalid request body"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while creating webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Register a new webhook",
+        "tags": [
+          "Webhooks"
+        ]
+      }
+    },
+    "/events/v1beta1/system-webhooks/{id}": {
+      "delete": {
+        "description": "Remove a specific webhook from the system",
+        "operationId": "deleteWebhook",
+        "parameters": [
+          {
+            "description": "Webhook ID",
+            "examples": {
+              "equals": {
+                "description": "Delete specific webhook",
+                "summary": "Example with specific webhook ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "default": "0908777a-788f-45da-afb8-295c626e4d14",
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The `force` query parameter is used to force deletion in situations where the webhook has one or more subscriptions.",
+            "in": "query",
+            "name": "force",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Bad Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Webhook not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request, A webhook doesn't exist with the given ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while retrieving webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Delete a webhook by ID",
+        "tags": [
+          "Webhooks"
+        ]
+      },
+      "get": {
+        "description": "Retrieve detailed information about a specific webhook by its unique identifier",
+        "operationId": "retrieveWebhook",
+        "parameters": [
+          {
+            "description": "Webhook ID",
+            "examples": {
+              "equals": {
+                "description": "Get specific webhook",
+                "summary": "Example with specific webhook ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "default": "0908777a-788f-45da-afb8-295c626e4d14",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemWebhookResponse"
+                }
+              }
+            },
+            "description": "Webhook retrieved successfully."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-query-params": {
+                    "summary": "Invalid query params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid query params"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Webhook not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request, A webhook doesn't exist with the given ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while retrieving webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Get a webhook by ID",
+        "tags": [
+          "Webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Update an existing webhook's settings, such as its name, description, destination, etc",
+        "operationId": "updateWebhook",
+        "parameters": [
+          {
+            "description": "Webhook ID",
+            "examples": {
+              "equals": {
+                "description": "Update specific webhook",
+                "summary": "Example with specific webhook ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "default": "0908777a-788f-45da-afb8-295c626e4d14",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemWebhookUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemWebhookResponse"
+                }
+              }
+            },
+            "description": "Webhook updated successfully."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-query-params": {
+                    "summary": "Invalid query params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "httpStatusCode": 400,
+                      "message": "Invalid query params"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-permission": {
+                    "summary": "Invalid Permission Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 403,
+                      "message": "Invalid Permission Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden - The operation is forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Webhook not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request, A webhook doesn't exist with the given ID."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-body": {
+                    "summary": "Invalid request body error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_EVENTS_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 422,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Invalid request body"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "description": "Request limit per hour.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of requests left for the time window.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "The UTC date/time at which the current rate limit window resets.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error occurred while retrieving webhook, if the issue persists, Please contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error, Please re-try and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Update a webhook by ID",
+        "tags": [
+          "Webhooks"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Hoku endpoint(Dev)",
+      "url": "https://hoku-ext-api.ccs.arubathena.com"
+    },
+    {
+      "description": "Polaris endpoint(QA)",
+      "url": "https://polaris-default-ext-api.ccs.arubathena.com"
+    },
+    {
+      "description": "Mira endpoint(QA)",
+      "url": "https://mira-default-ext-api-api.ccs.arubathena.com"
+    },
+    {
+      "description": "Pavo endpoint(Staging)",
+      "url": "https://pavo-default-ext-api.common.cloud.hpe.com"
+    },
+    {
+      "description": "Aquila endpoint(Production)",
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Everything about Webhooks",
+      "name": "Webhooks"
+    },
+    {
+      "description": "Everything about Subscriptions",
+      "name": "Subscriptions"
+    }
+  ]
+}

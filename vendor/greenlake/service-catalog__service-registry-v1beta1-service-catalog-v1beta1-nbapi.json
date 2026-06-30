@@ -1,0 +1,3732 @@
+{
+  "components": {
+    "examples": {
+      "filter-ServiceOfferRegion-by-region": {
+        "description": "Return service offer regions with a given region",
+        "summary": "Filter by region",
+        "value": "region eq 'us-east'"
+      },
+      "filter-ServiceOfferRegion-by-status": {
+        "description": "Return service offer regions with a given status",
+        "summary": "Filter by status",
+        "value": "status eq 'ONBOARDED'"
+      },
+      "filter-category": {
+        "description": "Return service offers for a given category",
+        "summary": "Filter by category",
+        "value": "category eq 'COMPUTE'"
+      },
+      "filter-isDefault": {
+        "description": "Return service offers that are service managers",
+        "summary": "Filter by isDefault",
+        "value": "isDefault eq true"
+      },
+      "filter-serviceManagerId": {
+        "description": "Return service offers for given service manager ID",
+        "summary": "Filter by serviceManagerId",
+        "value": "serviceManagerId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "filter-serviceOfferId": {
+        "description": "Return service offer regions with a given service offer ID",
+        "summary": "Filter by serviceOfferId",
+        "value": "serviceOfferId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "filter-serviceOfferId-and-region": {
+        "description": "Return service offer regions with a given service offer ID and region",
+        "summary": "Filter by serviceOfferId and region",
+        "value": "serviceOfferId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050' and region eq 'us-east'"
+      },
+      "filter-serviceOfferId-and-status": {
+        "description": "Return service offer regions with a given service offer ID and status",
+        "summary": "Filter by serviceOfferId and status",
+        "value": "serviceOfferId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050' and status eq 'ONBOARDED'"
+      },
+      "filter-serviceOfferId-and-status-and-region": {
+        "description": "Return service offer regions with a given service offer ID and status and region",
+        "summary": "Filter by serviceOfferId and status and region",
+        "value": "serviceOfferId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050' and status eq 'ONBOARDED' and region eq 'us-east'"
+      },
+      "filter-slug": {
+        "description": "Return service offers with a given slug",
+        "summary": "Filter by slug",
+        "value": "slug eq 'GLP'"
+      },
+      "filter-staticLaunchUrl": {
+        "description": "Return service offers for a given static launch URL",
+        "summary": "Filter by staticLaunchUrl",
+        "value": "staticLaunchUrl eq '/Organization'"
+      },
+      "filter-status": {
+        "description": "Return service offers with a given status",
+        "summary": "Filter by status",
+        "value": "status eq 'ONBOARDED'"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BadRequestError"
+            }
+          }
+        },
+        "description": "400 Bad Request"
+      },
+      "Conflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "409 Conflict"
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenError"
+            }
+          }
+        },
+        "description": "403 Forbidden"
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalError"
+            }
+          }
+        },
+        "description": "500 Internal Server Error"
+      },
+      "NoContent": {
+        "description": "NoContent"
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "404 Not Found"
+      },
+      "PreConditionFailed": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PreConditionFailedError"
+            }
+          }
+        },
+        "description": "412 PreConditionFailed"
+      },
+      "ServiceOfferOnboarded": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceOfferReadOnboarded"
+            }
+          }
+        },
+        "description": "201 Service Offer Created Response",
+        "headers": {
+          "Location": {
+            "description": "URL of the created Workspace",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ServiceOfferPublished": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceOfferRead"
+            }
+          }
+        },
+        "description": "201 Service Offer Published Response",
+        "headers": {
+          "Location": {
+            "description": "URL of the created Workspace",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ServiceOfferRegionCreated": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceOfferRegionRead"
+            }
+          }
+        },
+        "description": "201 Service Offer Region Created Response",
+        "headers": {
+          "Location": {
+            "description": "URL of the created Workspace",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/TooManyRequestsError"
+            }
+          }
+        },
+        "description": "429 TooManyRequests"
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedError"
+            }
+          }
+        },
+        "description": "401 Unauthorized"
+      },
+      "ValidationError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        },
+        "description": "422 Validation error"
+      }
+    },
+    "schemas": {
+      "AccountType": {
+        "description": "The type of account associated with the service offer.",
+        "enum": [
+          "BASIC_ORGANIZATION",
+          "STANDALONE",
+          "MSP",
+          "TENANT"
+        ],
+        "example": "MSP",
+        "title": "AccountType",
+        "type": "string"
+      },
+      "BadRequestError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_BAD_REQUEST",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "issues": {
+                      "description": "Array of bad request issues.",
+                      "items": {
+                        "properties": {
+                          "description": {
+                            "description": "An elaborate description of issue. This can be used by developers to understand how the failure can be addressed.",
+                            "example": "Invalid format.",
+                            "type": "string"
+                          },
+                          "source": {
+                            "description": "The part of the request with an issue.",
+                            "enum": [
+                              "field",
+                              "header",
+                              "query.parameter"
+                            ],
+                            "example": "field",
+                            "type": "string"
+                          },
+                          "subject": {
+                            "description": "The specific issue key.",
+                            "example": "id",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "subject",
+                          "description"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.bad_request",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "issues"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 400,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Service Offer 6c4ec6df-1c23-460f-aece-34573e88de19 does not exist",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId",
+              "errorDetails"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "Category": {
+        "description": "The category to which a service offer belongs, such as compute, networking, or storage.",
+        "enum": [
+          "COMPUTE",
+          "NETWORKING",
+          "STORAGE",
+          "PRIVATE_CLOUD",
+          "MGMT_GOV",
+          "WORKLOADS",
+          "AI_ML_ANALYTICS"
+        ],
+        "example": "COMPUTE",
+        "title": "Category",
+        "type": "string"
+      },
+      "CategoryWithFeaturedServiceOffers": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "servicesWithRegions": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceOfferWithAvailableRegions"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "Type of resource",
+            "example": "/service-catalog/featured-service",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "type",
+          "services"
+        ],
+        "title": "CategoryWithFeaturedServiceOffers",
+        "type": "object"
+      },
+      "CategoryWithServiceOffers": {
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "servicesWithRegions": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceOfferWithAvailableRegions"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "Type of resource",
+            "example": "/service-catalog/categorywise-services",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "servicesWithRegions"
+        ],
+        "title": "CategoryWithServiceOffers",
+        "type": "object"
+      },
+      "ConflictError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_CONFLICT",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines.",
+                      "properties": {
+                        "conflictType": {
+                          "description": "Status of the access token.",
+                          "example": "Duplicate",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "Source of the error.",
+                      "example": "hpe.greenlake.service-catalog",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 409,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Duplicate Service Provision.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "DetailedProvision": {
+        "properties": {
+          "serviceManagerProvision": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceManagerProvision"
+              }
+            ],
+            "x-omitempty": false
+          },
+          "serviceOffer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferPartialDetails"
+              }
+            ]
+          },
+          "serviceProvision": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceProvision"
+              }
+            ],
+            "x-omitempty": false
+          }
+        },
+        "title": "DetailedProvision"
+      },
+      "DetailedServiceManagerResourceLink": {
+        "properties": {
+          "id": {
+            "description": "Service Manager ID",
+            "example": "7267b0e0-013c-4181-8c27-01b395ed0b61",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "name": {
+            "description": "service-offer belonging to the same application that has isDefault true",
+            "example": "Aruba Central",
+            "title": "name",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/service-catalog/v1beta1/service-managers/7267b0e0-013c-4181-8c27-01b395ed0b61",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceOfferId": {
+            "description": "Service offer ID",
+            "example": "8e22512f-da36-43f7-8141-83c6fc4b025b",
+            "format": "uuid",
+            "title": "serviceOfferId",
+            "type": "string"
+          }
+        },
+        "title": "ServiceManagerResourceLink",
+        "type": "object"
+      },
+      "DetailedServiceOffer": {
+        "properties": {
+          "availableRegions": {
+            "description": "Names of the regions where the Service Offer is available for the logged in user/customer.",
+            "items": {
+              "$ref": "#/components/schemas/RegionWithLocations"
+            },
+            "title": "availableRegions",
+            "type": "array"
+          },
+          "id": {
+            "description": "Region with Detailed Provisions identifier",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "id",
+            "type": "string"
+          },
+          "orgSingletonServiceProvisions": {
+            "description": "Service-provision entry for the organization that the current workspace belongs to.",
+            "items": {
+              "$ref": "#/components/schemas/DetailedProvision"
+            },
+            "title": "orgSingletonServiceProvision",
+            "type": "array"
+          },
+          "provisions": {
+            "description": "Data pertaining to service and app provisions",
+            "items": {
+              "$ref": "#/components/schemas/DetailedProvision"
+            },
+            "title": "provisions",
+            "type": "array",
+            "x-omitempty": false
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/DetailedServiceManagerResourceLink"
+          },
+          "serviceOffer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferReadWithMedia"
+              }
+            ],
+            "x-omitempty": false
+          },
+          "type": {
+            "description": "Type of resource",
+            "example": "/service-catalog/detailed-service-offer",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "availableRegions",
+          "provisions",
+          "orgSingletonServiceProvisions"
+        ],
+        "title": "DetailedServiceOffer",
+        "type": "object"
+      },
+      "FeaturedServiceOffers": {
+        "description": "Featured Services Offers list grouped by Category",
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "Count Per Page",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryWithFeaturedServiceOffers"
+            },
+            "type": "array"
+          },
+          "next": {
+            "example": "STORAGE",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "Total Count",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "FeaturedServiceOffers",
+        "type": "object"
+      },
+      "ForbiddenError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "8567e466-7322-414a-b7d4-6832c3ce8f47",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_FORBIDDEN",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines.",
+                      "properties": {
+                        "uiAuthorization": {
+                          "description": "Status of the access token.",
+                          "example": "Failed",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "Source of the error.",
+                      "example": "hpe.greenlake.iam",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 403,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "The user is not authorized to perform the request",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "InternalError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "e0a0d57d-30cb-45f8-90cb-d6ea3501f70b",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_INTERNAL_SERVER_ERROR",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "retryAfterSeconds": {
+                      "description": "Seconds to wait before retrying.",
+                      "example": 30,
+                      "type": "integer"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.retry_info",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "retryAfterSeconds"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 500,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Internal Server Error",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId",
+              "errorDetails"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "MSPConversionStatus": {
+        "allOf": [
+          {
+            "type": "string"
+          }
+        ],
+        "description": "The status of a MSP conversion process.",
+        "enum": [
+          "MSP_CONVERSION_INITIATED",
+          "MSP_CONVERTED",
+          "MSP_CONVERSION_FAILED"
+        ],
+        "example": "MSP_CONVERTED",
+        "title": "MSPConversionStatus"
+      },
+      "MediaCategory": {
+        "description": "The type of media asset associated with the service offer.",
+        "enum": [
+          "LOGO",
+          "SCREENSHOT"
+        ],
+        "example": "SCREENSHOT",
+        "title": "MediaCategory",
+        "type": "string"
+      },
+      "MyServices": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "Count Per Page",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Data pertaining to service and app provisions",
+            "items": {
+              "$ref": "#/components/schemas/RegionWithDetailedProvisions"
+            },
+            "title": "Provisions",
+            "type": "array"
+          },
+          "next": {
+            "example": "us-west",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "Total Count",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "MyServices",
+        "type": "object"
+      },
+      "NotFoundError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_NOT_FOUND",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines.",
+                      "properties": {
+                        "requestedItem": {
+                          "description": "Status of the access token.",
+                          "example": "Not Found",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "Source of the error.",
+                      "example": "hpe.greenlake.service-catalog",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 404,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "No service provision found for ID: 64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "OperationalMode": {
+        "allOf": [
+          {
+            "type": "string"
+          }
+        ],
+        "description": "The operational mode of the service offer.",
+        "enum": [
+          "DEFAULT",
+          "MSP_OWNED_INVENTORY",
+          "CUSTOMER_OWNED_INVENTORY"
+        ],
+        "example": "MSP_OWNED_INVENTORY",
+        "title": "OperationalMode"
+      },
+      "PreConditionFailedError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a969d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_PRECONDITION_FAILED",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "issues": {
+                      "description": "Array of precondition issues.",
+                      "items": {
+                        "properties": {
+                          "description": {
+                            "description": "An elaborate description of how the precondition failed. This can be used by developers to understand how the failure can be fixed.",
+                            "example": "The TXT record with the domain ownership verification did not exist.",
+                            "type": "string"
+                          },
+                          "source": {
+                            "description": "Source of the error.",
+                            "example": "hpe.greenlake.organizations.verification",
+                            "type": "string"
+                          },
+                          "subject": {
+                            "description": "The specific issue.",
+                            "example": "TXT Record with key _hpe-greenlake-validation",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "subject"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.precondition_failed",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "issues",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 412,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Precondition Failed",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId",
+              "errorDetails"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ProvisionStatus": {
+        "allOf": [
+          {
+            "type": "string"
+          }
+        ],
+        "description": "The current provisioning status of the service, such as provisioned or failed.",
+        "enum": [
+          "PROVISION_INITIATED",
+          "PROVISIONED",
+          "PROVISION_FAILED",
+          "UNPROVISION_INITIATED",
+          "UNPROVISIONED",
+          "UNPROVISION_FAILED"
+        ],
+        "example": "PROVISIONED",
+        "title": "ProvisionStatus"
+      },
+      "RecentService": {
+        "properties": {
+          "id": {
+            "description": "Service Offer identifier",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "id",
+            "type": "string"
+          },
+          "lastAccessedTime": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Most recent date and time at which service offer was launched",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "lastAccessedTime"
+          },
+          "regionalProvisions": {
+            "items": {
+              "$ref": "#/components/schemas/RegionalProvision"
+            },
+            "title": "regionalProvisions",
+            "type": "array"
+          },
+          "serviceOffer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferPartialDetails"
+              }
+            ]
+          },
+          "type": {
+            "description": "Resource Type",
+            "example": "/service-catalog/recent-service",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "lastAccessed",
+          "serviceOffer",
+          "provisions"
+        ],
+        "title": "RecentService",
+        "type": "object"
+      },
+      "RecentServiceV2": {
+        "properties": {
+          "id": {
+            "description": "Id of service-manager-provision entry or service-provision entry",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "id",
+            "type": "string"
+          },
+          "lastAccessedTime": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Most recent date and time at which service was launched",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "lastAccessedTime"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Region"
+          },
+          "serviceManagerProvision": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceManagerProvisionPartialInfo"
+              }
+            ],
+            "x-omitempty": false
+          },
+          "serviceOffer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferPartialInfo"
+              }
+            ]
+          },
+          "serviceProvision": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceProvisionPartialInfo"
+              }
+            ],
+            "x-omitempty": false
+          },
+          "type": {
+            "description": "Resource Type",
+            "example": "/service-catalog/recent-service",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "region",
+          "lastAccessedTime",
+          "serviceOffer",
+          "provisions"
+        ],
+        "title": "RecentServiceV2",
+        "type": "object"
+      },
+      "RecentServices": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "Count Per Page",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Service offer with provisions and last accessed timestamp",
+            "items": {
+              "$ref": "#/components/schemas/RecentService"
+            },
+            "title": "RecentService",
+            "type": "array"
+          },
+          "next": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "Total Count",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "RecentServices",
+        "type": "object"
+      },
+      "RecentServicesV2": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "Count Per Page",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Service offer with provisions and last accessed timestamp",
+            "items": {
+              "$ref": "#/components/schemas/RecentServiceV2"
+            },
+            "title": "RecentService",
+            "type": "array"
+          },
+          "next": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "Total Count",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "RecentServicesV2",
+        "type": "object"
+      },
+      "Region": {
+        "properties": {
+          "id": {
+            "description": "The code name for a geographical region supported by the HPE GreenLake cloud.",
+            "example": "us-east",
+            "title": "id",
+            "type": "string"
+          },
+          "name": {
+            "description": "The human-readable name for the geographical region.",
+            "example": "US East",
+            "title": "name",
+            "type": "string"
+          },
+          "type": {
+            "description": "The resource type identifier for the region.",
+            "example": "/service-catalog/region",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "title": "Region"
+      },
+      "RegionWithDetailedProvisions": {
+        "properties": {
+          "id": {
+            "description": "Region with Detailed Provisions identifier",
+            "example": "us-east",
+            "title": "id",
+            "type": "string"
+          },
+          "provisions": {
+            "items": {
+              "$ref": "#/components/schemas/DetailedProvision"
+            },
+            "title": "provisions",
+            "type": "array"
+          },
+          "type": {
+            "description": "Resource Type",
+            "example": "/service-catalog/my-service",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "provisions"
+        ],
+        "title": "RegionWithDetailedProvisions",
+        "type": "object"
+      },
+      "RegionWithLocations": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Region"
+          },
+          {
+            "properties": {
+              "locations": {
+                "description": "A list of physical locations within the region where the application instance is available.",
+                "example": [
+                  "Virginia",
+                  "California"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "title": "location",
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "title": "RegionWithLocations"
+      },
+      "RegionalProvision": {
+        "properties": {
+          "id": {
+            "description": "Region as provision identifier",
+            "example": "us-east",
+            "title": "id",
+            "type": "string"
+          },
+          "serviceManagerProvision": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceManagerProvision"
+              }
+            ],
+            "x-omitempty": false
+          },
+          "serviceProvision": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceProvision"
+              }
+            ],
+            "x-omitempty": false
+          },
+          "type": {
+            "description": "Resource Type",
+            "example": "/service-catalog/regional-provision",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "title": "RegionalProvision"
+      },
+      "ServiceManagerProvision": {
+        "description": "Service manager provision details",
+        "properties": {
+          "createdAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was created or upgraded.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "createdAt"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "example": 1,
+            "title": "generation",
+            "type": "integer"
+          },
+          "id": {
+            "example": "2fa85f6457174562b3fc2c963f66afa1",
+            "title": "Service manager provisioned ID",
+            "type": "string"
+          },
+          "provisionStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProvisionStatus"
+              }
+            ]
+          },
+          "reason": {
+            "description": "Reason for failure",
+            "example": "Failed to configure IDP.",
+            "title": "Reason",
+            "type": "string"
+          },
+          "region": {
+            "example": "us-east",
+            "title": "Region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager provision resource",
+            "example": "/service-catalog/v1beta1/service-manager-provisions/2fa85f6457174562b3fc2c963f66afa1",
+            "title": "Resource URI",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "serviceManagerInstanceId": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "ServiceManagerInstanceId",
+            "type": "string"
+          },
+          "updatedAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "updatedAt"
+          },
+          "workspaceTransferStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceTransferStatus"
+              }
+            ],
+            "x-omitempty": false
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceManager",
+          "region",
+          "provisionStatus",
+          "serviceManagerInstanceId",
+          "createdAt",
+          "updatedAt",
+          "generation",
+          "reason"
+        ],
+        "title": "ServiceManagerProvision",
+        "type": "object"
+      },
+      "ServiceManagerProvisionPartialInfo": {
+        "description": "Service manager provision abraged information. Typically used when only fully provisioned entries are needed.",
+        "properties": {
+          "createdAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was created or upgraded.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "createdAt"
+          },
+          "createdBy": {
+            "example": "user@company.com",
+            "title": "CreatedBy",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "example": 1,
+            "title": "generation",
+            "type": "integer"
+          },
+          "id": {
+            "example": "2fa85f6457174562b3fc2c963f66afa1",
+            "title": "Service manager provisioned ID",
+            "type": "string"
+          },
+          "region": {
+            "example": "us-east",
+            "title": "Region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager provision resource",
+            "example": "/service-catalog/v1beta1/service-manager-provisions/2fa85f6457174562b3fc2c963f66afa1",
+            "title": "Resource URI",
+            "type": "string"
+          },
+          "serviceManagerInstanceId": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "ServiceManagerInstanceId",
+            "type": "string"
+          },
+          "updatedAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "updatedAt"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceManager",
+          "region",
+          "serviceManagerInstanceId",
+          "generation"
+        ],
+        "title": "ServiceManagerProvisionPartialInfo",
+        "type": "object"
+      },
+      "ServiceManagerProvisionResourceLink": {
+        "properties": {
+          "id": {
+            "description": "The unique identifier for the service manager provision.",
+            "example": "2fb85f6457174562b3fc2c963f66afa2",
+            "title": "id",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The URI reference to the service manager provision resource.",
+            "example": "/service-catalog/v1beta1/service-manager-provisions/2fb85f64-5717-4562-b3fc-2c963f66afa2",
+            "title": "resourceUri",
+            "type": "string"
+          }
+        },
+        "title": "ServiceManagerProvisionResourceLink",
+        "type": "object"
+      },
+      "ServiceManagerResourceLink": {
+        "properties": {
+          "id": {
+            "description": "The unique identifier for the service manager.",
+            "example": "7267b0e0-013c-4181-8c27-01b395ed0b61",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The URI reference to the service manager resource.",
+            "example": "/service-catalog/v1beta1/service-managers/7267b0e0-013c-4181-8c27-01b395ed0b61",
+            "title": "resourceUri",
+            "type": "string"
+          }
+        },
+        "title": "ServiceManagerResourceLink",
+        "type": "object"
+      },
+      "ServiceOfferCatalog": {
+        "description": "List of Service Offers and available-regions grouped by Category",
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "Count Per Page",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryWithServiceOffers"
+            },
+            "type": "array"
+          },
+          "next": {
+            "example": "STORAGE",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "Total Count",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "ServiceOfferCatalog",
+        "type": "object"
+      },
+      "ServiceOfferList": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "The number of returned items per page.",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceOfferRead"
+            },
+            "title": "ServiceOfferList",
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of resources.",
+            "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "The total number of items in the result set.",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "ServiceOfferList",
+        "type": "object"
+      },
+      "ServiceOfferMediaImageDetails": {
+        "properties": {
+          "description": {
+            "description": "summary about the media",
+            "example": "This is sample description",
+            "format": "string",
+            "title": "description",
+            "type": "string"
+          },
+          "image": {
+            "description": "S3/minio URL",
+            "example": "https://test-url.com/3fa85f64-5717-4562-b3fc-2c963f66afa6/logo/cia85f64-5717-4562-b3fc-2c963f66afa6.png",
+            "format": "string",
+            "title": "image",
+            "type": "string"
+          }
+        },
+        "required": [
+          "image",
+          "description"
+        ],
+        "title": "ServiceOfferMediaImageDetails",
+        "type": "object"
+      },
+      "ServiceOfferMediaVideoDetails": {
+        "properties": {
+          "description": {
+            "description": "summary about the media",
+            "example": "This is sample description",
+            "format": "string",
+            "title": "description",
+            "type": "string"
+          },
+          "video": {
+            "description": "S3/minio URL",
+            "example": "https://test-url.com/3fa85f64-5717-4562-b3fc-2c963f66afa6/logo/cia85f64-5717-4562-b3fc-2c963f66afa6.mp4",
+            "format": "string",
+            "title": "video",
+            "type": "string"
+          }
+        },
+        "required": [
+          "video",
+          "description"
+        ],
+        "title": "ServiceOfferMediaVideoDetails",
+        "type": "object"
+      },
+      "ServiceOfferPartialDetails": {
+        "description": "Partial details for a service offer",
+        "properties": {
+          "categories": {
+            "description": "Types of categories",
+            "example": [
+              "NETWORKING"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "Identifier of service offer",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "serviceOfferId",
+            "type": "string"
+          },
+          "name": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Name of the Service Offer. In case of an app-provision, name of service-manager will be picked. If absent, name of app will be picked.",
+            "example": "Aruba Central",
+            "title": "name"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/service-catalog/v1beta1/service-offers/7267b0e0-013c-4181-8c27-01b395ed0b61",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "slug": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Short identifier for a service offer. In case of an app-provision, slug will be picked from service-manager. If absent, slug will be picked from application.",
+            "example": "CENTRAL",
+            "title": "slug"
+          },
+          "staticLaunchUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Relative URLs to launch",
+            "example": "https://${sub-domain}/infosight.hpe.com",
+            "title": "staticLaunchUrl",
+            "x-omitempty": false
+          },
+          "workspaceOpModes": {
+            "description": "Types of Workspace Operational Modes for Tenant Workspaces",
+            "example": [
+              "MSP_OWNED_INVENTORY"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceOpMode"
+            },
+            "title": "workspaceOpModes",
+            "type": "array",
+            "x-oapi-codegen-extra-tags": {
+              "validate": "omitempty,workspaceopmodes-validation"
+            }
+          },
+          "workspaceTypes": {
+            "description": "Workspace Types supported",
+            "example": [
+              "STANDALONE",
+              "MSP"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceTypes"
+            },
+            "title": "workspaceTypes",
+            "type": "array",
+            "x-oapi-codegen-extra-tags": {
+              "validate": "omitempty,workspacetype-validation"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "name",
+          "categories",
+          "slug",
+          "staticLaunchUrl",
+          "workspaceTypes",
+          "workspaceOpModes"
+        ],
+        "title": "ServiceOfferPartialDetails",
+        "type": "object"
+      },
+      "ServiceOfferPartialInfo": {
+        "description": "Service offer abraged information. Typically used when only available service-offers in a workspace are to be reported.",
+        "properties": {
+          "categories": {
+            "description": "Types of categories",
+            "example": [
+              "NETWORKING"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "Identifier of service offer",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "serviceOfferId",
+            "type": "string"
+          },
+          "name": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Name of the Service Offer. In case of an app-provision, name of service-manager will be picked. If absent, name of app will be picked.",
+            "example": "Aruba Central",
+            "title": "name"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/service-catalog/v1beta1/service-offers/7267b0e0-013c-4181-8c27-01b395ed0b61",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "slug": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Short identifier for a service offer. In case of an app-provision, slug will be picked from service-manager. If absent, slug will be picked from application.",
+            "example": "CENTRAL",
+            "title": "slug"
+          },
+          "staticLaunchUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Relative URLs to launch",
+            "example": "https://${sub-domain}/infosight.hpe.com",
+            "title": "staticLaunchUrl",
+            "x-omitempty": false
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "name",
+          "categories",
+          "slug",
+          "staticLaunchUrl"
+        ],
+        "title": "ServiceOfferPartialInfo",
+        "type": "object"
+      },
+      "ServiceOfferRead": {
+        "properties": {
+          "brokerUri": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "HPE Internal. Applies only to internal service offers. It is the relative path starting with API group (the API group is sufficient). The base URI is the API gateway for the HPE GreenLake cloud cluster. This is the application API endpoint exposed by application to be called from HPE GreenLake cloud.",
+            "example": "/igc",
+            "title": "brokerUri"
+          },
+          "capabilities": {
+            "description": "A list of key features or functionalities provided by the service offer.",
+            "example": [
+              "Capability 1",
+              "Capability 2"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "categories": {
+            "description": "The categories to which the service offer belongs.",
+            "example": [
+              "COMPUTE",
+              "NETWORKING"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "type": "array"
+          },
+          "contactSalesUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The HTTPS URL for contacting the sales team.",
+            "example": "https://contact-sales.hpe.com/",
+            "title": "contactSalesURL"
+          },
+          "createdAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was created.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "createdAt"
+          },
+          "documentationUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "An HTTPS URL to the documentation.",
+            "example": "https://www.arubanetworks.com/techdocs/central/latest/content/home.htm",
+            "title": "documentationURL"
+          },
+          "evalUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The URL to sign up for a time-limited evaluation or trial of the service offer.",
+            "example": "https://connect.hpe.com/HPE_Backup_and_Recovery_Trial",
+            "title": "evalUrl"
+          },
+          "featuresSupported": {
+            "description": "The features supported by this service offer, such as deep linking or RBAC.",
+            "example": [
+              "DEEP_LINKING",
+              "SERVICE_PROVISIONING",
+              "HONOR_UNPROVISION_RESPONSE"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SupportedFeature"
+            },
+            "type": "array"
+          },
+          "generation": {
+            "allOf": [
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "A monotonically increasing update counter.",
+            "example": 1,
+            "title": "generation"
+          },
+          "id": {
+            "description": "The unique identifier for the service offer.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "isDefault": {
+            "allOf": [
+              {
+                "type": "boolean"
+              }
+            ],
+            "default": false,
+            "description": "Indicates whether this service offer is the default for its service manager.",
+            "example": true,
+            "title": "isDefault"
+          },
+          "languagesSupported": {
+            "description": "The ISO codes for languages supported by this service offer.",
+            "example": [
+              "en-US",
+              "de-DE"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "languagesSupported",
+            "type": "array"
+          },
+          "name": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The name of the service offer.",
+            "example": "Aruba Central",
+            "title": "name"
+          },
+          "overview": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A brief overview of the service offer.",
+            "example": "Aruba Central overview",
+            "maxLength": 128,
+            "title": "overview"
+          },
+          "preProvisionMessage": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A message displayed to users before provisioning the service offer, such as warnings or important information.",
+            "example": "Users will be logged out during provisioning.",
+            "title": "preProvisionMessage"
+          },
+          "resourceUri": {
+            "description": "The URI reference to this resource.",
+            "example": "/service-catalog/v1beta1/service-offers/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink",
+            "description": "The associated service manager application for this service offer, including its ID and resource URI."
+          },
+          "serviceOfferType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferType"
+              }
+            ]
+          },
+          "shortDescription": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A short description or tagline for the service offer.",
+            "example": "description",
+            "title": "shortDescription"
+          },
+          "slug": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A short identifier for the service offer.",
+            "example": "AC",
+            "maxLength": 8,
+            "minLength": 2,
+            "pattern": "^[A-Z-]+$",
+            "title": "slug"
+          },
+          "staticLaunchUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The relative URL used to launch the service offer.",
+            "example": "https://${sub-domain}/infosight.hpe.com",
+            "title": "staticLaunchUrl"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferStatus"
+              }
+            ]
+          },
+          "termsOfServiceUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "An HTTPS URL to the terms of service.",
+            "example": "https://www.hpe.com/us/en/about/legal/ccs-terms.html#Storage",
+            "title": "termsOfServiceURL"
+          },
+          "testDriveUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "An HTTPS URL to test drive.",
+            "example": "https://testdrive.greenlake.hpe.com",
+            "title": "testDriveURL"
+          },
+          "updatedAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was last updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "updatedAt"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "name",
+          "slug",
+          "overview",
+          "capabilities",
+          "categories",
+          "serviceOfferType",
+          "serviceManager",
+          "featuresSupported",
+          "languagesSupported",
+          "documentationUrl",
+          "termsOfServiceUrl",
+          "testDriveUrl",
+          "contactSalesUrl",
+          "status",
+          "createdAt",
+          "generatedAt",
+          "shortDescription",
+          "staticLaunchUrl",
+          "evalUrl",
+          "brokerUri",
+          "preProvisionMessage"
+        ],
+        "title": "ServiceOfferRead",
+        "type": "object"
+      },
+      "ServiceOfferReadOnboarded": {
+        "properties": {
+          "brokerUri": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "HPE Internal. Applies only to internal service offers. It is the relative path starting with API group (the API group is sufficient). The base URI is the API gateway for the HPE GreenLake cloud cluster. This is the application API endpoint exposed by application to be called from HPE GreenLake cloud.",
+            "example": "/igc",
+            "title": "brokerUri"
+          },
+          "capabilities": {
+            "description": "A list of the service offer capabilities.",
+            "example": [
+              "Capability 1",
+              "Capability 2"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "categories": {
+            "description": "The category to which the service offer belongs.",
+            "example": [
+              "COMPUTE",
+              "NETWORKING"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            },
+            "type": "array"
+          },
+          "contactSalesUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The HTTPS URL for contacting the sales team.",
+            "example": "https://contact-sales.hpe.com/",
+            "title": "contactSalesURL"
+          },
+          "createdAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was created.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "createdAt"
+          },
+          "documentationUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The HTTPS URL to the documentation.",
+            "example": "https://www.arubanetworks.com/techdocs/central/latest/content/home.htm",
+            "title": "documentationURL"
+          },
+          "evalUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The URL to sign up for a time-limited evaluation or trial of the service offer.",
+            "example": "https://connect.hpe.com/HPE_Backup_and_Recovery_Trial",
+            "title": "evalUrl"
+          },
+          "featuresSupported": {
+            "description": "A list of supported features.",
+            "example": [
+              "DEEP_LINKING",
+              "SERVICE_PROVISIONING",
+              "HONOR_UNPROVISION_RESPONSE"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SupportedFeature"
+            },
+            "type": "array"
+          },
+          "generation": {
+            "allOf": [
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "A monotonically increasing update counter.",
+            "example": 1,
+            "title": "generation"
+          },
+          "id": {
+            "description": "The unique identifier for a service offer.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "isDefault": {
+            "allOf": [
+              {
+                "type": "boolean"
+              }
+            ],
+            "default": false,
+            "description": "A boolean that indicates if a service offer is a service manager.",
+            "example": true,
+            "title": "isDefault"
+          },
+          "languagesSupported": {
+            "description": "ISO code for the supported languages",
+            "example": [
+              "en-US",
+              "de-DE"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "languagesSupported",
+            "type": "array"
+          },
+          "name": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The name of the service offer.",
+            "example": "Aruba Central",
+            "title": "name"
+          },
+          "overview": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "An overview of the service offer.",
+            "example": "Aruba Central overview",
+            "maxLength": 128,
+            "title": "overview"
+          },
+          "preProvisionMessage": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A short message displayed in the service provision dialog box.",
+            "example": "Users will be logged out during provisioning.",
+            "title": "preProvisionMessage"
+          },
+          "resourceUri": {
+            "description": "The URI reference to this resource.",
+            "example": "/service-catalog/v1beta1/service-offers/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "serviceOfferType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServiceOfferType"
+              }
+            ]
+          },
+          "shortDescription": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A short description or tagline for the service offer.",
+            "example": "description",
+            "title": "shortDescription"
+          },
+          "slug": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "A short identifier for the service offer.",
+            "example": "AC",
+            "maxLength": 8,
+            "minLength": 2,
+            "pattern": "^[A-Z-]+$",
+            "title": "slug"
+          },
+          "staticLaunchUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The relative URL used to launch the service offer.",
+            "example": "https://${sub-domain}/infosight.hpe.com",
+            "title": "staticLaunchUrl"
+          },
+          "status": {
+            "description": "The current status of the service offer.",
+            "enum": [
+              "ONBOARDING",
+              "ONBOARDED",
+              "PUBLISHED"
+            ],
+            "example": "ONBOARDED",
+            "title": "ServiceOfferStatus",
+            "type": "string"
+          },
+          "termsOfServiceUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The HTTPS URL to the terms of service.",
+            "example": "https://www.hpe.com/us/en/about/legal/ccs-terms.html#Storage",
+            "title": "termsOfServiceURL"
+          },
+          "testDriveUrl": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "The HTTPS URL to the test drive",
+            "example": "https://testdrive.greenlake.hpe.com",
+            "title": "testDriveURL"
+          },
+          "type": {
+            "description": "The type of resource.",
+            "example": "/service-catalog/service-offer",
+            "title": "type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "allOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "description": "Date and time at which the service offer was last updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "updatedAt"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "resourceUri",
+          "slug",
+          "overview",
+          "capabilities",
+          "categories",
+          "serviceOfferType",
+          "serviceManager",
+          "featuresSupported",
+          "languagesSupported",
+          "documentationUrl",
+          "termsOfServiceUrl",
+          "testDriveUrl",
+          "contactSalesUrl",
+          "status",
+          "createdAt",
+          "generatedAt",
+          "shortDescription",
+          "staticLaunchUrl",
+          "evalUrl",
+          "brokerUri",
+          "preProvisionMessage"
+        ],
+        "title": "ServiceOfferReadOnboarded",
+        "type": "object"
+      },
+      "ServiceOfferReadWithMedia": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ServiceOfferRead"
+          },
+          {
+            "properties": {
+              "logo": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ServiceOfferMediaImageDetails"
+                  }
+                ],
+                "description": "S3/minio URL",
+                "title": "logo"
+              },
+              "screenshots": {
+                "description": "S3/minio URLs for the screenshots",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceOfferMediaImageDetails"
+                },
+                "title": "screenshots",
+                "type": "array"
+              },
+              "videos": {
+                "description": "S3/minio URLs for the videos",
+                "items": {
+                  "$ref": "#/components/schemas/ServiceOfferMediaVideoDetails"
+                },
+                "title": "videos",
+                "type": "array"
+              },
+              "workspaceTypes": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/WorkspaceTypes"
+                  }
+                ],
+                "example": [
+                  "MSP",
+                  "TENANT"
+                ],
+                "x-oapi-codegen-extra-tags": {
+                  "validate": "omitempty,workspacetype-validation"
+                }
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "required": [
+          "workspaceTypes",
+          "logo",
+          "screenshots",
+          "videos"
+        ],
+        "title": "ServiceOfferReadWithMedia"
+      },
+      "ServiceOfferRegionRead": {
+        "properties": {
+          "createdAt": {
+            "description": "Date and time at which the service offer was created.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "createdAt",
+            "type": "string"
+          },
+          "generation": {
+            "description": "A monotonically increasing update counter.",
+            "example": "1",
+            "format": "int64",
+            "title": "generation",
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier for the service offer region.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "region": {
+            "description": "The code name of the region where this service offer is available.",
+            "example": "us-east",
+            "title": "region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The URI reference to this resource.",
+            "example": "/service-catalog/v1beta1/service-offer-regions/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceOffer": {
+            "$ref": "#/components/schemas/ServiceOfferResourceLink",
+            "description": "A service offer represents a specific set of features or capabilities that can be independently identified and assigned access. Service offers are typically associated with roles and permissions, commerce, metering, quote-to-cash, or trial evaluations."
+          },
+          "status": {
+            "description": "The current status of the service offer.",
+            "enum": [
+              "ONBOARDING",
+              "ONBOARDED",
+              "PUBLISHED"
+            ],
+            "example": "ONBOARDED",
+            "title": "ServiceOfferStatus",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "example": "/service-catalog/service-offer-region",
+            "title": "type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date and time at which the service offer was updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "updatedAt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "serviceOfferId",
+          "region",
+          "status",
+          "createdAt",
+          "updatedAt",
+          "generation"
+        ],
+        "title": "ServiceOfferRegionRead",
+        "type": "object"
+      },
+      "ServiceOfferRegionsList": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "description": "The number of returned items per page.",
+            "title": "count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceOfferRegionRead"
+            },
+            "title": "ServiceOfferRegionsList",
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of resources.",
+            "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+            "title": "next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "description": "Total number of items in the result set.",
+            "title": "total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next",
+          "count",
+          "total"
+        ],
+        "title": "ServiceOfferRegionsList",
+        "type": "object"
+      },
+      "ServiceOfferResourceLink": {
+        "properties": {
+          "id": {
+            "description": "The unique identifier for the service offer.",
+            "example": "4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The URI reference to the service offer resource.",
+            "example": "/service-catalog/v1beta1/service-offers/4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "resourceUri",
+            "type": "string"
+          }
+        },
+        "title": "ServiceOfferResourceLink",
+        "type": "object"
+      },
+      "ServiceOfferStatus": {
+        "description": "The current status of the service offer.",
+        "enum": [
+          "ONBOARDING",
+          "ONBOARDED",
+          "PUBLISHED"
+        ],
+        "example": "PUBLISHED",
+        "title": "ServiceOfferStatus",
+        "type": "string"
+      },
+      "ServiceOfferType": {
+        "description": "The type of service offer.",
+        "enum": [
+          "FREE",
+          "COMMON_TOOLS",
+          "SAAS",
+          "DEVICE_SAAS",
+          "IAAS",
+          "ORGANIZATION"
+        ],
+        "example": "SAAS",
+        "title": "ServiceOfferType",
+        "type": "string"
+      },
+      "ServiceOfferWithAvailableRegions": {
+        "properties": {
+          "availableRegions": {
+            "description": "The list of regions where this service offer is available to the current user or customer.",
+            "items": {
+              "$ref": "#/components/schemas/Region"
+            },
+            "title": "availableRegions",
+            "type": "array"
+          },
+          "id": {
+            "description": "The unique identifier for the service offer with available regions.",
+            "example": 1,
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "serviceOffer": {
+            "$ref": "#/components/schemas/ServiceOfferRead",
+            "description": "A service offer represents a specific set of features or capabilities that can be independently identified and assigned access. Service offers are typically associated with roles and permissions, commerce, metering, quote-to-cash, or trial evaluations."
+          },
+          "type": {
+            "description": "The resource type for this object.",
+            "example": "/service-catalog/service-with-regions",
+            "title": "type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceOffer",
+          "availableRegions"
+        ],
+        "title": "ServiceOfferWithAvailableRegions",
+        "type": "object"
+      },
+      "ServiceProvision": {
+        "properties": {
+          "createdAt": {
+            "description": "Date and time at which the service offer was created or upgraded.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "CreatedAt",
+            "type": "string"
+          },
+          "createdBy": {
+            "example": "user@company.com",
+            "title": "CreatedBy",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Generated/updated version",
+            "example": 1,
+            "title": "Generation",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Service provision identifier",
+            "example": "2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "provisionStatus": {
+            "$ref": "#/components/schemas/ProvisionStatus"
+          },
+          "reason": {
+            "example": "Failed to configure IDP.",
+            "title": "Reason",
+            "type": "string"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Region"
+          },
+          "resourceUri": {
+            "example": "/service-catalog/v1beta1/service-provisions/2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "serviceManagerInstanceId": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "ServiceManagerInstanceId",
+            "type": "string"
+          },
+          "serviceManagerProvision": {
+            "$ref": "#/components/schemas/ServiceManagerProvisionResourceLink"
+          },
+          "serviceOffer": {
+            "$ref": "#/components/schemas/ServiceOfferResourceLink"
+          },
+          "updatedAt": {
+            "description": "Date and time at which the service offer was updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "UpdatedAt",
+            "type": "string"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/WorkspaceResourceLink"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceOffer",
+          "region",
+          "workspace",
+          "generation"
+        ],
+        "title": "ServiceProvision"
+      },
+      "ServiceProvisionPartialInfo": {
+        "description": "Service provision abraged information. Typically used when only fully provisioned entries are needed.",
+        "properties": {
+          "createdAt": {
+            "description": "Date and time at which the service offer was created or upgraded.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "CreatedAt",
+            "type": "string"
+          },
+          "createdBy": {
+            "example": "user@company.com",
+            "title": "CreatedBy",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Generated/updated version",
+            "example": 1,
+            "title": "Generation",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Service provision identifier",
+            "example": "2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "region": {
+            "example": "us-east",
+            "title": "Region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "example": "/service-catalog/v1beta1/service-provisions/2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "serviceManagerInstanceId": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "ServiceManagerInstanceId",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date and time at which the service offer was updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "UpdatedAt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceOffer",
+          "region",
+          "serviceManagerInstanceId",
+          "generation"
+        ],
+        "title": "ServiceProvisionPartialInfo"
+      },
+      "SupportedFeature": {
+        "description": "Indicates a feature supported by the service offer. \nExamples include deep linking, evaluation, provisioning, and RBAC support.\n",
+        "enum": [
+          "DEEP_LINKING",
+          "EVALUATION",
+          "SERVICE_PROVISIONING",
+          "ORG_SINGLETON_SERVICE_PROVISIONING",
+          "SKIP_SERVICE_MGR_PROVISIONING",
+          "SKIP_SERVICE_UNPROVISIONING",
+          "RBAC",
+          "UI_DISABLE_PROVISIONING",
+          "HONOR_UNPROVISION_RESPONSE",
+          "ORG_PARENT_SUPPORTED"
+        ],
+        "example": "DEEP_LINKING",
+        "title": "SupportedFeature",
+        "type": "string"
+      },
+      "TooManyRequestsError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a969d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_ERROR_TOO_MANY_REQUESTS",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines.",
+                      "properties": {
+                        "issue": {
+                          "description": "Status of the access token.",
+                          "example": "Unknown",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "Source of the error.",
+                      "example": "hpe.greenlake.service-catalog",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 429,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Current request can not be processed due to unknown issue.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "UnauthorizedError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_UNAUTHORIZED",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines.",
+                      "properties": {
+                        "accessToken": {
+                          "description": "Status of the access token.",
+                          "example": "Expired",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "Source of the error.",
+                      "example": "hpe.greenlake.iam",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 401,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Authentication error - token expired",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ValidationError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error.",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error.",
+                "example": "HPE_GL_SERVICE_CATALOG_UNPROCESSABLE_ENTITY",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines.",
+                      "properties": {
+                        "invalidInput": {
+                          "description": "Status of the access token.",
+                          "example": "id",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "Source of the error.",
+                      "example": "hpe.greenlake.service-catalog",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 422,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message.",
+                "example": "Invalid UUID: 5221850a-dae8-4bdf-ae69-021e3bbf80a",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "WorkspaceOpMode": {
+        "description": "The operational mode of the workspace, indicating where the service offer is visible or provisionable.",
+        "enum": [
+          "CUSTOMER_OWNED_INVENTORY",
+          "MSP_OWNED_INVENTORY",
+          "ALL",
+          "NONE"
+        ],
+        "example": "CUSTOMER_OWNED_INVENTORY",
+        "title": "WorkspaceOpMode",
+        "type": "string"
+      },
+      "WorkspaceResourceLink": {
+        "properties": {
+          "id": {
+            "description": "The unique identifier for the workspace.",
+            "example": "4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "id",
+            "type": "string"
+          },
+          "name": {
+            "description": "The display name of the workspace.",
+            "example": "Hewlett Packard Enterprise",
+            "title": "name",
+            "type": "string"
+          },
+          "organizationId": {
+            "description": "The unique identifier of the organization.",
+            "example": "5ab85f64-6717-5562-c3fc-3c963f66afa6",
+            "format": "uuid",
+            "title": "organizationId",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The URI reference to this resource.",
+            "example": "/workspaces/v1/workspaces/4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "resourceUri",
+            "type": "string"
+          },
+          "workspaceTransferStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceTransferStatus"
+              }
+            ]
+          }
+        },
+        "title": "WorkspaceResourceLink",
+        "type": "object"
+      },
+      "WorkspaceTransferStatus": {
+        "description": "The status of a workspace transfer, indicating the progress of moving a workspace from one type to another.",
+        "enum": [
+          "TRANSFER_INITIATED",
+          "TRANSFER_COMPLETED",
+          "TRANSFER_FAILED"
+        ],
+        "example": "TRANSFER_COMPLETED",
+        "title": "WorkspaceTransferStatus",
+        "type": "string"
+      },
+      "WorkspaceTypes": {
+        "description": "The type of workspace. For example, a managed service provider (MSP) or standalone workspace.",
+        "enum": [
+          "BASIC_ORGANIZATION",
+          "STANDALONE",
+          "MSP",
+          "TENANT"
+        ],
+        "example": "MSP",
+        "title": "WorkspaceTypes",
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "The API reference documentation for endpoints related to service offer management.",
+    "license": {
+      "name": "HPE End User License Agreement",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Service offer management",
+    "version": "v1beta1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/service-catalog/v1beta1/detailed-service-offers/{id}": {
+      "get": {
+        "description": "Get Detailed Service Offer",
+        "operationId": "getDetailedServiceOffer",
+        "parameters": [
+          {
+            "description": "Service Offer ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "format": "string",
+              "title": "id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetailedServiceOffer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Service Offer Details",
+        "tags": [
+          "UI Management"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/featured-services": {
+      "get": {
+        "description": "Get Featured Service Offers",
+        "operationId": "getFeaturedServices",
+        "parameters": [
+          {
+            "description": "Specifies the category for the next page of featured services.",
+            "example": "STORAGE",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the category for the next page of featured services.",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of entries per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeaturedServiceOffers"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Featured Service Offers",
+        "tags": [
+          "UI Management"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/my-services": {
+      "get": {
+        "description": "Get data to populate My Services",
+        "operationId": "getMyServices",
+        "parameters": [
+          {
+            "description": "Specifies the start-id for the next page of my services.",
+            "example": "us-west",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the start-id for the next page of my services.",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of entries per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies whether to include omnipresent service offers in response",
+            "in": "query",
+            "name": "include-omnipresent",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Request omnipresent service offers to be included along with other provisioned service offers",
+              "example": true,
+              "title": "Include Omnipresent",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyServices"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get My Services",
+        "tags": [
+          "UI Management"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/recent-services": {
+      "get": {
+        "description": "Get data to populate Recent Services",
+        "operationId": "getRecentServices",
+        "parameters": [
+          {
+            "description": "Specifies the start-id for the next page of recent services.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the start-id for the next page of recent services.",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of entries per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentServices"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Recent Services",
+        "tags": [
+          "UI Management"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-catalog": {
+      "get": {
+        "description": "Get Service Offers for Catalog View",
+        "operationId": "getServiceCatalog",
+        "parameters": [
+          {
+            "description": "Specifies the category for the next page of service catalog.",
+            "example": "STORAGE",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the category for the next page of service catalog.",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of entries per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOfferCatalog"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Service Offers for Catalog",
+        "tags": [
+          "UI Management"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-offer-regions": {
+      "get": {
+        "description": "Retrieve a list of service offer regions by applying filters.\nEach service offer region represents a service offer provisioned in a specific region.\n<br><br>**Pagination:** This API supports cursor-based pagination. Provide the cursor in the `next` query parameter to retrieve the next page.\n",
+        "operationId": "getServiceOfferRegions",
+        "parameters": [
+          {
+            "description": "Specifies the pagination cursor for the next page of service offer regions.",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the pagination cursor for the next page of service offer regions.",
+              "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of results to be returned.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "Specifies the number of results to be returned.",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `filter` query parameter is used to filter the set of resources returned in a `GET` request. The returned set of resources must match the criteria in the filter query parameter.<br><br> The value of the `filter` query parameter is a subset of [OData 4.0](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.<br><br>**Supported fields**: `serviceOfferId`, `status`, and `region`.<br>**Supported operand**: `eq`<br>**Supported operations**: `and`",
+            "examples": {
+              "filter-ServiceOfferId-and-region": {
+                "$ref": "#/components/examples/filter-serviceOfferId-and-region"
+              },
+              "filter-ServiceOfferId-and-status": {
+                "$ref": "#/components/examples/filter-serviceOfferId-and-status"
+              },
+              "filter-ServiceOfferId-and-status-and-region": {
+                "$ref": "#/components/examples/filter-serviceOfferId-and-status-and-region"
+              },
+              "filter-ServiceOfferRegion-by-region": {
+                "$ref": "#/components/examples/filter-ServiceOfferRegion-by-region"
+              },
+              "filter-ServiceOfferRegion-by-status": {
+                "$ref": "#/components/examples/filter-ServiceOfferRegion-by-status"
+              },
+              "filter-serviceOfferId": {
+                "$ref": "#/components/examples/filter-serviceOfferId"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOfferRegionsList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get service offer regions",
+        "tags": [
+          "Service offer regions"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-offer-regions/{id}": {
+      "get": {
+        "description": "Retrieve detailed information about a specific service offer region by providing its unique identifier in the request path.\nTo obtain valid service offer region IDs, use the `Get service offer regions` endpoint to list available regions.\n",
+        "operationId": "getServiceOfferRegion",
+        "parameters": [
+          {
+            "description": "The unique service offer region ID.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique service offer region ID.",
+              "format": "uuid",
+              "title": "id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOfferRegionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get service offer region",
+        "tags": [
+          "Service offer regions"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-offers": {
+      "get": {
+        "description": "Retrieve a list of service offers by applying filters. \nA service offer provides a distinct set of functionality that can be independently identified and assigned access.\n<br><br>**Pagination:** This API supports cursor-based pagination. Provide the cursor in the `next` query parameter to retrieve the next page.\n",
+        "operationId": "getServiceOffers",
+        "parameters": [
+          {
+            "description": "Specifies the pagination cursor for the next page of service offers.",
+            "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the pagination cursor for the next page of service offers.",
+              "title": "Pagination cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of results to be returned.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `filter` query parameter is used to filter the set of resources returned in a `GET` request. The returned set of resources must match the criteria in the filter query parameter.<br><br> The value of the `filter` query parameter is a subset of [OData 4.0](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.<br><br>**Supported fields**: `category`, `serviceManagerId`, `status`, `isDefault`, `slug`, and `staticLaunchUrl`.<br>**Supported operand**: `eq`<br>**Supported operations**: `and`",
+            "examples": {
+              "filter-category": {
+                "$ref": "#/components/examples/filter-category"
+              },
+              "filter-isDefault": {
+                "$ref": "#/components/examples/filter-isDefault"
+              },
+              "filter-serviceManagerId": {
+                "$ref": "#/components/examples/filter-serviceManagerId"
+              },
+              "filter-slug": {
+                "$ref": "#/components/examples/filter-slug"
+              },
+              "filter-staticLaunchUrl": {
+                "$ref": "#/components/examples/filter-staticLaunchUrl"
+              },
+              "filter-status": {
+                "$ref": "#/components/examples/filter-status"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOfferList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get service offers",
+        "tags": [
+          "Service offers"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-offers/{id}": {
+      "get": {
+        "description": "Retrieve detailed information about a specific service offer by supplying its unique identifier in the request path.\nTo obtain valid service offer IDs, use the `Get service offers` endpoint to list available offers.\n",
+        "operationId": "getServiceOffer",
+        "parameters": [
+          {
+            "description": "The unique identifier of the service offer.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "The unique identifier for the service offer.",
+              "format": "uuid",
+              "title": "id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceOfferRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get a service offer",
+        "tags": [
+          "Service offers"
+        ]
+      }
+    },
+    "/service-catalog/v1beta2/recent-services": {
+      "get": {
+        "description": "Get data to populate Recent Services V2",
+        "operationId": "getRecentServicesV2",
+        "parameters": [
+          {
+            "description": "Specifies the start-id for the next page of recent services.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the start-id for the next page of recent services.",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of entries per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecentServicesV2"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Recent Services",
+        "tags": [
+          "UI Management"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ]
+}

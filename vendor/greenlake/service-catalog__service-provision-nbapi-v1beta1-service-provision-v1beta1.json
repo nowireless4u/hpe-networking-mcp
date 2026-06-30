@@ -1,0 +1,1538 @@
+{
+  "components": {
+    "examples": {
+      "filter-example1": {
+        "description": "Return service provision with given ID",
+        "summary": "Filter by service provision ID",
+        "value": "id eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "filter-example2": {
+        "description": "Return service provisions for given workspace ID",
+        "summary": "Filter by workspace ID",
+        "value": "workspaceId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "filter-example3": {
+        "description": "Return service provisions for given Application Customer ID",
+        "summary": "Filter by service manager provision ID",
+        "value": "serviceManagerProvisionId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "filter-example4": {
+        "description": "Return service provisions for given service offer ID and region",
+        "summary": "Filter by service offer ID and region",
+        "value": "ServiceOfferId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050' and region eq 'us-west'"
+      },
+      "filter-example5": {
+        "description": "Return service provision for given application ID and application instance ID",
+        "summary": "Filter by service manager and service manager instance ID",
+        "value": "serviceManagerId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050' and serviceManagerInstanceId eq '62d242c7-7d53-448d-b7d0-baf0c591f024'"
+      },
+      "filter-example6": {
+        "description": "Return service provisions with given status",
+        "summary": "Filter by Status",
+        "value": "status eq 'PROVISION_INITIATIED'"
+      },
+      "filter-example7": {
+        "description": "Return service provisions with given organization id",
+        "summary": "Filter by OrganizationID",
+        "value": "organizationId eq '767c0c92-5ecc-4952-85d6-06d2bcaaf050'"
+      },
+      "filter-example8": {
+        "description": "Return service provisions with given Slug in service offer",
+        "summary": "Filter by Slug",
+        "value": "slug eq 'AC'"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BadRequestError"
+            }
+          }
+        },
+        "description": "400 Bad Request"
+      },
+      "Conflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "409 Conflict"
+      },
+      "Forbidden": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ForbiddenError"
+            }
+          }
+        },
+        "description": "403 Forbidden"
+      },
+      "InternalServerError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/InternalError"
+            }
+          }
+        },
+        "description": "500 Internal Server Error"
+      },
+      "NoContent": {
+        "description": "NoContent"
+      },
+      "NotFound": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotFoundError"
+            }
+          }
+        },
+        "description": "404 Not Found"
+      },
+      "PreConditionFailed": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PreConditionFailedError"
+            }
+          }
+        },
+        "description": "412 PreCondition Failed"
+      },
+      "ServiceProvisionCreated": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceProvision"
+            }
+          }
+        },
+        "description": "201 ServiceProvision Created Response",
+        "headers": {
+          "Location": {
+            "description": "URL of the created Workspace",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnauthorizedError"
+            }
+          }
+        },
+        "description": "401 Unauthorized"
+      },
+      "ValidationError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        },
+        "description": "422 Validation error"
+      }
+    },
+    "schemas": {
+      "AccountType": {
+        "enum": [
+          "BASIC_ORGANIZATION",
+          "STANDALONE",
+          "MSP",
+          "TENANT"
+        ],
+        "title": "AccountType",
+        "type": "string"
+      },
+      "BadRequestError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_BAD_REQUEST",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "issues": {
+                      "description": "Array of bad request issues.",
+                      "items": {
+                        "properties": {
+                          "description": {
+                            "description": "An elaborate description of issue. This can be used by developers to understand how the failure can be addressed.",
+                            "example": "Invalid format.",
+                            "type": "string"
+                          },
+                          "source": {
+                            "description": "The part of the request with an issue.",
+                            "enum": [
+                              "field",
+                              "header",
+                              "query.parameter"
+                            ],
+                            "example": "field",
+                            "type": "string"
+                          },
+                          "subject": {
+                            "description": "The specific issue key.",
+                            "example": "id",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "subject",
+                          "description"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.bad_request",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "issues"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 400,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "Service Offer 6c4ec6df-1c23-460f-aece-34573e88de19 does not exist",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId",
+              "errorDetails"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "BaseError": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+            "example": "64136af7-cd64-4b4e-88a8-150ab51a969d",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+            "example": "HPE_GL_ERROR_EXPIRED_TOKEN",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code",
+            "example": 401,
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "Authentication error - token expired",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ConflictError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_CONFLICT",
+                "type": "string"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 409,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "Duplicate Service Provision.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "Error": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseError"
+          },
+          {
+            "properties": {
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "metadata": {
+                      "description": "Any additional key value pairs that the service defines",
+                      "properties": {
+                        "recommendedActions": {
+                          "items": {
+                            "description": "Action recommended to the user",
+                            "example": "Contact admin to perform operation",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "source": {
+                      "description": "The source of the error. Typically a registered API group",
+                      "example": "hpe.greenlake.organizations",
+                      "type": "string"
+                    },
+                    "type": {
+                      "description": "The type of error details",
+                      "example": "hpe.greenlake.metadata",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "source",
+                    "metadata"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ]
+      },
+      "ForbiddenError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "8567e466-7322-414a-b7d4-6832c3ce8f47",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_FORBIDDEN",
+                "type": "string"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 403,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "UI Authorization Failed for current Route",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "InternalError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "e0a0d57d-30cb-45f8-90cb-d6ea3501f70b",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                "type": "string"
+              },
+              "errorDetails": {
+                "description": "Additional detailed information about the error",
+                "items": {
+                  "properties": {
+                    "retryAfterSeconds": {
+                      "description": "Seconds to wait before retrying.",
+                      "example": 30,
+                      "type": "integer"
+                    },
+                    "type": {
+                      "description": "The type of error details.",
+                      "example": "hpe.greenlake.retry_info",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "retryAfterSeconds"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 500,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "Internal Server Error",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId",
+              "errDetails"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "MspConversionStatus": {
+        "enum": [
+          "MSP_CONVERSION_INITIATED",
+          "MSP_CONVERTED",
+          "MSP_CONVERSION_FAILED"
+        ],
+        "title": "MspConversionStatus",
+        "type": "string"
+      },
+      "NotFoundError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_NOT_FOUND",
+                "type": "string"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 404,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "No service provision found for ID: 64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "NotificationServiceProvisionResponse": {
+        "example": {
+          "reason": "Failed to configure IDP.",
+          "result": "FAILURE",
+          "serviceProvisionId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        },
+        "properties": {
+          "reason": {
+            "description": "Reason for failure",
+            "title": "reason",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/Result"
+          },
+          "serviceProvisionId": {
+            "description": "Service provision identifier",
+            "example": "2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "format": "uuid",
+            "title": "serviceProvisionId",
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceProvisionId",
+          "result"
+        ],
+        "title": "NotificationServiceProvisionResponse"
+      },
+      "OperationalMode": {
+        "enum": [
+          "DEFAULT",
+          "MSP_OWNED_INVENTORY",
+          "CUSTOMER_OWNED_INVENTORY"
+        ],
+        "title": "OperationalMode",
+        "type": "string"
+      },
+      "PreConditionFailedError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a969d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_PRECONDITION_FAILED",
+                "type": "string"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 412,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "Server preconditions; missing request headers",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ProvisionStatus": {
+        "enum": [
+          "PROVISION_INITIATED",
+          "PROVISIONED",
+          "PROVISION_FAILED",
+          "UNPROVISION_INITIATED",
+          "UNPROVISIONED",
+          "UNPROVISION_FAILED"
+        ],
+        "title": "ProvisionStatus",
+        "type": "string"
+      },
+      "Result": {
+        "enum": [
+          "SUCCESS",
+          "FAILURE"
+        ],
+        "title": "Result",
+        "type": "string"
+      },
+      "ServiceManagerProvisionResourceLink": {
+        "properties": {
+          "accountType": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "id": {
+            "example": "2fb85f6457174562b3fc2c963f66afa2",
+            "title": "ServiceManagerProvisionId",
+            "type": "string"
+          },
+          "mspConversionStatus": {
+            "$ref": "#/components/schemas/MspConversionStatus"
+          },
+          "operationalMode": {
+            "$ref": "#/components/schemas/OperationalMode"
+          },
+          "provisionStatus": {
+            "$ref": "#/components/schemas/ProvisionStatus"
+          },
+          "reason": {
+            "example": "Failed to configure IDP.",
+            "title": "Reason",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/service-catalog/v1beta1/service-manager-provisions/2fb85f64-5717-4562-b3fc-2c963f66afa2",
+            "title": "Resource URI",
+            "type": "string"
+          }
+        },
+        "title": "ServiceManagerProvisionResourceLink",
+        "type": "object"
+      },
+      "ServiceManagerResourceLink": {
+        "properties": {
+          "id": {
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "ServiceManagerId",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/service-catalog/v1beta1/service-managers/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "Resource URI",
+            "type": "string"
+          }
+        },
+        "title": "ServiceManagerResourceLink",
+        "type": "object"
+      },
+      "ServiceOfferResourceLink": {
+        "properties": {
+          "id": {
+            "example": "4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "ServiceOfferId",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the service offer",
+            "example": "Aruba Central",
+            "title": "Name",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/service-catalog/v1alpha1/service-offers/4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "title": "Resource URI",
+            "type": "string"
+          }
+        },
+        "title": "ServiceOfferResourceLink",
+        "type": "object"
+      },
+      "ServiceProvision": {
+        "properties": {
+          "createdAt": {
+            "description": "Date and time at which the service offer was created or upgraded.",
+            "example": "2021-04-23T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "CreatedAt",
+            "type": "string"
+          },
+          "createdBy": {
+            "example": "user@company.com",
+            "title": "CreatedBy",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Generated/updated version",
+            "example": 1,
+            "title": "Generation",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Service provision identifier",
+            "example": "2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "provisionStatus": {
+            "$ref": "#/components/schemas/ProvisionStatus"
+          },
+          "reason": {
+            "example": "Failed to configure IDP.",
+            "title": "Reason",
+            "type": "string"
+          },
+          "region": {
+            "example": "us-west",
+            "title": "Region",
+            "type": "string"
+          },
+          "resourceUri": {
+            "example": "/service-catalog/{version}/service-provisions/2fa85f64-5717-4562-b3fc-2c963f66afa9",
+            "title": "ResourceUri",
+            "type": "string"
+          },
+          "retryCount": {
+            "example": 0,
+            "title": "RetryCount",
+            "type": "integer"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerResourceLink"
+          },
+          "serviceManagerInstanceId": {
+            "example": "2fc85f64-5717-4562-b3fc-2c963f66afa3",
+            "title": "ServiceManagerInstanceId",
+            "type": "string"
+          },
+          "serviceManagerProvision": {
+            "$ref": "#/components/schemas/ServiceManagerProvisionResourceLink"
+          },
+          "serviceOffer": {
+            "$ref": "#/components/schemas/ServiceOfferResourceLink"
+          },
+          "type": {
+            "example": "/service-catalog/service-provision",
+            "title": "ResourceType",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Date and time at which the service offer was updated.",
+            "example": "2021-04-29T10:20:30.400+02:30",
+            "format": "date-time",
+            "title": "UpdatedAt",
+            "type": "string"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/WorkspaceResourceLink"
+          }
+        },
+        "required": [
+          "id",
+          "resourceUri",
+          "serviceOffer",
+          "region",
+          "workspace",
+          "retryCount",
+          "type",
+          "createdAt",
+          "updatedAt",
+          "generation"
+        ],
+        "title": "ServiceProvision"
+      },
+      "ServiceProvisionCreateBase": {
+        "properties": {
+          "region": {
+            "example": "us-west",
+            "title": "RegionCode",
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "validate": "required"
+            }
+          },
+          "serviceOfferId": {
+            "description": "Service offer identifier",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "ServiceOfferId",
+            "type": "string",
+            "x-oapi-codegen-extra-tags": {
+              "validate": "required,uuid"
+            }
+          }
+        },
+        "required": [
+          "serviceOfferId",
+          "region"
+        ],
+        "title": "ServiceProvisionCreateBase",
+        "type": "object"
+      },
+      "ServiceProvisionList": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "title": "Count Per Page",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ServiceProvision"
+            },
+            "title": "Service Provision List",
+            "type": "array"
+          },
+          "next": {
+            "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+            "title": "Next",
+            "type": "string"
+          },
+          "total": {
+            "default": 10,
+            "title": "Total Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next",
+          "total"
+        ],
+        "title": "ServiceProvisionList",
+        "type": "object"
+      },
+      "ServiceStatus": {
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Status"
+              }
+            ],
+            "example": "HEALTHY",
+            "title": "status",
+            "type": "string"
+          },
+          "summary": {
+            "example": "HEALTHY",
+            "title": "summary",
+            "type": "string"
+          }
+        },
+        "title": "ServiceStatus",
+        "type": "object"
+      },
+      "Status": {
+        "enum": [
+          "HEALTHY",
+          "UNHEALTHY"
+        ],
+        "example": "HEALTHY",
+        "title": "status",
+        "type": "string"
+      },
+      "UnauthorizedError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_UNAUTHORIZED",
+                "type": "string"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 401,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "Authentication error - token expired",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ValidationError": {
+        "allOf": [
+          {
+            "properties": {
+              "debugId": {
+                "description": "A unique identifier for the instance of this error. Maybe same as trace Id",
+                "example": "64136af7-cd64-4b4e-88a8-150ab51a920d",
+                "type": "string"
+              },
+              "errorCode": {
+                "description": "A unique machine-friendly identifier for the error from a global list of enumerated identifier strings",
+                "example": "HPE_GL_ERROR_UNPROCESSABLE_ENTITY",
+                "type": "string"
+              },
+              "httpStatusCode": {
+                "description": "The HTTP equivalent status code",
+                "example": 422,
+                "type": "integer"
+              },
+              "message": {
+                "description": "A user-friendly error message",
+                "example": "Invalid UUID: 5221850a-dae8-4bdf-ae69-021e3bbf80a",
+                "type": "string"
+              }
+            },
+            "required": [
+              "httpStatusCode",
+              "errorCode",
+              "message",
+              "debugId"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "WorkspaceResourceLink": {
+        "properties": {
+          "id": {
+            "example": "4ab85f64-5717-4562-b3fc-2c963f66afa6",
+            "format": "uuid",
+            "title": "WorkspaceId",
+            "type": "string"
+          },
+          "mspId": {
+            "description": "Identifier of Tenant Account's MspID",
+            "example": "3ca24f18-5013-4562-b3fc-2d992f22ade2",
+            "title": "MspId",
+            "type": "string"
+          },
+          "name": {
+            "description": "Workspace Name",
+            "example": "Hewlett Packard Enterprise",
+            "title": "Workspace Name",
+            "type": "string"
+          },
+          "organizationId": {
+            "example": "5ab85f64-6717-5562-c3fc-3c963f66afa6",
+            "format": "uuid",
+            "title": "OrganizationId",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Resource URI",
+            "example": "/workspaces/v1/workspaces/{workspaceId}",
+            "title": "Resource URI",
+            "type": "string"
+          },
+          "workspaceTransferStatus": {
+            "$ref": "#/components/schemas/WorkspaceTransferStatus"
+          }
+        },
+        "title": "WorkspaceResourceLink",
+        "type": "object"
+      },
+      "WorkspaceTransferStatus": {
+        "enum": [
+          "TRANSFER_INITIATED",
+          "TRANSFER_COMPLETED",
+          "TRANSFER_FAILED"
+        ],
+        "title": "WorkspaceTransferStatus",
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "This Document outlines the API contracts for service-provision in HPE Common Cloud Services",
+    "license": {
+      "name": "HPE End User License Agreement",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "Service Provision",
+    "version": "v1beta1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/service-catalog/v1beta1/notifications/provision-response": {
+      "post": {
+        "description": "Receive a Notification from an internal service conveying the response for a Service Provision request",
+        "operationId": "postServiceProvisionResponse",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationServiceProvisionResponse"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/ServiceProvisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreConditionFailed"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Receive a Notification from an internal service conveying the response for a Service Provision request",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-provisions": {
+      "get": {
+        "description": "Get Service Provision list by filters applied",
+        "operationId": "getServiceProvisions",
+        "parameters": [
+          {
+            "description": "Is required for (only) App API if view all is false",
+            "in": "header",
+            "name": "Hpe-workspace-id",
+            "schema": {
+              "default": "Id",
+              "format": "uuid",
+              "title": "Hpe-workspace-id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the start-id for the next page of service offers.",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "description": "Specifies the start-id for the next page of service offers.",
+              "title": "Pagination Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Number of entries per page",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 2000,
+              "description": "Number of entries per page",
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Pagination Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Supports Odata format. <br> **Supported Fields:** id, ServiceOfferId, workspaceId, serviceManagerProvisionId, serviceManagerId, serviceManagerInstanceId, status, organizationId, slug. <br> **Supported operand:** _eq_ <br> **Supported operations:** _and_",
+            "examples": {
+              "filter-example1": {
+                "$ref": "#/components/examples/filter-example1"
+              },
+              "filter-example2": {
+                "$ref": "#/components/examples/filter-example2"
+              },
+              "filter-example3": {
+                "$ref": "#/components/examples/filter-example3"
+              },
+              "filter-example4": {
+                "$ref": "#/components/examples/filter-example4"
+              },
+              "filter-example5": {
+                "$ref": "#/components/examples/filter-example5"
+              },
+              "filter-example6": {
+                "$ref": "#/components/examples/filter-example6"
+              },
+              "filter-example7": {
+                "$ref": "#/components/examples/filter-example7"
+              },
+              "filter-example8": {
+                "$ref": "#/components/examples/filter-example8"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "deepObject"
+          },
+          {
+            "allowEmptyValue": true,
+            "description": "Get entire entry along with sensitive fields corresponding to user workspace",
+            "in": "query",
+            "name": "unredacted",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Request the complete entry along with the sensitive fields for user workspace",
+              "example": true,
+              "title": "unredacted",
+              "type": "boolean"
+            }
+          },
+          {
+            "allowEmptyValue": true,
+            "description": "Get unredacted entries for all workspaces",
+            "in": "query",
+            "name": "all",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Request unredacted entries for all workspaces",
+              "example": true,
+              "title": "all",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceProvisionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Service Provisions",
+        "tags": [
+          "Service Provisions"
+        ]
+      },
+      "post": {
+        "description": "Initial step to provision a service-offer in a region",
+        "operationId": "postServiceProvision",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceProvisionCreateBase"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/ServiceProvisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreConditionFailed"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Create Service Provision",
+        "tags": [
+          "Service Provisions"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-provisions/{id}": {
+      "delete": {
+        "description": "Unprovision and delete a specific service provision",
+        "operationId": "deleteServiceProvision",
+        "parameters": [
+          {
+            "description": "Service provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service provision ID",
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "allowEmptyValue": true,
+            "description": "Specifies the force-delete action (irrespective of provision status)",
+            "in": "query",
+            "name": "force",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Specifies the force-delete action (irrespective of provision status)",
+              "example": true,
+              "title": "Force-flag",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Generation version match",
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "description": "Generation version match",
+              "example": 1,
+              "title": "If-Match",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/NoContent"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreConditionFailed"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Unprovision and delete Service Provision entry",
+        "tags": [
+          "Service Provisions"
+        ]
+      },
+      "get": {
+        "description": "Fetch service provision details for an ID",
+        "operationId": "getServiceProvision",
+        "parameters": [
+          {
+            "description": "Service provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service provision ID",
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "allowEmptyValue": true,
+            "description": "Get entire entry along with sensitive fields corresponding to user workspace",
+            "in": "query",
+            "name": "unredacted",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Request the complete entry along with the sensitive fields for user workspace",
+              "example": true,
+              "title": "unredacted",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceProvision"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Get Service Provision",
+        "tags": [
+          "Service Provisions"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-provisions/{id}/retry": {
+      "post": {
+        "description": "Retrigger Service provisioning in case it failed previously",
+        "operationId": "retryServiceProvision",
+        "parameters": [
+          {
+            "description": "Service provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service provision ID",
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/ServiceProvisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreConditionFailed"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Retrigger Service provisioning in case it failed previously",
+        "tags": [
+          "Service Provisions"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-provisions/{id}/retry-unprovision": {
+      "post": {
+        "description": "Retrigger Service Unprovisioning in case it failed previously",
+        "operationId": "retryServiceUnprovision",
+        "parameters": [
+          {
+            "description": "Service provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service provision ID",
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/ServiceProvisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreConditionFailed"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Retrigger Service Unprovisioning in case it failed previously",
+        "tags": [
+          "Service Provisions"
+        ]
+      }
+    },
+    "/service-catalog/v1beta1/service-provisions/{id}/retry-workspace-transfer": {
+      "post": {
+        "description": "Retry the workspace transfer for a given service provision ID",
+        "operationId": "retryWorkspaceTransfer",
+        "parameters": [
+          {
+            "description": "Service provision ID",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "description": "Service provision ID",
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/components/responses/ServiceProvisionCreated"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "412": {
+            "$ref": "#/components/responses/PreConditionFailed"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "summary": "Retry Workspace Transfer",
+        "tags": [
+          "Service Provisions"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://polaris-default-user-api.ccs.arubathena.com"
+    },
+    {
+      "url": "https://hoku-default-user-api.ccs.arubathena.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "CRUD operations for Service Provision",
+      "name": "Service Provisions",
+      "x-displayName": "Service Provisions"
+    }
+  ],
+  "x-tagGroups": [
+    {
+      "name": "App APIs",
+      "tags": [
+        "Service Provisions"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2881 @@
+{
+  "components": {
+    "schemas": {
+      "ApiError": {
+        "description": "API Error Object.",
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier for the instance of this error",
+            "format": "uuid",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP equivalent status code",
+            "format": "int32",
+            "maximum": 599,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "User-friendly error message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "message",
+          "debugId",
+          "httpStatusCode"
+        ],
+        "type": "object"
+      },
+      "AsyncOperation": {
+        "description": "Asynchronous operation object.",
+        "properties": {
+          "createdAt": {
+            "description": "The time at which this asynchronous operation is submitted.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "endedAt": {
+            "description": "Time at which the operation completed (entered a `SUCCEEDED`, `FAILED`, or `CANCELLED` state).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ApiError"
+              },
+              {
+                "description": "No error",
+                "type": "null"
+              }
+            ]
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Primary identifier for the asynchronous operation given by the system.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "logMessages": {
+            "oneOf": [
+              {
+                "description": "A list of progress update objects, which may be empty.",
+                "items": {
+                  "$ref": "#/components/schemas/asyncOpLogMessage"
+                },
+                "maxItems": 0,
+                "type": "array"
+              },
+              {
+                "description": "No log messages",
+                "type": "null"
+              }
+            ]
+          },
+          "progressPercent": {
+            "description": "Percent progress of the operation as an integer value of 0 to 100.",
+            "format": "int32",
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "results": {
+            "oneOf": [
+              {
+                "description": "List of references to resources (other than the source resource) which were created, updated, or deleted during the operation.",
+                "items": {
+                  "$ref": "#/components/schemas/asyncOpResult"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              {
+                "description": "No resources are created yet",
+                "type": "null"
+              }
+            ]
+          },
+          "sourceResourceUri": {
+            "description": "URI reference to the resource that initiated the operation.",
+            "format": "uri-reference",
+            "type": "string"
+          },
+          "startedAt": {
+            "description": "Time at which the operation entered the `RUNNING` state.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "State of the operation.",
+            "enum": [
+              "INITIALIZED",
+              "RUNNING",
+              "PAUSED",
+              "TIMEDOUT",
+              "SUCCEEDED",
+              "FAILED"
+            ],
+            "type": "string"
+          },
+          "suggestedPollingIntervalSeconds": {
+            "description": "Number of seconds recommended for clients to poll for updates.",
+            "format": "int32",
+            "maximum": 360000,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "timeoutMinutes": {
+            "description": "Number of minutes after the last update before the operation moves into the `TIMEDOUT` state.",
+            "format": "int32",
+            "maximum": 1,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "type": {
+            "const": "wellness/async-operation",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The time at which this asynchronous operation is last updated.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "startedAt",
+          "endedAt",
+          "sourceResourceUri",
+          "state",
+          "logMessages",
+          "progressPercent",
+          "error"
+        ],
+        "type": "object"
+      },
+      "CreateSupportCaseReqBody": {
+        "description": "Create support case request body.",
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventResourceRef"
+          }
+        },
+        "type": "object"
+      },
+      "EventResourceRef": {
+        "description": "Reference to the wellness event.",
+        "properties": {
+          "id": {
+            "description": "Unique ID of the the wellness event",
+            "format": "uuid",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the wellness event",
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceUri",
+          "id"
+        ],
+        "type": "object"
+      },
+      "GetAsyncOperationListResponse": {
+        "description": "Async Operation List Response Object.",
+        "properties": {
+          "count": {
+            "default": 100,
+            "description": "Number of items (asynchronous operations) returned.",
+            "format": "int32",
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AsyncOperation"
+            },
+            "maxItems": 200,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "next": {
+            "description": "The asynchronous operation ID acts as the pagination cursor for the next page of resources. Empty string when no more pages exist.",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items (asynchronous operation) for the current filter criteria.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "GetEventListResponse": {
+        "description": "Event list response object.",
+        "properties": {
+          "count": {
+            "default": 100,
+            "description": "Number of items (wellness events) returned.",
+            "format": "int32",
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WellnessEvent"
+            },
+            "maxItems": 200,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "next": {
+            "description": "The event ID acts as the pagination cursor for the next page of resources. Empty string when no more pages exist.",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items (wellness events) for the current filter criteria.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "GetSupportCaseListResponse": {
+        "description": "Support case list response object.",
+        "properties": {
+          "count": {
+            "description": "Number of items (support cases) returned.",
+            "format": "int32",
+            "maximum": 200,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/supportCase"
+            },
+            "maxItems": 200,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "next": {
+            "description": "Support case ID, which acts as the pagination cursor for the next page of support cases. Empty string when no more pages exist.",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items (support cases) for the current filter criteria.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total"
+        ],
+        "type": "object"
+      },
+      "ManualCaseDetails": {
+        "description": "Curated details for manually created support cases. Only present when `source` is `manual`.",
+        "properties": {
+          "accountName": {
+            "description": "Account name associated with the case.",
+            "type": "string"
+          },
+          "alternateContact": {
+            "description": "Alternate contact for the case. Only present when an alternate contact was provided during case creation.",
+            "properties": {
+              "email": {
+                "description": "Contact email address.",
+                "format": "email",
+                "type": "string"
+              },
+              "name": {
+                "description": "The full name of the contact person.",
+                "type": "string"
+              },
+              "phone": {
+                "description": "The phone number of the contact.",
+                "type": "string"
+              },
+              "preferredContactMethod": {
+                "description": "Specifies how the contact prefers to be reached. Contains the label and type.",
+                "properties": {
+                  "label": {
+                    "description": "The human-readable label, for example, \"Email\".",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "The contact method type, for example, \"email\" or \"phone\".",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "category": {
+            "description": "The primary help category, for example, \"Backup and Recovery\".",
+            "type": "string"
+          },
+          "description": {
+            "description": "The user-provided issue description.",
+            "type": "string"
+          },
+          "hasAttachments": {
+            "description": "Indicates whether the case includes file attachments. Set to `true` if one or more files are attached.",
+            "type": "boolean"
+          },
+          "orderNumber": {
+            "description": "Purchase order number associated with the device or subscription.",
+            "type": "string"
+          },
+          "outage": {
+            "description": "A boolean that declares whether an outage has occurred.",
+            "type": "boolean"
+          },
+          "primaryContact": {
+            "description": "Primary contact for the case.",
+            "properties": {
+              "email": {
+                "description": "Contact email address.",
+                "format": "email",
+                "type": "string"
+              },
+              "name": {
+                "description": "The full name of the contact person.",
+                "type": "string"
+              },
+              "phone": {
+                "description": "The phone number of the contact.",
+                "type": "string"
+              },
+              "preferredContactMethod": {
+                "description": "Specifies how the contact prefers to be reached. Contains the label and type.",
+                "properties": {
+                  "label": {
+                    "description": "The human-readable label, for example, \"Email\".",
+                    "type": "string"
+                  },
+                  "type": {
+                    "description": "The contact method type, for example, \"email\" or \"phone\".",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "priority": {
+            "description": "Case priority.",
+            "properties": {
+              "label": {
+                "description": "The human-readable priority label, for example, \"Critical\".",
+                "type": "string"
+              },
+              "value": {
+                "description": "The priority code, for example, \"P1\".",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "serialNumber": {
+            "description": "Serial number of the device associated with the case.",
+            "type": "string"
+          },
+          "subcategory": {
+            "description": "The sub-category selection, displayed as a breadcrumb when multiple sub-categories apply. For example, \"Disaster Recovery > Data Protection\".",
+            "type": "string"
+          },
+          "subscriptionKey": {
+            "description": "License key that activates the device subscription.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PatchEventReqBody": {
+        "description": "Patch event request body.",
+        "properties": {
+          "archive": {
+            "default": false,
+            "description": "Boolean indicating whether the wellness event is archived or not.",
+            "type": "boolean"
+          },
+          "flag": {
+            "default": false,
+            "description": "Boolean indicating whether the wellness event is flagged or not.",
+            "type": "boolean"
+          },
+          "read": {
+            "default": false,
+            "description": "Boolean indicating the read status of the wellness event.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "PatchEventResponse": {
+        "description": "Patch Event Response Object.",
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventResourceRef"
+          },
+          "success": {
+            "default": false,
+            "description": "Indicates whether the event identified by the ID was updated or not.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ServiceManagerRef": {
+        "description": "Reference to the service manager (application) of the device that generated this wellness event.",
+        "properties": {
+          "id": {
+            "description": "Unique ID of the service manager (application) of the device that generated this wellness event.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the service manager (application) of the device that generated this wellness event.",
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceUri",
+          "id"
+        ],
+        "type": "object"
+      },
+      "WellnessEvent": {
+        "description": "Wellness Event Object.",
+        "properties": {
+          "archive": {
+            "default": false,
+            "description": "Specifies if the wellness event has been archived or not.",
+            "type": "boolean"
+          },
+          "asset": {
+            "$ref": "#/components/schemas/asset"
+          },
+          "causes": {
+            "description": "A list of possible root causes for the event condition.",
+            "items": {
+              "$ref": "#/components/schemas/cause"
+            },
+            "type": "array"
+          },
+          "condition": {
+            "$ref": "#/components/schemas/condition"
+          },
+          "correlated": {
+            "default": false,
+            "description": "Specifies if this wellness event is related to another wellness event or not.",
+            "type": "boolean"
+          },
+          "createdAt": {
+            "description": "Time of wellness event creation.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "$ref": "#/components/schemas/description"
+          },
+          "flag": {
+            "default": false,
+            "description": "Specifies if the wellness event has been flagged or not.",
+            "type": "boolean"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Primary identifier for the wellness event given by the system.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "isFlex": {
+            "description": "Specifies if the device associated with this wellness event is a Flex device.",
+            "type": "boolean"
+          },
+          "productName": {
+            "description": "The name of the product to which this event belongs.",
+            "type": "string"
+          },
+          "read": {
+            "default": false,
+            "description": "Specifies if the wellness event has been read or not.",
+            "type": "boolean"
+          },
+          "region": {
+            "description": "The region of the device to which the wellness event belongs.",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the wellness event itself (a self link).",
+            "format": "uri-reference",
+            "type": "string"
+          },
+          "serviceManager": {
+            "$ref": "#/components/schemas/ServiceManagerRef"
+          },
+          "serviceName": {
+            "description": "The name of the service to which this event belongs.",
+            "type": "string"
+          },
+          "source": {
+            "description": "Indicates how the event was created.",
+            "enum": [
+              "manual",
+              "auto"
+            ],
+            "example": "auto",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/status"
+          },
+          "supportCase": {
+            "$ref": "#/components/schemas/supportCase"
+          },
+          "supportCaseCreationOpUri": {
+            "description": "URI to get details of the support case creation operation.",
+            "format": "uri-reference",
+            "type": "string"
+          },
+          "title": {
+            "description": "Short description of the wellness event.",
+            "type": "string"
+          },
+          "type": {
+            "const": "wellness/event",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The last date and time the wellness event was updated.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "asset": {
+        "description": "The device the wellness event belongs to.",
+        "properties": {
+          "name": {
+            "description": "The serial number or name of the asset.",
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "The serial number of the asset.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "asyncOpLogMessage": {
+        "description": "Progress update object of an asynchronous operation.",
+        "properties": {
+          "message": {
+            "description": "Description of a recorded state of an asynchronous operation.",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "The time at which the state of asynchronous operation is recorded.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "asyncOpResult": {
+        "description": "Resource that is newly created by the asynchronous operation.",
+        "properties": {
+          "name": {
+            "description": "Name of the resource created.",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Reference to the resource that is newly created by the asynchronous operation",
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "caseHistoryData": {
+        "description": "History of the actions performed on the support case object.",
+        "properties": {
+          "action": {
+            "description": "The type of case update, for example, `Case Opened` and `Updated`.",
+            "type": "string"
+          },
+          "timeStamp": {
+            "description": "Date and time representing when the support case update occurred.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "cause": {
+        "description": "Short explanation about potential cause for occurrence of this wellness event.",
+        "properties": {
+          "confidence": {
+            "description": "Confidence score for this cause.",
+            "format": "int32",
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "description": {
+            "$ref": "#/components/schemas/description"
+          },
+          "recommendation": {
+            "description": "A recommended action to resolve the wellness condition.",
+            "type": "string"
+          },
+          "title": {
+            "description": "One sentence summary of potential cause.",
+            "type": "string"
+          },
+          "visibility": {
+            "description": "A visibility filter. Null or absent implies universally visible.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "condition": {
+        "description": "Specifies details about the nature of the wellness event.",
+        "properties": {
+          "category": {
+            "description": "The category the condition belongs to.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Human-readable name given to the condition.",
+            "type": "string"
+          },
+          "severity": {
+            "description": "The severity level of the wellness event.",
+            "enum": [
+              "critical",
+              "warning",
+              "notice"
+            ],
+            "type": "string"
+          },
+          "urn": {
+            "description": "Unique identifier of the condition.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "description": {
+        "description": "Explanation of the wellness event.",
+        "properties": {
+          "content": {
+            "description": "A descriptive explanation of the wellness event.",
+            "type": "string"
+          },
+          "mediaType": {
+            "description": "Specifies the media type of the content.",
+            "enum": [
+              "text/plain",
+              "html"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "status": {
+        "description": "Current status of the wellness event.",
+        "properties": {
+          "correlatedTo": {
+            "description": "List of wellness events correlated to this wellness event.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "currentState": {
+            "description": "The current status. It is the most recent computed state for the event.",
+            "enum": [
+              "open",
+              "resolved",
+              "timeoutCaseCreation",
+              "pendingCaseCreation",
+              "pendingEscalation",
+              "escalated",
+              "correlated",
+              "acknowledged",
+              "expired",
+              "error"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "supportCase": {
+        "description": "Support case object.",
+        "properties": {
+          "caseHistory": {
+            "description": "Case update history.",
+            "items": {
+              "$ref": "#/components/schemas/caseHistoryData"
+            },
+            "type": "array"
+          },
+          "caseNumber": {
+            "description": "The case number assigned to the support case.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "The date and time of support case creation.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "crm": {
+            "description": "The customer relationship management (CRM) system used to create the support case.",
+            "type": "string"
+          },
+          "details": {
+            "$ref": "#/components/schemas/ManualCaseDetails"
+          },
+          "event": {
+            "$ref": "#/components/schemas/EventResourceRef"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter to track the support case version.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier of the case.",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "URI to the support case.",
+            "format": "uri-reference",
+            "type": "string"
+          },
+          "source": {
+            "description": "Indicates how the support case was created.",
+            "enum": [
+              "manual",
+              "auto"
+            ],
+            "example": "manual",
+            "type": "string"
+          },
+          "status": {
+            "description": "The current status of the support case.",
+            "enum": [
+              "open",
+              "closed",
+              "escalated",
+              "correlated",
+              "acknowledged",
+              "resolved",
+              "expired",
+              "error"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "const": "wellness/support-case",
+            "description": "The type of the resource.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The last date and time the support case was updated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "user": {
+            "description": "The first and last name of the user that escalated the wellness event. Only relevant to manually escalated cases.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "bearerFormat": "JWT",
+        "description": "Personal access token compliant with RFC8725 issued by the HPE GreenLake platform.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "The HPE GreenLake for Wellness APIs facilitates the automation of IT operations by enabling you to monitor wellness events related to your infrastructure. To further streamline integration workflows, these APIs provide various filtering options and KPI metrics.",
+    "license": {
+      "name": "HPE License",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "title": "HPE GreenLake for Wellness",
+    "version": "v2"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/wellness/v2/async-operations": {
+      "get": {
+        "description": "Retrieves a list of all asynchronous operations organized in descending order based on their creation time. This ensures the most recent asynchronous operations are presented first.<br><br>\n__Pagination__&#58; This endpoint exclusively supports cursor-based pagination.<br><br> __Filtering__&#58; The following are the supported filter parameters&#58;\n* `state`&mdash; The `state` filter parameter only supports the `eq` operator and its value should be a valid string.\n* `createdAt`\n* `updatedAt`\n* `endedAt`\n* `startedAt`",
+        "operationId": "getAllAsyncOperations",
+        "parameters": [
+          {
+            "description": "The `filter` query parameter is used to filter a set of resources. The returned set of resources matches the criteria in the filter query parameter. The value of the filter query parameter is a subset of [OData V4](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.",
+            "examples": {
+              "aOp-btw-time-range": {
+                "summary": "Retrieve a list of asynchronous operations initiated between the given timestamps",
+                "value": "createdAt gt 2021-05-12T07:20:00.00Z and createdAt lt 2022-05-12T07:20:00.00Z"
+              },
+              "aOp-start-lt": {
+                "summary": "Retrieve a list of asynchronous operations that went into the `RUNNING` state after the given timestamp",
+                "value": "startedAt gt 2021-05-12T07:20:00.00Z"
+              },
+              "aOp-timestamp-gt": {
+                "summary": "Retrieve a list of asynchronous operations initiated after the given timestamp",
+                "value": "createdAt gt 2021-05-12T07:20:00.00Z"
+              },
+              "aOp-timestamp-lt": {
+                "summary": "Retrieve a list of asynchronous operations initiated before the given timestamp",
+                "value": "createdAt lt 2021-05-12T07:20:00.00Z"
+              },
+              "state": {
+                "summary": "Retrieve a list of asynchronous operations that are in the given `state`",
+                "value": "state eq SUCCEEDED"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of asynchronous operations to be returned.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the ID, which acts as the pagination cursor for the next page of asynchronous operations.",
+            "examples": {
+              "async-op-id": {
+                "description": "Async Operation ID",
+                "summary": "Async Operation ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "async-ops": {
+                    "summary": "List of asynchronous operations",
+                    "value": {
+                      "count": 2,
+                      "items": [
+                        {
+                          "createdAt": "2024-01-01T12:00:00Z",
+                          "endedAt": "2024-01-01T12:05:00Z",
+                          "error": null,
+                          "generation": 1,
+                          "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24",
+                          "logMessages": null,
+                          "progressPercent": 100,
+                          "results": [
+                            {
+                              "name": "wellness/support-case",
+                              "resourceUri": "/wellness/v2/support-cases/343445456"
+                            }
+                          ],
+                          "sourceResourceUri": "/wellness/v2/events/00000010-7e93-4046-9adc-1397cd6ab2d1",
+                          "startedAt": "2024-01-01T12:00:00Z",
+                          "state": "SUCCEEDED",
+                          "suggestedPollingIntervalSeconds": 30,
+                          "timeoutMinutes": 1,
+                          "type": "wellness/async-operation",
+                          "updatedAt": "2024-02-01T12:00:00Z"
+                        },
+                        {
+                          "createdAt": "2024-02-01T12:00:00Z",
+                          "endedAt": "",
+                          "error": null,
+                          "generation": 1,
+                          "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb25",
+                          "logMessages": null,
+                          "progressPercent": 0,
+                          "results": null,
+                          "sourceResourceUri": "/wellness/v2/events/00000010-7e93-4046-9adc-1397cd6ab2d2",
+                          "startedAt": "2024-02-01T12:00:00Z",
+                          "state": "RUNNING",
+                          "suggestedPollingIntervalSeconds": 30,
+                          "timeoutMinutes": 1,
+                          "type": "wellness/async-operation",
+                          "updatedAt": "2024-03-01T12:00:00Z"
+                        }
+                      ],
+                      "next": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                      "total": 300
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/GetAsyncOperationListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-query-params": {
+                    "summary": "Invalid query params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OPS_REQUEST_PARAMS",
+                      "httpStatusCode": 400,
+                      "message": "Invalid query params"
+                    }
+                  },
+                  "invalid-select": {
+                    "summary": "Invalid select query param",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OPS_INVALID_SELECT",
+                      "httpStatusCode": 400,
+                      "message": "Only total is supported for select query param"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Please contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OPS_NEXT_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  },
+                  "unexpected-1": {
+                    "summary": "Unexpected error 1",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OPS_UNEXPECTED_ERROR_1",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error. Please re-try and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Get a list of asynchronous operations",
+        "tags": [
+          "Async Operations"
+        ]
+      }
+    },
+    "/wellness/v2/async-operations/{id}": {
+      "get": {
+        "description": "Retrieves asynchronous operation details identified with a specific ID.",
+        "operationId": "getAsyncOperation",
+        "parameters": [
+          {
+            "description": "The asynchronous operation `id` returned in an ansychronous API response.",
+            "examples": {
+              "equals": {
+                "description": "Returns details of the asynchronous operation that matches the given ID.",
+                "summary": "Example with specific ayschronous operation ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "async-operation": {
+                    "summary": "Asynchronous Operation",
+                    "value": {
+                      "createdAt": "2024-01-01T12:00:00Z",
+                      "endedAt": "2024-01-01T12:05:00Z",
+                      "error": null,
+                      "generation": 1,
+                      "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24",
+                      "logMessages": null,
+                      "progressPercent": 100,
+                      "results": [
+                        {
+                          "name": "wellness/support-case",
+                          "resourceUri": "/wellness/v2/support-cases/343445456"
+                        }
+                      ],
+                      "sourceResourceUri": "/wellness/v2/events/00000010-7e93-4046-9adc-1397cd6ab2d1",
+                      "startedAt": "2024-01-01T12:00:00Z",
+                      "state": "SUCCEEDED",
+                      "suggestedPollingIntervalSeconds": 30,
+                      "timeoutMinutes": 1,
+                      "type": "wellness/async-operation",
+                      "updatedAt": "2024-02-01T12:00:00Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/AsyncOperation"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-async-op-id": {
+                    "summary": "Invalid async operation id",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OP_INVALID_ID_PARAM",
+                      "httpStatusCode": 400,
+                      "message": "Invalid asynchronous operation id"
+                    }
+                  },
+                  "invalid-request-params": {
+                    "summary": "Invalid request params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OP_INVALID_REQUEST_PARAMS",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request params"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OP_ID_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "asynchronous operation id not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request. An asynchronous operation doesn't exist with the given ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "summary": "Rate Limited",
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_ASYNC_OP_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected server error. Retry and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Get asynchronous operation details",
+        "tags": [
+          "Async Operations"
+        ]
+      }
+    },
+    "/wellness/v2/events": {
+      "get": {
+        "description": "Retrieves a list of wellness events, in descending order of creation time so that the most recent events are listed first.<br><br>\n__Pagination__&mdash; This endpoint exclusively supports cursor-based pagination, using the `next` query parameter.<br><br> __Filtering__&mdash; The following are the supported filter parameters&#58;\n* `condition/severity`\n* `status/currentState`\n* `supportCase/caseNumber`\n* `asset/serialNumber`\n* `productName`\n* `serviceName`\n* `region`\n* `serviceManager/id `\n* `source`\n* `isFlex`\n* `flag`\n* `archive`\n* `read`\n* `createdAt`\n* `updatedAt`",
+        "operationId": "getAllEvents",
+        "parameters": [
+          {
+            "description": "The `filter` query parameter is used to filter a set of resources. The returned set of resources matches the criteria in the filter query parameter. The value of the filter query parameter is a subset of [OData V4](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.\n\n| Class | Supported |\n|---|---|\n| Types | string, boolean, timestamp |\n| Comparison | `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in` |\n| Logical Expressions | `and` |\n| Functions | `contains()`, `startswith()`, `endswith()` |\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
+            "examples": {
+              "archive": {
+                "description": "Retrieve events that are not archived.",
+                "summary": "Filter with archive",
+                "value": "archive ne true"
+              },
+              "btw-time-range": {
+                "description": "Retrieve events created between the given timestamps.",
+                "summary": "Filter with timestamp (between)",
+                "value": "createdAt gt 2021-05-12T07:20:00.00Z and createdAt lt 2022-05-12T07:20:00.00Z"
+              },
+              "contains": {
+                "description": "Retrieve events that contains the given number in the support case number.",
+                "summary": "Filter with case number of the support case",
+                "value": "contains(supportCase/caseNumber, '523')"
+              },
+              "flag": {
+                "description": "Retrieve events that are flagged.",
+                "summary": "Filter with flag",
+                "value": "flag eq true"
+              },
+              "isFlex": {
+                "description": "Retrieve events that belong to Flex devices.",
+                "summary": "Filter with Flex device status",
+                "value": "isFlex eq true"
+              },
+              "isFlex-false": {
+                "description": "Retrieve events that do not belong to Flex devices.",
+                "summary": "Filter for non-Flex devices",
+                "value": "isFlex eq false"
+              },
+              "lt-time-range": {
+                "description": "Retrieve events created before the given timestamp.",
+                "summary": "Filter with timestamp (less than)",
+                "value": "createdAt lt 2021-05-12T07:20:00.00Z"
+              },
+              "product": {
+                "description": "Retrieve events that belong to productName 'HPE Alletra 9000'.",
+                "summary": "Filter with product",
+                "value": "productName eq 'HPE Alletra 9000'"
+              },
+              "region": {
+                "description": "Retrieve events that belong to devices in the given region.",
+                "summary": "Filter with device region",
+                "value": "region eq 'us-east'"
+              },
+              "serialNumber": {
+                "description": "Retrieve events that belong to the specified serial number.",
+                "summary": "Filter with serial number",
+                "value": "asset/serialNumber eq 'CZJ4490026'"
+              },
+              "service": {
+                "description": "Retrieve events that belong to specified services.",
+                "summary": "Filter with multiple services",
+                "value": "serviceName in ('Storage', 'Compute')"
+              },
+              "service-manager": {
+                "description": "Retrieve events that belong to specified Service Manager.",
+                "summary": "Filter with Service Manager ID",
+                "value": "serviceManager/id eq '0001b67f-9518-4d0f-9b17-70cec7763632'"
+              },
+              "service-manager-region": {
+                "description": "Retrieve events that belong to specified Service Manager and a Region.",
+                "summary": "Filter with Service Manager and Region",
+                "value": "region eq 'us-east' and serviceManager/id eq '0001b67f-9518-4d0f-9b17-70cec7763632'"
+              },
+              "severity": {
+                "description": "Retrieve events with severity 'warning'.",
+                "summary": "Filter with the severity of the condition",
+                "value": "condition/severity eq 'warning'"
+              },
+              "severity-product": {
+                "description": "Retrieve events with severity 'warning' and that belong to productName 'HPE Alletra 9000'.",
+                "summary": "Filter with the severity of the condition and product",
+                "value": "condition/severity eq 'warning' and productName eq 'HPE Alletra 9000'"
+              },
+              "source": {
+                "description": "Retrieve only auto-generated (device) events, excluding manually created cases.",
+                "summary": "Filter by event source",
+                "value": "source eq 'auto'"
+              },
+              "source-manual": {
+                "description": "Retrieve only manually created events.",
+                "summary": "Filter for manually created events",
+                "value": "source eq 'manual'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Searches for wellness events that contain the given search string. A search string can include alphanumeric characters, a space character (Unicode `U+0020`) or a hyphen (-). Apart from space characters and hyphens, no other special characters are supported. Including an unsupported character might cause inaccurate results. The minimum length of a search string is 2 characters and maximum is 100 characters. When performing a search, it's important to use specific terms. A generic search term may cause the search to timeout.\n* `title`\n* `condition.category`\n* `condition.name`\n* `condition.severity`\n* `asset.name`\n* `asset.product`\n* `asset.serialNumber`\n* `status.currentStatus`\n* `supportCase.casenumber`\n* `supportCase.casestatus`\n* `serviceName`\n* `productName`\n<br><br>__Note:__ You can use both the `filter` and `text-search` parameters in the same query. If both are provided, the filter is applied first, and then text-search is performed on the filtered results.",
+            "examples": {
+              "temperature": {
+                "summary": "Search for wellness events that contain the string `temperature`",
+                "value": "temperature"
+              }
+            },
+            "in": "query",
+            "name": "text-search",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 2,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The `select` query parameter is used to limit the properties returned for support cases. The value of the `select` query parameter is a comma separated list of properties. All properties are returned if the select parameter is omitted.<br><br> __Note:__ Only the `total` property is supported.",
+            "examples": {
+              "total": {
+                "description": "Retrieve the total count of events for the current filter.",
+                "summary": "Get total count",
+                "value": "total"
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of resources (wellness events) to fetch.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The `next` parameter represents the ID of an event used as a pagination cursor to retrieve the next set of wellness events. The parameter must be a valid UUID and be a part of the response of the previous request.",
+            "examples": {
+              "event-id": {
+                "description": "Event ID as pagination cursor",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "events": {
+                    "summary": "List of events",
+                    "value": {
+                      "count": 2,
+                      "items": [
+                        {
+                          "asset": {
+                            "name": "SRBACKUP01ILO.jansen.local",
+                            "serialNumber": "CZJ4490026"
+                          },
+                          "causes": [
+                            {
+                              "title": "<p>The system experienced an unexpected reset or shutdown with no errors logged.</p>"
+                            }
+                          ],
+                          "condition": {
+                            "category": "Firmware/Drivers",
+                            "name": "Potential increase in the frequency of reboots on Gen 9 Servers",
+                            "severity": "notice",
+                            "urn": "urn:proliant:Potential increase in the frequency of reboots on Gen 9 Servers"
+                          },
+                          "createdAt": "2023-01-27T18:17:37.607Z",
+                          "description": {
+                            "content": "Potential increase in the frequency of reboots on Gen 9 Servers",
+                            "mediaType": "text/plain"
+                          },
+                          "generation": 2,
+                          "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                          "isFlex": false,
+                          "region": "us-east",
+                          "resourceUri": "/wellness/v2/events/0001b67f-9518-4d0f-9b17-70cec7763632",
+                          "serviceManager": {
+                            "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                            "resourceUri": "/wellness/v2/service-managers/0001b67f-9518-4d0f-9b17-70cec7763632"
+                          },
+                          "status": {
+                            "currentState": "open"
+                          },
+                          "supportCase": {
+                            "caseNumber": "29160",
+                            "createdAt": "2023-01-27T18:17:37.607Z",
+                            "crm": "salesforce",
+                            "generation": 2,
+                            "id": "73695013",
+                            "resourceUri": "/wellness/v2/support-cases/73695013",
+                            "status": "open",
+                            "type": "wellness/support-case",
+                            "updatedAt": "2023-01-29T23:37:37.607Z",
+                            "user": "sample-user@gmail.com"
+                          },
+                          "title": "Potential increase in the frequency of reboots on Gen 9 Servers",
+                          "type": "wellness/event",
+                          "updatedAt": "2023-01-28T18:17:37.607Z"
+                        },
+                        {
+                          "asset": {
+                            "name": "ilo-cm1.yvr.com",
+                            "serialNumber": "CZJ4490026"
+                          },
+                          "causes": [
+                            {
+                              "title": "<p>Active Health System (AHS) exceeds size threshold.</p>"
+                            }
+                          ],
+                          "condition": {
+                            "category": "Firmware/Drivers",
+                            "name": "Active Health System exceeds size threshold",
+                            "severity": "critical",
+                            "urn": "urn:proliant:Active Health System exceeds size threshold"
+                          },
+                          "createdAt": "2023-03-01T17:25:39.984Z",
+                          "description": {
+                            "content": "Active Health System exceeds size threshold",
+                            "mediaType": "text/plain"
+                          },
+                          "flag": true,
+                          "generation": 0,
+                          "id": "0001a481-e47c-4f5e-9b62-36221cbaec99",
+                          "isFlex": true,
+                          "read": true,
+                          "region": "us-east",
+                          "resourceUri": "/wellness/v2/events/0001a481-e47c-4f5e-9b62-36221cbaec99",
+                          "serviceManager": {
+                            "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                            "resourceUri": "/wellness/v2/service-managers/0001b67f-9518-4d0f-9b17-70cec7763632"
+                          },
+                          "status": {
+                            "currentState": "open"
+                          },
+                          "supportCase": {
+                            "caseNumber": "89903",
+                            "createdAt": "2023-03-01T17:25:39.984Z",
+                            "generation": 1,
+                            "id": "43997887",
+                            "resourceUri": "/wellness/v2/support-cases/43997887",
+                            "status": "open",
+                            "type": "wellness/support-case",
+                            "updatedAt": "2024-02-02T16:32:19.984Z"
+                          },
+                          "title": "Active Health System exceeds size threshold",
+                          "type": "wellness/event",
+                          "updatedAt": "2024-01-09T23:37:37.607Z"
+                        }
+                      ],
+                      "next": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                      "total": 300
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/GetEventListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-query-params": {
+                    "summary": "Invalid query params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENTS_INVALID_REQUEST_PARAMS",
+                      "httpStatusCode": 400,
+                      "message": "Invalid query params"
+                    }
+                  },
+                  "invalid-select": {
+                    "summary": "Invalid select query param",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENTS_INVALID_SELECT",
+                      "httpStatusCode": 400,
+                      "message": "Only total is supported for select query param"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "38bf3d78-d2c9-4bff-9b0f-197744635346",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENTS_SEARCH_TIMED_OUT",
+                      "httpStatusCode": 422,
+                      "message": "The specified search is too wide. Try using more specific terms to narrow it down."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Search Timeout - Search too wide causing timeout"
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Please contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENTS_NEXT_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  },
+                  "unexpected-1": {
+                    "summary": "Unexpected error 1",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENTS_UNEXPECTED_ERROR_1",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error. Please re-try and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Get a list of wellness events",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/wellness/v2/events/{id}": {
+      "get": {
+        "description": "Retrieves a wellness event identified by the given ID.",
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "description": "The wellness event ID.",
+            "examples": {
+              "equals": {
+                "description": "Returns event that match the given wellness event ID.",
+                "summary": "Example with a specific event ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "event": {
+                    "summary": "Single event",
+                    "value": {
+                      "asset": {
+                        "name": "simba-lion-king",
+                        "serialNumber": "CZJ4490026"
+                      },
+                      "causes": [
+                        {
+                          "title": "<p>The system experienced an unexpected reset or shutdown with no errors logged.</p>"
+                        }
+                      ],
+                      "condition": {
+                        "category": "Firmware/Drivers",
+                        "name": "Potential increase in the frequency of reboots on Gen 9 Servers",
+                        "severity": "notice",
+                        "urn": "urn:proliant:Potential increase in the frequency of reboots on Gen 9 Servers"
+                      },
+                      "createdAt": "2023-01-27T18:17:37.607Z",
+                      "description": {
+                        "content": "Potential increase in the frequency of reboots on Gen 9 Servers",
+                        "mediaType": "text/plain"
+                      },
+                      "flag": true,
+                      "generation": 0,
+                      "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                      "isFlex": false,
+                      "read": true,
+                      "region": "us-east",
+                      "resourceUri": "/wellness/v2/events/0001b67f-9518-4d0f-9b17-70cec7763632",
+                      "serviceManager": {
+                        "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                        "resourceUri": "/wellness/v2/service-managers/0001b67f-9518-4d0f-9b17-70cec7763632"
+                      },
+                      "status": {
+                        "currentState": "open"
+                      },
+                      "supportCase": {
+                        "caseNumber": "29160",
+                        "createdAt": "2023-01-27T18:17:37.607Z",
+                        "generation": 1,
+                        "id": "73695013",
+                        "resourceUri": "/wellness/v2/support-cases/73695013",
+                        "type": "wellness/support-case",
+                        "updatedAt": "2024-01-09T23:37:37.607Z"
+                      },
+                      "title": "Potential increase in the frequency of reboots on Gen 9 Servers",
+                      "type": "wellness/event",
+                      "updatedAt": "2024-01-09T23:37:37.607Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/WellnessEvent"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-event-id": {
+                    "summary": "Invalid event id",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENT_INVALID_EVENT_ID_PARAM",
+                      "httpStatusCode": 400,
+                      "message": "Invalid event ID"
+                    }
+                  },
+                  "invalid-query-params": {
+                    "summary": "Invalid query params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENT_INVALID_REQUEST_PARAMS",
+                      "httpStatusCode": 400,
+                      "message": "Invalid query params"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENT_EVENT_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Wellness event not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request. A wellness event does not exist with the given ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "summary": "Rate Limited",
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_EVENT_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error. Retry and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Get wellness event with specific ID",
+        "tags": [
+          "Events"
+        ]
+      },
+      "patch": {
+        "description": "Update a wellness event identified by the given ID. Only the attributes `flag`, `read`, and `archive` can be updated.",
+        "operationId": "updateEvent",
+        "parameters": [
+          {
+            "description": "Event ID",
+            "examples": {
+              "equals": {
+                "description": "Update specific event",
+                "summary": "Example with specific event ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "default": "0908777a-788f-45da-afb8-295c626e4d14",
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "examples": {
+                "multiple-tags": {
+                  "summary": "Mark as unread and flag the wellness event",
+                  "value": {
+                    "flag": true,
+                    "read": false
+                  }
+                },
+                "single-tag-archive": {
+                  "summary": "Archive a wellness event",
+                  "value": {
+                    "archive": true
+                  }
+                },
+                "single-tag-read": {
+                  "summary": "Mark a wellness event as read",
+                  "value": {
+                    "read": true
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/PatchEventReqBody"
+              }
+            }
+          },
+          "description": "Request body can have the following attributes",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "update-event": {
+                    "summary": "Update wellness event",
+                    "value": {
+                      "event": {
+                        "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
+                        "resourceUri": "/wellness/v2/events/0001b67f-9518-4d0f-9b17-70cec7763632"
+                      },
+                      "success": true
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PatchEventResponse"
+                }
+              }
+            },
+            "description": "Successfully updated the given wellness event"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "EmptyReqBody": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_PATCH_EVENTS_EMPTY_REQUEST_BODY",
+                      "httpStatusCode": 400,
+                      "message": "At least one of the read, flag or archive fields must be present"
+                    }
+                  },
+                  "InvalidEventId": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_PATCH_EVENT_INVALID_EVENT_ID_PARAM",
+                      "httpStatusCode": 400,
+                      "message": "Invalid event id"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_PATCH_EVENT_EVENT_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "A wellness event doesn't exist with the given ID"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "A wellness event does not exist with the given ID."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-body": {
+                    "summary": "Invalid request body error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_PATCH_EVENTS_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 422,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Invalid request body"
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "summary": "Rate limit exceeded",
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_PATCH_EVENT_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error. Retry and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Update wellness event with specific ID",
+        "tags": [
+          "Events"
+        ]
+      }
+    },
+    "/wellness/v2/support-cases": {
+      "get": {
+        "description": "Retrieves a list of support cases associated with wellness events. The results are in descending order of creation time, so that the most recent support cases are listed first.<br><br>\n__Pagination__&#58; This endpoint exclusively supports cursor-based pagination, using the `next` query parameter.<br><br> __Filtering__&#58; The following are the supported filter parameters&#58;\n**Note&#58;** Using any `details/*` filter implicitly limits results to manual cases (`source` = `manual`).\n* `event/id` &mdash; The `event/id` filter parameter only supports the `eq` operator and its value should be a valid wellness event ID.\n* `caseNumber`\n* `status`\n* `createdAt` &mdash; Timestamp when the support case was created.\n* `updatedAt` &mdash; Timestamp when the support case was last updated.\n* `source` &mdash; How the case was created. Only supports the `eq` operator. Values&#58; `manual`, `auto`.\n* `details/category` &mdash; Primary help category assigned to the case. Only applicable to manual cases.\n* `details/serialNumber` &mdash; Serial number of the device associated with the case. Only applicable to manual cases.\n* `details/subscriptionKey` &mdash; License key for the subscription associated with the case. Only applicable to manual cases.\n* `details/primaryContact/email` &mdash; Email address of the primary contact for the case. Only applicable to manual cases.\n* `details/alternateContact/email` &mdash; Email address of an alternate contact for the case. Only applicable to manual cases.\n* `event/condition/severity`\n* `event/status/currentState`\n* `event/productName`\n* `event/serviceName`\n* `event/createdAt` &mdash; Timestamp when the underlying wellness event was created.\n* `event/updatedAt` &mdash; Timestamp when the underlying wellness event was last updated.\n* `event/isFlex` &mdash; Whether the device associated with the event is a Flex device. Only supports the `eq` operator. Values&#58; `true`, `false`.",
+        "operationId": "getSupportCases",
+        "parameters": [
+          {
+            "description": "The `filter` query parameter is used to filter a set of resources. The returned set of resources matches the criteria in the filter query parameter. The value of the filter query parameter is a subset of [OData V4](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.\n\n| Class | Supported |\n|---|---|\n| Types | string, timestamp, guid |\n| Comparison | `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in` |\n| Logical Expressions | `and` |\n| Functions | `contains()`, `startswith()`, `endswith()` |\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
+            "examples": {
+              "btw-time-range": {
+                "summary": "Retrieve a list of support cases created between given timestamps",
+                "value": "createdAt gt 2021-05-12T07:20:00.00Z and createdAt lt 2022-05-12T07:20:00.00Z"
+              },
+              "details-alternate-contact-email": {
+                "summary": "Retrieve manual cases by alternate contact email",
+                "value": "details/alternateContact/email eq 'bob.wilson@example.com'"
+              },
+              "details-category": {
+                "summary": "Retrieve manual cases for a specific help category",
+                "value": "details/category eq 'Backup and Recovery'"
+              },
+              "details-primary-contact-email": {
+                "summary": "Retrieve manual cases by primary contact email",
+                "value": "details/primaryContact/email eq 'jane.doe@example.com'"
+              },
+              "details-serial-number": {
+                "summary": "Retrieve manual cases for a specific device serial number",
+                "value": "details/serialNumber eq 'AF-123456'"
+              },
+              "details-subscription-key": {
+                "summary": "Retrieve manual cases for a specific subscription key",
+                "value": "details/subscriptionKey eq 'SUB-2026-RAVE-TEST'"
+              },
+              "event-id": {
+                "summary": "Retrieve the support case details associated with the given wellness event",
+                "value": "event/id eq 3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              },
+              "event-isFlex": {
+                "description": "Retrieve support cases associated with Flex device events.",
+                "summary": "Retrieve support cases for Flex devices",
+                "value": "event/isFlex eq true"
+              },
+              "event-isFlex-false": {
+                "description": "Retrieve support cases associated with non-Flex device events.",
+                "summary": "Retrieve support cases for non-Flex devices",
+                "value": "event/isFlex eq false"
+              },
+              "event-timestamp-gt": {
+                "summary": "Retrieve a list of support cases for wellness events created after the given timestamp",
+                "value": "event/createdAt gt 2021-05-12T07:20:00.00Z"
+              },
+              "event-timestamp-lt": {
+                "summary": "Retrieve a list of support cases for wellness events created before the given timestamp",
+                "value": "event/createdAt lt 2021-05-12T07:20:00.00Z"
+              },
+              "lt-time-range": {
+                "summary": "Retrieve a list of support cases created before the given timestamp",
+                "value": "createdAt lt 2021-05-12T07:20:00.00Z"
+              },
+              "source-auto": {
+                "summary": "Retrieve only auto-created support cases",
+                "value": "source eq 'auto'"
+              },
+              "source-manual": {
+                "summary": "Retrieve only manually created support cases",
+                "value": "source eq 'manual'"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The `select` query parameter is used to limit the properties returned for support cases. The value of the `select` query parameter is a comma separated list of properties. All properties are returned if the select parameter is omitted.<br><br> __Note:__ Only the `total` property is supported.",
+            "examples": {
+              "total": {
+                "description": "Retrieve only the count of support cases for the current filter.",
+                "summary": "Get only the count of support cases",
+                "value": "total"
+              }
+            },
+            "in": "query",
+            "name": "select",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the number of support cases to be returned.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "format": "int32",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the event ID, which acts as the pagination cursor for the next page of support cases.",
+            "examples": {
+              "event-id": {
+                "description": "Event ID",
+                "summary": "Event ID",
+                "value": "0908777a-788f-45da-afb8-295c626e4d14"
+              }
+            },
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "auto-support-case": {
+                    "summary": "Auto-created support case",
+                    "value": {
+                      "count": 1,
+                      "items": [
+                        {
+                          "caseNumber": "93793",
+                          "createdAt": "2024-01-06T12:17:37.606Z",
+                          "event": {
+                            "id": "0000030d-0ba6-4d15-b3c4-e3d3c4391ec9",
+                            "resourceUri": "/wellness/v2/events/0000030d-0ba6-4d15-b3c4-e3d3c4391ec9"
+                          },
+                          "generation": 1,
+                          "id": "86325656",
+                          "resourceUri": "/wellness/v2/support-cases/86325656",
+                          "source": "auto",
+                          "status": "closed",
+                          "type": "wellness/support-case",
+                          "updatedAt": "2024-01-09T23:37:37.606Z"
+                        }
+                      ],
+                      "next": "000000d0-a3c9-4dc2-aacb-d85973efbdf3",
+                      "total": 300
+                    }
+                  },
+                  "manual-support-case": {
+                    "summary": "Manually created support case with details",
+                    "value": {
+                      "count": 1,
+                      "items": [
+                        {
+                          "caseNumber": "47758",
+                          "createdAt": "2023-11-12T12:18:59.983Z",
+                          "details": {
+                            "accountName": "Acme Corp",
+                            "alternateContact": {
+                              "email": "bob.wilson@example.com",
+                              "name": "Bob Wilson",
+                              "phone": "+1-555-0200",
+                              "preferredContactMethod": {
+                                "label": "Phone",
+                                "type": "phone"
+                              }
+                            },
+                            "category": "Backup and Recovery",
+                            "description": "Unable to restore from latest snapshot",
+                            "hasAttachments": false,
+                            "orderNumber": "ORD-2026-03",
+                            "outage": true,
+                            "primaryContact": {
+                              "email": "jane.doe@example.com",
+                              "name": "Jane Doe",
+                              "phone": "+1-555-0199",
+                              "preferredContactMethod": {
+                                "label": "Email",
+                                "type": "email"
+                              }
+                            },
+                            "priority": {
+                              "label": "Critical",
+                              "value": "P1"
+                            },
+                            "serialNumber": "AF-123456",
+                            "subcategory": "Disaster Recovery > Data Protection",
+                            "subscriptionKey": "SUB-2026-RAVE-TEST"
+                          },
+                          "event": {
+                            "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24",
+                            "resourceUri": "/wellness/v2/events/00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24"
+                          },
+                          "generation": 1,
+                          "id": "41495911",
+                          "resourceUri": "/wellness/v2/support-cases/41495911",
+                          "source": "manual",
+                          "status": "open",
+                          "type": "wellness/support-case",
+                          "updatedAt": "2024-02-02T16:32:19.983Z"
+                        }
+                      ],
+                      "next": "000000d0-a3c9-4dc2-aacb-d85973efbdf3",
+                      "total": 150
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/GetSupportCaseListResponse"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-params": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASES_INVALID_REQUEST_PARAMS",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request params"
+                    }
+                  },
+                  "invalid-select-param": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASES_INVALID_SELECT",
+                      "httpStatusCode": 400,
+                      "message": "Only total is supported for select request param"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token-error": {
+                    "summary": "Invalid AUTH Token",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit, Please contact HPE Support if its an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limit-exceed": {
+                    "summary": "Rate limit exceeded",
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASES_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error. Please re-try and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Get a list of support cases",
+        "tags": [
+          "Support Cases"
+        ]
+      },
+      "post": {
+        "description": "Create a support case for a wellness event. This is an **asynchronous operation**. Use the `URI` specified in the `Location` response header to retrieve the status of the case creation operation.",
+        "operationId": "createSupportCase",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "create-support-case": {
+                  "summary": "Create support case for a wellness event",
+                  "value": {
+                    "event": {
+                      "id": "00000010-7e93-4046-9adc-1397cd6ab2d1",
+                      "resourceUri": "/wellness/v2/events/00000010-7e93-4046-9adc-1397cd6ab2d1"
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupportCaseReqBody"
+              }
+            }
+          },
+          "description": "Request Body",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "OK",
+            "headers": {
+              "Location": {
+                "description": "URI to get details of the support case creation operation.",
+                "examples": {
+                  "async-op": {
+                    "summary": "URI to retrieve the status of the case creation operation",
+                    "value": "/wellness/v2/async-operations/00000010-7e93-4046-9adc-1397cd6ab2d1"
+                  }
+                },
+                "schema": {
+                  "format": "uri-reference",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-req-body": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_POST_SUPPORT_CASE_INVALID_REQUEST_BODY",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request body"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-token": {
+                    "summary": "Invalid Token Error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "id-not-found": {
+                    "summary": "Event ID not found",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_POST_SUPPORT_CASE_EVENT_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "Wellness event doesn't exist with the given ID"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Wellness event doesn't exist with the given ID"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "case-creation-pending": {
+                    "summary": "Support Case creation is already in progress",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_POST_SUPPORT_CASE_PENDING_CASE_CREATION",
+                      "httpStatusCode": 409,
+                      "message": "Support case creation is already in progress for this event"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict - Support case creation is already in progress for this event"
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "when-exceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected-error": {
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_POST_SUPPORT_CASE_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "unexpected error occurred while creating support case, if the issue persists, contact HPE Support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected server error. Retry and contact HPE Support if the error is not resolved."
+          }
+        },
+        "summary": "Create a support case",
+        "tags": [
+          "Support Cases"
+        ]
+      }
+    },
+    "/wellness/v2/support-cases/{id}": {
+      "get": {
+        "description": "Retrieves a support case identified by the given ID.",
+        "operationId": "getSupportCase",
+        "parameters": [
+          {
+            "description": "The support case ID.",
+            "examples": {
+              "equals": {
+                "description": "Returns support case that match given event ID.",
+                "summary": "Example with specific Support Case ID",
+                "value": "ab23434cs"
+              }
+            },
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "auto-support-case": {
+                    "summary": "Auto-created support case",
+                    "value": {
+                      "caseNumber": "93793",
+                      "createdAt": "2024-01-06T12:17:37.606Z",
+                      "event": {
+                        "id": "0000030d-0ba6-4d15-b3c4-e3d3c4391ec9",
+                        "resourceUri": "/wellness/v2/events/0000030d-0ba6-4d15-b3c4-e3d3c4391ec9"
+                      },
+                      "generation": 1,
+                      "id": "86325656",
+                      "resourceUri": "/wellness/v2/support-cases/86325656",
+                      "source": "auto",
+                      "status": "closed",
+                      "type": "wellness/support-case",
+                      "updatedAt": "2024-01-09T23:37:37.606Z"
+                    }
+                  },
+                  "manual-support-case": {
+                    "summary": "Manually created support case with details",
+                    "value": {
+                      "caseNumber": "47758",
+                      "createdAt": "2023-11-12T12:18:59.983Z",
+                      "details": {
+                        "accountName": "Acme Corp",
+                        "alternateContact": {
+                          "email": "alice.chen@example.com",
+                          "name": "Alice Chen",
+                          "phone": "+1-555-0101",
+                          "preferredContactMethod": {
+                            "label": "Email",
+                            "type": "email"
+                          }
+                        },
+                        "category": "Compute Ops Management",
+                        "description": "The server firmware update failed mid-process.",
+                        "hasAttachments": true,
+                        "outage": false,
+                        "primaryContact": {
+                          "email": "john.smith@example.com",
+                          "name": "John Smith",
+                          "phone": "+1-555-0100",
+                          "preferredContactMethod": {
+                            "label": "Phone",
+                            "type": "phone"
+                          }
+                        },
+                        "priority": {
+                          "label": "Major",
+                          "value": "P2"
+                        },
+                        "serialNumber": "SRV-789012",
+                        "subcategory": "Service related",
+                        "subscriptionKey": "SUB-2025-COM-001"
+                      },
+                      "event": {
+                        "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24",
+                        "resourceUri": "/wellness/v2/events/00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24"
+                      },
+                      "generation": 1,
+                      "id": "41495911",
+                      "resourceUri": "/wellness/v2/support-cases/41495911",
+                      "source": "manual",
+                      "status": "open",
+                      "type": "wellness/support-case",
+                      "updatedAt": "2024-02-02T16:32:19.983Z"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/supportCase"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid-request-params": {
+                    "summary": "Invalid request params",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASE_INVALID_ID_PARAM",
+                      "httpStatusCode": 400,
+                      "message": "Invalid request params"
+                    }
+                  },
+                  "invalid-support-case-id": {
+                    "summary": "Invalid support case id",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASE_INVALID_ID_PARAM",
+                      "httpStatusCode": 400,
+                      "message": "Invalid support case ID"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "summary": "Unauthorized",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "httpStatusCode": 401,
+                      "message": "Invalid JWT token in Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "not-found": {
+                    "summary": "Not found error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASE_ID_NOT_FOUND",
+                      "httpStatusCode": 404,
+                      "message": "support case not found"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Bad Request, A support case doesn't exist with the given ID."
+          },
+          "429": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "You have exceeded the allowed rate limit. Please contact HPE support if it is an error.",
+            "headers": {
+              "x-envoy-rate-limited": {
+                "description": "Rate limit exceeded",
+                "examples": {
+                  "rate-limited": {
+                    "summary": "Rate Limited",
+                    "value": "true"
+                  }
+                },
+                "schema": {
+                  "format": "boolean",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpected": {
+                    "summary": "Unexpected error",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASE_UNEXPECTED_ERROR",
+                      "httpStatusCode": 500,
+                      "message": "Unexpected error, if the problem persists please contact HPE support"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unexpected Server Error. Please re-try and contact HPE support if the error is not resolved."
+          }
+        },
+        "summary": "Get support case with specific ID",
+        "tags": [
+          "Support Cases"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "url": "https://global.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Wellness events provide health insights about your\u00a0HPE\u00a0products and services and show information about automatically created support cases. Wellness events allow you to&#58; <ul> <li>Identify potential vulnerabilities before they affect your environment.</li> <li>Proactively monitor the health of your\u00a0HPE\u00a0products and services.</li> <li>View AI-powered recommendations about events.</li></ul>",
+      "name": "Events"
+    },
+    {
+      "description": "Create and retrieve support cases associated with wellness events.",
+      "name": "Support Cases"
+    },
+    {
+      "description": "Asynchronous APIs are APIs that do not return data immediately. This means you can make multiple requests at once. A high-level overview of the asynchronous API process&#58; <ol><li>You make a request to an asynchronous API endpoint.</li> <li>HPE GreenLake returns an acknowledgment, typically a `202 Accepted`, and provides a URI to the async-operation resource in the\u00a0`Location`\u00a0header. <li>HPE GreenLake continues to process the request.</li> <li>When completed, HPE GreenLake returns the requested information.</li></ol>",
+      "name": "Async Operations"
+    }
+  ]
+}

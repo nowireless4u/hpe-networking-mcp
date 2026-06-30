@@ -1,0 +1,236 @@
+{
+  "_comment": "GreenLake OpenAPI specs (public northbound). Refreshed by .github/workflows/greenlake-specs-refresh.yml from developer.greenlake.hpe.com. URLs are exact (casing matters: openApi.json / openapiBeta.json / @v1).",
+  "specs": [
+    {
+      "service": "audit-logs",
+      "title": "GLCP Audit Logs API",
+      "paths": 8,
+      "file": "audit-logs.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/audit-logs/public/openapi/audit-logs/v1/audit-trail.json?download"
+    },
+    {
+      "service": "authorization",
+      "title": "HPE GreenLake for Authorization API",
+      "paths": 7,
+      "file": "authorization__authz-v1beta1-external-authz-v2-config.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/authorization/public/openapi/authz-v1beta1/external-authz-v2-config.json?download"
+    },
+    {
+      "service": "authorization",
+      "title": "Workspace Groups Management API",
+      "paths": 4,
+      "file": "authorization__groups-v1beta1-external-groups-v1beta1.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/authorization/public/openapi/groups-v1beta1/external-groups-v1beta1.json?download"
+    },
+    {
+      "service": "backup-recovery",
+      "title": "Backup and Recovery API",
+      "paths": 85,
+      "file": "backup-recovery.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/backup-recovery/public/openapi/backup-recovery-public-v1beta1/backup-recovery-api.json?download"
+    },
+    {
+      "service": "block-storage",
+      "title": "HPE Greenlake For Block Storage REST APIs.",
+      "paths": 83,
+      "file": "block-storage.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/block-storage/public/openapi/block-storage-public-v1alpha1/block-storage-api.json?download"
+    },
+    {
+      "service": "compute-ops-mgmt",
+      "title": "HPE Compute Ops Management API",
+      "paths": 134,
+      "file": "compute-ops-mgmt.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/compute-ops-mgmt/public/openapi/compute-ops-mgmt-remote/openapi.json?download"
+    },
+    {
+      "service": "consumption-analytics",
+      "title": "HPE GreenLake Consumption Analytics API",
+      "paths": 7,
+      "file": "consumption-analytics.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/consumption-analytics/public/openapi/public-reports-v2/public-reports-v2.json?download"
+    },
+    {
+      "service": "credentials",
+      "title": "HPE Greenkake for Credential Management API",
+      "paths": 3,
+      "file": "credentials.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/credentials/public/openapi/credentials/openapi.json?download"
+    },
+    {
+      "service": "data-services",
+      "title": "Data Services API",
+      "paths": 20,
+      "file": "data-services.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/data-services/public/openapi/data-services-public-v1beta1/data-services-api.json?download"
+    },
+    {
+      "service": "device-management",
+      "title": "HPE GreenLake APIs for Device Management",
+      "paths": 9,
+      "file": "device-management.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/device-management/public/openapi/nbapi-inventory/openapi.json?download"
+    },
+    {
+      "service": "event",
+      "title": "Webhook API - v1beta1",
+      "paths": 6,
+      "file": "event__webhook-v1beta1-webhook-v1beta1-nbapi.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/event/public/openapi/webhook-v1beta1/webhook-v1beta1-nbapi.json?download"
+    },
+    {
+      "service": "event",
+      "title": "System Webhook API - v1beta1",
+      "paths": 3,
+      "file": "event__webhook-v1beta1-system-webhook-v1beta1-nbapi.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/event/public/openapi/webhook-v1beta1/system-webhook-v1beta1-nbapi.json?download"
+    },
+    {
+      "service": "flex",
+      "title": "HPE Flex Solutions",
+      "paths": 4,
+      "file": "flex.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/flex/public/openapi/flex-service/v1beta1/flex-api.json?download"
+    },
+    {
+      "service": "identity",
+      "title": "HPE GreenLake for Workspace Management API",
+      "paths": 4,
+      "file": "identity__identity-v1-nb-openapi-workspace.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/identity/public/openapi/identity-v1/nb_openapi_workspace.json?download"
+    },
+    {
+      "service": "identity",
+      "title": "HPE GreenLake for User Management API",
+      "paths": 2,
+      "file": "identity__identity-v1-nb-openapi-identity.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/identity/public/openapi/identity-v1/nb_openapi_identity.json?download"
+    },
+    {
+      "service": "location-management",
+      "title": "Locations API",
+      "paths": 9,
+      "file": "location-management.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/location-management/public/openapi/locations-service-latest/@v1/openApi.json?download"
+    },
+    {
+      "service": "object-storage",
+      "title": "HPE Greenlake For Object Storage REST APIs.",
+      "paths": 10,
+      "file": "object-storage.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/object-storage/public/openapi/object-storage-public-v1alpha1/object-storage-api.json?download"
+    },
+    {
+      "service": "private-cloud-business",
+      "title": "HPE GreenLake for Private Cloud Business Edition System APIs",
+      "paths": 15,
+      "file": "private-cloud-business.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/private-cloud-business/public/openapi/private-cloud-business-public-v1beta1/private-cloud-business-api.json?download"
+    },
+    {
+      "service": "reporting",
+      "title": "HPE GreenLake for Reporting",
+      "paths": 5,
+      "file": "reporting.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/reporting/public/openapi/reporting-nbapi/v1/report-mgmt.json?download"
+    },
+    {
+      "service": "scim",
+      "title": "HPE GreenLake SCIM User and Group Management APIs",
+      "paths": 6,
+      "file": "scim.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/scim/public/openapi/user-group-management-public/openapiBeta.json?download"
+    },
+    {
+      "service": "service-catalog",
+      "title": "Service Registry",
+      "paths": 22,
+      "file": "service-catalog__service-registry-v1beta1-service-catalog-v1alpha1.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-registry-v1beta1/service_catalog_v1alpha1.json?download"
+    },
+    {
+      "service": "service-catalog",
+      "title": "Service offer management",
+      "paths": 10,
+      "file": "service-catalog__service-registry-v1beta1-service-catalog-v1beta1-nbapi.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-registry-v1beta1/service_catalog_v1beta1_nbapi.json?download"
+    },
+    {
+      "service": "service-catalog",
+      "title": "Service Manager Management",
+      "paths": 6,
+      "file": "service-catalog__service-catalog-v1beta1-service-catalog-v1.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-catalog-v1beta1/service-catalog-v1.json?download"
+    },
+    {
+      "service": "service-catalog",
+      "title": "Service Provision",
+      "paths": 6,
+      "file": "service-catalog__service-provision-nbapi-v1beta1-service-provision-v1beta1.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-provision-nbapi-v1beta1/service_provision_v1beta1.json?download"
+    },
+    {
+      "service": "service-catalog",
+      "title": "Service provision management",
+      "paths": 4,
+      "file": "service-catalog__service-provision-nbapi-v1beta1-service-provision-v1beta1-nbapi.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-provision-nbapi-v1beta1/service_provision_v1beta1_nbapi.json?download"
+    },
+    {
+      "service": "storage-fleet",
+      "title": "HPE Greenlake For Storage Fleet REST APIs",
+      "paths": 121,
+      "file": "storage-fleet.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/storage-fleet/public/openapi/storage-fleet-public-v1alpha1/storage-fleet-api.json?download"
+    },
+    {
+      "service": "subscription-management",
+      "title": "HPE GreenLake APIs for Subscription Management",
+      "paths": 12,
+      "file": "subscription-management.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/subscription-management/public/openapi/nbapi-subscription/openapi.json?download"
+    },
+    {
+      "service": "sustainability",
+      "title": "Sustainability-Insight-Center",
+      "paths": 12,
+      "file": "sustainability.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/sustainability/public/openapi/sustainability-insight-ctr-latest/index.json?download"
+    },
+    {
+      "service": "tags",
+      "title": "HPE GreenLake for Tags APIs",
+      "paths": 4,
+      "file": "tags.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/tags/public/openapi/nbapi-tags-latest/openapi.json?download"
+    },
+    {
+      "service": "virtualization",
+      "title": "Virtualization API",
+      "paths": 37,
+      "file": "virtualization.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/virtualization/public/openapi/virtualization-public-v1beta1/virtualization-api.json?download"
+    },
+    {
+      "service": "wellness",
+      "title": "HPE GreenLake for Wellness",
+      "paths": 6,
+      "file": "wellness.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/wellness/public/openapi/wellness-service/index.json?download"
+    },
+    {
+      "service": "workspace",
+      "title": "HPE GreenLake for Workspace Management API",
+      "paths": 4,
+      "file": "workspace__workspace-management-v1-nb-openapi-workspace.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/workspace/public/openapi/workspace-management-v1/nb_openapi_workspace.json?download"
+    },
+    {
+      "service": "workspace",
+      "title": "HPE GreenLake for User Management API",
+      "paths": 2,
+      "file": "workspace__workspace-management-v1-nb-openapi-identity.json",
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/workspace/public/openapi/workspace-management-v1/nb_openapi_identity.json?download"
+    }
+  ]
+}

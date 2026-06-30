@@ -1,0 +1,97 @@
+name: GreenLake specs refresh
+
+# Pulls the vendored HPE GreenLake OpenAPI specs from the public developer
+# portal into vendor/greenlake/ and opens a PR if anything changed. The set of
+# specs is driven by vendor/greenlake/sources.json (curated public northbound
+# APIs). The job also diffs the live llms.txt manifest against sources.json and
+# reports any newly-published services so the manifest can be extended.
+#
+# URLs in sources.json are exact (the _bundle files preserve source casing —
+# openApi.json / openapiBeta.json / @v1 — so they can't be derived by string
+# transform). See vendor/greenlake/README.md.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Monday 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download specs from sources.json
+        run: |
+          set -euo pipefail
+          dir=vendor/greenlake
+          fail=0
+          # emit "file<TAB>url"
+          python3 - "$dir/sources.json" > /tmp/specs.tsv <<'PY'
+          import json, sys
+          for s in json.load(open(sys.argv[1]))["specs"]:
+              print(s["file"] + "\t" + s["url"])
+          PY
+          while IFS=$'\t' read -r file url; do
+            out="$dir/$file"
+            code=$(curl -sS --retry 3 --max-time 60 -o "$out.tmp" -w "%{http_code}" "$url" || echo 000)
+            if [ "$code" = "200" ] && python3 -c 'import sys,json; d=json.load(open(sys.argv[1])); assert d.get("openapi") and d.get("paths")' "$out.tmp" 2>/dev/null; then
+              # pretty-print for stable diffs
+              python3 -c 'import sys,json; d=json.load(open(sys.argv[1])); json.dump(d, open(sys.argv[2],"w"), indent=2, sort_keys=True); open(sys.argv[2],"a").write("\n")' "$out.tmp" "$out"
+              rm -f "$out.tmp"
+              echo "ok   $file"
+            else
+              echo "FAIL $file (HTTP $code)"; rm -f "$out.tmp"; fail=1
+            fi
+          done < /tmp/specs.tsv
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::One or more GreenLake specs failed to download"; exit 1
+          fi
+
+      - name: Detect newly-published services (llms.txt drift)
+        run: |
+          set -euo pipefail
+          curl -sS --retry 3 --max-time 60 https://developer.greenlake.hpe.com/llms.txt -o /tmp/llms.txt
+          # services that have a real (non-changelog) public openapi page
+          grep -oE '/services/[a-z0-9-]+/public/openapi/[^)]+' /tmp/llms.txt \
+            | grep -viE 'changelog|getting-help' \
+            | sed -E 's#/services/([a-z0-9-]+)/.*#\1#' | sort -u > /tmp/portal_services.txt
+          python3 - <<'PY' > /tmp/known_services.txt
+          import json
+          print("\n".join(sorted({s["service"] for s in json.load(open("vendor/greenlake/sources.json"))["specs"]})))
+          PY
+          new=$(comm -23 /tmp/portal_services.txt <(sort /tmp/known_services.txt) || true)
+          if [ -n "$new" ]; then
+            echo "::warning::New GreenLake services on the portal not in sources.json:"; echo "$new"
+            echo "$new" > /tmp/new_services.txt
+          else
+            echo "No new services."
+          fi
+
+      - name: Open PR if specs changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain vendor/greenlake)" ]; then
+            echo "No spec changes."; exit 0
+          fi
+          branch="chore/greenlake-specs-refresh-$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add vendor/greenlake
+          note=""
+          [ -f /tmp/new_services.txt ] && note="
+
+          **New services on the portal not yet vendored** (add to sources.json):
+          $(sed 's/^/- /' /tmp/new_services.txt)"
+          git commit -m "chore(greenlake): refresh vendored OpenAPI specs"
+          git push -u origin "$branch"
+          gh pr create --title "chore(greenlake): refresh vendored OpenAPI specs" \
+            --body "Automated refresh of \`vendor/greenlake/\` from the HPE GreenLake developer portal (driven by \`sources.json\`).$note" \
+            --base main --head "$branch"

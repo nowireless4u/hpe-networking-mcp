@@ -1,0 +1,2057 @@
+{
+  "components": {
+    "schemas": {
+      "ErrorDetail": {
+        "properties": {
+          "issues": {
+            "description": "Array of bad request issues.",
+            "items": {
+              "$ref": "#/components/schemas/ErrorIssue"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "The part of the request with an issue.",
+            "example": "hpe.greenlake.bad_request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "issues",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ErrorIssue": {
+        "properties": {
+          "description": {
+            "description": "An elaborate description of issue. This can be used by developers to understand how the failure can be addressed.",
+            "example": "Must be a numeric value which is 0 or greater.",
+            "type": "string"
+          },
+          "source": {
+            "description": "The part of the request with an issue. ",
+            "example": "query.parameter",
+            "type": "string"
+          },
+          "subject": {
+            "description": "The specific issue key.",
+            "example": "limit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "subject"
+        ],
+        "type": "object"
+      },
+      "ErrorMessage": {
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for the instance of this error. This can be used to help with troubleshooting.",
+            "example": "860a9caa39ffa07effc84d6da9173236",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "A unique machine-friendly, but human-readable identifier for the error",
+            "example": "HPE_GL_CA_NAME_TOO_LONG",
+            "type": "string"
+          },
+          "errorDetails": {
+            "description": "Additional detailed information about the error",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array"
+          },
+          "flowContextId": {
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP equivalent status code.",
+            "example": 400,
+            "format": "int32",
+            "type": "integer"
+          },
+          "message": {
+            "description": "A user-friendly error message",
+            "example": "Invalid yearMonth format, should be yyyyMM.",
+            "type": "string"
+          },
+          "status": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "debugId",
+          "errorCode",
+          "httpStatusCode",
+          "message"
+        ],
+        "type": "object"
+      },
+      "ForecastConfig": {
+        "properties": {
+          "enableForecast": {
+            "type": "boolean"
+          },
+          "forecastPeriod": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "interval": {
+            "enum": [
+              "DAY",
+              "MONTH",
+              "QUARTER",
+              "YEAR"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublicDefinitionIdentifierV2": {
+        "properties": {
+          "count": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReportIdentifierV2"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "total": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "PublicReportColumn": {
+        "description": "Defines a column in a Consumption Analytics report table. Each column specifies a field name and an optional aggregation function.",
+        "properties": {
+          "aggFunction": {
+            "description": "The aggregation function to apply to the field. Required for metric fields when data needs to be summarized.  Examples include SUM, AVG, COUNT, and so on.",
+            "enum": [
+              "NONE",
+              "SUM",
+              "COUNT",
+              "CARDINALITY",
+              "MIN",
+              "MAX",
+              "AVG"
+            ],
+            "type": "string"
+          },
+          "fieldName": {
+            "description": "The reference name of the field to include in the report column. Example system fields: 'sys_Provider_s', 'sys_Cost_f'. Example tag and custom fields: 'ext_f8693b3b4c321cc6c7b711be5733f288_s', 'ext_b8697b3b4c391cc6c7b711be5733f333_f'.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fieldName"
+        ],
+        "type": "object"
+      },
+      "PublicReportDateFilter": {
+        "description": "Specifies the date range used for filtering report data. A report can use either a relative range (like LAST_30_DAYS) or an absolute range (between two calendar dates).",
+        "properties": {
+          "endDate": {
+            "description": "The end date of the filter range. Used when the type is ABSOLUTE.",
+            "format": "date",
+            "type": "string"
+          },
+          "relativeRange": {
+            "description": "A predefined time period relative to the current date. Used when the type is set to RELATIVE.",
+            "enum": [
+              "YESTERDAY",
+              "LAST_7_DAYS",
+              "LAST_14_DAYS",
+              "LAST_30_DAYS",
+              "LAST_60_DAYS",
+              "LAST_90_DAYS",
+              "LAST_120_DAYS",
+              "LAST_QUARTER",
+              "LAST_YEAR",
+              "LAST_6_MONTHS",
+              "LAST_13_MONTHS",
+              "CURRENT_MONTH",
+              "PREVIOUS_MONTH",
+              "CURRENT_QUARTER",
+              "PREVIOUS_QUARTER",
+              "CURRENT_YEAR",
+              "PREVIOUS_YEAR"
+            ],
+            "type": "string"
+          },
+          "startDate": {
+            "description": "The start date of the filter range. Used when the type is ABSOLUTE.",
+            "format": "date",
+            "type": "string"
+          },
+          "type": {
+            "description": "Defines whether the filter uses a relative date range or an absolute date range.",
+            "enum": [
+              "ABSOLUTE",
+              "RELATIVE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "PublicReportDateFilterRequest": {
+        "description": "Specifies the date range for executing a saved report. Provide either a relative date range or an absolute date range using startDate and endDate.",
+        "properties": {
+          "endDate": {
+            "description": "The inclusive end date of the absolute date range (YYYY-MM-DD). Required when relativeDate is not provided.",
+            "example": "2026-03-31",
+            "format": "date",
+            "type": "string"
+          },
+          "relativeDate": {
+            "description": "A predefined time period relative to today. Takes precedence over startDate and endDate when both are provided.",
+            "enum": [
+              "YESTERDAY",
+              "LAST_7_DAYS",
+              "LAST_14_DAYS",
+              "LAST_30_DAYS",
+              "LAST_60_DAYS",
+              "LAST_90_DAYS",
+              "LAST_120_DAYS",
+              "LAST_QUARTER",
+              "LAST_YEAR",
+              "LAST_6_MONTHS",
+              "LAST_13_MONTHS",
+              "CURRENT_MONTH",
+              "PREVIOUS_MONTH",
+              "CURRENT_QUARTER",
+              "PREVIOUS_QUARTER",
+              "CURRENT_YEAR",
+              "PREVIOUS_YEAR"
+            ],
+            "type": "string"
+          },
+          "startDate": {
+            "description": "The inclusive start date of the absolute date range (YYYY-MM-DD). Required when relativeDate is not provided.",
+            "example": "2026-01-01",
+            "format": "date",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublicReportExecuteRequest": {
+        "description": "Request body for generating a report from an ad-hoc report definition.",
+        "properties": {
+          "columns": {
+            "description": "The list of columns to include in the report. Each column specifies a field and optional aggregation function.",
+            "items": {
+              "$ref": "#/components/schemas/PublicReportColumn"
+            },
+            "type": "array"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/PublicReportFilter",
+            "description": "The filters to apply to the report, including date range and optional field-level conditions."
+          }
+        },
+        "required": [
+          "columns",
+          "filter"
+        ],
+        "type": "object"
+      },
+      "PublicReportFieldCriteria": {
+        "description": "Defines a filter condition for a specific field within a report. Each filter uses a comparison operator and one or more values to evaluate against a field.",
+        "properties": {
+          "name": {
+            "description": "The name of the field to filter on.",
+            "type": "string"
+          },
+          "operator": {
+            "description": "The comparison operator used to evaluate the field's value.",
+            "enum": [
+              "EQ",
+              "NOT_EQ",
+              "IN",
+              "NOT_IN",
+              "TOP",
+              "BOTTOM",
+              "GT",
+              "GTE",
+              "LT",
+              "LTE",
+              "BETWEEN",
+              "NOT_BETWEEN",
+              "STARTS_WITH",
+              "CONTAINS",
+              "DOES_NOT_CONTAIN",
+              "EMPTY",
+              "IS_EMPTY",
+              "NOT_EMPTY",
+              "DOES_NOT_START_WITH"
+            ],
+            "type": "string"
+          },
+          "values": {
+            "description": "One or more values to be used for filtering. Can be strings, numbers, or dates, depending on the field type and operator.",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "operator",
+          "values"
+        ],
+        "type": "object"
+      },
+      "PublicReportFilter": {
+        "description": "Defines the filters applied to a report. Combines a date filter and an optional list of field-level filter conditions.",
+        "properties": {
+          "dateFilter": {
+            "$ref": "#/components/schemas/PublicReportDateFilter",
+            "description": "The reporting date range, either relative or absolute."
+          },
+          "fieldFilters": {
+            "description": "An optional list of field-level filter conditions that apply to the report. Each condition specifies a field, comparison operator, and one or more values.",
+            "items": {
+              "$ref": "#/components/schemas/PublicReportFieldCriteria"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "dateFilter"
+        ],
+        "type": "object"
+      },
+      "PublicReportUsageField": {
+        "description": "Describes a usage field that can be referenced as a report column.",
+        "properties": {
+          "defaultFunction": {
+            "description": "The default function for this field; it will be used if nothing is provided.",
+            "enum": [
+              "NONE",
+              "SUM",
+              "COUNT",
+              "CARDINALITY",
+              "MIN",
+              "MAX",
+              "AVG"
+            ],
+            "type": "string"
+          },
+          "displayName": {
+            "description": "The human-readable display name of the field.",
+            "example": "Cost",
+            "type": "string"
+          },
+          "fieldName": {
+            "description": "The internal reference name of the field, used when specifying report columns.",
+            "example": "sys_Cost_f",
+            "type": "string"
+          },
+          "validFunctions": {
+            "description": "The list of aggregation functions that are valid for this field. Use these values when specifying the aggFunction on a report column.",
+            "items": {
+              "enum": [
+                "NONE",
+                "SUM",
+                "COUNT",
+                "CARDINALITY",
+                "MIN",
+                "MAX",
+                "AVG"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "valueType": {
+            "description": "The value type of the field, which determines what kinds of data it stores and which aggregation functions are applicable.",
+            "enum": [
+              "STRING",
+              "INT",
+              "FLOAT",
+              "DATE",
+              "TIMESTAMP"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PublicReportV2ExecuteResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "totalCount": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ReportChart": {
+        "description": "Represents a visual chart element within a Consumption Analytics report.    A chart is configured with a title, chart type, optional description, and a definition    object that specifies how the data is visualized (for example, which metric to plot, how to group or aggregate it).    Charts are added, edited, and rendered in the Edit Report panel of the UI.",
+        "properties": {
+          "definition": {
+            "$ref": "#/components/schemas/ReportChartDefinition",
+            "description": "Contains the full configuration for the chart, including fields like metric, group by, and series. Used to define how the data is visualized."
+          },
+          "description": {
+            "description": "A short description that appears as a tooltip on the info icon in the report. Optional.",
+            "maxLength": 175,
+            "minLength": 0,
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the chart. Assigned automatically upon creation.",
+            "type": "string"
+          },
+          "title": {
+            "description": "The title of the chart, shown above the chart in reports. Helps users identify the chart's purpose.",
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "type": {
+            "description": "Defines the type of chart to render, such as bar, line, pie, or stacked bar. Determines which configuration fields are displayed.",
+            "enum": [
+              "PIE",
+              "LINE",
+              "BAR",
+              "STACKED_BAR",
+              "HEATMAP",
+              "GROUPED_BAR",
+              "MULTI_METRICS_LINE",
+              "MULTI_LINE",
+              "TIME_SERIES_BAR",
+              "TIME_SERIES_STACKED_BAR"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "definition",
+          "title",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ReportChartDefinition": {
+        "description": "Defines the configuration of a chart in a report, including how data is grouped, aggregated, and visualized.",
+        "properties": {
+          "dualAxis": {
+            "description": "If true, displays the chart with two Y-axes, typically used for combining metrics of different units or scales.",
+            "type": "boolean"
+          },
+          "excludeOther": {
+            "description": "If true, excludes the 'Other' category from the chart display. Required for pie and grouped bar-style charts.",
+            "type": "boolean"
+          },
+          "group": {
+            "description": "Optional field used to group data points in the chart. Required for `GROUPED_BAR` and `HEATMAP` charts.",
+            "type": "string"
+          },
+          "maxGroups": {
+            "description": "The maximum number of groups to display in the chart. Excess groups are collapsed into 'Other' if `excludeOther` is false.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "metric": {
+            "description": "The name of a numeric field used as the chart metric. Required for all chart types except `MULTI_METRICS_LINE`, which uses `metricDefinitions`.",
+            "type": "string"
+          },
+          "metricAggFunction": {
+            "description": "The aggregation function applied to the metric field. Examples include `SUM`, `AVG`, `COUNT`, and so on.",
+            "enum": [
+              "NONE",
+              "SUM",
+              "COUNT",
+              "CARDINALITY",
+              "MIN",
+              "MAX",
+              "AVG"
+            ],
+            "type": "string"
+          },
+          "metricDefinitions": {
+            "description": "A list of metric + aggregation combinations for charts that support multiple metrics, such as `MULTI_METRICS_LINE`.",
+            "items": {
+              "$ref": "#/components/schemas/ReportChartMetricDefinition"
+            },
+            "type": "array"
+          },
+          "orientation": {
+            "description": "Orientation of the chart. Required for bar-based charts.",
+            "enum": [
+              "VERTICAL",
+              "HORIZONTAL"
+            ],
+            "type": "string"
+          },
+          "series": {
+            "description": "The field used to represent the series or X-axis. Typically a time-based field for line charts or a string field for bar and pie charts.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ReportChartMetricDefinition": {
+        "description": "Defines a single metric and aggregation function pair for charts that support multiple metrics, such as MULTI_METRICS_LINE. Each entry specifies a numeric field to chart, along with the aggregation function to apply.",
+        "properties": {
+          "metric": {
+            "description": "A valid numeric field to be plotted in the chart. Must have `valueType == INT` or `valueType == FLOAT`.",
+            "type": "string"
+          },
+          "metricAggFunction": {
+            "description": "The aggregation function applied to the metric field. Determines how the data points are summarized.",
+            "enum": [
+              "NONE",
+              "SUM",
+              "COUNT",
+              "CARDINALITY",
+              "MIN",
+              "MAX",
+              "AVG"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric",
+          "metricAggFunction"
+        ],
+        "type": "object"
+      },
+      "ReportColumn": {
+        "description": "Defines a column in a Consumption Analytics report table. Each column references a specific field, and may optionally apply aggregation, grouping, sorting, pivoting, or formatting.",
+        "example": {
+          "aggFunction": "SUM",
+          "fieldName": "cost_f",
+          "formatting": {
+            "placesAfterDecimal": 2
+          },
+          "group": false,
+          "sort": "DESC"
+        },
+        "properties": {
+          "aggFunction": {
+            "description": "The aggregation function to apply to the field. Required for metric fields when data needs to be summarized.        Examples include SUM, AVG, COUNT, and so on.",
+            "enum": [
+              "NONE",
+              "SUM",
+              "COUNT",
+              "CARDINALITY",
+              "MIN",
+              "MAX",
+              "AVG"
+            ],
+            "type": "string"
+          },
+          "fieldName": {
+            "description": "The name of the field to include in the report column. Fields can be dimensions, measures, or tags.        Common suffixes help identify type: `_d` for date, `_f` for float, `_i` for integer, `_t` for timestamp.",
+            "type": "string"
+          },
+          "formatting": {
+            "$ref": "#/components/schemas/ReportColumnFormat",
+            "description": "Optional formatting settings for the column, such as the number of decimal places to display."
+          },
+          "group": {
+            "description": "Indicates whether the field is used as a grouping dimension in the report.        Reports may include multiple group columns to organize and summarize data across multiple dimensions.",
+            "type": "boolean"
+          },
+          "pivot": {
+            "description": "Defines the time-based pivoting for this column, allowing data to be rearranged across intervals such as day, month, or year.",
+            "enum": [
+              "DAY",
+              "WEEK",
+              "MONTH",
+              "QUARTER",
+              "YEAR"
+            ],
+            "type": "string"
+          },
+          "sort": {
+            "description": "Optional sort order for the column values. Affects the order in which rows appear in the report.",
+            "enum": [
+              "ASC",
+              "DESC"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "fieldName"
+        ],
+        "type": "object"
+      },
+      "ReportColumnFormat": {
+        "description": "Optional formatting options for a report column. Used to customize how values\u2014particularly numeric ones\u2014are displayed in the UI.",
+        "properties": {
+          "placesAfterDecimal": {
+            "description": "Specifies how many digits to display after the decimal point for floating-point values.         Useful for aligning report outputs with expected precision (for example, showing 2 decimal places for currency).",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ReportDateFilter": {
+        "description": "Specifies the date range used for filtering report data.     A report can use either a relative range (like \"last 30 days\") or an absolute range (between two calendar dates).",
+        "properties": {
+          "endDate": {
+            "description": "The end date of the filter range. Used when the type is `ABSOLUTE`.",
+            "format": "date",
+            "type": "string"
+          },
+          "relativeRange": {
+            "description": "A predefined time period relative to the current date.         Used when the type is set to `RELATIVE`.",
+            "enum": [
+              "YESTERDAY",
+              "LAST_7_DAYS",
+              "LAST_14_DAYS",
+              "LAST_30_DAYS",
+              "LAST_60_DAYS",
+              "LAST_90_DAYS",
+              "LAST_120_DAYS",
+              "LAST_QUARTER",
+              "LAST_YEAR",
+              "LAST_6_MONTHS",
+              "LAST_13_MONTHS",
+              "CURRENT_MONTH",
+              "PREVIOUS_MONTH",
+              "CURRENT_QUARTER",
+              "PREVIOUS_QUARTER",
+              "CURRENT_YEAR",
+              "PREVIOUS_YEAR"
+            ],
+            "type": "string"
+          },
+          "startDate": {
+            "description": "The start date of the filter range. Used when the type is `ABSOLUTE`.",
+            "format": "date",
+            "type": "string"
+          },
+          "type": {
+            "description": "Defines whether the filter uses a relative date range or an absolute date range.",
+            "enum": [
+              "ABSOLUTE",
+              "RELATIVE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "ReportDefinition": {
+        "description": "Represents a complete report configuration in Consumption Analytics.     A report consists of columns, charts, filters, and metadata such as ownership, creation date, and sharing settings.     Reports can be created, updated, shared, and used to export data in table or chart formats.",
+        "properties": {
+          "charts": {
+            "description": "A list of charts defined within the report, each describing a specific data visualization.",
+            "items": {
+              "$ref": "#/components/schemas/ReportChart"
+            },
+            "type": "array"
+          },
+          "columns": {
+            "description": "The list of fields (columns) included in the report table.",
+            "items": {
+              "$ref": "#/components/schemas/ReportColumn"
+            },
+            "type": "array"
+          },
+          "created": {
+            "$ref": "#/components/schemas/UserEvent",
+            "description": "Information about the user who created the report and when it was created."
+          },
+          "description": {
+            "description": "A short summary of the report\u2019s purpose or contents.",
+            "example": "Tracks monthly consumption grouped by service and region.",
+            "type": "string"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/ReportFilter",
+            "description": "The set of filters applied to the report data, including both date and field-level filters."
+          },
+          "forecastCfg": {
+            "$ref": "#/components/schemas/ForecastConfig",
+            "description": "Configuration for forecasted data in the report, if applicable.     This includes settings for how forecasted values are calculated and displayed."
+          },
+          "id": {
+            "description": "The unique identifier of the report.",
+            "example": "7021d69d-de13-44bd-97e1-dbb05eef0759",
+            "type": "string"
+          },
+          "lastUpdated": {
+            "$ref": "#/components/schemas/UserEvent",
+            "description": "Information about the user who last modified the report and the timestamp."
+          },
+          "name": {
+            "description": "The name of the report as shown in the UI.",
+            "example": "Monthly Usage Breakdown",
+            "type": "string"
+          },
+          "owner": {
+            "description": "Indicates whether the currently authenticated user is the report\u2019s owner.",
+            "type": "boolean"
+          },
+          "pivot": {
+            "description": "Indicates whether the report output is pivoted by a time-based dimension (for example, by month).",
+            "type": "boolean"
+          },
+          "shared": {
+            "type": "boolean"
+          },
+          "sharing": {
+            "$ref": "#/components/schemas/ReportSharing",
+            "description": "Controls whether the report is private (only visible to the owner) or public (visible to all tenant users)."
+          }
+        },
+        "type": "object"
+      },
+      "ReportFieldCriteria": {
+        "description": "Defines a filter condition for a specific field within a report.     Each filter uses a comparison operator and one or more values to evaluate against a field.",
+        "properties": {
+          "name": {
+            "description": "The name of the field to filter on.",
+            "type": "string"
+          },
+          "operator": {
+            "description": "The comparison operator used to evaluate the field\u2019s value.",
+            "enum": [
+              "EQ",
+              "NOT_EQ",
+              "IN",
+              "NOT_IN",
+              "TOP",
+              "BOTTOM",
+              "GT",
+              "GTE",
+              "LT",
+              "LTE",
+              "BETWEEN",
+              "NOT_BETWEEN",
+              "STARTS_WITH",
+              "CONTAINS",
+              "DOES_NOT_CONTAIN",
+              "EMPTY",
+              "IS_EMPTY",
+              "NOT_EMPTY",
+              "DOES_NOT_START_WITH"
+            ],
+            "type": "string"
+          },
+          "values": {
+            "description": "One or more values to be used for filtering.         Can be strings, numbers, or dates, depending on the field type and operator.",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "operator",
+          "values"
+        ],
+        "type": "object"
+      },
+      "ReportFilter": {
+        "description": "Defines the filters applied to a report. Combines a date filter and a list of field-level filter conditions.",
+        "properties": {
+          "dateFilter": {
+            "$ref": "#/components/schemas/ReportDateFilter",
+            "description": "The reporting date range, either relative or absolute."
+          },
+          "fieldFilters": {
+            "description": "A list of field-level filter conditions that apply to the report.        Each condition specifies a field, comparison operator, and one or more values.",
+            "items": {
+              "$ref": "#/components/schemas/ReportFieldCriteria"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "dateFilter",
+          "fieldFilters"
+        ],
+        "type": "object"
+      },
+      "ReportIdentifierV2": {
+        "properties": {
+          "createdAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "generation": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "boolean"
+          },
+          "shared": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ReportSharing": {
+        "description": "Defines the sharing visibility of a report. A report can be either private (visible only to the owner) or public (shared with other tenant users).",
+        "properties": {
+          "type": {
+            "description": "The sharing mode of the report. If set to `PUBLIC`, the report is accessible to other users in the same tenant.        If set to `PRIVATE`, only the report owner can view and edit it.",
+            "enum": [
+              "PUBLIC",
+              "PRIVATE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "UserEvent": {
+        "description": "Captures metadata about a user action, such as report creation or last update.    Used to display audit information including who made the change and when it occurred.",
+        "properties": {
+          "email": {
+            "description": "The email address of the user who performed the action.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier of the user who performed the action.",
+            "type": "string"
+          },
+          "name": {
+            "description": "The display name of the user who performed the action.",
+            "type": "string"
+          },
+          "time": {
+            "description": "The date and time when the action occurred.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "glcUserBearerAuth": {
+        "bearerFormat": "JWT",
+        "description": "JWT token used for authentication and authorization.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "API reference documentation for the HPE GreenLake Consumption Analytics API.",
+    "license": {
+      "name": "HPE",
+      "url": "https://www.hpe.com/us/en/software/licensing.html"
+    },
+    "termsOfService": "https://www.hpe.com/us/en/about/legal/terms-of-use.html",
+    "title": "HPE GreenLake Consumption Analytics API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/consumption-analytics/v2/reports": {
+      "get": {
+        "description": "List the report definitions that are available.",
+        "operationId": "reports-v2-list",
+        "parameters": [
+          {
+            "description": "The maximum number of items to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The number of items to skip before starting to collect the result set.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": "0",
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "description": "success",
+                    "value": {
+                      "count": 2,
+                      "items": [
+                        {
+                          "createdAt": "2022-05-04T22:27:12.071872",
+                          "generation": "1",
+                          "id": "00000000-0000-0000-0000-000000000001",
+                          "name": "Cost (Previous 30 days)",
+                          "owner": false,
+                          "shared": true,
+                          "type": "report-definition",
+                          "updatedAt": "2023-02-15T18:41:24.531274"
+                        },
+                        {
+                          "createdAt": "2026-02-23T20:10:07.810399",
+                          "description": "breakdown cost by service and day",
+                          "generation": "1",
+                          "id": "00000000-0000-0000-0000-000000000002",
+                          "name": "Cost by Service",
+                          "owner": false,
+                          "shared": true,
+                          "type": "report-definition",
+                          "updatedAt": "2026-02-23T20:10:07.810399"
+                        }
+                      ],
+                      "offset": 0,
+                      "total": 2
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PublicDefinitionIdentifierV2"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "List report definitions",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/consumption-analytics/v2/reports/execute": {
+      "post": {
+        "description": "Generates the report based on report definition provided in the request body.",
+        "operationId": "reports-v2-gen-by-def",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "body": {
+                  "description": "body",
+                  "value": {
+                    "columns": [
+                      {
+                        "fieldName": "sys_Provider_s"
+                      },
+                      {
+                        "fieldName": "sys_MeterName_s"
+                      },
+                      {
+                        "aggFunction": "SUM",
+                        "fieldName": "sys_Cost_f"
+                      }
+                    ],
+                    "filter": {
+                      "dateFilter": {
+                        "relativeRange": "LAST_7_DAYS",
+                        "type": "RELATIVE"
+                      },
+                      "fieldFilters": [
+                        {
+                          "name": "sys_Provider_s",
+                          "operator": "STARTS_WITH",
+                          "values": [
+                            "H"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/PublicReportExecuteRequest"
+              }
+            }
+          },
+          "description": "The request body containing the details for executing the report.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "description": "success",
+                    "value": {
+                      "items": [
+                        {
+                          "sys_Cost_f": 1232.45,
+                          "sys_Provider_s": "HPE"
+                        },
+                        {
+                          "sys_Cost_f": 1232.45,
+                          "sys_Provider_s": "AWS"
+                        }
+                      ],
+                      "totalCount": 2
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PublicReportV2ExecuteResponse"
+                }
+              }
+            },
+            "description": "Report generated successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "Generate report from definition",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/consumption-analytics/v2/reports/execute/csv": {
+      "post": {
+        "description": "Generates a report based on the report definition provided in the request body and returns the result as a downloadable CSV file.",
+        "operationId": "reports-v2-gen-by-def-csv",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "body": {
+                  "description": "body",
+                  "value": {
+                    "columns": [
+                      {
+                        "fieldName": "sys_Provider_s"
+                      },
+                      {
+                        "fieldName": "sys_MeterName_s"
+                      },
+                      {
+                        "aggFunction": "SUM",
+                        "fieldName": "sys_Cost_f"
+                      }
+                    ],
+                    "filter": {
+                      "dateFilter": {
+                        "relativeRange": "LAST_7_DAYS",
+                        "type": "RELATIVE"
+                      },
+                      "fieldFilters": [
+                        {
+                          "name": "sys_Provider_s",
+                          "operator": "STARTS_WITH",
+                          "values": [
+                            "H"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/PublicReportExecuteRequest"
+              }
+            }
+          },
+          "description": "The request body containing the details for executing the report.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "description": "The CSV file content",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The report as a CSV file",
+            "headers": {
+              "Content-Disposition": {
+                "description": "Indicates that the response is a downloadable file",
+                "schema": {
+                  "example": "attachment; filename=\"report_2025-01-31T16:16:20.031975.csv\""
+                },
+                "style": "simple"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "Generate report from definition as CSV",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/consumption-analytics/v2/reports/usage-fields": {
+      "get": {
+        "description": "Returns the list of usage fields available for use as report columns, including their value types and valid aggregation functions.",
+        "operationId": "reports-v2-usage-fields",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublicReportUsageField"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "List usage fields",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/consumption-analytics/v2/reports/{id}": {
+      "get": {
+        "description": "Fetches the details of a specific report definition by its ID. Use the `id` returned by **List report definitions** as the path parameter.",
+        "operationId": "reports-v2-get-by-id",
+        "parameters": [
+          {
+            "description": "The ID of the report definition.",
+            "example": "7021d69d-de13-44bd-97e1-dbb05eef0759",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "maxLength": 36,
+              "minLength": 32,
+              "pattern": "^[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportDefinition"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "Retrieve a report definition",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/consumption-analytics/v2/reports/{id}/execute": {
+      "post": {
+        "description": "Executes a report for a saved definition; specify the date range in the request body.",
+        "operationId": "reports-v2-gen-by-id",
+        "parameters": [
+          {
+            "description": "The ID of the report to export.",
+            "example": "7021d69d-de13-44bd-97e1-dbb05eef0759",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "maxLength": 36,
+              "minLength": 32,
+              "pattern": "^[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "absolute": {
+                  "description": "absolute",
+                  "value": {
+                    "endDate": "2026-03-31",
+                    "startDate": "2026-01-01"
+                  }
+                },
+                "relative": {
+                  "description": "relative",
+                  "value": {
+                    "relativeDate": "YESTERDAY"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/PublicReportDateFilterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "description": "success",
+                    "value": {
+                      "items": [
+                        {
+                          "sys_Cost_f": 1232.45,
+                          "sys_Provider_s": "HPE"
+                        },
+                        {
+                          "sys_Cost_f": 1232.45,
+                          "sys_Provider_s": "AWS"
+                        }
+                      ],
+                      "totalCount": 2
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PublicReportV2ExecuteResponse"
+                }
+              }
+            },
+            "description": "The exported report as a JSON file"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "Generate report for saved definition",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/consumption-analytics/v2/reports/{id}/execute/csv": {
+      "post": {
+        "description": "Executes a saved report definition and returns the result as a downloadable CSV file. Specify the date range in the request body.",
+        "operationId": "reports-v2-gen-by-id-csv",
+        "parameters": [
+          {
+            "description": "The ID of the saved report to export.",
+            "example": "7021d69d-de13-44bd-97e1-dbb05eef0759",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "maxLength": 36,
+              "minLength": 32,
+              "pattern": "^[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "absolute": {
+                  "description": "absolute",
+                  "value": {
+                    "endDate": "2026-03-31",
+                    "startDate": "2026-01-01"
+                  }
+                },
+                "relative": {
+                  "description": "relative",
+                  "value": {
+                    "relativeDate": "YESTERDAY"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/PublicReportDateFilterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "description": "The CSV file content",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The report as a CSV file",
+            "headers": {
+              "Content-Disposition": {
+                "description": "Indicates that the response is a downloadable file",
+                "schema": {
+                  "example": "attachment; filename=\"report_2025-01-31T16:16:20.031975.csv\""
+                },
+                "style": "simple"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unauthorized": {
+                    "description": "unauthorized",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000020",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [],
+                      "httpStatusCode": 401,
+                      "message": "Valid authentication is required to access this resource."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "forbidden": {
+                    "description": "forbidden",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000021",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [],
+                      "httpStatusCode": 403,
+                      "message": "Insufficient permissions, check role assignments and billing account restrictions."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "notFound": {
+                    "description": "notFound",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000022",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_NOT_FOUND",
+                      "errorDetails": [],
+                      "httpStatusCode": 404,
+                      "message": "Resource Not Found."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "unexpectedError": {
+                    "description": "unexpectedError",
+                    "value": {
+                      "debugId": "00000000-0000-4000-8000-000000000023",
+                      "errorCode": "HPE_GL_CONSUMPTION_ANALYTICS_INTERNAL_SERVICE_ERROR",
+                      "errorDetails": [],
+                      "httpStatusCode": 500,
+                      "message": "An unexpected error occurred."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              }
+            },
+            "description": "Unexpected Error"
+          }
+        },
+        "summary": "Generate saved report as CSV",
+        "tags": [
+          "Reports"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "glcUserBearerAuth": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "US West",
+      "url": "https://us-west.api.greenlake.hpe.com"
+    }
+  ],
+  "tags": [
+    {
+      "description": "Reference documentation for reporting operations.",
+      "name": "Reports"
+    }
+  ]
+}
