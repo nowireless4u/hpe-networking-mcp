@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 - Write gate + `confirm_gated_invoke` confirmation fire before any API call. All failure paths `raise ToolError` (structured). `AsyncLimiter` is per-invocation (no cross-loop reuse). GreenLake: 10 → 11 tools (hidden until the write flag is set).
-- **Pending live verification:** the device-add write path (async-operation result envelope, `202`+`Location`, PATCH bodies) is built against the documented API shapes; real captured responses from a GreenLake hardware run should be attached before merge.
+- **Write path live-verified against a real HPE device** (2026-06-28 add + service PATCH; 2026-06-29 location + tags PATCH). Confirmed: `POST /devices/v1/devices` → `202`+async-op (`postDevicesResponse`); `PATCH /devices/v2beta1/devices?id=<uuid>` for service/subscription/location/tags → `202`+`Location` → async-op `SUCCEEDED` (`PatchDeviceResponseV2`, `result.succeededDevices`). Location and tags are PATCHable post-add (not add-time-only).
 
 ## [3.4.5.10] - 2026-06-29
 

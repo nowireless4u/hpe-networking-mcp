@@ -64,9 +64,11 @@ async def _patch_enrich_location(
     from .bulk_add import _poll_async_operation  # noqa: PLC0415
 
     endpoint = "/devices/v2beta1/devices"
-    # ASSUMPTION A1: PATCH /devices/v2beta1/devices accepts {"location": {"id": uuid}} post-add.
-    # If location is add-time-only, this will return 4xx and be recorded as failed.
-    # pack3tL0ss/central-api-cli only shows location in POST body — PATCH is unconfirmed.
+    # CONFIRMED via live API (2026-06-29): PATCH /devices/v2beta1/devices?id=<uuid>
+    # with {"location": {"id": uuid}} POST-ADD returns 202 + a Location header, and the
+    # async-op reaches status SUCCEEDED with resultType "PatchDeviceResponseV2" and
+    # result.succeededDevices=[{"id": <uuid>}]. Location is NOT add-time-only — it can be
+    # assigned to an already-added device. (Verified against a live HPE device.)
     body: dict[str, Any] = {"location": {"id": location_id}}
     headers = {"Content-Type": "application/merge-patch+json"}
 
@@ -127,6 +129,9 @@ async def _patch_enrich_tags(
     from .bulk_add import _poll_async_operation  # noqa: PLC0415
 
     endpoint = "/devices/v2beta1/devices"
+    # CONFIRMED via live API (2026-06-29): PATCH {"tags": {...}} POST-ADD returns 202 +
+    # async-op SUCCEEDED (resultType "PatchDeviceResponseV2"). merge-patch semantics apply:
+    # a tag key set to null deletes it; other existing tags are preserved.
     body: dict[str, Any] = {"tags": tags_dict}
     headers = {"Content-Type": "application/merge-patch+json"}
 
