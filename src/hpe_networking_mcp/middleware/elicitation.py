@@ -153,9 +153,14 @@ async def confirm_gated_invoke(
     The decision sequence, per the agreed design:
 
     1. ``DISABLE_ELICITATION=true`` → auto-accept (operator opt-out).
-    2. Attempt a REAL ``ctx.elicit()`` prompt — it round-trips transparently
-       from the code-mode sandbox (verified live; #414's contrary premise was
-       false). Accept proceeds; decline/cancel return structured results.
+    2. Attempt a REAL ``ctx.elicit()`` prompt with a REQUIRED ``approve``
+       boolean schema — it round-trips transparently from the code-mode
+       sandbox (verified live; #414's contrary premise was false). Only an
+       explicit ``approve=true`` proceeds; decline/cancel/approve-false return
+       structured results. The required field also closes a live safety gap:
+       the old empty-schema (``response_type=None``) form was silently
+       auto-accepted by some clients (Claude Desktop), letting writes run with
+       no visible confirmation; a missing ``approve`` now fails closed.
     3. Only when the prompt RAISES (client genuinely cannot present one) is
        ``confirmed=true`` honored as the popup-less chat fallback. An AI
        cannot self-authorize while a human-facing prompt is available.
@@ -182,7 +187,27 @@ async def confirm_gated_invoke(
     param_summary = _sanitized_param_summary(params)
     prompt = f"Confirm: {description}\nParams: {param_summary}"
     try:
-        result = await ctx.elicit(prompt, response_type=None)
+        # Use a REQUIRED boolean response schema rather than the deprecated
+        # ``response_type=None`` (empty-object) form. The empty schema is
+        # rendered inconsistently by clients: some (e.g. Claude Desktop)
+        # silently auto-ACCEPT it — so a gated write executes with no visible
+        # confirmation — while others auto-cancel. A required ``approve`` field
+        # forces the client to render a real dialog; and critically, a client
+        # that auto-accepts with an EMPTY payload now fails schema validation
+        # (``approve`` missing) → the ``except Exception`` below fails closed,
+        # instead of silently proceeding. Only an explicit ``approve=true``
+        # from a human proceeds.
+        result = await ctx.elicit(
+            prompt,
+            # mypy can't bind `bool` to elicit's generic scalar overload `type[T]`
+            # and falls back to the deprecated `response_type: None` overload;
+            # the scalar form is correct and runtime-verified (schema requires a
+            # boolean `value`; empty auto-accept raises ValidationError → fails
+            # closed below). Hence the targeted ignore.
+            bool,  # type: ignore[arg-type]
+            response_title="Approve",
+            response_description="Approve this action? Must be set to true to proceed.",
+        )
     except McpError as e:
         # Only the specific no-capability signal opens the fallback path:
         # "Elicitation not supported" / METHOD_NOT_FOUND (verified against
@@ -240,8 +265,13 @@ async def confirm_gated_invoke(
         }
 
     match result:
-        case AcceptedElicitation():
+        case AcceptedElicitation(data=True):
             return None
+        case AcceptedElicitation():
+            # Accepted the dialog but did NOT set approve=true (unchecked, or a
+            # client that auto-accepts with a default-false payload) → treat as
+            # a refusal, never a proceed.
+            return {"status": "declined", "message": "Action not approved (approve was not set to true)."}
         case DeclinedElicitation():
             return {"status": "declined", "message": "Action declined by user."}
         case CancelledElicitation():

@@ -39,7 +39,8 @@ pytestmark = pytest.mark.unit
 def _ctx(*, disable_elicitation: bool = False, elicit: AsyncMock | None = None) -> MagicMock:
     ctx = MagicMock()
     ctx.lifespan_context = {"config": SimpleNamespace(disable_elicitation=disable_elicitation)}
-    ctx.elicit = elicit if elicit is not None else AsyncMock(return_value=AcceptedElicitation(data=None))
+    # The gate now elicits a REQUIRED boolean; only ``data=True`` proceeds.
+    ctx.elicit = elicit if elicit is not None else AsyncMock(return_value=AcceptedElicitation(data=True))
     return ctx
 
 
@@ -54,6 +55,29 @@ class TestConfirmGatedInvoke:
         ctx = _ctx()
         assert await confirm_gated_invoke(ctx, "central tool 'x'", {}) is None
         ctx.elicit.assert_awaited_once()
+
+    async def test_elicit_uses_required_bool_schema_not_deprecated_none(self):
+        """Regression: the gate must NOT use the deprecated empty-schema
+        ``response_type=None`` form, which some clients (Claude Desktop) silently
+        auto-accept — letting a gated write run with no visible confirmation. It
+        must send a required boolean so clients render a real dialog and an
+        empty auto-accept fails closed."""
+        ctx = _ctx()
+        await confirm_gated_invoke(ctx, "central tool 'x'", {})
+        args, kwargs = ctx.elicit.await_args
+        # response_type is passed positionally (args[1]) or by keyword; either
+        # way it must be bool (a required field), never None (empty schema).
+        response_type = kwargs.get("response_type", args[1] if len(args) > 1 else None)
+        assert response_type is bool, "gate must elicit a required bool, not response_type=None"
+
+    async def test_accept_without_true_is_not_a_proceed(self):
+        """The safety case: a client that ACCEPTS the dialog but supplies a
+        default/false payload (``data=False``) must NOT proceed — only an
+        explicit approve=true does."""
+        ctx = _ctx(elicit=AsyncMock(return_value=AcceptedElicitation(data=False)))
+        result = await confirm_gated_invoke(ctx, "central tool 'x'", {})
+        assert result is not None
+        assert result["status"] == "declined"
 
     async def test_decline_returns_declined(self):
         ctx = _ctx(elicit=AsyncMock(return_value=DeclinedElicitation()))
@@ -110,9 +134,9 @@ class TestConfirmGatedInvoke:
         """The human must see WHAT they approve — targets shown, secrets redacted."""
         captured: list[str] = []
 
-        async def grab(message, response_type=None):
+        async def grab(message, response_type=None, response_title=None, response_description=None):
             captured.append(message)
-            return AcceptedElicitation(data=None)
+            return AcceptedElicitation(data=True)
 
         ctx = _ctx(elicit=AsyncMock(side_effect=grab))
         await confirm_gated_invoke(
@@ -129,9 +153,9 @@ class TestConfirmGatedInvoke:
         """api_key / apiKey / clientSecret / refreshToken / private-key all redact."""
         captured: list[str] = []
 
-        async def grab(message, response_type=None):
+        async def grab(message, response_type=None, response_title=None, response_description=None):
             captured.append(message)
-            return AcceptedElicitation(data=None)
+            return AcceptedElicitation(data=True)
 
         ctx = _ctx(elicit=AsyncMock(side_effect=grab))
         # Bind leak markers to variables (not literals in secret-named

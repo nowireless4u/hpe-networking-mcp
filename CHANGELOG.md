@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0.2] - 2026-07-01
+
+**Patch — SECURITY: universal confirmation gate could be silently auto-accepted by some clients (all platforms).** The gate used the **deprecated** `ctx.elicit(prompt, response_type=None)` form, which produces an *empty* object schema. Clients render that inconsistently: some (observed: Claude Desktop) silently answer `accept` with an empty payload — so a write-gated / destructive tool executed with **no visible confirmation prompt**. Because the gate is universal (`confirm_gated_invoke` at the `<platform>_invoke_tool` chokepoint), this affected **every platform's** gated tools. Exposure required a write-enabled deployment (`ENABLE_<platform>_WRITE_TOOLS=true`, which is **off by default**) *and* an auto-accepting client; clients that auto-*cancel* the empty elicit blocked the write instead. This was a client-side auto-accept, not the `confirmed=true` self-authorization hole (#415, which remains closed).
+
+### Fixed
+- The gate now elicits a **required boolean** (`ctx.elicit(prompt, bool, response_title="Approve", ...)`) instead of the empty-schema deprecated form. A real client must render an approval dialog; a client that auto-accepts with an empty payload now **fails schema validation → fails closed** (the gate returns `confirmation_unavailable`, the tool does not run). Only an explicit `approve=true` proceeds; `approve=false`/decline/cancel block. Verified end-to-end with a real FastMCP `Client`: an `accept` carrying no value does not dispatch the write.
+
+### Notes
+- No tool/count/signature changes; gate-internal. New tests: `test_elicit_uses_required_bool_schema_not_deprecated_none`, `test_accept_without_true_is_not_a_proceed` (unit) and `test_accept_without_value_fails_closed` (end-to-end round-trip).
+
 ## [3.5.0.1] - 2026-07-01
 
 **Patch — fix misleading GreenLake registration log (said "169 tools", meant 169 modules).** `_register_greenlake_tools` logged `GreenLake: registered 169 tools`, but `169` is the number of tool *module files* — the spec-generated surface is **959 tools** (one module holds many). The line read as if the platform only exposed 169 tools. No behavior change; the 959 tools were always registered and reachable.

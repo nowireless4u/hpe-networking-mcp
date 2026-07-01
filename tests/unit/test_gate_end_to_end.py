@@ -83,7 +83,9 @@ class TestGateEndToEnd:
             prompts.append(message)
             from fastmcp.client.elicitation import ElicitResult
 
-            return ElicitResult(action="accept")
+            # The gate now elicits a REQUIRED boolean; a human who approves
+            # supplies value=True.
+            return ElicitResult(action="accept", content={"value": True})
 
         async with Client(server, elicitation_handler=handler) as client:
             result = await client.call_tool(
@@ -92,6 +94,26 @@ class TestGateEndToEnd:
         assert calls == [{"target": "HQ"}]
         assert len(prompts) == 1 and "gatetest_manage_thing" in prompts[0]
         assert result.data["status"] == "written"
+
+    async def test_accept_without_value_fails_closed(self, gated_server):
+        """SAFETY: a client that ACCEPTS the elicitation but supplies no payload
+        (the Claude Desktop silent-auto-accept of the old empty schema) must NOT
+        dispatch the write — the required `value` field is missing, server-side
+        validation fails, and the gate fails closed."""
+        server, calls = gated_server
+
+        async def handler(message: str, response_type, params, context):
+            from fastmcp.client.elicitation import ElicitResult
+
+            return ElicitResult(action="accept")  # no content — empty auto-accept
+
+        async with Client(server, elicitation_handler=handler) as client:
+            result = await client.call_tool(
+                f"{_PLATFORM}_invoke_tool",
+                {"name": "gatetest_manage_thing", "params": {"target": "HQ"}},
+            )
+        assert calls == []  # the write must NOT have run
+        assert result.data["status"] != "written"
 
     async def test_decline_blocks_dispatch_even_with_confirmed_true(self, gated_server):
         """#415: confirmed=true must not bypass a live prompt the human declined."""
@@ -118,7 +140,7 @@ class TestGateEndToEnd:
             prompts.append(message)
             from fastmcp.client.elicitation import ElicitResult
 
-            return ElicitResult(action="accept")
+            return ElicitResult(action="accept", content={"value": True})
 
         async with Client(server, elicitation_handler=counting_handler) as client:
             result = await client.call_tool(f"{_PLATFORM}_invoke_tool", {"name": "gatetest_get_thing", "params": {}})
