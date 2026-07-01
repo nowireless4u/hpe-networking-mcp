@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0.1] - 2026-07-01
+
+**Patch — fix misleading GreenLake registration log (said "169 tools", meant 169 modules).** `_register_greenlake_tools` logged `GreenLake: registered 169 tools`, but `169` is the number of tool *module files* — the spec-generated surface is **959 tools** (one module holds many). The line read as if the platform only exposed 169 tools. No behavior change; the 959 tools were always registered and reachable.
+
+### Fixed
+- `platforms/greenlake/__init__.py`: `register_tools()` now returns the actual **tool** count (from the shared registry) instead of the module count, and the startup log reads `registered 959 tools across 169 tool module(s) + 3 meta-tools (<mode> mode)`. README's example log line updated to match.
+
+### Notes
+- No tool/parameter/count changes. The full 9-platform catalog remains **4126** tools; a deployment with Apstra/UXI disabled (no secrets) registers fewer (e.g. 4086 without those two).
+
 ## [3.5.0.0] - 2026-06-30
 
 **Platform milestone — HPE GreenLake is now a fully spec-generated platform (11 → 959 tools).** GreenLake was the last hand-curated REST platform: 10 read tools plus `greenlake_bulk_add_devices`. Full-stack deployments span compute, storage, *and* networking, so the whole GreenLake northbound API surface now matters — not just the handful of reads we transcribed by hand. GreenLake now uses the **same spec-driven pipeline as Mist and EdgeConnect**: tool modules are generated from vendored OpenAPI specs and auto-discovered at import time, and the vendored specs are refreshed weekly by CI (the #429 auto-update pipeline).

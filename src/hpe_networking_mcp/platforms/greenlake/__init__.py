@@ -34,9 +34,12 @@ def register_tools(mcp_instance: FastMCP, config: ServerConfig) -> int:
     the ``@tool(...)`` decorators record each tool with FastMCP via the shared
     ``_registry.tool`` shim. ``_``-prefixed modules (``_bulk_*``) are skipped.
 
-    Returns the count of tool modules that registered (not incl. the 3 meta-tools).
+    Returns the count of tools that registered (not incl. the 3 meta-tools) —
+    the module count is much smaller (one module holds many tools), so it must
+    not be conflated with the tool count in logs.
     """
     from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
+    from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES
     from hpe_networking_mcp.platforms.greenlake import _registry
 
     # Wire the FastMCP holder BEFORE importing the tools package so the ``@tool``
@@ -59,10 +62,12 @@ def register_tools(mcp_instance: FastMCP, config: ServerConfig) -> int:
     # reachable via ``await call_tool("greenlake_list_tools", ...)`` from inside
     # ``execute()`` even though they're hidden from the top-level catalog.
     build_meta_tools("greenlake", mcp_instance)
+    tool_count = len(REGISTRIES["greenlake"])
     logger.info(
-        "GreenLake: registered {} tool module(s) + 3 meta-tools ({} mode)",
+        "GreenLake: registered {} tools across {} tool module(s) + 3 meta-tools ({} mode)",
+        tool_count,
         len(loaded),
         config.tool_mode,
     )
 
-    return len(loaded)
+    return tool_count
