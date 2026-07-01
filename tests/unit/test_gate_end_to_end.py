@@ -30,7 +30,11 @@ def gated_server():
     """A FastMCP server exposing gatetest_invoke_tool over a fake registry."""
     calls: list[dict[str, Any]] = []
 
-    async def fake_write_tool(ctx, target: str = "", confirmed: bool = False) -> dict:
+    async def fake_write_tool(ctx, target: str = "") -> dict:
+        # NOTE: deliberately does NOT accept a ``confirmed`` kwarg — mirrors a real
+        # strict-schema tool. If _invoke_tool failed to strip the gate-control
+        # ``confirmed`` flag before dispatch, this would raise TypeError, so the
+        # confirmed=true fallback test below regression-guards that strip (#558).
         calls.append({"target": target})
         return {"status": "written", "target": target}
 

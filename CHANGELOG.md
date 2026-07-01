@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0.4] - 2026-07-01
+
+**Patch — make the popup-less `confirmed=true` fallback actually work (follow-up to #558).** After the structural gate landed, a client that can't render the elicitation prompt (e.g. Claude Desktop, which now reports "elicitation not supported" for the required-boolean schema) correctly falls back to the `confirmed=true` chat-confirm path — but the flag **leaked into the target tool's arguments**. The gate consumed `confirmed` for its decision but never stripped it, so the tool's strict schema (`additionalProperties: false`) rejected it with a `422`, and the write could never be confirmed.
+
+### Fixed
+- **Strip the gate-control `confirmed` key before dispatch on both paths:** `_invoke_tool` removes it from params before coercion/`spec.func`, and `ElicitationMiddleware.on_call_tool` removes it from the forwarded arguments before `call_next`. The gate still reads it for the fallback decision; the tool never sees it.
+- **Clearer `confirmation_required` guidance:** the message now tells the AI to re-invoke via `<platform>_invoke_tool` with `"confirmed": true` **inside the params object** (the free-form field that carries it), and explicitly NOT to add `confirmed` to a direct by-name call — the tool's own schema rejects unknown fields, which is the `422` operators were hitting.
+
+### Notes
+- No tool/count/signature changes. New tests: `_invoke_tool` strip is regression-guarded by a strict fake tool (no `confirmed` kwarg) driven through the confirmed=true fallback, plus a `on_call_tool` unit test asserting `confirmed` is stripped before forwarding.
+
 ## [3.5.0.3] - 2026-07-01
 
 **Patch — SECURITY: close the direct-by-name confirmation bypass (all platforms, code mode). Closes #558.** The confirmation gate (`confirm_gated_invoke`) was only wired into the `<platform>_invoke_tool` dispatcher (and the two translate-apply tools). But in code mode (the default), the sandbox can call any tool **directly by name** — and the `execute` description said that was equivalent to `invoke_tool`. A direct-by-name write therefore skipped the gate entirely and ran with no confirmation. This affected every platform's write/destructive tools whenever that platform's writes were enabled. (Dynamic mode was unaffected — underlying tools are hidden and direct calls blocked, so only the gated `invoke_tool` path exists.) This is the deeper cause behind the Claude Desktop "no prompt" reports; the v3.5.0.2 elicit-form fix hardened the `invoke_tool` path but not this one.

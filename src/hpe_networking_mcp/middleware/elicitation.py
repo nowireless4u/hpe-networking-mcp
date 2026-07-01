@@ -130,6 +130,15 @@ class ElicitationMiddleware(Middleware):
                     )
                     return ToolResult(content=gate.get("message", ""), structured_content=envelope)
 
+                # Proceeding via the popup-less fallback: ``confirmed`` was
+                # consumed by the gate but is NOT a tool parameter. Strip it so a
+                # direct-by-name call doesn't leak it into the tool's strict
+                # schema (422) — the invoke_tool path strips it symmetrically.
+                if "confirmed" in params:
+                    cleaned = {k: v for k, v in params.items() if k != "confirmed"}
+                    new_message = context.message.model_copy(update={"arguments": cleaned})
+                    context = context.copy(message=new_message)
+
         return await call_next(context)  # type: ignore[no-any-return]
 
     async def on_initialize(
@@ -317,8 +326,12 @@ async def confirm_gated_invoke(
             "status": "confirmation_required",
             "message": (
                 f"{description} requires user confirmation and this client cannot show a "
-                f"confirmation prompt. Params: {param_summary}. Confirm with the user in "
-                "chat, then call again with confirmed=true in params."
+                f"confirmation prompt. Params: {param_summary}. Confirm with the user in chat, "
+                "then re-invoke through the platform's <platform>_invoke_tool meta-tool with "
+                '"confirmed": true placed INSIDE the params object — e.g. '
+                'invoke_tool(name="<tool>", params={..., "confirmed": true}). Do NOT add '
+                '"confirmed" to a direct by-name call: the tool\'s own schema rejects unknown '
+                "fields, so the flag only travels via invoke_tool's free-form params."
             ),
         }
     except Exception as e:

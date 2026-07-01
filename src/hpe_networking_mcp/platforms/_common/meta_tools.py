@@ -479,6 +479,12 @@ def build_meta_tools(
             len(safe_params),
         )
 
+        # ``confirmed`` is a gate-control key (consumed by confirm_gated_invoke
+        # above for the popup-less chat fallback), NOT a tool parameter. Strip it
+        # before coercion/dispatch or the target tool's strict schema rejects it
+        # (422) / spec.func gets an unexpected kwarg (#558 follow-up).
+        dispatch_params = {k: v for k, v in safe_params.items() if k != "confirmed"}
+
         # Replicate the Pydantic coercion FastMCP would do on a direct
         # tool call: turn string enum values into ``Enum`` instances,
         # strings into ``UUID`` objects, etc. Without this, any tool that
@@ -486,7 +492,7 @@ def build_meta_tools(
         # attribute 'value'`` because the meta-tool bypasses FastMCP's
         # normal dispatch wrapper.
         try:
-            coerced = _coerce_params(spec, safe_params)
+            coerced = _coerce_params(spec, dispatch_params)
         except ValidationError as exc:
             return {
                 "status": "invalid_params",

@@ -24,9 +24,15 @@ from fastmcp.server.elicitation import (
     DeclinedElicitation,
 )
 from mcp.shared.exceptions import McpError
-from mcp.types import ErrorData
+from mcp.types import CallToolRequestParams, ErrorData
 
-from hpe_networking_mcp.middleware.elicitation import _sanitized_param_summary, confirm_gated_invoke
+from hpe_networking_mcp.middleware.elicitation import (
+    ElicitationMiddleware,
+    _sanitized_param_summary,
+    confirm_gated_invoke,
+)
+from hpe_networking_mcp.platforms._common.annotations import Capability
+from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES, ToolSpec
 
 
 def _no_elicitation_error() -> McpError:
@@ -110,7 +116,10 @@ class TestConfirmGatedInvoke:
         result = await confirm_gated_invoke(ctx, "central tool 'x'", {})
         assert result is not None
         assert result["status"] == "confirmation_required"
-        assert "confirmed=true" in result["message"]
+        # Steers the AI to the path that actually carries the flag: invoke_tool
+        # with "confirmed" inside the free-form params object.
+        assert '"confirmed"' in result["message"]
+        assert "invoke_tool" in result["message"]
 
     async def test_other_mcp_errors_fail_closed_even_with_confirmed(self):
         """An McpError that is NOT the no-capability signal (e.g. transport
@@ -181,6 +190,55 @@ class TestConfirmGatedInvoke:
     def test_param_summary_caps_length(self):
         summary = _sanitized_param_summary({"payload": {"x" * 10: "y" * 1000}})
         assert len(summary) <= 300
+
+
+class TestOnCallToolStripsConfirmed:
+    """The structural on_call_tool gate must consume ``confirmed`` for the
+    popup-less fallback but STRIP it before forwarding — else it leaks into the
+    target tool's strict schema (422). (#558 follow-up.)"""
+
+    async def test_confirmed_stripped_before_forwarding_on_approve(self):
+        REGISTRIES["apstra"]["apstra_zap"] = ToolSpec(
+            name="apstra_zap",
+            func=lambda ctx: None,
+            platform="apstra",
+            category="w",
+            tags={"requires_confirmation"},
+            capability=Capability.WRITE,
+        )
+        try:
+            mw = ElicitationMiddleware()
+
+            ctx = MagicMock()
+            ctx.lifespan_context = {"config": SimpleNamespace(disable_elicitation=False)}
+            # No-capability client → elicit raises → confirmed=true fallback proceeds.
+            ctx.elicit = AsyncMock(side_effect=_no_elicitation_error())
+
+            message = CallToolRequestParams(name="apstra_zap", arguments={"x": 1, "confirmed": True})
+            context = MagicMock()
+            context.message = message
+            context.fastmcp_context = ctx
+
+            def _copy(*, message):
+                c2 = MagicMock()
+                c2.message = message
+                c2.fastmcp_context = ctx
+                return c2
+
+            context.copy = _copy
+
+            forwarded: dict = {}
+
+            async def call_next(c):
+                forwarded["arguments"] = dict(c.message.arguments or {})
+                return "dispatched"
+
+            result = await mw.on_call_tool(context, call_next)
+            assert result == "dispatched"  # proceeded (confirmed honored)
+            assert forwarded["arguments"] == {"x": 1}  # confirmed stripped
+            assert "confirmed" not in forwarded["arguments"]
+        finally:
+            REGISTRIES["apstra"].pop("apstra_zap", None)
 
 
 class TestInvokeToolGating:
