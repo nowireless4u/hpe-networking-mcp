@@ -118,7 +118,7 @@ class ElicitationMiddleware(Middleware):
         if uxi_write:
             await ctx.enable_components(tags={"uxi_write", "uxi_write_delete"}, components={"tool"})
         if greenlake_write:
-            await ctx.enable_components(tags={"greenlake_write"}, components={"tool"})
+            await ctx.enable_components(tags={"greenlake_write", "greenlake_write_delete"}, components={"tool"})
         if edgeconnect_write:
             await ctx.enable_components(tags={"edgeconnect_write", "edgeconnect_write_delete"}, components={"tool"})
         logger.info(

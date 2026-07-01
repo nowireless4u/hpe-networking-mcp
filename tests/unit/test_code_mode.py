@@ -268,45 +268,22 @@ class TestCodeModeErrorReturns:
     contract" for the full writeup.
     """
 
-    @pytest.mark.asyncio
-    async def test_greenlake_get_user_details_empty_id_raises_tool_error(self):
-        """Empty-string id raises ToolError(400) instead of returning a string.
-        The registry shim (with ``_registry.mcp = None`` at import time in
-        tests) returns the raw function, so ``ctx`` can be ``None`` for the
-        early-validation path that never touches it.
+    def test_greenlake_request_raises_structured_toolerror_on_4xx(self):
+        """GreenLake is now spec-generated: every tool routes through
+        ``greenlake_request``, whose ``_raise_for_status`` converts a non-2xx
+        response into a structured ``ToolError`` (the codified contract). The
+        former hand-curated per-tool validation tests were removed with those
+        modules; this pins the contract at the transport layer instead.
         """
+        import httpx
         from fastmcp.exceptions import ToolError
 
-        from hpe_networking_mcp.platforms.greenlake.tools.users import (
-            greenlake_get_user_details,
-        )
+        from hpe_networking_mcp.platforms.greenlake.client import _raise_for_status
 
+        resp = httpx.Response(404, json={"message": "not found"})
         with pytest.raises(ToolError) as exc_info:
-            await greenlake_get_user_details(None, id="")  # type: ignore[arg-type]
-        assert exc_info.value.args[0]["status_code"] == 400
-
-    @pytest.mark.asyncio
-    async def test_greenlake_get_workspace_empty_raises_tool_error(self):
-        from fastmcp.exceptions import ToolError
-
-        from hpe_networking_mcp.platforms.greenlake.tools.workspaces import (
-            greenlake_get_workspace,
-        )
-
-        with pytest.raises(ToolError) as exc_info:
-            await greenlake_get_workspace(None, workspaceId="")  # type: ignore[arg-type]
-        assert exc_info.value.args[0]["status_code"] == 400
-
-    def test_greenlake_users_coerce_int_still_raises_for_helper_callers(self):
-        """``_coerce_int`` remains a raising helper — its ValueError is caught
-        by the public tool entry's param-build try/except and re-raised as a
-        ToolError(400). Pinning this so we don't accidentally rewrite the
-        helper to return error sentinels and silently break callers.
-        """
-        from hpe_networking_mcp.platforms.greenlake.tools.users import _coerce_int
-
-        with pytest.raises(ValueError):
-            _coerce_int("abc", "limit")
+            _raise_for_status("GET", "/devices/v1/devices/x", resp)
+        assert exc_info.value.args[0]["status_code"] == 404
 
     # NOTE (v3.2.1.0): the old ``test_no_raise_in_greenlake_tool_files`` AST
     # guard was removed — it enforced the obsolete no-raise rule. GreenLake

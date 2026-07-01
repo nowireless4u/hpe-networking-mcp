@@ -10,18 +10,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 3177 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 4126 underlying tools
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 3177 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 4126 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 3177 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 4126 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -43,7 +43,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 3177 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 4126 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -100,7 +100,7 @@ If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMidd
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 3177 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 4126 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -110,7 +110,7 @@ The `static` mode was REMOVED in v3.0.0.0 — at 3177 tools / ~64K tokens it was
 | Aruba Central | 63 | 20 | 12 | 95 |
 | Aruba ClearPass | 67 | 75 | -- | 142 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
-| HPE GreenLake | 10 | 1 | -- | 11 |
+| HPE GreenLake | 513 | 446 | -- | 959 |
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
 | Aruba OS 8 | 26 | 12 | 9 | 47 |
 | HPE UXI | 11 | 10 | -- | 21 |
@@ -227,7 +227,7 @@ skills register in every mode without violating the code-mode design.
 | `central-qos-policy` | End-to-end runbook for switch QoS in Aruba Central, covering both halves: **ingress / marking** — traffic classes (`named-condition`) → marker policy (`policy` with `type: POLICY_QOS`, `association: ASSOCIATION_INTERFACE`) → VLAN-interface bind; and **egress / system-wide** — queue-profile → schedule-profile → atomic apply + DSCP-map (`qos-global`) → scope assignment. Carries exact live-verified payload shapes — the `ADDRESS_SUBNET_MASK` discriminator + dotted-mask format, the undocumented `condition.named-condition.condition-reference`, `ACTION_QOS` + `local-queue-priority`/`dscp`, `access-group-vlan-in` routed-in bind, the `WEIGHTED` algorithm collapse of DWRR/WFQ, the `"DEFAULT"` enum literal for factory-default refs, and `qos-global` PATCH semantics (field-preserve + array-upsert-by-key). Section G is an automated update-applied-profile block. **New in v3.2.3.4: Path picker — POLICY_QOS comes in two flavors.** `ASSOCIATION_INTERFACE` is SVI-bindable (what the skill assumes). `ASSOCIATION_ROLE` renders as `port-access policy sys_policy_pap_<role>` device-side and **only enforces on authenticated port-access sessions — never on SVI transit**, regardless of how you bind it. Documents the five live-captured error patterns (HTTP 400 `Cannot find in library`, HTTP 400 `Role-based Policies cannot be mapped to ScopeTypes.DEVICE`/`DEVICE_COLLECTION`, HTTP 500 `Cannot find object … of module aruba-policy`, HTTP 400 `Policies … still part of Policy Group`) and the silent-skip-with-success-indication trap when the bind is attempted at SITE scope. Includes a wrong-primitive runbook (paste-ready code block that diagnoses the policy's `association` and pivots) and mandates device-side `central_show_commands` verification — `config-health` alone reports `SYNCHRONIZED` even when the role-based-policy bind silently no-ops on the device. CX vs AOS-S (PVOS) aware. | v3.2.2.0 / v3.2.3.1 / v3.2.3.3 / v3.2.3.4 |
 | `central-site-dashboard` | Single-site operational dashboard for Aruba Central — overall health score, device status by type, client counts, and active alerts, PLUS a **ClearPass NAC overlay** of the active sessions on that site's APs (active-client count, breakdown by enforcement role + SSID, session table), rendered through `generate_prefab_ui` (Generative UI). The fast path for "build me a dashboard for site X": a fixed gather with the exact response-envelope unwraps baked in (Central collection reads are uniform `data["items"]` as of #491 — site_health → `data["items"][0]`, devices → `data["items"]` (empty is `{"items": []}`), alerts rows under `data["items"]`; `central_get_alerts` requires `site_id`; ClearPass sessions under `data["_embedded"]["items"]`). ClearPass→site correlation is by session `ap_name` ∈ the site's Central AP names, active-only via `{"acctstoptime":{"$exists":false}}` (ClearPass rejects `$or`, so wireless-AP scope only). The NAC panel is best-effort — skipped cleanly if ClearPass is disabled/unreachable. Always emits a text walkthrough so it stays useful in non-MCP-Apps clients. Single-site by design (cross-platform / Mist / UXI overlays out of scope). Read-only. | v3.3.13.5 / v3.3.13.6 |
 
-| `greenlake-device-onboarding` | **GreenLake device onboarding (add → subscribe → assign service)** — the guided runbook for "add devices to GreenLake," replacing a bare `greenlake_bulk_add_devices` call. Stage 1 asks the data source and **mandates the paste-visibility warning** (upload is read server-side and never enters the chat; paste is AI-visible — small lists only); Stage 2 picks a subscription (`greenlake_get_subscriptions`); Stage 3 assigns a service; Stage 4 optional location/tags; Stage 5 runs the bulk add with **batch-uniform** `subscription_key` / `service_id` / `location` / `tags` params (so an uploaded serial/MAC list the AI can't edit still gets subscribed + assigned in one call); Stage 6 verifies (serials are tokenized in the result — intentional redaction, not placeholder data). Write-gated (`ENABLE_GREENLAKE_WRITE_TOOLS`) + confirmation-gated. | v3.4.7.0 |
+| `greenlake-device-onboarding` | **GreenLake device onboarding (add → subscribe → assign service)** — the guided runbook for "add devices to GreenLake," replacing a bare `greenlake_bulk_add_devices` call. Stage 1 asks the data source and **mandates the paste-visibility warning** (upload is read server-side and never enters the chat; paste is AI-visible — small lists only); Stage 2 picks a subscription (`greenlake_get_subscriptions_v1_subscriptions`); Stage 3 assigns a service; Stage 4 optional location/tags; Stage 5 runs the bulk add with **batch-uniform** `subscription_key` / `service_id` / `location` / `tags` params (so an uploaded serial/MAC list the AI can't edit still gets subscribed + assigned in one call); Stage 6 verifies (serials are tokenized in the result — intentional redaction, not placeholder data). Write-gated (`ENABLE_GREENLAKE_WRITE_TOOLS`) + confirmation-gated. | v3.4.7.0 |
 
 The `TEMPLATE.md` file in the skills directory is a starting point if you
 want to author a new skill — it's filtered out of the registry by name.
@@ -1763,107 +1763,34 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 
 ---
 
-## HPE GreenLake (11 tools — 10 read + 1 write)
+## HPE GreenLake (959 tools — spec-generated)
 
-GreenLake uses the same dynamic-mode meta-tool pattern as every other platform since v2.0.0.0. In the default `MCP_TOOL_MODE=dynamic`, the AI sees `greenlake_list_tools`, `greenlake_get_tool_schema`, and `greenlake_invoke_tool` and discovers the 11 underlying tools below through them. The v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`) are **removed** in v2.0.
+GreenLake is **spec-generated** (same pipeline as Mist and EdgeConnect): tool
+modules are emitted from the vendored OpenAPI specs under `vendor/greenlake/`
+(one spec per GreenLake northbound service — devices, subscriptions, identity,
+workspaces, locations, service-provisioning, MLOps, compute-ops, storage, and
+more) and auto-discovered at import time. The vendored specs are refreshed
+weekly by the `greenlake-specs-refresh` GitHub Action, which opens a PR when
+HPE publishes changes — the same auto-update pipeline tracked in #429.
 
-The 10 read tools are always available. The 1 write tool (`greenlake_bulk_add_devices`) requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`.
+Because the surface is large and mechanically derived, individual tools are not
+enumerated here. Discover them the usual way:
 
-#### `greenlake_get_audit_logs`
+- **Code mode (default):** `await call_tool("search", {"query": "greenlake subscription"})`
+  then `get_schema`, then `call_tool("<name>", {...})`.
+- **Dynamic mode:** `greenlake_list_tools` / `greenlake_get_tool_schema` / `greenlake_invoke_tool`.
 
-> Retrieve GreenLake audit logs with optional OData filtering and pagination.
+Naming follows the path-slug convention `greenlake_<verb>_<service>_<path>` —
+e.g. `greenlake_get_devices_v1_devices`, `greenlake_get_subscriptions_v1_subscriptions`,
+`greenlake_get_workspaces_v1_workspaces_workspace_id`. HTTP verb maps to
+capability: `GET` → read (always available); `POST`/`PUT`/`PATCH` → write
+(tagged `greenlake_write`); `DELETE` → destructive (tagged
+`greenlake_write_delete`). All 446 write/delete tools require
+`ENABLE_GREENLAKE_WRITE_TOOLS=true` and fire an elicitation confirmation before
+executing. Writes that return `202 Accepted` are auto-polled to their terminal
+async-operation status so the caller sees the real outcome, not a bare 202.
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| filter | str | No | OData filter expression. Values in single quotes. |
-| select | str | No | Comma-separated properties to include. |
-| all | str | No | Free-text search across all properties. |
-| limit | int | No | Default: 50. Max: 2000. |
-| offset | int | No | Zero-based offset for pagination. |
-
-#### `greenlake_get_audit_log_details`
-
-> Get additional detail for a single GreenLake audit log entry.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | str | Yes | Audit log record ID (must have `hasDetails=true`). |
-
-#### `greenlake_get_devices`
-
-> List devices managed in a GreenLake workspace with filtering, sorting, and pagination.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| filter | str | No | OData filter expression. Values in single quotes. |
-| filter_tags | str | No | Tag filter expression. |
-| sort | str | No | Sort expressions (e.g. `serialNumber,macAddress desc`). |
-| select | list[str] | No | Property names to include. |
-| limit | int | No | Default: 2000. |
-| offset | int | No | Zero-based offset for pagination. |
-
-#### `greenlake_get_device_by_id`
-
-> Get details on a specific GreenLake device by its resource ID.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | str | Yes | Device resource ID. |
-
-#### `greenlake_get_subscriptions`
-
-> List subscriptions in a GreenLake workspace with filtering, sorting, and pagination.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| filter | str | No | OData filter expression. Values in single quotes. |
-| filter_tags | str | No | Tag filter expression. |
-| sort | str | No | Sort expressions. |
-| select | list[str] | No | Property names to include. |
-| limit | int | No | Default: 50. |
-| offset | int | No | Zero-based offset for pagination. |
-
-#### `greenlake_get_subscription_details`
-
-> Get detailed information for a single GreenLake subscription by ID.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | str | Yes | Subscription ID. |
-
-#### `greenlake_get_users`
-
-> List users in a GreenLake workspace with OData filtering and pagination.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| filter | str | No | OData filter expression. Values in single quotes. |
-| limit | int | No | Default: 300. Max: 600. |
-| offset | int | No | Pagination offset (number of pages to skip). |
-
-#### `greenlake_get_user_details`
-
-> Retrieve a single GreenLake user by user ID.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | str | Yes | User ID. |
-
-#### `greenlake_get_workspace`
-
-> Retrieve basic workspace information for a given GreenLake workspace ID.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| workspaceId | str | Yes | Workspace ID. |
-
-#### `greenlake_get_workspace_details`
-
-> Retrieve contact information for a GreenLake workspace.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| workspaceId | str | Yes | Workspace ID. |
+Alongside the generated surface is one hand-written orchestration tool:
 
 #### `greenlake_bulk_add_devices` *(write — requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`)*
 

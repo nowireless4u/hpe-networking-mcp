@@ -129,7 +129,9 @@ class TestIsToolEnabled:
 
     def test_greenlake_read_always_enabled(self):
         """Read tools are always enabled regardless of write flag."""
-        spec = ToolSpec(name="greenlake_get_devices", func=_fn, platform="greenlake", category="r", tags=set())
+        spec = ToolSpec(
+            name="greenlake_get_devices_v1_devices", func=_fn, platform="greenlake", category="r", tags=set()
+        )
         assert is_tool_enabled(spec, self._make_config()) is True
 
     def test_unrelated_tag_does_not_gate(self):

@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.8.0] - 2026-06-30
+
+**Minor — HPE GreenLake is now a fully spec-generated platform (11 → 959 tools).** GreenLake was the last hand-curated REST platform: 10 read tools plus `greenlake_bulk_add_devices`. Full-stack deployments span compute, storage, *and* networking, so the whole GreenLake northbound API surface now matters — not just the handful of reads we transcribed by hand. GreenLake now uses the **same spec-driven pipeline as Mist and EdgeConnect**: tool modules are generated from vendored OpenAPI specs and auto-discovered at import time, and the vendored specs are refreshed weekly by CI (the #429 auto-update pipeline).
+
+### Added
+- **959 spec-generated GreenLake tools** (513 read + 359 write + 87 delete) across 169 auto-discovered modules, emitted from the 30 vendored specs in `vendor/greenlake/` — one per GreenLake northbound service (devices, subscriptions, identity/IAM, workspaces, locations, service-provisioning, compute-ops, storage, MLOps, and more). Naming follows `greenlake_<verb>_<service>_<path-slug>`; the previous read tool names (e.g. `greenlake_get_devices_v1_devices`) are preserved by the slug convention.
+- **`greenlake_request` transport** (`platforms/greenlake/client.py`) mirroring `mist_request`: authenticated request → structured `ToolError` on non-2xx. Write endpoints that return **`202 Accepted` + `Location`** are **auto-polled** to their terminal async-operation status (`SUCCEEDED`/`FAILED`/`TIMEOUT`), so callers get the real outcome instead of a bare 202.
+- **Write-gating for the generated surface** — `POST`/`PUT`/`PATCH` → `greenlake_write`; `DELETE` → `greenlake_write_delete`. All 446 write/delete tools require `ENABLE_GREENLAKE_WRITE_TOOLS=true` and fire the universal elicitation confirmation. Wired at all four gate points (`_WRITE_TAG_BY_PLATFORM`, `_GATE_CONFIG_ATTR`, server `Visibility`, elicitation `enable_components`).
+- **`vendor/greenlake/` + weekly `greenlake-specs-refresh` GitHub Action** (shipped in #553) — pulls every GreenLake northbound spec via the portal `llms.txt` manifest and opens an auto-merge PR when HPE publishes changes.
+
+### Changed
+- **GreenLake `__init__.py` uses `pkgutil` auto-discovery** (like EdgeConnect) — no `TOOLS` dict to maintain.
+- Tool count **3178 → 4126** underlying tools.
+
+### Removed
+- The five hand-curated GreenLake read modules (`devices.py`, `subscriptions.py`, `users.py`, `workspaces.py`, `audit_logs.py`) — superseded by the generated equivalents. `bulk_add.py` (the guided device-onboarding orchestration tool) and its `_bulk_*` helpers are **kept**.
+
+### Notes
+- The generator (`scripts/generate_greenlake_tools.py`) is maintainer-local and gitignored, consistent with the other five spec-driven generators.
+- Docs updated (README / INSTRUCTIONS / TOOLS.md counts + GreenLake section rewritten as spec-generated). Skill/test references repointed to the generated tool names.
+
 ## [3.4.7.1] - 2026-06-30
 
 **Patch — self-correcting sandbox hint for Mist search arrays (`unhashable type: 'list'`).** Mist org-level search/aggregation endpoints (`mist_search_org_wireless_clients`, `mist_search_org_devices`, …) return **arrays** for window-aggregated fields — `ssid`, `hostname`, `ap`, `device` — because a client/device can have several over the search window (`mac`/`band` stay scalar; verified live). Code-mode models routinely use one of these directly as a dict key and crash with `cannot use 'list' as a dict key (unhashable type: 'list')`.

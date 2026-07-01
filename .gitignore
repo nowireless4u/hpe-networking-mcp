@@ -132,6 +132,7 @@ central-tools-backup/
 # ARE committed; the scripts that emit them are not. Regeneration is a local
 # maintainer step at release time.
 scripts/generate_edgeconnect_tools.py
+scripts/generate_greenlake_tools.py
 scripts/_mist_generator.py
 scripts/regenerate_mist_tools.py
 scripts/import_central_config_tools.py

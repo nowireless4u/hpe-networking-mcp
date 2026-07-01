@@ -21,7 +21,7 @@ description: |
   Write-gated (ENABLE_GREENLAKE_WRITE_TOOLS) + confirmation-gated.
 platforms: [greenlake]
 tags: [greenlake, onboarding, devices, subscription, service, write]
-tools: [health, greenlake_get_workspace, greenlake_get_subscriptions, greenlake_get_subscription_details, greenlake_get_devices, greenlake_bulk_add_devices, file_manager, list_files]
+tools: [health, greenlake_get_workspaces_v1_workspaces_workspace_id, greenlake_get_subscriptions_v1_subscriptions, greenlake_get_subscriptions_v1_subscriptions_id, greenlake_get_devices_v1_devices, greenlake_bulk_add_devices, file_manager, list_files]
 ---
 
 # GreenLake device onboarding
@@ -69,9 +69,9 @@ what they gave you.
 
 ## Stage 2 — Choose a subscription
 
-Call `greenlake_get_subscriptions` and show the operator the available
+Call `greenlake_get_subscriptions_v1_subscriptions` and show the operator the available
 subscriptions (key, tier/product, available seats, expiry). Let them pick the
-one to apply. Use `greenlake_get_subscription_details` if they want specifics.
+one to apply. Use `greenlake_get_subscriptions_v1_subscriptions_id` if they want specifics.
 Capture the chosen **subscription key** for Stage 5 (`subscription_key`).
 
 If they don't want to subscribe now, note that the devices will be added

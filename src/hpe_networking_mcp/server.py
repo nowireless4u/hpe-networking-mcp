@@ -536,7 +536,7 @@ def create_server(config: ServerConfig) -> FastMCP:
     if not config.enable_uxi_write_tools:
         mcp.add_transform(Visibility(False, tags={"uxi_write", "uxi_write_delete"}, components={"tool"}))
     if not config.enable_greenlake_write_tools:
-        mcp.add_transform(Visibility(False, tags={"greenlake_write"}, components={"tool"}))
+        mcp.add_transform(Visibility(False, tags={"greenlake_write", "greenlake_write_delete"}, components={"tool"}))
     if not config.enable_edgeconnect_write_tools:
         mcp.add_transform(
             Visibility(False, tags={"edgeconnect_write", "edgeconnect_write_delete"}, components={"tool"})

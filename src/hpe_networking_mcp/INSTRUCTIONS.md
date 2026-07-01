@@ -18,7 +18,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 3178 underlying tools are reachable from inside a sandboxed Python `execute()` block — discover names with `search` / `<platform>_list_tools`, then call EITHER directly by name (`await call_tool("mist_search_org_devices", {...})`) OR via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})`; both work for every platform (Mist included, as of v3.4.5.6). The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4126 underlying tools are reachable from inside a sandboxed Python `execute()` block — discover names with `search` / `<platform>_list_tools`, then call EITHER directly by name (`await call_tool("mist_search_org_devices", {...})`) OR via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})`; both work for every platform (Mist included, as of v3.4.5.6). The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `translate_wlan_preview`, `translate_wlan_apply`, `translate_config_preview`, `translate_config_apply`
     - **3 meta-tools per platform × 9 platforms** = 27: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -620,15 +620,26 @@ After reading the report, drill down into specific issues using the exact tool c
 
 # HPE GREENLAKE (greenlake_* tools)
 
-## Tool Categories
-- **Audit Logs**: greenlake_get_audit_logs, greenlake_get_audit_log_details
-- **Devices**: greenlake_get_devices, greenlake_get_device_by_id
-- **Subscriptions**: greenlake_get_subscriptions, greenlake_get_subscription_details
-- **Users**: greenlake_get_users, greenlake_get_user_details
-- **Workspaces**: greenlake_get_workspace, greenlake_get_workspace_details
-- **Bulk Onboarding** *(write — requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`)*: greenlake_bulk_add_devices
+GreenLake is **spec-generated** (like Mist and EdgeConnect): ~959 tools are emitted
+from the vendored OpenAPI specs (`vendor/greenlake/`, one per northbound service —
+devices, subscriptions, identity, workspaces, locations, service-provisioning,
+compute-ops, storage, MLOps, and more). Do not assume a fixed short list — **discover
+the tool you need** with `search` (code mode) or `greenlake_list_tools` /
+`greenlake_get_tool_schema` / `greenlake_invoke_tool` (dynamic mode).
 
-Use the standard dynamic-mode discovery pattern (`greenlake_list_tools`, `greenlake_get_tool_schema`, `greenlake_invoke_tool`) — these replaced the v1.x endpoint-dispatch tools (`greenlake_list_endpoints`, `greenlake_get_endpoint_schema`, `greenlake_invoke_endpoint`), which are gone.
+## Common read tools (representative — the full surface is much larger)
+- **Audit Logs**: greenlake_get_auditlogs_ui_v1_search, greenlake_get_auditlogs_ui_v1_details
+- **Devices**: greenlake_get_devices_v1_devices, greenlake_get_devices_v1_devices_id
+- **Subscriptions**: greenlake_get_subscriptions_v1_subscriptions, greenlake_get_subscriptions_v1_subscriptions_id
+- **Users**: greenlake_get_identity_v1_users, greenlake_get_identity_v1_users_id
+- **Workspaces**: greenlake_get_workspaces_v1_workspaces_workspace_id
+
+Naming: `greenlake_<verb>_<service>_<path-slug>`. Verb → capability: `GET` = read
+(always available); `POST`/`PUT`/`PATCH` = write (`greenlake_write` tag);
+`DELETE` = destructive (`greenlake_write_delete` tag). All ~446 write/delete tools
+require `ENABLE_GREENLAKE_WRITE_TOOLS=true` and fire an elicitation confirmation
+before executing. Writes returning `202 Accepted` are auto-polled to their terminal
+async-operation status, so you get the real outcome rather than a bare 202.
 
 ## Write Tools — Bulk Device Onboarding
 
@@ -636,7 +647,7 @@ Use the standard dynamic-mode discovery pattern (`greenlake_list_tools`, `greenl
 
 The tool runs in batches of 5 at 5 POST/min; assignment/enrichment PATCHes run at 20/min. For large CSVs (>100 rows) this can take several minutes — use `ctx.report_progress` events to monitor. A `.cache.json` checkpoint is written after each batch; re-invoking the same CSV resumes from the last checkpoint.
 
-**Requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`.** The `confirm_write` elicitation step fires before any API call — the user must accept before devices are added.
+**Requires `ENABLE_GREENLAKE_WRITE_TOOLS=true`.** The universal elicitation gate fires before any API call — the user must accept before devices are added.
 
 ---
 

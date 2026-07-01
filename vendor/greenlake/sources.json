@@ -94,13 +94,6 @@
     },
     {
       "service": "identity",
-      "title": "HPE GreenLake for Workspace Management API",
-      "paths": 4,
-      "file": "identity__identity-v1-nb-openapi-workspace.json",
-      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/identity/public/openapi/identity-v1/nb_openapi_workspace.json?download"
-    },
-    {
-      "service": "identity",
       "title": "HPE GreenLake for User Management API",
       "paths": 2,
       "file": "identity__identity-v1-nb-openapi-identity.json",
@@ -170,13 +163,6 @@
       "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-provision-nbapi-v1beta1/service_provision_v1beta1.json?download"
     },
     {
-      "service": "service-catalog",
-      "title": "Service provision management",
-      "paths": 4,
-      "file": "service-catalog__service-provision-nbapi-v1beta1-service-provision-v1beta1-nbapi.json",
-      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-provision-nbapi-v1beta1/service_provision_v1beta1_nbapi.json?download"
-    },
-    {
       "service": "storage-fleet",
       "title": "HPE Greenlake For Storage Fleet REST APIs",
       "paths": 121,
@@ -224,13 +210,6 @@
       "paths": 4,
       "file": "workspace__workspace-management-v1-nb-openapi-workspace.json",
       "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/workspace/public/openapi/workspace-management-v1/nb_openapi_workspace.json?download"
-    },
-    {
-      "service": "workspace",
-      "title": "HPE GreenLake for User Management API",
-      "paths": 2,
-      "file": "workspace__workspace-management-v1-nb-openapi-identity.json",
-      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/workspace/public/openapi/workspace-management-v1/nb_openapi_identity.json?download"
     }
   ]
 }

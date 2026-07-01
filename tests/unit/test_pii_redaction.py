@@ -111,7 +111,7 @@ class TestFieldClassification:
     def test_greenlake_camelcase_serial_classified(self) -> None:
         """GreenLake API uses camelCase ``serialNumber``; the normalizer lowercases
         (no camel split), so the ruleset must carry ``serialnumber`` to tokenize
-        device serials in GreenLake responses (e.g. greenlake_get_devices)."""
+        device serials in GreenLake responses (e.g. greenlake_get_devices_v1_devices)."""
         for field in ("serialNumber", "serialnumber", "serial", "serial_number"):
             cls, kind = classify_field(field, "CN-EXAMPLE-01")
             assert cls == FieldClassification.TOKENIZE_IDENTIFIER, field
