@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import json as _json
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 import httpx
 from fastmcp.exceptions import ToolError
@@ -279,8 +280,13 @@ def _body_or_text(response: httpx.Response) -> Any:
 
 
 def _raise_for_status(method: str, path: str, response: httpx.Response) -> None:
-    """Convert a non-2xx GreenLake response to a structured ``ToolError``."""
-    if response.status_code < 400:
+    """Convert any non-2xx GreenLake response to a structured ``ToolError``.
+
+    Only ``2xx`` is success. ``httpx`` does not follow redirects by default, so a
+    ``3xx`` (regional/proxy routing) must NOT flow through as a fake success — it
+    is surfaced as a structured error like any other non-2xx.
+    """
+    if 200 <= response.status_code < 300:
         return
     try:
         detail: Any = response.json()
@@ -295,6 +301,31 @@ def _raise_for_status(method: str, path: str, response: httpx.Response) -> None:
     )
 
 
+def _normalize_location(base_url: str, location: str) -> str:
+    """Reduce a ``Location`` header to a base-relative ``/path?query`` for ``client.get()``.
+
+    ``client.get()`` builds ``base_url + endpoint``, so the endpoint must be a
+    relative path — never an absolute URL (that would concatenate into a busted
+    ``https://hosthttps://other`` URL). Absolute same-origin locations are reduced
+    to their ``path?query``; absolute cross-origin locations are rejected with a
+    structured ``ToolError`` (we won't blindly follow a Location to a different
+    host); relative locations just get a leading slash.
+    """
+    if location.startswith(("http://", "https://")):
+        loc = urlsplit(location)
+        base = urlsplit(base_url)
+        if (loc.scheme, loc.netloc) != (base.scheme, base.netloc):
+            raise ToolError(
+                {
+                    "status_code": 502,
+                    "message": f"GreenLake async Location points to a different host: {location}",
+                }
+            )
+        rel = loc.path + (f"?{loc.query}" if loc.query else "")
+        return rel if rel.startswith("/") else f"/{rel}"
+    return location if location.startswith("/") else f"/{location}"
+
+
 async def _poll_async_operation(client: GreenLakeHttpClient, location: str) -> Any:
     """Poll a GreenLake async-operation resource until it reaches a terminal state.
 
@@ -303,9 +334,7 @@ async def _poll_async_operation(client: GreenLakeHttpClient, location: str) -> A
     (``SUCCEEDED`` / ``FAILED`` / ``TIMEOUT``) and return the final resource so
     the caller gets the real outcome rather than an opaque 202.
     """
-    endpoint = location if location.startswith("/") else f"/{location}"
-    if location.startswith("http"):  # absolute URL → strip the base
-        endpoint = location[len(client.base_url) :] if location.startswith(client.base_url) else location
+    endpoint = _normalize_location(client.base_url, location)
     for _ in range(_ASYNC_POLL_MAX_ATTEMPTS):
         result = await client.get(endpoint)
         status = (result.get("status") or "").upper() if isinstance(result, dict) else ""

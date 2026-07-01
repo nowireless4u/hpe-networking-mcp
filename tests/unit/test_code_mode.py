@@ -285,6 +285,42 @@ class TestCodeModeErrorReturns:
             _raise_for_status("GET", "/devices/v1/devices/x", resp)
         assert exc_info.value.args[0]["status_code"] == 404
 
+    def test_greenlake_raise_for_status_treats_3xx_as_error(self):
+        """3xx is NOT success — httpx doesn't follow redirects, so a regional/proxy
+        redirect must surface as a structured ToolError, not a fake 2xx body."""
+        import httpx
+        from fastmcp.exceptions import ToolError
+
+        from hpe_networking_mcp.platforms.greenlake.client import _raise_for_status
+
+        resp = httpx.Response(302, headers={"location": "https://elsewhere/x"})
+        with pytest.raises(ToolError) as exc_info:
+            _raise_for_status("GET", "/devices/v1/devices", resp)
+        assert exc_info.value.args[0]["status_code"] == 302
+
+    def test_normalize_location_relative_and_same_origin(self):
+        """Relative → leading slash; absolute same-origin → path?query only."""
+        from hpe_networking_mcp.platforms.greenlake.client import _normalize_location
+
+        base = "https://global.api.greenlake.hpe.com"
+        assert _normalize_location(base, "async-operations/v1/abc") == "/async-operations/v1/abc"
+        assert _normalize_location(base, "/async-operations/v1/abc") == "/async-operations/v1/abc"
+        assert (
+            _normalize_location(base, f"{base}/async-operations/v1/abc?wait=true")
+            == "/async-operations/v1/abc?wait=true"
+        )
+
+    def test_normalize_location_rejects_cross_origin(self):
+        """An absolute Location to a different host must raise, not concatenate."""
+        from fastmcp.exceptions import ToolError
+
+        from hpe_networking_mcp.platforms.greenlake.client import _normalize_location
+
+        base = "https://global.api.greenlake.hpe.com"
+        with pytest.raises(ToolError) as exc_info:
+            _normalize_location(base, "https://other-host.example.com/async-operations/v1/abc")
+        assert exc_info.value.args[0]["status_code"] == 502
+
     # NOTE (v3.2.1.0): the old ``test_no_raise_in_greenlake_tool_files`` AST
     # guard was removed — it enforced the obsolete no-raise rule. GreenLake
     # tools now raise ToolError per the codified contract. An inverse guard
