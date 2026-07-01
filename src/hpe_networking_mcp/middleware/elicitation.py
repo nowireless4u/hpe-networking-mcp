@@ -23,9 +23,12 @@ from fastmcp.server.elicitation import (
     DeclinedElicitation,
 )
 from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.tools.tool import ToolResult
 from loguru import logger
 from mcp.shared.exceptions import McpError
 
+from hpe_networking_mcp.middleware.response_envelope import _build_envelope
+from hpe_networking_mcp.platforms._common.tool_registry import REGISTRIES, ToolSpec
 from hpe_networking_mcp.redaction.safe_summary import is_sensitive_key as _is_sensitive_key
 
 _PARAM_SUMMARY_MAX_LEN = 300
@@ -56,7 +59,79 @@ def _sanitized_param_summary(params: dict | None) -> str:
     return rendered
 
 
+def _find_registry_spec(tool_name: str) -> ToolSpec | None:
+    """Return the platform ``ToolSpec`` for a tool name, or ``None``.
+
+    Only registry-managed **platform** tools live in ``REGISTRIES``. The
+    per-platform meta-tools (``<platform>_list_tools`` / ``_get_tool_schema`` /
+    ``_invoke_tool``), the code-mode ``execute`` + discovery tools, the
+    cross-platform statics (``health`` / ``site_*`` / ``translate_*``) and the
+    MCP-Apps tools are registered with ``@mcp.tool`` OUTSIDE the registry, so
+    they return ``None`` here and are NOT gated by ``on_call_tool``. That is
+    correct: ``_invoke_tool`` and the translate-apply tools carry their own
+    in-body ``confirm_gated_invoke`` and dispatch the target via ``spec.func``
+    directly (never re-entering middleware), so gating them here too would
+    double-prompt; the rest are reads/discovery/sandbox and must not prompt.
+    """
+    for registry in REGISTRIES.values():
+        spec = registry.get(tool_name)
+        if spec is not None:
+            return spec
+    return None
+
+
 class ElicitationMiddleware(Middleware):
+    async def on_call_tool(
+        self,
+        context: MiddlewareContext[mcp.types.CallToolRequestParams],
+        call_next,
+    ) -> ToolResult:
+        """Structural confirmation gate at the ``tools/call`` layer (#558).
+
+        The ``<platform>_invoke_tool`` dispatcher gates its target, but a tool
+        called DIRECTLY by name — which the code-mode sandbox allows and the
+        ``execute`` description says is equivalent — never went through that
+        dispatcher, so it bypassed confirmation entirely. This gates the direct
+        path structurally: every registry ``ToolSpec`` whose classification
+        requires confirmation (``requires_confirmation`` tag) — or is missing
+        (``capability is None``, fail-closed) — prompts before it runs, exactly
+        like the dispatcher. Non-registry infra tools pass through unchanged
+        (see ``_find_registry_spec``), so ``invoke_tool`` / translate keep their
+        single in-body gate and reads/discovery never prompt.
+        """
+        tool_name = getattr(context.message, "name", None)
+        ctx = context.fastmcp_context
+        spec = _find_registry_spec(tool_name) if tool_name else None
+
+        if spec is not None and ctx is not None:
+            # Same predicate as the _invoke_tool dispatcher: tag-driven, and
+            # fail-closed on a registered-but-unclassified tool.
+            needs_confirmation = "requires_confirmation" in spec.tags or spec.capability is None
+            if needs_confirmation:
+                params = dict(getattr(context.message, "arguments", None) or {})
+                summary = (spec.description or spec.category or "no description")[:120]
+                gate = await confirm_gated_invoke(
+                    ctx,
+                    f"{spec.platform} tool '{tool_name}' ({summary})",
+                    params,
+                )
+                if gate is not None:
+                    # Blocked — return the structured outcome as the tool result
+                    # WITHOUT running the tool. We short-circuit before the inner
+                    # ResponseEnvelopeMiddleware, so build the envelope here (as
+                    # ValidationCatchMiddleware does).
+                    envelope = _build_envelope(
+                        ok=False,
+                        data=gate,
+                        status=403,
+                        message=gate.get("message"),
+                        tool=tool_name or "unknown",
+                        platform=spec.platform,
+                    )
+                    return ToolResult(content=gate.get("message", ""), structured_content=envelope)
+
+        return await call_next(context)  # type: ignore[no-any-return]
+
     async def on_initialize(
         self,
         context: MiddlewareContext[mcp.types.InitializeRequest],

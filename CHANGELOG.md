@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0.3] - 2026-07-01
+
+**Patch — SECURITY: close the direct-by-name confirmation bypass (all platforms, code mode). Closes #558.** The confirmation gate (`confirm_gated_invoke`) was only wired into the `<platform>_invoke_tool` dispatcher (and the two translate-apply tools). But in code mode (the default), the sandbox can call any tool **directly by name** — and the `execute` description said that was equivalent to `invoke_tool`. A direct-by-name write therefore skipped the gate entirely and ran with no confirmation. This affected every platform's write/destructive tools whenever that platform's writes were enabled. (Dynamic mode was unaffected — underlying tools are hidden and direct calls blocked, so only the gated `invoke_tool` path exists.) This is the deeper cause behind the Claude Desktop "no prompt" reports; the v3.5.0.2 elicit-form fix hardened the `invoke_tool` path but not this one.
+
+### Fixed
+- **Structural gate at the `tools/call` layer:** `ElicitationMiddleware.on_call_tool` now runs `confirm_gated_invoke` for any registry `ToolSpec` whose classification requires confirmation (`requires_confirmation` tag) or is missing (`capability is None`, fail-closed) — on **every** dispatch path, including the sandbox's nested `ctx.fastmcp.call_tool`. Non-registry infra tools (meta-tools, discovery, `execute`, `health`, translate) pass through, so `invoke_tool`/translate keep their single in-body gate (no double-prompt) and reads never prompt. `DISABLE_ELICITATION=true` still bypasses (operator opt-out).
+- Updated the code-mode `execute` description: direct and `invoke_tool` calls are equally confirmation-gated; the gate is structural and cannot be skipped by calling a tool directly.
+
+### Notes
+- No tool/count/signature changes. New tests: direct write blocks on decline / proceeds on approve / fails closed on empty-accept / reads don't prompt, plus a nested-`ctx.fastmcp.call_tool` test that mirrors the code-mode sandbox dispatch (all via a real FastMCP `Client`).
+
 ## [3.5.0.2] - 2026-07-01
 
 **Patch — SECURITY: universal confirmation gate could be silently auto-accepted by some clients (all platforms).** The gate used the **deprecated** `ctx.elicit(prompt, response_type=None)` form, which produces an *empty* object schema. Clients render that inconsistently: some (observed: Claude Desktop) silently answer `accept` with an empty payload — so a write-gated / destructive tool executed with **no visible confirmation prompt**. Because the gate is universal (`confirm_gated_invoke` at the `<platform>_invoke_tool` chokepoint), this affected **every platform's** gated tools. Exposure required a write-enabled deployment (`ENABLE_<platform>_WRITE_TOOLS=true`, which is **off by default**) *and* an auto-accepting client; clients that auto-*cancel* the empty elicit blocked the write instead. This was a client-side auto-accept, not the `confirmed=true` self-authorization hole (#415, which remains closed).

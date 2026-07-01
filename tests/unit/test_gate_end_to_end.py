@@ -14,7 +14,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from fastmcp import Client, FastMCP
+from fastmcp import Client, Context, FastMCP
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._common.meta_tools import build_meta_tools
@@ -166,3 +166,146 @@ class TestGateEndToEnd:
             )
         assert second.data["status"] == "written"
         assert calls == [{"target": "HQ"}]
+
+
+@pytest.fixture
+def direct_gated_server():
+    """Server with ElicitationMiddleware + the underlying tools registered as
+    real FastMCP tools, so a Client can call them DIRECTLY by name (the #558
+    bypass path). The middleware's structural on_call_tool gate must fire on
+    that path just like the _invoke_tool dispatcher does.
+    """
+    from hpe_networking_mcp.middleware.elicitation import ElicitationMiddleware
+
+    calls: list[dict[str, Any]] = []
+
+    REGISTRIES[_PLATFORM] = {
+        "gatetest_manage_thing": ToolSpec(
+            name="gatetest_manage_thing",
+            func=lambda ctx, **k: None,  # unused on the direct path
+            platform=_PLATFORM,
+            category="test",
+            description="Fake gated write.",
+            tags={f"{_PLATFORM}_write_delete", "requires_confirmation"},
+            capability=Capability.WRITE_DELETE,
+        ),
+        "gatetest_get_thing": ToolSpec(
+            name="gatetest_get_thing",
+            func=lambda ctx, **k: None,
+            platform=_PLATFORM,
+            category="test",
+            description="Fake read.",
+            tags=set(),
+            capability=Capability.READ,
+        ),
+    }
+
+    config = SimpleNamespace(disable_elicitation=False)
+    setattr(config, f"enable_{_PLATFORM}_write_tools", True)
+
+    @asynccontextmanager
+    async def lifespan(_server):
+        yield {"config": config}
+
+    server = FastMCP("gate-test-direct", lifespan=lifespan, middleware=[ElicitationMiddleware()])
+
+    @server.tool(name="gatetest_manage_thing")
+    async def _direct_write(target: str = "") -> dict:
+        calls.append({"target": target})
+        return {"status": "written", "target": target}
+
+    @server.tool(name="gatetest_get_thing")
+    async def _direct_read() -> dict:
+        calls.append({"read": True})
+        return {"status": "read"}
+
+    yield server, calls
+    REGISTRIES.pop(_PLATFORM, None)
+
+
+class TestDirectCallGating:
+    """#558: a write tool called DIRECTLY by name (not via _invoke_tool) must be
+    gated by the structural on_call_tool middleware — on every dispatch path."""
+
+    async def test_direct_write_blocks_on_decline(self, direct_gated_server):
+        server, calls = direct_gated_server
+
+        async def handler(message, response_type, params, context):
+            from fastmcp.client.elicitation import ElicitResult
+
+            return ElicitResult(action="decline")
+
+        async with Client(server, elicitation_handler=handler) as client:
+            result = await client.call_tool("gatetest_manage_thing", {"target": "HQ"})
+        assert calls == []  # the write must NOT have run
+        assert result.data["ok"] is False
+        assert result.data["data"]["status"] == "declined"
+
+    async def test_direct_write_proceeds_on_approve(self, direct_gated_server):
+        server, calls = direct_gated_server
+        prompts: list[str] = []
+
+        async def handler(message, response_type, params, context):
+            from fastmcp.client.elicitation import ElicitResult
+
+            prompts.append(message)
+            return ElicitResult(action="accept", content={"value": True})
+
+        async with Client(server, elicitation_handler=handler) as client:
+            result = await client.call_tool("gatetest_manage_thing", {"target": "HQ"})
+        assert len(prompts) == 1 and "gatetest_manage_thing" in prompts[0]
+        assert calls == [{"target": "HQ"}]
+        assert result.data["status"] == "written"
+
+    async def test_direct_write_empty_accept_fails_closed(self, direct_gated_server):
+        """A client that accepts with no payload (Claude Desktop's silent
+        auto-accept) fails the required-bool schema → the middleware fails
+        closed → the direct write does NOT run."""
+        server, calls = direct_gated_server
+
+        async def handler(message, response_type, params, context):
+            from fastmcp.client.elicitation import ElicitResult
+
+            return ElicitResult(action="accept")  # no content
+
+        async with Client(server, elicitation_handler=handler) as client:
+            result = await client.call_tool("gatetest_manage_thing", {"target": "HQ"})
+        assert calls == []
+        assert result.data["ok"] is False
+
+    async def test_direct_read_never_prompts(self, direct_gated_server):
+        server, calls = direct_gated_server
+        prompts: list[str] = []
+
+        async def handler(message, response_type, params, context):
+            from fastmcp.client.elicitation import ElicitResult
+
+            prompts.append(message)
+            return ElicitResult(action="accept", content={"value": True})
+
+        async with Client(server, elicitation_handler=handler) as client:
+            result = await client.call_tool("gatetest_get_thing", {})
+        assert prompts == []  # reads never prompt
+        assert calls == [{"read": True}]
+        assert result.data["status"] == "read"
+
+    async def test_nested_fastmcp_call_tool_is_gated_like_the_sandbox(self, direct_gated_server):
+        """The code-mode sandbox dispatches direct-by-name calls via
+        ``ctx.fastmcp.call_tool(name, params)`` (run_middleware=True). This proves
+        on_call_tool fires on that NESTED path too — i.e. an ``execute()`` block
+        calling a write tool directly by name cannot bypass confirmation (#558)."""
+        server, calls = direct_gated_server
+
+        @server.tool(name="gatetest_sandbox_proxy")
+        async def _proxy(ctx: Context, target: str = "") -> dict:
+            # Mirror exactly what CodeMode's sandbox call_tool does.
+            return await ctx.fastmcp.call_tool("gatetest_manage_thing", {"target": target})
+
+        async def handler(message, response_type, params, context):
+            from fastmcp.client.elicitation import ElicitResult
+
+            return ElicitResult(action="decline")
+
+        async with Client(server, elicitation_handler=handler) as client:
+            await client.call_tool("gatetest_sandbox_proxy", {"target": "HQ"})
+        assert calls == []  # the nested direct-by-name write was gated and blocked
