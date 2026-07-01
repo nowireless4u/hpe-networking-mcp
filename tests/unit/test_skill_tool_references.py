@@ -62,6 +62,9 @@ _GLOBAL_ALLOWLIST: frozenset[str] = frozenset(
         # UXI write-tool tag names (referenced in INSTRUCTIONS.md "Write Tools" section)
         "uxi_write",
         "uxi_write_delete",
+        # GreenLake write-tool tag names (referenced in INSTRUCTIONS.md GreenLake section)
+        "greenlake_write",
+        "greenlake_write_delete",
         # UXI paste-bundle field labels used in `uxi-cross-platform-diagnostics.md`
         # Stage 1' template — these are data field names embedded in the paste
         # block format, not tool names. Regex picks them up because they share
