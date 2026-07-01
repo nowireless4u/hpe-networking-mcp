@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.4.8.0] - 2026-06-30
+## [3.5.0.0] - 2026-06-30
 
-**Minor — HPE GreenLake is now a fully spec-generated platform (11 → 959 tools).** GreenLake was the last hand-curated REST platform: 10 read tools plus `greenlake_bulk_add_devices`. Full-stack deployments span compute, storage, *and* networking, so the whole GreenLake northbound API surface now matters — not just the handful of reads we transcribed by hand. GreenLake now uses the **same spec-driven pipeline as Mist and EdgeConnect**: tool modules are generated from vendored OpenAPI specs and auto-discovered at import time, and the vendored specs are refreshed weekly by CI (the #429 auto-update pipeline).
+**Platform milestone — HPE GreenLake is now a fully spec-generated platform (11 → 959 tools).** GreenLake was the last hand-curated REST platform: 10 read tools plus `greenlake_bulk_add_devices`. Full-stack deployments span compute, storage, *and* networking, so the whole GreenLake northbound API surface now matters — not just the handful of reads we transcribed by hand. GreenLake now uses the **same spec-driven pipeline as Mist and EdgeConnect**: tool modules are generated from vendored OpenAPI specs and auto-discovered at import time, and the vendored specs are refreshed weekly by CI (the #429 auto-update pipeline).
 
 ### Added
 - **959 spec-generated GreenLake tools** (513 read + 359 write + 87 delete) across 169 auto-discovered modules, emitted from the 30 vendored specs in `vendor/greenlake/` — one per GreenLake northbound service (devices, subscriptions, identity/IAM, workspaces, locations, service-provisioning, compute-ops, storage, MLOps, and more). Naming follows `greenlake_<verb>_<service>_<path-slug>`; the previous read tool names (e.g. `greenlake_get_devices_v1_devices`) are preserved by the slug convention.
