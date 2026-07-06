@@ -132,7 +132,7 @@ jobs:
       - name: Create or update sync PR
         if: steps.diff.outputs.changed == 'true'
         id: cpr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.MIST_SYNC_PAT }}
           branch: chore/sync-mist-openapi
