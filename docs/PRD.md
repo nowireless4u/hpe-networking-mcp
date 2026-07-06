@@ -202,7 +202,7 @@ secrets/
 
 | Property | Value |
 |----------|-------|
-| Base image | `python:3.12-slim-bookworm` |
+| Base image | `python:3.13-slim-trixie` |
 | Package manager | `uv` (pinned version) |
 | Runtime user | Non-root (`mcpuser`, uid 1000) |
 | Exposed port | `8000` |

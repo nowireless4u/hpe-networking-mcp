@@ -37,3 +37,29 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trivy:
+    # Image-layer CVE scan (CPython interpreter + Debian OS packages) — the layer
+    # pip-audit and bandit are blind to. Surfaced by a CWPP report of CPython
+    # interpreter CVEs (CVE-2026-3644/4786/6100/7210) that our Python-only
+    # scanners could not see. Builds the runtime image and fails the build on any
+    # HIGH/CRITICAL vuln that has an available fix (`--ignore-unfixed`), so the
+    # gate stays actionable rather than red on Debian's fix-deferred backlog.
+    name: Image Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build runtime image
+        run: docker build -t hpe-networking-mcp:scan .
+      - name: Trivy scan (fail on fixable HIGH/CRITICAL)
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image \
+            --scanners vuln \
+            --pkg-types os,library \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --no-progress \
+            hpe-networking-mcp:scan

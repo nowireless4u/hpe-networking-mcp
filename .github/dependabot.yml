@@ -18,3 +18,35 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+
+  # Base-image bumps (Dockerfile FROM). Interpreter/OS CVEs live here, not in
+  # the pip ecosystem — this is what would have surfaced the CPython base-image
+  # CVEs automatically (CVE-2026-3644/4786/6100/7210).
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # GitHub Actions version bumps (keeps the CI/security actions current).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/New_York"
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
