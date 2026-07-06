@@ -39,17 +39,17 @@ async def central_get_clients_trend(
     ctx: Context,
     start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
     end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
-    filter: str | None = None,
 ) -> dict | str:
     """Get tenant-wide client-count trend over a time window."""
     conn = get_central_conn(ctx)
+    # The endpoint's time-window params are ``start-at`` / ``end-at`` (kebab-case);
+    # ``start`` / ``end`` are rejected with HTTP 400 "Unknown query parameter", and
+    # this endpoint has no ``filter`` param. Surfaced by live dashboard testing.
     params: dict = {}
     if start:
-        params["start"] = start
+        params["start-at"] = start
     if end:
-        params["end"] = end
-    if filter:
-        params["filter"] = filter
+        params["end-at"] = end
     return await _get(conn, "network-monitoring/v1/clients-trend", params)
 
 
@@ -57,13 +57,13 @@ async def central_get_clients_trend(
 async def central_get_clients_topn_usage(
     ctx: Context,
     top_n: Annotated[int, Field(ge=1, le=100, description="Number of top-clients to return (default 10).")] = 10,
-    filter: str | None = None,
 ) -> dict | str:
     """Get the top-N clients by usage."""
     conn = get_central_conn(ctx)
-    params: dict = {"topN": top_n}
-    if filter:
-        params["filter"] = filter
+    # ``topN`` is rejected (HTTP 400 "must be in kebab-case"); the row count is
+    # controlled by ``limit`` and this endpoint has no ``filter`` param. Surfaced
+    # by live dashboard testing.
+    params: dict = {"limit": top_n}
     return await _get(conn, "network-monitoring/v1/clients-topn-usage", params)
 
 

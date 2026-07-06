@@ -109,7 +109,10 @@ async def central_get_switches_topn_interface_trends(
 ) -> dict | str:
     """Get the top-N busiest switch interfaces across the tenant."""
     conn = get_central_conn(ctx)
-    params: dict = {"topN": top_n}
+    # Use kebab-case ``limit`` for the row count, never camelCase ``topN`` (the
+    # sibling top-aps / clients-topn endpoints 400 on ``topN``). Surfaced by live
+    # dashboard testing.
+    params: dict = {"limit": top_n}
     if filter:
         params["filter"] = filter
     return await _get(conn, "network-monitoring/v1/switches/topn-interface-trends", params)

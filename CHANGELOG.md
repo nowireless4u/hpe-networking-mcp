@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0.5] - 2026-07-06
+
+**Patch — fix Central MRT usage/trend tools sending query params the gateway rejects (#563).** Central's `network-monitoring/v1` gateway enforces kebab-case query params (`HPE_GL_NETWORKING_ERROR_INVALID_QUERY_PARAMETER` → "Query parameter must be in kebab-case: topN") and rejects unknown params ("Unknown query parameter: end"). Four tools shipped with camelCase / unsupported params and 400'd in live dashboard use. Verified live against the tenant.
+
+### Fixed
+- **`central_get_top_aps_by_usage`** and **`central_get_clients_topn_usage`**: send the row count as `limit` (was camelCase `topN`, → HTTP 400). Removed the `filter` param — these endpoints do not accept it.
+- **`central_get_clients_trend`**: send the time window as `start-at` / `end-at` (was `start` / `end`, → HTTP 400 "Unknown query parameter"). Removed the `filter` param — this endpoint does not accept it.
+- **`central_get_switches_topn_interface_trends`**: send the count as kebab-case `limit` (was camelCase `topN`). `filter` remains — it is a supported param on this endpoint.
+
+### Notes
+- No tool-count change. Three tools dropped an unsupported `filter` parameter; no other signature changes. New tests (`tests/unit/test_central_mrt_param_kebab.py`) pin the outgoing param names for all four tools by capturing each module's `_get` call.
+- Live-checked and **not** changed: `central_get_applications` paginates correctly with `offset`; `central_get_devices` returns populated serials across AP/GW/SW device types.
+
 ## [3.5.0.4] - 2026-07-01
 
 **Patch — make the popup-less `confirmed=true` fallback actually work (follow-up to #558).** After the structural gate landed, a client that can't render the elicitation prompt (e.g. Claude Desktop, which now reports "elicitation not supported" for the required-boolean schema) correctly falls back to the `confirmed=true` chat-confirm path — but the flag **leaked into the target tool's arguments**. The gate consumed `confirmed` for its decision but never stripped it, so the tool's strict schema (`additionalProperties: false`) rejected it with a `422`, and the write could never be confirmed.

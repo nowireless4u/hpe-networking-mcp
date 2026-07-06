@@ -326,7 +326,6 @@ async def central_get_top_aps_by_usage(
         ),
     ],
     top_n: Annotated[int, Field(ge=1, le=100, description="Number of APs to return (default 10).")] = 10,
-    filter: str | None = None,
 ) -> dict | str:
     """Get top-N APs by usage — metric ``'wireless'`` / ``'wired'`` / ``'usage'``
     (``'usage'`` = combined wired+wireless; ``'combined'`` is accepted as an alias).
@@ -339,9 +338,11 @@ async def central_get_top_aps_by_usage(
         "usage": "top-aps-by-usage",
     }
     conn = get_central_conn(ctx)
-    params: dict = {"topN": top_n}
-    if filter:
-        params["filter"] = filter
+    # The API rejects camelCase query params (``topN`` → HTTP 400 "must be in
+    # kebab-case") and these endpoints have no ``filter`` param — the row count
+    # is controlled by ``limit`` (see network-monitoring/v1 spec). Surfaced by
+    # live dashboard testing.
+    params: dict = {"limit": top_n}
     return await _get(conn, f"network-monitoring/v1/{path_seg(suffix_map[metric])}", params)
 
 
