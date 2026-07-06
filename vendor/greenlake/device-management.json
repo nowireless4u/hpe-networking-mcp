@@ -664,6 +664,17 @@
             "format": "uuid",
             "type": "string"
           },
+          "inUseWorkspace": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResponseInUseWorkspaceId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The workspace the device belongs to. Null for MSP account types. For other account types (MOI, COI, Enterprise Org Standalone), this field indicates the workspace the device is currently in use by."
+          },
           "isFlex": {
             "description": "A boolean that indicates whether the device has a Flex subscription or not.",
             "example": false,
@@ -682,6 +693,21 @@
             "description": "The manufacturer of the device.",
             "example": "HPE",
             "type": "string"
+          },
+          "management": {
+            "anyOf": [
+              {
+                "enum": [
+                  "MSP",
+                  "TENANT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Indicates whether the device is managed by an MSP or a tenant. Null indicates an enterprise organization device (not MSP/tenant-managed)."
           },
           "manufacturedDate": {
             "description": "The date the device was manufactured in UTC (RFC 3339 format).",
@@ -1490,6 +1516,31 @@
         ],
         "type": "object"
       },
+      "ResponseInUseWorkspaceId": {
+        "properties": {
+          "id": {
+            "description": "The unique identifier of the workspace.",
+            "example": "3292c36d30ef4f26823b76b5d213b670",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Full path of the workspace resource",
+            "example": "/workspaces/v1/workspaces/3292c36d30ef4f26823b76b5d213b670",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "example": "workspaces/workspace",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "resourceUri"
+        ],
+        "type": "object"
+      },
       "ResponseLocation": {
         "properties": {
           "city": {
@@ -2082,6 +2133,11 @@
                 "summary": "Filter with greater or equal check",
                 "value": "createdAt ge ''2024-01-18T19:53:51.480Z''"
               },
+              "inUseWorkspaceId": {
+                "description": "Return devices assigned to a specific workspace.\nExample syntax, inUseWorkspaceId eq \\<value>.\n",
+                "summary": "Filter on in-use workspace ID",
+                "value": "inUseWorkspaceId eq '011c7060ea2611f087d652e71933ec87'"
+              },
               "isFlex": {
                 "description": "Return devices that are on a flex subscription or not.\nExample syntax, isFlex eq true|false.\n",
                 "summary": "Filter on whether device is on a flex subscription",
@@ -2096,6 +2152,31 @@
                 "description": "Return devices of a specific make.\nExample syntax, make eq \\<value>.\n",
                 "summary": "Filter on device make",
                 "value": "make eq 'HPE'"
+              },
+              "managementMsp": {
+                "description": "Return devices where management is MSP.\nExample syntax, management eq \\<value>.\n",
+                "summary": "Filter on MSP managed devices",
+                "value": "management eq 'MSP'"
+              },
+              "managementMspNoInUseWorkspace": {
+                "description": "Return MSP managed devices where inUseWorkspaceId is null.\nExample syntax, management eq \\<value> and inUseWorkspaceId eq null.\n",
+                "summary": "Filter MSP devices not assigned to any workspace",
+                "value": "management eq 'MSP' and inUseWorkspaceId eq null"
+              },
+              "managementMspWithInUseWorkspace": {
+                "description": "Return MSP managed devices assigned to a specific workspace.\nExample syntax, management eq \\<value> and inUseWorkspaceId eq \\<value>.\n",
+                "summary": "Filter MSP devices in a specific workspace (MOI)",
+                "value": "management eq 'MSP' and inUseWorkspaceId eq '131846d43af111f08e4ebe50c5e8c005'"
+              },
+              "managementNull": {
+                "description": "Return devices where management is null (Enterprise Organization).\nExample syntax, management eq null.\n",
+                "summary": "Filter on devices with no management type",
+                "value": "management eq null"
+              },
+              "managementTenant": {
+                "description": "Return devices where management is TENANT.\nExample syntax, management eq \\<value>.\n",
+                "summary": "Filter on Tenant managed devices",
+                "value": "management eq 'TENANT'"
               },
               "manufacturedDate": {
                 "description": "Return devices manufactured on or after specific date.\nExample syntax, manufacturedDate ge \\<value>.\n",
@@ -2217,6 +2298,278 @@
             "content": {
               "application/json": {
                 "examples": {
+                  "device_consolidate_enterprise_org_response": {
+                    "summary": "Devices response with Consolidated Enterprise Organization View",
+                    "value": {
+                      "count": 2,
+                      "items": [
+                        {
+                          "application": null,
+                          "archived": false,
+                          "assignedState": "UNASSIGNED",
+                          "billingAccountId": null,
+                          "billingAccountName": null,
+                          "billingTier": null,
+                          "category": "NETWORK",
+                          "contact": null,
+                          "createdAt": "2026-01-06T11:27:52.197Z",
+                          "dedicatedPlatformWorkspace": null,
+                          "deviceName": null,
+                          "deviceType": "SD_WAN_GW",
+                          "id": "bde53e90-dc81-5eaf-8b0a-16cee7654670",
+                          "inUseWorkspace": {
+                            "id": "011c7060ea2611f087d652e71933ec87",
+                            "resourceUri": "/workspaces/v1/workspaces/011c7060ea2611f087d652e71933ec87",
+                            "type": "workspaces/workspace"
+                          },
+                          "location": {
+                            "city": "bengaluru",
+                            "country": "India",
+                            "id": "e4ad2f0f-c725-4852-bac4-62d635ac46f6",
+                            "latitude": 13.12662,
+                            "locationName": "loc-1",
+                            "locationSource": "SDI",
+                            "longitude": 77.61329,
+                            "postalCode": "560061",
+                            "resourceUri": "/locations/v1/locations/e4ad2f0f-c725-4852-bac4-62d635ac46f6",
+                            "state": "bengaluru",
+                            "streetAddress": "bengaluru"
+                          },
+                          "macAddress": "02:19:11:A1:E2:E1",
+                          "make": "HPE",
+                          "management": null,
+                          "manufacturedDate": "2025-05-01T20:14:04.000Z",
+                          "model": "EC-V",
+                          "ownership": "MANAGED",
+                          "partNumber": "S6M37A",
+                          "region": null,
+                          "secondaryName": null,
+                          "serialNumber": "TEST060120261",
+                          "subscription": null,
+                          "subscriptionCategory": null,
+                          "tags": {
+                            "test": "abc"
+                          },
+                          "tenantWorkspaceId": null,
+                          "type": "devices/device",
+                          "updatedAt": "2026-01-14T08:48:40.468Z",
+                          "warranty": null
+                        },
+                        {
+                          "application": null,
+                          "archived": false,
+                          "assignedState": "UNASSIGNED",
+                          "billingAccountId": null,
+                          "billingAccountName": null,
+                          "billingTier": null,
+                          "category": "NETWORK",
+                          "contact": null,
+                          "createdAt": "2026-01-06T05:16:43.233Z",
+                          "dedicatedPlatformWorkspace": null,
+                          "deviceName": null,
+                          "deviceType": "SD_WAN_GW",
+                          "id": "c0820a27-295b-5984-84b4-43180c831b15",
+                          "inUseWorkspace": {
+                            "id": "341f5236db2e11f0b5d246c440094996",
+                            "resourceUri": "/workspaces/v1/workspaces/341f5236db2e11f0b5d246c440094996",
+                            "type": "workspaces/workspace"
+                          },
+                          "location": {
+                            "city": "bengaluru",
+                            "country": "India",
+                            "id": "eaa45500-b681-48f2-925b-ce1e9aa339ae",
+                            "latitude": 13.12662,
+                            "locationName": "loc-1",
+                            "locationSource": "SDI",
+                            "longitude": 77.61329,
+                            "postalCode": "560061",
+                            "resourceUri": "/locations/v1/locations/eaa45500-b681-48f2-925b-ce1e9aa339ae",
+                            "state": "bengaluru",
+                            "streetAddress": "bengaluru"
+                          },
+                          "macAddress": "02:19:11:A1:E2:E9",
+                          "make": "HPE",
+                          "management": null,
+                          "manufacturedDate": "2025-05-01T20:14:04.000Z",
+                          "model": "EC-V",
+                          "ownership": "MANAGED",
+                          "partNumber": "S6M37A",
+                          "region": null,
+                          "secondaryName": null,
+                          "serialNumber": "TEST06012026",
+                          "subscription": null,
+                          "subscriptionCategory": null,
+                          "tags": null,
+                          "tenantWorkspaceId": null,
+                          "type": "devices/device",
+                          "updatedAt": "2026-01-14T08:44:08.403Z",
+                          "warranty": null
+                        }
+                      ],
+                      "offset": 0,
+                      "total": 2
+                    }
+                  },
+                  "device_consolidate_msp_response": {
+                    "summary": "Devices response with Consolidated MSP View",
+                    "value": {
+                      "count": 3,
+                      "items": [
+                        {
+                          "application": null,
+                          "archived": false,
+                          "assignedState": "UNASSIGNED",
+                          "billingAccountId": null,
+                          "billingAccountName": null,
+                          "billingTier": null,
+                          "category": "NETWORK",
+                          "contact": {
+                            "type": "WORKSPACE-USER",
+                            "workspaceUser": {
+                              "id": "4a2e4102-5c05-4713-8fc8-4e82f9704e53",
+                              "resourceUri": "/identity/v1/users/4a2e4102-5c05-4713-8fc8-4e82f9704e53"
+                            }
+                          },
+                          "createdAt": "2025-11-18T06:44:48.358Z",
+                          "dedicatedPlatformWorkspace": null,
+                          "deviceName": null,
+                          "deviceType": "IAP",
+                          "id": "08788812-4302-5094-932e-5637a22242a8",
+                          "inUseWorkspace": null,
+                          "location": {
+                            "city": "bengaluru",
+                            "country": "India",
+                            "id": "6336ac6a-945d-4143-8c0a-8e5144058989",
+                            "latitude": 13.12662,
+                            "locationName": "location-1",
+                            "locationSource": "SDI",
+                            "longitude": 77.61329,
+                            "postalCode": "560061",
+                            "resourceUri": "/locations/v1/locations/6336ac6a-945d-4143-8c0a-8e5144058989",
+                            "state": "karnataka",
+                            "streetAddress": "Bengaluru"
+                          },
+                          "macAddress": "00:99:00:99:81:00",
+                          "make": "HPE",
+                          "management": "MSP",
+                          "manufacturedDate": null,
+                          "model": "IAP-225-US",
+                          "ownership": "MANAGED",
+                          "partNumber": "JW242AR",
+                          "region": null,
+                          "secondaryName": null,
+                          "serialNumber": "TEST_BAPI_AP_0080770",
+                          "subscription": null,
+                          "subscriptionCategory": null,
+                          "tags": {
+                            "test": "abc"
+                          },
+                          "tenantWorkspaceId": null,
+                          "type": "devices/device",
+                          "updatedAt": "2026-01-14T04:36:14.679Z",
+                          "warranty": null
+                        },
+                        {
+                          "application": {
+                            "id": "df5b41c4-7c35-4158-af63-302042b9911b",
+                            "resourceUri": "/service-catalog/v1beta1/service-managers/df5b41c4-7c35-4158-af63-302042b9911b"
+                          },
+                          "archived": false,
+                          "assignedState": "ASSIGNED_TO_SERVICE",
+                          "billingAccountId": null,
+                          "billingAccountName": null,
+                          "billingTier": null,
+                          "category": "NETWORK",
+                          "contact": null,
+                          "createdAt": "2025-05-13T14:03:14.298Z",
+                          "dedicatedPlatformWorkspace": null,
+                          "deviceName": null,
+                          "deviceType": "SD_WAN_GW",
+                          "id": "128760c1-a63f-5b7b-a8be-390355e2713d",
+                          "inUseWorkspace": {
+                            "id": "131846d43af111f08e4ebe50c5e8c005",
+                            "resourceUri": "/workspaces/v1/workspaces/131846d43af111f08e4ebe50c5e8c005",
+                            "type": "workspaces/workspace"
+                          },
+                          "location": {
+                            "city": "Bengaluru",
+                            "country": "India",
+                            "id": "bb90750f-08ad-4026-a94c-7926ce2a450f",
+                            "latitude": 12.84548,
+                            "locationName": "test-location",
+                            "locationSource": "SDI",
+                            "longitude": 77.67239,
+                            "postalCode": "560100",
+                            "resourceUri": "/locations/v1/locations/bb90750f-08ad-4026-a94c-7926ce2a450f",
+                            "state": "Karnataka",
+                            "streetAddress": "Electronic City"
+                          },
+                          "macAddress": "01:02:17:A1:B5:E6",
+                          "make": "HPE",
+                          "management": "MSP",
+                          "manufacturedDate": "2025-01-01T20:14:04.000Z",
+                          "model": "EDGE CONNECT VIRTUAL",
+                          "ownership": "MANAGED",
+                          "partNumber": "EGDECONNECTPARTTEST",
+                          "region": "us-west",
+                          "secondaryName": null,
+                          "serialNumber": "ECVTEST1205255",
+                          "subscription": null,
+                          "subscriptionCategory": null,
+                          "tags": null,
+                          "tenantWorkspaceId": "131846d4-3af1-11f0-8e4e-be50c5e8c005",
+                          "type": "devices/device",
+                          "updatedAt": "2026-01-22T12:31:02.048Z",
+                          "warranty": null
+                        },
+                        {
+                          "application": {
+                            "id": "df5b41c4-7c35-4158-af63-302042b9911b",
+                            "resourceUri": "/service-catalog/v1beta1/service-managers/df5b41c4-7c35-4158-af63-302042b9911b"
+                          },
+                          "archived": false,
+                          "assignedState": "ASSIGNED_TO_SERVICE",
+                          "billingAccountId": null,
+                          "billingAccountName": null,
+                          "billingTier": null,
+                          "category": "NETWORK",
+                          "contact": null,
+                          "createdAt": "2025-10-29T11:09:33.512Z",
+                          "dedicatedPlatformWorkspace": null,
+                          "deviceName": null,
+                          "deviceType": "SD_WAN_GW",
+                          "id": "5e121d72-f0f1-5f2e-91b3-c306fdc990f0",
+                          "inUseWorkspace": {
+                            "id": "ea0bd9f26ce811f091f91efe899b8583",
+                            "resourceUri": "/workspaces/v1/workspaces/ea0bd9f26ce811f091f91efe899b8583",
+                            "type": "workspaces/workspace"
+                          },
+                          "location": null,
+                          "macAddress": "02:19:11:A1:C2:E4",
+                          "make": "HPE",
+                          "management": "TENANT",
+                          "manufacturedDate": "2025-05-01T20:14:04.000Z",
+                          "model": "EC-V",
+                          "ownership": "MANAGED",
+                          "partNumber": "S6M37A",
+                          "region": "us-west",
+                          "secondaryName": null,
+                          "serialNumber": "ECVT10092000B",
+                          "subscription": null,
+                          "subscriptionCategory": null,
+                          "tags": {
+                            "test": "abc"
+                          },
+                          "tenantWorkspaceId": null,
+                          "type": "devices/device",
+                          "updatedAt": "2026-01-12T09:30:16.229Z",
+                          "warranty": null
+                        }
+                      ],
+                      "offset": 0,
+                      "total": 3
+                    }
+                  },
                   "device_non_workspace_user_response": {
                     "summary": "Devices response with non-workspace user details",
                     "value": {
@@ -2245,6 +2598,11 @@
                           "createdAt": "2024-02-13T09:00:22.920Z",
                           "deviceType": "ALS",
                           "id": "64343c3c-3016-4234-baee-765651aa4bb3",
+                          "inUseWorkspace": {
+                            "id": "3292c36d30ef4f26823b76b5d213b670",
+                            "resourceUri": "/workspaces/v1/workspaces/3292c36d30ef4f26823b76b5d213b670",
+                            "type": "workspaces/workspace"
+                          },
                           "isFlex": true,
                           "location": {
                             "city": "New York",
@@ -2261,6 +2619,7 @@
                           },
                           "macAddress": "21:01:18:21:12:22",
                           "make": "HPE",
+                          "management": "MSP",
                           "manufacturedDate": "2024-01-10T00:00:00Z",
                           "model": "COMPUTE",
                           "ownership": "MANAGED",
@@ -2336,6 +2695,11 @@
                           "createdAt": "2024-02-13T09:00:22.920Z",
                           "deviceType": "ALS",
                           "id": "64343c3c-3016-4234-baee-765651aa4bb3",
+                          "inUseWorkspace": {
+                            "id": "3292c36d30ef4f26823b76b5d213b670",
+                            "resourceUri": "/workspaces/v1/workspaces/3292c36d30ef4f26823b76b5d213b670",
+                            "type": "workspaces/workspace"
+                          },
                           "isFlex": true,
                           "location": {
                             "city": "New York",
@@ -2352,6 +2716,7 @@
                           },
                           "macAddress": "21:01:18:21:12:22",
                           "make": "HPE",
+                          "management": "MSP",
                           "manufacturedDate": "2024-01-10T00:00:00Z",
                           "model": "COMPUTE",
                           "ownership": "MANAGED",
@@ -3071,6 +3436,273 @@
             "content": {
               "application/json": {
                 "examples": {
+                  "device_coi_response": {
+                    "summary": "Device response for Customer-Owned Inventory (COI) tenant",
+                    "value": {
+                      "application": {
+                        "id": "df5b41c4-7c35-4158-af63-302042b9911b",
+                        "resourceUri": "/service-catalog/v1beta1/service-managers/df5b41c4-7c35-4158-af63-302042b9911b"
+                      },
+                      "archived": false,
+                      "assignedState": "ASSIGNED_TO_SERVICE",
+                      "billingAccountId": null,
+                      "billingAccountName": null,
+                      "billingTier": null,
+                      "category": "NETWORK",
+                      "contact": null,
+                      "createdAt": "2025-10-29T11:09:33.512Z",
+                      "dedicatedPlatformWorkspace": null,
+                      "deviceName": null,
+                      "deviceType": "SD_WAN_GW",
+                      "id": "5e121d72-f0f1-5f2e-91b3-c306fdc990f0",
+                      "inUseWorkspace": {
+                        "id": "ea0bd9f26ce811f091f91efe899b8583",
+                        "resourceUri": "/workspaces/v1/workspaces/ea0bd9f26ce811f091f91efe899b8583",
+                        "type": "workspaces/workspace"
+                      },
+                      "location": null,
+                      "macAddress": "02:19:11:A1:C2:E4",
+                      "make": "HPE",
+                      "management": "TENANT",
+                      "manufacturedDate": "2025-05-01T20:14:04.000Z",
+                      "model": "EC-V",
+                      "ownership": "MANAGED",
+                      "partNumber": "S6M37A",
+                      "region": "us-west",
+                      "secondaryName": null,
+                      "serialNumber": "ECVT10092000B",
+                      "subscription": null,
+                      "subscriptionCategory": null,
+                      "tags": {
+                        "test": "abc"
+                      },
+                      "tenantWorkspaceId": null,
+                      "type": "devices/device",
+                      "updatedAt": "2026-01-12T09:30:16.229Z",
+                      "warranty": null
+                    }
+                  },
+                  "device_enterprise_child_response": {
+                    "summary": "Device response for Enterprise Organization child workspace",
+                    "value": {
+                      "application": null,
+                      "archived": false,
+                      "assignedState": "UNASSIGNED",
+                      "billingAccountId": null,
+                      "billingAccountName": null,
+                      "billingTier": null,
+                      "category": "NETWORK",
+                      "contact": null,
+                      "createdAt": "2026-01-06T05:16:43.233Z",
+                      "dedicatedPlatformWorkspace": null,
+                      "deviceName": null,
+                      "deviceType": "SD_WAN_GW",
+                      "id": "c0820a27-295b-5984-84b4-43180c831b15",
+                      "inUseWorkspace": {
+                        "id": "341f5236db2e11f0b5d246c440094996",
+                        "resourceUri": "/workspaces/v1/workspaces/341f5236db2e11f0b5d246c440094996",
+                        "type": "workspaces/workspace"
+                      },
+                      "location": {
+                        "city": "bengaluru",
+                        "country": "India",
+                        "id": "eaa45500-b681-48f2-925b-ce1e9aa339ae",
+                        "latitude": 13.12662,
+                        "locationName": "loc-1",
+                        "locationSource": "SDI",
+                        "longitude": 77.61329,
+                        "postalCode": "560061",
+                        "resourceUri": "/locations/v1/locations/eaa45500-b681-48f2-925b-ce1e9aa339ae",
+                        "state": "bengaluru",
+                        "streetAddress": "bengaluru"
+                      },
+                      "macAddress": "02:19:11:A1:E2:E9",
+                      "make": "HPE",
+                      "management": null,
+                      "manufacturedDate": "2025-05-01T20:14:04.000Z",
+                      "model": "EC-V",
+                      "ownership": "MANAGED",
+                      "partNumber": "S6M37A",
+                      "region": null,
+                      "secondaryName": null,
+                      "serialNumber": "TEST06012026",
+                      "subscription": null,
+                      "subscriptionCategory": null,
+                      "tags": null,
+                      "tenantWorkspaceId": null,
+                      "type": "devices/device",
+                      "updatedAt": "2026-01-14T08:44:08.403Z",
+                      "warranty": null
+                    }
+                  },
+                  "device_enterprise_parent_response": {
+                    "summary": "Device response for Enterprise Organization parent workspace",
+                    "value": {
+                      "application": null,
+                      "archived": false,
+                      "assignedState": "UNASSIGNED",
+                      "billingAccountId": null,
+                      "billingAccountName": null,
+                      "billingTier": null,
+                      "category": "NETWORK",
+                      "contact": null,
+                      "createdAt": "2026-01-06T11:27:52.197Z",
+                      "dedicatedPlatformWorkspace": null,
+                      "deviceName": null,
+                      "deviceType": "SD_WAN_GW",
+                      "id": "bde53e90-dc81-5eaf-8b0a-16cee7654670",
+                      "inUseWorkspace": {
+                        "id": "011c7060ea2611f087d652e71933ec87",
+                        "resourceUri": "/workspaces/v1/workspaces/011c7060ea2611f087d652e71933ec87",
+                        "type": "workspaces/workspace"
+                      },
+                      "location": {
+                        "city": "bengaluru",
+                        "country": "India",
+                        "id": "e4ad2f0f-c725-4852-bac4-62d635ac46f6",
+                        "latitude": 13.12662,
+                        "locationName": "loc-1",
+                        "locationSource": "SDI",
+                        "longitude": 77.61329,
+                        "postalCode": "560061",
+                        "resourceUri": "/locations/v1/locations/e4ad2f0f-c725-4852-bac4-62d635ac46f6",
+                        "state": "bengaluru",
+                        "streetAddress": "bengaluru"
+                      },
+                      "macAddress": "02:19:11:A1:E2:E1",
+                      "make": "HPE",
+                      "management": null,
+                      "manufacturedDate": "2025-05-01T20:14:04.000Z",
+                      "model": "EC-V",
+                      "ownership": "MANAGED",
+                      "partNumber": "S6M37A",
+                      "region": null,
+                      "secondaryName": null,
+                      "serialNumber": "TEST060120261",
+                      "subscription": null,
+                      "subscriptionCategory": null,
+                      "tags": {
+                        "test": "abc"
+                      },
+                      "tenantWorkspaceId": null,
+                      "type": "devices/device",
+                      "updatedAt": "2026-01-14T08:48:40.468Z",
+                      "warranty": null
+                    }
+                  },
+                  "device_moi_response": {
+                    "summary": "Device response for MSP-Owned Inventory (MOI) tenant",
+                    "value": {
+                      "application": {
+                        "id": "df5b41c4-7c35-4158-af63-302042b9911b",
+                        "resourceUri": "/service-catalog/v1beta1/service-managers/df5b41c4-7c35-4158-af63-302042b9911b"
+                      },
+                      "archived": false,
+                      "assignedState": "ASSIGNED_TO_SERVICE",
+                      "billingAccountId": null,
+                      "billingAccountName": null,
+                      "billingTier": null,
+                      "category": "NETWORK",
+                      "contact": null,
+                      "createdAt": "2025-05-13T14:03:14.298Z",
+                      "dedicatedPlatformWorkspace": null,
+                      "deviceName": null,
+                      "deviceType": "SD_WAN_GW",
+                      "id": "128760c1-a63f-5b7b-a8be-390355e2713d",
+                      "inUseWorkspace": {
+                        "id": "131846d43af111f08e4ebe50c5e8c005",
+                        "resourceUri": "/workspaces/v1/workspaces/131846d43af111f08e4ebe50c5e8c005",
+                        "type": "workspaces/workspace"
+                      },
+                      "location": {
+                        "city": "Bengaluru",
+                        "country": "India",
+                        "id": "bb90750f-08ad-4026-a94c-7926ce2a450f",
+                        "latitude": 12.84548,
+                        "locationName": "test-location",
+                        "locationSource": "SDI",
+                        "longitude": 77.67239,
+                        "postalCode": "560100",
+                        "resourceUri": "/locations/v1/locations/bb90750f-08ad-4026-a94c-7926ce2a450f",
+                        "state": "Karnataka",
+                        "streetAddress": "Electronic City"
+                      },
+                      "macAddress": "01:02:17:A1:B5:E6",
+                      "make": "HPE",
+                      "management": "MSP",
+                      "manufacturedDate": "2025-01-01T20:14:04.000Z",
+                      "model": "EDGE CONNECT VIRTUAL",
+                      "ownership": "MANAGED",
+                      "partNumber": "EGDECONNECTPARTTEST",
+                      "region": "us-west",
+                      "secondaryName": null,
+                      "serialNumber": "ECVTEST1205255",
+                      "subscription": null,
+                      "subscriptionCategory": null,
+                      "tags": null,
+                      "tenantWorkspaceId": "131846d4-3af1-11f0-8e4e-be50c5e8c005",
+                      "type": "devices/device",
+                      "updatedAt": "2026-01-22T12:31:02.048Z",
+                      "warranty": null
+                    }
+                  },
+                  "device_msp_response": {
+                    "summary": "Device response for MSP workspace (inUseWorkspace is null)",
+                    "value": {
+                      "application": null,
+                      "archived": false,
+                      "assignedState": "UNASSIGNED",
+                      "billingAccountId": null,
+                      "billingAccountName": null,
+                      "billingTier": null,
+                      "category": "NETWORK",
+                      "contact": {
+                        "type": "WORKSPACE-USER",
+                        "workspaceUser": {
+                          "id": "4a2e4102-5c05-4713-8fc8-4e82f9704e53",
+                          "resourceUri": "/identity/v1/users/4a2e4102-5c05-4713-8fc8-4e82f9704e53"
+                        }
+                      },
+                      "createdAt": "2025-11-18T06:44:48.358Z",
+                      "dedicatedPlatformWorkspace": null,
+                      "deviceName": null,
+                      "deviceType": "IAP",
+                      "id": "08788812-4302-5094-932e-5637a22242a8",
+                      "inUseWorkspace": null,
+                      "location": {
+                        "city": "bengaluru",
+                        "country": "India",
+                        "id": "6336ac6a-945d-4143-8c0a-8e5144058989",
+                        "latitude": 13.12662,
+                        "locationName": "location-1",
+                        "locationSource": "SDI",
+                        "longitude": 77.61329,
+                        "postalCode": "560061",
+                        "resourceUri": "/locations/v1/locations/6336ac6a-945d-4143-8c0a-8e5144058989",
+                        "state": "karnataka",
+                        "streetAddress": "Bengaluru"
+                      },
+                      "macAddress": "00:99:00:99:81:00",
+                      "make": "HPE",
+                      "management": "MSP",
+                      "manufacturedDate": null,
+                      "model": "IAP-225-US",
+                      "ownership": "MANAGED",
+                      "partNumber": "JW242AR",
+                      "region": null,
+                      "secondaryName": null,
+                      "serialNumber": "TEST_BAPI_AP_0080770",
+                      "subscription": null,
+                      "subscriptionCategory": null,
+                      "tags": {
+                        "test": "abc"
+                      },
+                      "tenantWorkspaceId": null,
+                      "type": "devices/device",
+                      "updatedAt": "2026-01-14T04:36:14.679Z",
+                      "warranty": null
+                    }
+                  },
                   "device_non_workspace_response": {
                     "summary": "Device response with non-workspace user details",
                     "value": {
@@ -3096,6 +3728,11 @@
                       "createdAt": "2024-02-13T09:00:22.920Z",
                       "deviceType": "ALS",
                       "id": "64343c3c-3016-4234-baee-765651aa4bb3",
+                      "inUseWorkspace": {
+                        "id": "3292c36d30ef4f26823b76b5d213b670",
+                        "resourceUri": "/workspaces/v1/workspaces/3292c36d30ef4f26823b76b5d213b670",
+                        "type": "workspaces/workspace"
+                      },
                       "isFlex": true,
                       "location": {
                         "city": "New York",
@@ -3112,6 +3749,7 @@
                       },
                       "macAddress": "21:01:18:21:12:22",
                       "make": "HPE",
+                      "management": "MSP",
                       "manufacturedDate": "2024-01-10T00:00:00Z",
                       "model": "COMPUTE",
                       "ownership": "MANAGED",
@@ -3180,6 +3818,11 @@
                       "createdAt": "2024-02-13T09:00:22.920Z",
                       "deviceType": "ALS",
                       "id": "64343c3c-3016-4234-baee-765651aa4bb3",
+                      "inUseWorkspace": {
+                        "id": "3292c36d30ef4f26823b76b5d213b670",
+                        "resourceUri": "/workspaces/v1/workspaces/3292c36d30ef4f26823b76b5d213b670",
+                        "type": "workspaces/workspace"
+                      },
                       "isFlex": true,
                       "location": {
                         "city": "New York",
@@ -3196,6 +3839,7 @@
                       },
                       "macAddress": "21:01:18:21:12:22",
                       "make": "HPE",
+                      "management": "MSP",
                       "manufacturedDate": "2024-01-10T00:00:00Z",
                       "model": "COMPUTE",
                       "ownership": "MANAGED",
@@ -4768,6 +5412,11 @@
                 "summary": "Filter with greater or equal check",
                 "value": "createdAt ge '2024-01-18T19:53:51.480Z'"
               },
+              "inUseWorkspaceId": {
+                "description": "Return devices assigned to a specific workspace.\nExample syntax, inUseWorkspaceId eq \\<value>.\n",
+                "summary": "Filter on in-use workspace ID",
+                "value": "inUseWorkspaceId eq '011c7060ea2611f087d652e71933ec87'"
+              },
               "isFlex": {
                 "description": "Return devices that are on a flex subscription or not.\nExample syntax, isFlex eq true|false.\n",
                 "summary": "Filter on whether device is on a flex subscription",
@@ -4782,6 +5431,31 @@
                 "description": "Return devices of a specific make.\nExample syntax, make eq \\<value>.\n",
                 "summary": "Filter on device make",
                 "value": "make eq 'HPE'"
+              },
+              "managementMsp": {
+                "description": "Return devices where management is MSP.\nExample syntax, management eq \\<value>.\n",
+                "summary": "Filter on MSP managed devices",
+                "value": "management eq 'MSP'"
+              },
+              "managementMspNoInUseWorkspace": {
+                "description": "Return MSP managed devices where inUseWorkspaceId is null.\nExample syntax, management eq \\<value> and inUseWorkspaceId eq null.\n",
+                "summary": "Filter MSP devices not assigned to any workspace",
+                "value": "management eq 'MSP' and inUseWorkspaceId eq null"
+              },
+              "managementMspWithInUseWorkspace": {
+                "description": "Return MSP managed devices assigned to a specific workspace.\nExample syntax, management eq \\<value> and inUseWorkspaceId eq \\<value>.\n",
+                "summary": "Filter MSP devices in a specific workspace (MOI)",
+                "value": "management eq 'MSP' and inUseWorkspaceId eq '131846d43af111f08e4ebe50c5e8c005'"
+              },
+              "managementNull": {
+                "description": "Return devices where management is null (Enterprise Organization).\nExample syntax, management eq null.\n",
+                "summary": "Filter on devices with no management type",
+                "value": "management eq null"
+              },
+              "managementTenant": {
+                "description": "Return devices where management is TENANT.\nExample syntax, management eq \\<value>.\n",
+                "summary": "Filter on Tenant managed devices",
+                "value": "management eq 'TENANT'"
               },
               "manufacturedDate": {
                 "description": "Return devices manufactured on or after specific date.\nExample syntax, manufacturedDate ge \\<value>.\n",
@@ -5686,7 +6360,7 @@
             }
           },
           {
-            "description": "\nThe filter expressions that are used to narrow down the devices before grouping.\nCombine multiple conditions using `and` or `or`.\nThe following examples are not an exhaustive list of all possible filtering options.\n",
+            "description": "The filter expressions that are used to narrow down the devices before grouping.\nCombine multiple conditions using `and` or `or`.\nThe following examples are not an exhaustive list of all possible filtering options.\n",
             "examples": {
               "Combined filter": {
                 "description": "Filter managed devices in a specific location",

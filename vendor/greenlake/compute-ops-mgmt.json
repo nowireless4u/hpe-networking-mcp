@@ -3313,6 +3313,21 @@
       "alert-v1": {
         "description": "Server hardware alert",
         "properties": {
+          "alertType": {
+            "description": "Alert type",
+            "enum": [
+              "hardware",
+              "software"
+            ],
+            "type": "string"
+          },
+          "arguments": {
+            "description": "Message template arguments",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "caseId": {
             "description": "ID of the automatically created HPE Support Case. This will be available only when a HPE Support Case is created for a service event.",
             "example": 9815373940,
@@ -3326,6 +3341,18 @@
           "category": {
             "type": "string"
           },
+          "cleared": {
+            "description": "True if the alert has been cleared, false if active",
+            "type": "boolean"
+          },
+          "clearedAt": {
+            "description": "Timestamp when the alert was cleared, null if active",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "createdAt": {
             "description": "Time of alert creation",
             "format": "date-time",
@@ -3333,6 +3360,16 @@
           },
           "description": {
             "type": "string"
+          },
+          "device": {
+            "description": "The server associated with this alert",
+            "properties": {
+              "id": {
+                "description": "Server identifier",
+                "type": "string"
+              }
+            },
+            "type": "object"
           },
           "generation": {
             "description": "Monotonically increasing update counter",
@@ -3344,10 +3381,33 @@
             "format": "uuid",
             "type": "string"
           },
+          "isRecurrent": {
+            "description": "Whether the alert is recurrent",
+            "type": "boolean"
+          },
           "message": {
             "type": "string"
           },
+          "messageId": {
+            "description": "Full versioned message identifier (bundle.major.minor.key)",
+            "type": "string"
+          },
+          "messageKey": {
+            "description": "Short message key, e.g. FanFailed",
+            "type": "string"
+          },
+          "originOfCondition": {
+            "description": "URI identifying the originating component",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "resolution": {
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "Self URI of this alert",
             "type": "string"
           },
           "serverId": {
@@ -23135,6 +23195,63 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/compute-ops-mgmt/v1/alerts": {
+      "get": {
+        "description": "Retrieve alert data for all Servers.\n\nOnly active alerts and cleared alerts within the last 180 days are returned.\nCleared alerts older than 180 days are excluded and cannot be retrieved via filter.\n\n**Filterable and sortable fields:**\n\n| Field | Type | Notes |\n|---|---|---|\n| `id` | string (UUID) | Alert UUID |\n| `device/id` | string | Server / appliance ID |\n| `severity` | string | `Critical`, `Warning`, `OK`, `Unknown` \u2014 case-insensitive |\n| `category` | string | e.g. `fans`, `security`, `power` \u2014 case-insensitive |\n| `alertType` | string | `hardware`, `software` \u2014 case-insensitive |\n| `messageKey` | string | e.g. `FanFailed`, `MinPasswordLengthAtRisk` |\n| `messageId` | string | Full versioned message ID (`bundle.major.minor.key`) |\n| `clearedAt` | datetime (ISO 8601) | `null` for active alerts |\n| `createdAt` | datetime (ISO 8601) | Alert creation timestamp |\n| `updatedAt` | datetime (ISO 8601) | Last modification timestamp |\n| `serviceEvent` | boolean | `true` / `false` |\n| `originOfCondition` | string | URI identifying the originating component |\n\n**Supported OData filter operators:** `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `and`, `or`, `not`, `in`, `contains`",
+        "operationId": "get_v1_alerts",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/offsetParam"
+          },
+          {
+            "$ref": "#/components/parameters/limitParam"
+          },
+          {
+            "$ref": "#/components/parameters/filterParam"
+          },
+          {
+            "$ref": "#/components/parameters/sortParam"
+          },
+          {
+            "$ref": "#/components/parameters/selectParam"
+          },
+          {
+            "$ref": "#/components/parameters/tenantAcidHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/alertCollection-v1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "406": {
+            "$ref": "#/components/responses/406-notAcceptableResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "List all alerts",
+        "tags": [
+          "alerts - v1"
+        ]
+      }
+    },
     "/compute-ops-mgmt/v1/appliance-firmware-bundles": {
       "get": {
         "description": "Retrieve the list of appliance firmware bundles",
