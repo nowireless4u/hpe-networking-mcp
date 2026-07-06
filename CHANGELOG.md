@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.5.0.6] - 2026-07-06
+## [3.5.1.0] - 2026-07-06
 
-**Patch — remediate CPython base-image CVEs + close the image-scanning gap.** A CWPP image scan flagged four HIGH CPython **interpreter** CVEs baked into the base image (`python:3.12-slim-bookworm` → CPython 3.12.13): CVE-2026-3644 (http.cookies control-char validation), CVE-2026-4786 (webbrowser command injection), CVE-2026-6100 (decompressor use-after-free), and CVE-2026-7210 (expat XML hash-flooding DoS). Our CI could not see them: `pip-audit` scans PyPI packages (not the interpreter binary), `bandit` is a static analyzer, and there was **no image/OS-layer scanner** at all.
+**Minor — remediate CPython base-image CVEs + close the image-scanning gap.** Classified minor (not patch) because it changes the shipped runtime platform — the container interpreter moves a full Python minor version (3.12.13 → 3.13.14) — and adds new CI security infrastructure. A CWPP image scan flagged four HIGH CPython **interpreter** CVEs baked into the base image (`python:3.12-slim-bookworm` → CPython 3.12.13): CVE-2026-3644 (http.cookies control-char validation), CVE-2026-4786 (webbrowser command injection), CVE-2026-6100 (decompressor use-after-free), and CVE-2026-7210 (expat XML hash-flooding DoS). Our CI could not see them: `pip-audit` scans PyPI packages (not the interpreter binary), `bandit` is a static analyzer, and there was **no image/OS-layer scanner** at all.
 
 ### Changed
 - **Base image `python:3.12-slim-bookworm` → `python:3.13-slim-trixie`** (CPython 3.13.14 on Debian trixie). Resolves CVE-2026-3644 (fixed 3.13.13) and CVE-2026-4786 / CVE-2026-6100 (fixed 3.13.14). The 3.12 branch is security-only and shipped no binary with these fixes (3.12.13 is its latest release), so a 3.13 bump is the remediation. Full test suite (incl. the code-mode / monty sandbox) passes on 3.13.14; the Prefab/Pyodide generative-UI sandbox prewarms cleanly.
