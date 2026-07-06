@@ -1,4 +1,4 @@
-FROM python:3.13-slim-trixie AS deps
+FROM python:3.14-slim-trixie AS deps
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
@@ -12,7 +12,7 @@ COPY pyproject.toml ./
 RUN uv sync --frozen --no-dev --no-install-project 2>/dev/null || uv sync --no-dev --no-install-project
 
 # --- Runtime stage ---
-FROM python:3.13-slim-trixie
+FROM python:3.14-slim-trixie
 
 # Install uv in runtime
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
