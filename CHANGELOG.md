@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **`generate_prefab_ui` guidance + dashboard skills now build self-contained `code`.** Inline the gathered values as Python literals at the top of the `code` instead of passing them via the `data` argument. Updated the `_GENERATIVE_UI_GUIDANCE` DATA CONTRACT block (`server.py`) and the `central-site-dashboard` + `central-ucc-quality` skills.
+- **Dashboard-skill `DataTable` examples now pass explicit `columns=[DataTableColumn(...)]`.** The prior bare `DataTable(rows=[...])` form errors on plain-dict rows (Prefab auto-generates columns only for DataFrames), which forced the model to abandon `DataTable` for lower-level table primitives mid-render. Fixed in the `central-site-dashboard` device/alert/NAC tables and noted in `central-ucc-quality`.
 
 ### Notes
 - The `data` argument still works server-side (and in fully compliant MCP-Apps hosts); the client-side generative renderer's failure to inject it is a `prefab-ui` limitation tracked upstream. Self-contained `code` is robust across hosts.

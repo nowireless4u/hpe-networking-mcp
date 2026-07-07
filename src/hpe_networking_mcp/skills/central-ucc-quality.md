@@ -386,7 +386,8 @@ Prefab code. Referencing `data` raises `NameError: name 'data'`.
    - **KPI row** — `Metric` cards: Live Calls (`summary["live_calls"]`),
      Degraded (`summary["degraded_calls"]`), Apps in use
      (`summary["apps_count"]`), Worst UCC Score (`summary["worst_score"]`).
-   - **Live calls `DataTable`** sorted worst-first — columns: Client (MAC),
+   - **Live calls `DataTable`** — pass explicit `columns=[DataTableColumn(key=..., header=...)]`
+     (a bare `DataTable(rows=[...])` over plain dicts errors); sorted worst-first — columns: Client (MAC),
      IP, App, **UCC Score** (color the cell/badge by band: red < 70, amber
      70–79, green ≥ 80), Delay ms, Jitter ms, Loss %, Codec, AP. Built-in
      search/sort makes it interactive without custom reactivity.
