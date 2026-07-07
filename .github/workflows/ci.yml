@@ -11,7 +11,7 @@ jobs:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen --no-dev --no-install-project 2>/dev/null || uv sync --no-dev --no-install-project
       - run: uv run ruff check .
@@ -21,7 +21,7 @@ jobs:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen 2>/dev/null || uv sync
       - run: uv run mypy src/ --ignore-missing-imports
@@ -30,7 +30,7 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen 2>/dev/null || uv sync
       - name: Run tests
@@ -40,7 +40,7 @@ jobs:
     name: Docker Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build Docker image
         run: docker build -t hpe-networking-mcp:ci .
       - name: Smoke test (no secrets — should exit with error)

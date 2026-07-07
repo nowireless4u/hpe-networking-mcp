@@ -13,7 +13,7 @@ jobs:
     name: Bandit Security Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - run: uv sync --frozen 2>/dev/null || uv sync
       - run: uv run bandit -r src/ -c pyproject.toml
@@ -22,7 +22,7 @@ jobs:
     name: Dependency Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
       - name: Run pip-audit against the locked environment
         run: uv run --frozen pip-audit
@@ -31,7 +31,7 @@ jobs:
     name: Secret Detection
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v3
@@ -48,7 +48,7 @@ jobs:
     name: Image Vulnerability Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build runtime image
         run: docker build -t hpe-networking-mcp:scan .
       - name: Trivy scan (fail on fixable HIGH/CRITICAL)
