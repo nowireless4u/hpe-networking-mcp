@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1.4] - 2026-07-07
+
+**Patch — apply the `generate_prefab_ui` guidance + code-mode re-expose event-loop-safely (#578).** `create_server()` mutated the `generate_prefab_ui` description (the self-contained-code steer from v3.5.1.1) and re-exposed the MCP-Apps tools in code mode via a bare `asyncio.run(mcp.get_tool(...))`. That works at synchronous CLI startup but raises inside an already-running event loop (embedded/async startup, async tests); the broad handler swallowed the failure, so the tool silently fell back to the upstream Prefab description and steered models back toward the broken `data=` pattern.
+
+### Fixed
+- **New `_get_registered_tool_blocking()` helper** runs the tool lookup directly when no loop is running and in a short-lived worker thread (own loop) when one is — so the guidance mutation and the code-mode app-tool re-expose both apply in either startup path. Replaces both `asyncio.run(mcp.get_tool(...))` sites.
+- Regression test builds `create_server()` from **inside** a running event loop and asserts the guidance is present, with no `coroutine 'FastMCP.get_tool' was never awaited` warning.
+
 ## [3.5.1.3] - 2026-07-07
 
 **Patch — complete the #561 empty-collection fix (v3.5.1.2 was insufficient).** v3.5.1.2 normalized a `null` Mist body to a bare `[]`, but an empty **list** *also* collapses to `data: null` through `ResponseEnvelopeMiddleware` — an empty list yields no recoverable content block, so the envelope can't distinguish it from `None`. Caught in post-deploy live verification: `mist_get_org_inventory` (empty) still returned `data: null` on v3.5.1.2.

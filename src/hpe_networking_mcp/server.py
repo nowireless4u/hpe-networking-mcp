@@ -1,5 +1,6 @@
 """FastMCP server setup, lifespan management, and tool loading."""
 
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -323,6 +324,37 @@ _GENERATIVE_UI_GUIDANCE = (
 )
 
 
+def _get_registered_tool_blocking(mcp: FastMCP, name: str) -> Any:
+    """Fetch a registered tool by name in an event-loop-safe way.
+
+    ``FastMCP.get_tool`` is a coroutine, and ``asyncio.run`` raises
+    ``RuntimeError`` if called from inside an already-running event loop
+    (embedded/async startup, async tests). ``create_server`` mutates a couple of
+    tools at build time — the ``generate_prefab_ui`` guidance and the code-mode
+    app-tool re-expose — so the lookup must work in BOTH contexts: run it
+    directly when no loop is running, and in a short-lived worker thread (with
+    its own loop) when one is. Returns the live Tool instance — mutations persist
+    to ``list_tools`` — or raises so callers can log the failure. Previously this
+    used a bare ``asyncio.run``, which failed silently inside a running loop and
+    dropped the guidance/re-expose (#578).
+    """
+
+    async def _lookup() -> Any:
+        return await mcp.get_tool(name)
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # No loop in this thread — safe to drive the coroutine directly.
+        return asyncio.run(_lookup())
+
+    # A loop is already running here; drive the lookup in its own thread/loop.
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(lambda: asyncio.run(_lookup())).result()
+
+
 def create_server(config: ServerConfig) -> FastMCP:
     """Create and configure the FastMCP server with all enabled platform tools."""
     from hpe_networking_mcp.middleware.elicitation import (
@@ -430,8 +462,6 @@ def create_server(config: ServerConfig) -> FastMCP:
     # sites) — a `search_prefab_components` discovery tool, and a `ui://` streaming
     # renderer resource. Server-side validation uses Deno (baked into the image).
     if _mcp_apps_enabled():
-        import asyncio
-
         from fastmcp.apps.file_upload import FileUpload
         from fastmcp.apps.generative import GenerativeUI
 
@@ -463,10 +493,10 @@ def create_server(config: ServerConfig) -> FastMCP:
         # networking-specific guidance to its description (preserving the upstream
         # Prefab authoring instructions). get_tool returns the live instance and the
         # change persists to list_tools, so this covers BOTH code and dynamic mode.
-        # create_server runs before the event loop, so a one-shot asyncio.run is safe
-        # (same justification as the code-mode re-expose below).
+        # Loop-safe fetch so the guidance is applied whether create_server runs
+        # synchronously (CLI startup) or inside an existing loop (#578).
         try:
-            _gen_tool = asyncio.run(mcp.get_tool("generate_prefab_ui"))
+            _gen_tool = _get_registered_tool_blocking(mcp, "generate_prefab_ui")
             if _gen_tool is not None:
                 _gen_tool.description = _GENERATIVE_UI_GUIDANCE + (_gen_tool.description or "")
                 logger.info("Generative UI: generate_prefab_ui description augmented with dashboard guidance")
@@ -983,11 +1013,10 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     # A discovery factory is `(get_catalog) -> Tool`; ours ignores the catalog and
     # returns the already-registered Tool unchanged, so the `ui` render metadata
     # survives the transform. The `ui://` renderer resources are not tools, so the
-    # CodeMode tool transform leaves them untouched. create_server() runs before the
-    # event loop starts, so a one-shot asyncio.run to fetch each tool is safe.
+    # CodeMode tool transform leaves them untouched. Loop-safe fetch so the
+    # re-expose works whether create_server runs synchronously or inside an
+    # existing loop (#578).
     if _mcp_apps_enabled():
-        import asyncio
-
         for app_tool_name in (
             "file_manager",
             "list_files",
@@ -995,7 +1024,7 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
             "search_prefab_components",
         ):
             try:
-                app_tool = asyncio.run(mcp.get_tool(app_tool_name))
+                app_tool = _get_registered_tool_blocking(mcp, app_tool_name)
                 discovery_tools.append(lambda get_catalog, _t=app_tool: _t)
                 logger.info("MCP Apps: {} re-exposed top-level in code mode", app_tool_name)
             except Exception as e:  # pragma: no cover - defensive

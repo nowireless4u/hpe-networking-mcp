@@ -138,6 +138,30 @@ def test_list_files_not_enveloped(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "ok" not in sc, "list_files got enveloped; it must be in _NO_ENVELOPE_TOOLS"
 
 
+async def test_guidance_applied_when_create_server_runs_inside_event_loop(monkeypatch: pytest.MonkeyPatch) -> None:
+    """#578: ``create_server()`` called from INSIDE a running event loop must
+    still apply the HPE guidance. The old code fetched the tool with a bare
+    ``asyncio.run(mcp.get_tool(...))``, which raises inside a running loop; the
+    failure was swallowed and the tool kept the upstream description. This test
+    runs from pytest-asyncio's loop (``async def``), exercising the loop-running
+    branch of the loop-safe helper — and must NOT emit the
+    ``coroutine 'FastMCP.get_tool' was never awaited`` RuntimeWarning."""
+    import warnings
+
+    monkeypatch.setenv("MCP_APP_ENABLE", "true")
+    with warnings.catch_warnings():
+        warnings.filterwarnings("error", message=r".*never awaited")
+        cfg = ServerConfig(tool_mode="code", mist=MistSecrets(api_token="x", host="y"))
+        mcp = create_server(cfg)  # built inside THIS async test's event loop
+
+    descriptions = {t.name: (t.description or "") for t in await mcp.list_tools()}  # type: ignore[attr-defined]
+    gen = descriptions.get("generate_prefab_ui", "")
+    assert "DATA CONTRACT" in gen, "HPE guidance missing when create_server ran inside a loop"
+    assert "SELF-CONTAINED" in gen
+    # The code-mode re-expose (same asyncio.run pattern, #578) must also have run.
+    assert "generate_prefab_ui" in descriptions
+
+
 def test_description_augmented_with_dashboard_guidance(monkeypatch: pytest.MonkeyPatch) -> None:
     """The tool description (not INSTRUCTIONS.md) is what steers tool selection, so
     generate_prefab_ui's description must carry the dashboard guidance AND keep the
