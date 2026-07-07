@@ -252,16 +252,20 @@ async def mist_request(
     except (ValueError, _json.JSONDecodeError):
         return {"raw": response.text, "has_more": False}
 
-    # Some Mist collection endpoints (e.g. GET /orgs/{id}/inventory,
-    # /otherdevices, /networks) return JSON ``null`` — not ``[]`` — for an
-    # empty or filtered-empty result set. Passing ``None`` straight through
-    # surfaces as ``data: null`` in the envelope, which a model (especially a
-    # small one) can't distinguish from data loss or an error. Normalize an
-    # empty result to an empty list so "no matching rows" is unambiguous. (#561)
-    if parsed is None:
-        parsed = []
+    result = _decode_pagination(response, [] if parsed is None else parsed)
 
-    return _decode_pagination(response, parsed)
+    # An empty collection surfaces as ``data: null`` through the response
+    # envelope: some Mist endpoints (GET /orgs/{id}/inventory, /otherdevices,
+    # /networks) return JSON ``null`` (not ``[]``) for an empty/filtered-empty
+    # set, AND a bare ``[]`` return has no recoverable content block, so the
+    # envelope can't distinguish it from ``None`` either — both collapse to
+    # ``null``, which a model can't tell from data loss. Return a dict for an
+    # empty collection so it reads as an unambiguous, non-null ``{"items": []}``
+    # (also forward-compatible with the uniform-shape direction in #500). (#561)
+    if result == []:
+        return {"items": [], "has_more": False}
+
+    return result
 
 
 async def resolve_org_id_from_self(client: httpx.AsyncClient) -> str | None:

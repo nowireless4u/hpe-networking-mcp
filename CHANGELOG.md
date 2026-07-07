@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1.3] - 2026-07-07
+
+**Patch — complete the #561 empty-collection fix (v3.5.1.2 was insufficient).** v3.5.1.2 normalized a `null` Mist body to a bare `[]`, but an empty **list** *also* collapses to `data: null` through `ResponseEnvelopeMiddleware` — an empty list yields no recoverable content block, so the envelope can't distinguish it from `None`. Caught in post-deploy live verification: `mist_get_org_inventory` (empty) still returned `data: null` on v3.5.1.2.
+
+### Fixed
+- **`mist_request` now returns `{"items": [], "has_more": False}` (a dict) for an empty collection** — from either a JSON `null` body or a bare `[]`. A dict populates `structured_content`, so it survives the envelope as a non-null, unambiguous "no rows" result (and is forward-compatible with the uniform-shape direction in #500). Added an end-to-end test that drives an empty result through the real envelope middleware (the check the isolated `mist_request` unit test in v3.5.1.2 missed).
+
 ## [3.5.1.2] - 2026-07-07
 
 **Patch — Mist code-mode hardening: bare-array reads no longer surface `data: null`, and generated-tool schemas are no longer null (#561, #525).** Reported by an external user driving a Mist adoption/inventory workflow from an agent.
