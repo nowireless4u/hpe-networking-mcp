@@ -537,3 +537,82 @@ class TestPayloadSchemaProvider:
         result = await tool.fn(_fake_ctx(ServerConfig()), name="apstra_get_blueprints")
         assert result["status"] == "ok"  # discovery still works
         assert "payload_schema" not in result
+
+
+# ---------------------------------------------------------------------------
+# #525: input_schema derived from the registry func signature
+# ---------------------------------------------------------------------------
+
+
+async def _mist_like_read(
+    ctx: FastMCPContext,
+    org_id: _Annotated[str, _Field(description="path parameter 'org_id'")],
+    type: _Annotated[str | None, _Field(default=None, description="Filter by type")] = None,
+    limit: _Annotated[int, _Field(description="page size")] = 100,
+) -> dict:
+    return {"ok": True}
+
+
+_mist_like_read.__name__ = "mist_get_org_inventory"  # type: ignore[attr-defined]
+
+
+async def _mist_like_write(
+    ctx: FastMCPContext,
+    org_id: _Annotated[str, _Field(description="path parameter 'org_id'")],
+    body: _Annotated[dict | None, _Field(default=None, description="Request body for PUT")] = None,
+) -> dict:
+    return {"ok": True}
+
+
+_mist_like_write.__name__ = "mist_update_org_inventory_assignment"  # type: ignore[attr-defined]
+
+
+def _mist_spec(func, name, capability):
+    return ToolSpec(
+        name=name,
+        func=func,
+        platform="mist",
+        category="orgs_inventory",
+        description="Mist tool.",
+        tags=set(),
+        capability=capability,
+    )
+
+
+@pytest.mark.unit
+class TestDeriveInputSchema:
+    """#525: get_tool_schema must not return ``input_schema: null`` for the
+    spec-driven generated tools (mist_*/edgeconnect_*) — derive it from the
+    registry ``ToolSpec.func`` signature."""
+
+    def test_read_tool_schema_has_params(self):
+        from hpe_networking_mcp.platforms._common.meta_tools import _derive_input_schema
+
+        schema = _derive_input_schema(_mist_spec(_mist_like_read, "mist_get_org_inventory", Capability.READ))
+        assert schema is not None
+        props = schema.get("properties", {})
+        assert "org_id" in props
+        assert "type" in props and "limit" in props
+        # org_id (no default) is required; the optional filters are not.
+        assert "org_id" in schema.get("required", [])
+        assert "type" not in schema.get("required", [])
+
+    def test_write_tool_schema_names_body_wrapper(self):
+        """The reporter's write-side case: the ``body`` request wrapper — the key
+        ``invoke_tool`` actually expects the payload under — must be discoverable."""
+        from hpe_networking_mcp.platforms._common.meta_tools import _derive_input_schema
+
+        schema = _derive_input_schema(
+            _mist_spec(_mist_like_write, "mist_update_org_inventory_assignment", Capability.WRITE)
+        )
+        assert schema is not None
+        props = schema.get("properties", {})
+        assert "org_id" in props
+        assert "body" in props  # previously unnamed → forced brute-force discovery
+
+    def test_params_hint_lists_required_and_optional(self):
+        from hpe_networking_mcp.platforms._common.meta_tools import _params_hint
+
+        hint = _params_hint(_mist_spec(_mist_like_read, "mist_get_org_inventory", Capability.READ))
+        assert hint["required"] == ["org_id"]
+        assert set(hint["optional"]) == {"type", "limit"}

@@ -252,6 +252,15 @@ async def mist_request(
     except (ValueError, _json.JSONDecodeError):
         return {"raw": response.text, "has_more": False}
 
+    # Some Mist collection endpoints (e.g. GET /orgs/{id}/inventory,
+    # /otherdevices, /networks) return JSON ``null`` — not ``[]`` — for an
+    # empty or filtered-empty result set. Passing ``None`` straight through
+    # surfaces as ``data: null`` in the envelope, which a model (especially a
+    # small one) can't distinguish from data loss or an error. Normalize an
+    # empty result to an empty list so "no matching rows" is unambiguous. (#561)
+    if parsed is None:
+        parsed = []
+
     return _decode_pagination(response, parsed)
 
 

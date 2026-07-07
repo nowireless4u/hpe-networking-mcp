@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1.2] - 2026-07-07
+
+**Patch — Mist code-mode hardening: bare-array reads no longer surface `data: null`, and generated-tool schemas are no longer null (#561, #525).** Reported by an external user driving a Mist adoption/inventory workflow from an agent.
+
+### Fixed
+- **#561 — empty Mist collection reads returned `data: null`.** Some Mist collection endpoints (`GET /orgs/{id}/inventory`, `/otherdevices`, `/networks`) return JSON `null` — not `[]` — for an empty or filtered-empty result set. `mist_request` passed that `None` through, surfacing as `data: null`, which a model can't distinguish from data loss. It now normalizes a `null` body to an empty list (`data: []`). Verified live: `mist_get_org_inventory` with the default `unassigned=True` returned `null` on an all-assigned org (`unassigned=False` returned the devices) — this was empty-result-returns-null, not non-empty data being dropped.
+- **#525 — `<platform>_get_tool_schema` returned `input_schema: null` for spec-driven generated tools.** `mcp._get_tool(name)` yields no usable schema for the generated `mist_*` / `edgeconnect_*` tools in code mode, so schemas came back null — leaving small models without parameter names, required fields, enums, or (for write tools) the `body` request-wrapper key. `get_tool_schema` now derives the schema from the registry `ToolSpec.func` signature when FastMCP has none, and falls back to a `params_hint` (required/optional names) if derivation fails. Verified on the real generated surface: `mist_get_org_inventory` → non-null schema with required `org_id`; `mist_update_org_inventory_assignment` → schema naming the `body` wrapper.
+
+### Notes
+- Both are part of the broader "uniform collection shape for spec-driven reads" direction (#500); #561 is the narrow, ship-now normalization and does not require the full `{items}` generator sweep.
+- Refactored the signature→Pydantic-field logic in `meta_tools` into a shared `_signature_fields` helper (used by both param coercion and schema derivation).
+
 ## [3.5.1.1] - 2026-07-06
 
 **Patch — fix Generative-UI dashboards hanging on "waiting for content" in Claude Desktop.** Root-caused from a client DevTools console error (`[Prefab] exec #1: NameError: name 'site' is not defined`): the MCP-Apps generative renderer **executes the tool's `code` in the browser as it streams** (`ontoolinputpartial`), but the `data` argument's top-level keys are injected as globals **only server-side** — the client-side streaming exec never receives them, so any name that came from `data` raises `NameError` and the widget wedges. This was NOT a CSP / CDN / base-image / client-render (#671) issue: Pyodide loads and runs, and the server produces a valid `$prefab` tree (verified live). A self-contained widget renders in Claude Desktop where the `data`-argument form hangs.

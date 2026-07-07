@@ -70,6 +70,80 @@ def _extract_annotated_default(annotation: Any) -> Any:
     return ...
 
 
+def _signature_fields(spec: ToolSpec) -> dict[str, Any]:
+    """Build Pydantic field definitions ``{name: (annotation, default)}`` from a
+    tool's signature, excluding the ``ctx`` param and variadics.
+
+    Shared by ``_coerce_params`` (validation) and ``_derive_input_schema``
+    (discovery). ``from __future__ import annotations`` leaves signatures as
+    strings, so resolve them eagerly with ``get_type_hints`` against the
+    function's own namespace so ``Annotated`` / ``UUID`` / enums resolve.
+    """
+    sig = inspect.signature(spec.func)
+    try:
+        resolved_hints = get_type_hints(spec.func, include_extras=True)
+    except Exception:
+        resolved_hints = {}
+
+    fields: dict[str, Any] = {}
+    for pname, param in sig.parameters.items():
+        if pname in _CTX_PARAM_NAMES:
+            continue
+        # Skip variadic parameters (``*args`` / ``**kwargs``) — Pydantic can't
+        # build a field from them (real tools rarely use this; AsyncMock stubs do).
+        if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
+            continue
+        annotation = resolved_hints.get(pname, param.annotation)
+        if annotation is inspect.Parameter.empty:
+            annotation = Any
+        if param.default is not inspect.Parameter.empty:
+            fields[pname] = (annotation, param.default)
+        else:
+            # Signature has no default; fall back to any default baked into the
+            # ``Annotated`` FieldInfo (``...`` / required if none is found).
+            fields[pname] = (annotation, _extract_annotated_default(annotation))
+    return fields
+
+
+def _derive_input_schema(spec: ToolSpec) -> dict[str, Any] | None:
+    """Derive a JSON input schema from the registry ``ToolSpec.func`` signature.
+
+    ``mcp._get_tool(name)`` yields no usable ``parameters`` for the spec-driven
+    generated tools (``mist_*`` / ``edgeconnect_*``) in code mode, leaving
+    ``input_schema: null`` — small models then have no parameter names, required
+    fields, enum values, or (for write tools) the ``body`` request wrapper key.
+    The func carries the real ``Annotated`` signature, so build the schema from
+    it. Returns ``None`` if there are no params or schema generation fails on an
+    arbitrary type. (#525)
+    """
+    try:
+        fields = _signature_fields(spec)
+        if not fields:
+            return None
+        model_cls = create_model(
+            f"{spec.name}__Schema",
+            __config__=ConfigDict(arbitrary_types_allowed=True, extra="forbid"),
+            **fields,
+        )
+        return model_cls.model_json_schema()
+    except Exception as exc:  # never let schema derivation break discovery
+        logger.debug("_derive_input_schema: could not derive schema for {!r} — {}", spec.name, exc)
+        return None
+
+
+def _params_hint(spec: ToolSpec) -> dict[str, list[str]]:
+    """Minimal fallback when full schema derivation fails: the required and
+    optional parameter names from the signature, so a model still knows the
+    shape (acceptance criterion of #525)."""
+    try:
+        fields = _signature_fields(spec)
+    except Exception:
+        return {"required": [], "optional": []}
+    required = [n for n, (_ann, default) in fields.items() if default is ...]
+    optional = [n for n in fields if n not in required]
+    return {"required": required, "optional": optional}
+
+
 def _coerce_params(spec: ToolSpec, raw_params: dict[str, Any]) -> dict[str, Any]:
     """Build a Pydantic model from the tool signature and validate/coerce.
 
@@ -85,38 +159,7 @@ def _coerce_params(spec: ToolSpec, raw_params: dict[str, Any]) -> dict[str, Any]
     ``ValidationError`` if the params don't match the signature (missing
     required params, unknown keys, or type-coercion failures).
     """
-    sig = inspect.signature(spec.func)
-    # ``from __future__ import annotations`` in tool modules leaves
-    # ``inspect.signature()`` annotations as strings. Pydantic can't
-    # evaluate those strings without a matching namespace. Resolve
-    # eagerly with ``get_type_hints`` using the function's own globals
-    # + localns so ``Annotated``, ``UUID``, enums defined beside the
-    # tool, etc. all resolve correctly.
-    try:
-        resolved_hints = get_type_hints(spec.func, include_extras=True)
-    except Exception:
-        resolved_hints = {}
-
-    fields: dict[str, Any] = {}
-    for pname, param in sig.parameters.items():
-        if pname in _CTX_PARAM_NAMES:
-            continue
-        # Skip variadic parameters (``*args`` / ``**kwargs``). Pydantic
-        # can't build a field from them; real tools almost never use this
-        # shape, but ``AsyncMock()`` stubs in tests do — and a runtime
-        # crash there is worse than no coercion.
-        if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
-            continue
-        annotation = resolved_hints.get(pname, param.annotation)
-        if annotation is inspect.Parameter.empty:
-            annotation = Any
-        if param.default is not inspect.Parameter.empty:
-            fields[pname] = (annotation, param.default)
-        else:
-            # Signature has no default; fall back to any default baked
-            # into the ``Annotated`` FieldInfo. Returns ``...`` (required)
-            # if none is found.
-            fields[pname] = (annotation, _extract_annotated_default(annotation))
+    fields = _signature_fields(spec)
 
     if not fields:
         # Signature has no validatable params — nothing to coerce. Hand
@@ -394,6 +437,13 @@ def build_meta_tools(
             }
 
         input_schema = getattr(fm_tool, "parameters", None) or getattr(fm_tool, "input_schema", None)
+        # Spec-driven generated tools (mist_*/edgeconnect_*) resolve through
+        # ``_get_tool`` with no usable schema in code mode, leaving
+        # ``input_schema: null``. Derive it from the registry func signature so
+        # the model gets parameter names, required fields, enums, and the write
+        # ``body`` wrapper. (#525)
+        if not input_schema:
+            input_schema = _derive_input_schema(spec)
         annotations = getattr(fm_tool, "annotations", None)
         result: dict[str, Any] = {
             "status": "ok",
@@ -404,6 +454,10 @@ def build_meta_tools(
             "annotations": _annotations_to_dict(annotations),
             "input_schema": input_schema,
         }
+        # If schema derivation still failed (arbitrary types, etc.), give the
+        # model at least the required/optional parameter names so it isn't blind.
+        if not input_schema:
+            result["params_hint"] = _params_hint(spec)
 
         # For tools whose ``payload`` is an opaque config-model body, attach the
         # distilled field schema so clients author it without guessing (#384).
