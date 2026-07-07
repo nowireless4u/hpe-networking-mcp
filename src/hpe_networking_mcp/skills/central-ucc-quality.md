@@ -373,7 +373,13 @@ Prefab code. Referencing `data` raises `NameError: name 'data'`.
 1. First call **`search_prefab_components`** (top-level tool) to confirm
    exact component names/args — e.g. `search_prefab_components(query="Card Metric Badge DataTable Tabs BarChart")`.
 2. Then call **`generate_prefab_ui`** (top-level tool — not via
-   `call_tool`) with the Prefab code + `data`. Suggested layout:
+   `call_tool`). Your `code` must be **self-contained**: inline your gathered
+   values (`scope_label`, `summary`, `by_app`, `by_band`, the live-call rows,
+   etc.) as Python literals at the TOP of the `code`, then reference them. Do
+   **NOT** pass a `data` argument — the widget executes your `code` in the
+   browser *as it streams* and does not receive the `data` argument's globals
+   there, so any name that came only from `data` raises `NameError: name 'X' is
+   not defined` and the widget hangs on "waiting for content". Suggested layout:
    - **Header** — title from `scope_label`, plus a status `Badge` whose
      color is the worst band present (red if any POOR, amber if any FAIR,
      green otherwise).

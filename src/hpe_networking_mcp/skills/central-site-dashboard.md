@@ -219,10 +219,14 @@ return {
 
 ### Step 2 — Render the dashboard (Generative UI)
 
-Call `generate_prefab_ui` directly (top-level tool). Pass the Step 1 return as
-the `data` argument — **each top-level key becomes a global** inside `code`
-(`site`, `device_summary`, `client_summary`, `alert_summary`, `devices`,
-`alerts`, `nac`). There is NO `data` variable in the sandbox.
+Call `generate_prefab_ui` directly (top-level tool). Your `code` MUST be
+**self-contained**: inline the Step 1 values as Python literals at the TOP of the
+`code` (`site = {...}`, `device_summary = {...}`, `devices = [...]`, `alerts = [...]`,
+`nac = {...}`, etc.), then reference those names. Do **NOT** pass the `data`
+argument — the widget executes your `code` in the browser *as it streams* and does
+NOT receive the `data` argument's globals there, so any name that came only from
+`data` raises `NameError: name 'X' is not defined` and the widget hangs forever on
+"waiting for content". Everything the `code` references must be defined in the `code`.
 
 If you need to confirm component names, call `search_prefab_components` ONCE
 with a broad query — don't fan out. The common set for this board:
@@ -243,9 +247,21 @@ with a broad query — don't fan out. The common set for this board:
   the count AND breakdowns are themselves partial — don't present them as complete.
 
 Build with the context-manager form (children register onto the open
-container), assign a `PrefabApp`, e.g.:
+container), assign a `PrefabApp`. Start the `code` with your Step 1 values
+inlined as literals (substitute the REAL values you gathered), e.g.:
 
 ```python
+# --- Step 1 values, inlined as literals — self-contained, NO `data` argument ---
+site = {"name": "HQ", "health": {"Summary": 92}}
+device_summary = {"Summary": {"Total": 42}, "Details": [...]}
+client_summary = {"Total": 128}
+alert_summary = {"Total": 3, "Critical": 1}
+devices = [...]   # rows from central_get_devices (already unwrapped from the envelope)
+alerts = [...]    # rows from central_get_alerts
+nac = {"status": "ok", "active_count": 0, "by_role": {}, "by_ssid": {}, "sessions": [],
+       "sessions_truncated": False, "aggregate_truncated": False}
+
+# --- build the view (everything below references only names defined above) ---
 with Column(gap=4) as view:
     Heading(f"{site['name']} — site dashboard")
     with Row(gap=4):

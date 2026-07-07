@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1.1] - 2026-07-06
+
+**Patch — fix Generative-UI dashboards hanging on "waiting for content" in Claude Desktop.** Root-caused from a client DevTools console error (`[Prefab] exec #1: NameError: name 'site' is not defined`): the MCP-Apps generative renderer **executes the tool's `code` in the browser as it streams** (`ontoolinputpartial`), but the `data` argument's top-level keys are injected as globals **only server-side** — the client-side streaming exec never receives them, so any name that came from `data` raises `NameError` and the widget wedges. This was NOT a CSP / CDN / base-image / client-render (#671) issue: Pyodide loads and runs, and the server produces a valid `$prefab` tree (verified live). A self-contained widget renders in Claude Desktop where the `data`-argument form hangs.
+
+### Fixed
+- **`generate_prefab_ui` guidance + dashboard skills now build self-contained `code`.** Inline the gathered values as Python literals at the top of the `code` instead of passing them via the `data` argument. Updated the `_GENERATIVE_UI_GUIDANCE` DATA CONTRACT block (`server.py`) and the `central-site-dashboard` + `central-ucc-quality` skills.
+
+### Notes
+- The `data` argument still works server-side (and in fully compliant MCP-Apps hosts); the client-side generative renderer's failure to inject it is a `prefab-ui` limitation tracked upstream. Self-contained `code` is robust across hosts.
+
 ## [3.5.1.0] - 2026-07-06
 
 **Minor — remediate CPython base-image CVEs + close the image-scanning gap.** Classified minor (not patch) because it changes the shipped runtime platform — the container interpreter moves a full Python minor version (3.12.13 → 3.13.14) — and adds new CI security infrastructure. A CWPP image scan flagged four HIGH CPython **interpreter** CVEs baked into the base image (`python:3.12-slim-bookworm` → CPython 3.12.13): CVE-2026-3644 (http.cookies control-char validation), CVE-2026-4786 (webbrowser command injection), CVE-2026-6100 (decompressor use-after-free), and CVE-2026-7210 (expat XML hash-flooding DoS). Our CI could not see them: `pip-audit` scans PyPI packages (not the interpreter binary), `bandit` is a static analyzer, and there was **no image/OS-layer scanner** at all.
