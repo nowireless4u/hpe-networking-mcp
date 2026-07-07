@@ -4,22 +4,25 @@
 Each Aruba developer-hub project (``developer.arubanetworks.com/<project>``) is
 a ReadMe project whose API reference is split across **multiple** uploaded
 OpenAPI definitions (e.g. New Central MRT is Monitoring + Troubleshooting +
-Services + Reporting + Notifications + MSP + Authorization). ReadMe serves each
-compiled definition as raw JSON at::
+Services + Reporting + Notifications + MSP + Authorization).
 
-    https://developer.arubanetworks.com/<project>/openapi/<apiSetting-id>
+Aruba migrated the hub to ReadMe's **"SuperHub"** platform on 2026-07-02, which
+retired the old ``/<project>/openapi/<hex-apiSetting-id>`` endpoint (now 404s)
+and the ``"apiSetting"`` HTML markers. The reference page now server-renders its
+props into a ``<script id="ssr-props">`` JSON block:
 
-The ``<apiSetting-id>`` values are embedded in every reference page's HTML.
-This script discovers them by scraping the project's ``/reference`` page,
-fetches each definition, validates it parses as OpenAPI 3.x with >= 1 path,
-and writes one ``<title-slug>.json`` per definition (keys sorted for stable
-diffs) plus a deterministic ``_manifest.json`` recording provenance.
+* ``apiDefinitions`` — the **active branch's** current specs (filename + uri).
+* ``context.project.stable.apiRegistries`` — every uploaded version, each with a
+  per-file ``uuid``.
 
-No browser is required. The earlier Playwright approach failed because this
-portal embeds specs in server-rendered HTML rather than fetching them at
-runtime, so there was no standalone JSON response to intercept (and a single
-reference page only inlines its own operation). The ``/openapi/<id>`` endpoint
-is the real upstream source.
+This script parses ssr-props, resolves each current filename to its registry
+``uuid``, and fetches the compiled OAS by uuid from the ReadMe dash API::
+
+    https://dash.readme.com/api/v1/api-registry/<uuid>
+
+It validates each parses as OpenAPI 3.x with >= 1 path, and writes one
+``<title-slug>.json`` per definition (keys sorted for stable diffs) plus a
+deterministic ``_manifest.json`` recording provenance. No browser required.
 
 **Adding a platform = one entry in ``PROJECTS``** (the same ReadMe pattern
 backs aruba-uxi, aruba-cppm, aruba-aoscx, etc. — verify the hub path first).
@@ -32,6 +35,7 @@ issue-on-failure step fires and no bad snapshot is committed.
 
 from __future__ import annotations
 
+import html as _html
 import json
 import re
 import sys
@@ -60,8 +64,13 @@ PROJECTS: list[dict[str, str]] = [
     {"slug": "aoscx", "outdir": "aoscx"},
 ]
 
-# ReadMe apiSetting ids are 24-char hex Mongo ObjectIds embedded in page HTML.
-_API_SETTING_RE = re.compile(r'"apiSetting":"([0-9a-f]{24})"')
+# ReadMe "SuperHub" (Aruba migrated the hub 2026-07-02) server-renders the
+# reference page's props into a JSON <script id="ssr-props"> block. The active
+# branch's specs live under ``apiDefinitions``; every historical version lives
+# under ``context.project.stable.apiRegistries`` keyed by a per-file ``uuid``.
+# The raw compiled OAS is fetched by uuid from the ReadMe dash API.
+_SSR_PROPS_RE = re.compile(r'<script id="ssr-props"[^>]*>(.*?)</script>', re.DOTALL)
+_README_REGISTRY = "https://dash.readme.com/api/v1/api-registry"
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 _UA = "Mozilla/5.0 (compatible; hpe-networking-mcp-oas-sync/1.0)"
@@ -102,22 +111,58 @@ def _looks_like_oas(obj: Any) -> bool:
     )
 
 
-def _discover_ids(slug: str) -> list[str]:
-    """Scrape a project's /reference page for its apiSetting definition ids."""
-    html = _http_get(f"{HUB}/{slug}/reference").decode("utf-8", "replace")
-    ids = sorted(set(_API_SETTING_RE.findall(html)))
-    if not ids:
-        raise RuntimeError(f"no apiSetting ids found on {HUB}/{slug}/reference")
-    return ids
+def _parse_ssr_props(slug: str) -> dict[str, Any]:
+    """Parse the ``<script id="ssr-props">`` JSON from a project's /reference page."""
+    page = _http_get(f"{HUB}/{slug}/reference").decode("utf-8", "replace")
+    match = _SSR_PROPS_RE.search(page)
+    if not match:
+        raise RuntimeError(f"no ssr-props on {HUB}/{slug}/reference (portal structure changed?)")
+    try:
+        return json.loads(_html.unescape(match.group(1).strip()))
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"{slug}: ssr-props JSON did not parse ({exc})") from exc
 
 
-def _fetch_spec(slug: str, setting_id: str) -> dict[str, Any] | None:
-    """Fetch one definition; return the OAS dict or None if stale/invalid.
+def _discover_specs(slug: str) -> list[dict[str, str]]:
+    """Discover the CURRENT branch's OpenAPI specs as ``[{filename, uuid}]``.
 
-    Stale apiSetting ids (definitions deleted upstream) return a tiny error
-    body that fails JSON/OAS validation — those are silently skipped.
+    ``apiDefinitions`` is the active branch's live set (e.g. New Central =
+    monitoring-80/reporting-84/... on branch 26.04); ``apiRegistries`` holds
+    every uploaded version keyed by a per-file ``uuid`` — which is what the raw
+    OAS endpoint fetches by. We take the current filenames and resolve each to
+    its registry uuid (last/most-recent entry wins on a duplicate filename).
     """
-    raw = _http_get(f"{HUB}/{slug}/openapi/{setting_id}")
+    props = _parse_ssr_props(slug)
+    api_defs = props.get("apiDefinitions") or []
+    registries = (((props.get("context") or {}).get("project") or {}).get("stable") or {}).get("apiRegistries") or []
+
+    uuid_by_file: dict[str, str] = {}
+    for reg in registries:
+        filename, uuid = reg.get("filename"), reg.get("uuid")
+        if filename and uuid:
+            uuid_by_file[filename] = uuid  # later entries (more recent) override
+
+    specs: list[dict[str, str]] = []
+    for definition in api_defs:
+        if definition.get("type") not in (None, "openapi"):
+            continue  # skip non-OpenAPI definitions (e.g. graphql), if any
+        filename = definition.get("filename")
+        uuid = uuid_by_file.get(filename or "")
+        if not uuid:
+            continue  # current definition with no matching registry uuid — skip
+        specs.append({"filename": filename, "uuid": uuid})
+
+    if not specs:
+        raise RuntimeError(f"{slug}: no OpenAPI definitions found in ssr-props apiDefinitions")
+    return specs
+
+
+def _fetch_spec(uuid: str) -> dict[str, Any] | None:
+    """Fetch one compiled OAS by its ReadMe api-registry uuid.
+
+    Returns the OAS dict, or None if the response isn't a valid OpenAPI doc.
+    """
+    raw = _http_get(f"{_README_REGISTRY}/{uuid}")
     try:
         obj = json.loads(raw)
     except json.JSONDecodeError:
@@ -154,18 +199,19 @@ def sync_project(project: dict[str, str]) -> dict[str, Any]:
     outdir = VENDOR / outdir_name
     outdir.mkdir(parents=True, exist_ok=True)
 
-    ids = _discover_ids(slug)
-    # file slug -> (apiSetting id, spec)
+    specs = _discover_specs(slug)
+    # vendored file slug -> (registry uuid, spec)
     collected: dict[str, tuple[str, dict[str, Any]]] = {}
-    for setting_id in ids:
-        spec = _fetch_spec(slug, setting_id)
+    for entry in specs:
+        uuid = entry["uuid"]
+        spec = _fetch_spec(uuid)
         if spec is None:
-            continue  # stale/retired definition id
+            continue  # unfetchable / not a valid OAS doc
         title = str(spec.get("info", {}).get("title", "untitled"))
         file_slug = _slugify(title)
-        if file_slug in collected:  # title collision — disambiguate by id
-            file_slug = f"{file_slug}-{setting_id[:6]}"
-        collected[file_slug] = (setting_id, spec)
+        if file_slug in collected:  # title collision — disambiguate by uuid
+            file_slug = f"{file_slug}-{uuid[:6]}"
+        collected[file_slug] = (uuid, spec)
 
     if not collected:
         raise RuntimeError(f"{slug}: no valid OpenAPI definitions discovered")
@@ -190,7 +236,7 @@ def sync_project(project: dict[str, str]) -> dict[str, Any]:
 
     definitions = []
     total_paths = 0
-    for file_slug, (setting_id, spec) in sorted(collected.items()):
+    for file_slug, (uuid, spec) in sorted(collected.items()):
         _write_json(outdir / f"{file_slug}.json", spec)
         info = spec.get("info", {})
         path_count = len(spec.get("paths", {}))
@@ -198,7 +244,7 @@ def sync_project(project: dict[str, str]) -> dict[str, Any]:
         definitions.append(
             {
                 "slug": file_slug,
-                "id": setting_id,
+                "id": uuid,
                 "title": str(info.get("title", "?")),
                 "version": str(info.get("version", "?")),
                 "path_count": path_count,
@@ -207,7 +253,7 @@ def sync_project(project: dict[str, str]) -> dict[str, Any]:
 
     manifest = {
         "project": slug,
-        "source": f"{HUB}/{slug}/openapi/<apiSetting-id>",
+        "source": f"{_README_REGISTRY}/<uuid> (discovered via {HUB}/{slug}/reference)",
         "definition_count": len(definitions),
         "total_paths": total_paths,
         "definitions": sorted(definitions, key=lambda d: d["slug"]),
