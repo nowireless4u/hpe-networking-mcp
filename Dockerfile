@@ -65,8 +65,10 @@ RUN uv run --no-sync python -m hpe_networking_mcp.prefab_prewarm
 
 EXPOSE 8000
 
-# Health check
+# Health check — hits the plain /livez probe (200 when the process is alive).
+# Liveness is intentionally decoupled from upstream platform reachability, so a
+# transient Mist/Central/GreenLake outage never marks the container unhealthy.
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD uv run --no-sync python -c "import httpx; r = httpx.get('http://localhost:8000/mcp', timeout=5); assert r.status_code < 500" || exit 1
+    CMD uv run --no-sync python -c "import httpx; r = httpx.get('http://localhost:8000/livez', timeout=5); assert r.status_code == 200" || exit 1
 
 CMD ["uv", "run", "--no-sync", "python", "-m", "hpe_networking_mcp"]

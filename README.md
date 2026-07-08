@@ -203,6 +203,39 @@ docker compose logs
 
 Look for lines like `Mist: 1037 underlying tools registered (code mode)`, `ClearPass: 142 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 48 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `EdgeConnect: registered 187 generated tool module(s) (code mode)`, `GreenLake: registered 959 tools across 169 tool module(s) (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 4126 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
 
+### Health & readiness probes
+
+The server exposes plain HTTP endpoints for container/orchestrator health checks. They require **no** MCP stream negotiation (unlike `/mcp`, which can return `405`/`406` to a naive probe) and never call external platforms, so a transient upstream outage can't mark the process unhealthy:
+
+| Endpoint | Success | Purpose |
+|----------|---------|---------|
+| `GET /livez` | `200 ok` | Process is alive and serving HTTP. Use for liveness. |
+| `GET /readyz` | `200 ok` (else `503 starting`) | Startup complete and ready for MCP traffic. Use for readiness/startup. |
+| `GET /healthz` | `200` + JSON | Operator info: `service`, `version`, `status`, enabled platform names, `uptime_seconds`. No secrets. |
+
+The deeper per-platform reachability check remains the MCP `health` tool — it is intentionally **not** used for liveness, so an upstream platform being unreachable never restarts the container.
+
+The Docker/Compose healthcheck already targets `/livez`. Kubernetes example:
+
+```yaml
+startupProbe:
+  httpGet: { path: /livez, port: 8000 }
+  failureThreshold: 30
+  periodSeconds: 10
+livenessProbe:
+  httpGet: { path: /livez, port: 8000 }
+  periodSeconds: 20
+  timeoutSeconds: 2
+  failureThreshold: 3
+readinessProbe:
+  httpGet: { path: /readyz, port: 8000 }
+  periodSeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 3
+```
+
+> Kubernetes probes reach the pod IP, so keep the default `MCP_HOST=0.0.0.0` bind (loopback-only binds are unreachable by the kubelet). Probes send no `Origin` header and are allowed through origin validation.
+
 ### Docker Image
 
 The pre-built image is available on GitHub Container Registry:

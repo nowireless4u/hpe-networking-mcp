@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.2.0] - 2026-07-08
+
+**Minor — Kubernetes- and Docker-friendly HTTP health endpoints (#582).** The MCP protocol endpoint (`/mcp`) is not a clean `httpGet` probe target — a bare `GET` can return `406` and `HEAD` can return `405`, neither of which Kubernetes treats as success (only `200`–`399` pass), so Docker healthchecks had to special-case tolerated non-2xx statuses from `/mcp`. New plain HTTP endpoints give orchestrators a normal probe surface that never requires MCP stream negotiation.
+
+### Added
+- **`GET /livez`** — `200` whenever the process is alive and serving HTTP. Lightweight; makes **no** external-platform calls, so a transient Mist/Central/GreenLake outage can never mark the container unhealthy or trigger a pod restart.
+- **`GET /readyz`** — `503` until the FastMCP lifespan startup completes, then `200`. Also independent of upstream platform reachability (readiness means "started and can accept MCP traffic", never "every platform is reachable").
+- **`GET /healthz`** — non-sensitive operator JSON: `service`, `version`, `status`, enabled platform **names**, and `uptime_seconds`. No secrets, hosts, or counts.
+- Registered in **every** tool mode and regardless of `MCP_APP_ENABLE` — deployment plumbing, not model-facing tools. They ride outside the FastMCP tool-middleware chain (plain HTTP, never enveloped), and the DNS-rebinding `OriginValidationMiddleware` passes header-less probe traffic through untouched. The deeper per-platform reachability check remains the MCP `health` tool (deliberately not wired into liveness).
+- README section documenting the endpoints plus copy-paste Kubernetes `startupProbe`/`livenessProbe`/`readinessProbe` examples.
+
+### Changed
+- **Dockerfile `HEALTHCHECK` and Docker Compose healthcheck now call `/livez`** (`== 200`) instead of tolerating `/mcp` returning `405`/`406` — a clearer `healthy`/`unhealthy` signal for Docker and a normal probe target for Kubernetes.
+
 ## [3.5.1.4] - 2026-07-07
 
 **Patch — apply the `generate_prefab_ui` guidance + code-mode re-expose event-loop-safely (#578).** `create_server()` mutated the `generate_prefab_ui` description (the self-contained-code steer from v3.5.1.1) and re-exposed the MCP-Apps tools in code mode via a bare `asyncio.run(mcp.get_tool(...))`. That works at synchronous CLI startup but raises inside an already-running event loop (embedded/async startup, async tests); the broad handler swallowed the failure, so the tool silently fell back to the upstream Prefab description and steered models back toward the broken `data=` pattern.

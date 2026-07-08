@@ -11,6 +11,7 @@ from fastmcp.tools.tool import ToolResult
 from loguru import logger
 
 from hpe_networking_mcp.config import ServerConfig
+from hpe_networking_mcp.health_routes import mark_ready, register_health_routes
 
 _INSTRUCTIONS = (Path(__file__).parent / "INSTRUCTIONS.md").read_text(encoding="utf-8")
 
@@ -218,6 +219,14 @@ async def lifespan(server: FastMCP):
                     )
         except Exception as e:
             logger.warning("Startup probe loop raised unexpectedly — {}", e)
+
+    # Startup is complete: flip the /readyz probe to ready. Deliberately after
+    # the (best-effort, non-fatal) platform probes but NOT gated on their
+    # result — readiness means "the server finished starting and can accept MCP
+    # traffic", never "every upstream platform is reachable" (that would let a
+    # transient upstream outage trigger a pod restart). Deep reachability stays
+    # in the MCP `health` tool.
+    mark_ready(server)
 
     try:
         yield context
@@ -599,6 +608,11 @@ def create_server(config: ServerConfig) -> FastMCP:
         # (health + translate_wlan_* ARE registered in every mode — they wrap
         # engines/probes the sandbox can't import, so they must be call_tool-able.)
         _register_code_mode(mcp, config.code_sandbox_max_duration_secs)
+
+    # Plain HTTP liveness/readiness/health endpoints for Kubernetes probes and
+    # Docker healthchecks. Registered in every tool mode and independent of
+    # MCP_APP_ENABLE — deployment plumbing, not a model-facing tool.
+    register_health_routes(mcp, config)
 
     return mcp
 
