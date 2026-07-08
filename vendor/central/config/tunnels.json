@@ -3334,9 +3334,5 @@
     {
       "name": "Interface Tunnel Group"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

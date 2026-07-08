@@ -7259,9 +7259,5 @@
     {
       "name": "Vsx Pair"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

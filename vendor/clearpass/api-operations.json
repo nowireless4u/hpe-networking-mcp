@@ -124,7 +124,7 @@
   "info": {
     "contact": {},
     "title": "API Operations",
-    "version": "6.14.0"
+    "version": "6.12.7"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -400,8 +400,5 @@
       "key": "Authorization",
       "value": "Bearer <TOKEN>"
     }
-  ],
-  "x-readme": {
-    "proxy-enabled": true
-  }
+  ]
 }

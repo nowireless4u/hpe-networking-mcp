@@ -29412,9 +29412,5 @@
     {
       "name": "Udp Broadcast Forwarder"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

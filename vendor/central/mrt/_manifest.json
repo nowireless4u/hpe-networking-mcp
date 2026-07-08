@@ -2,49 +2,49 @@
   "definition_count": 7,
   "definitions": [
     {
-      "id": "6a0f4706130877bb01a87c20",
+      "id": "1s7u1260m5zss2wh",
       "path_count": 1,
       "slug": "authorization",
       "title": "Authorization",
       "version": "1.0.0"
     },
     {
-      "id": "6a22a31de3748e46fbce46ad",
+      "id": "18et12mq0rxypw",
       "path_count": 133,
       "slug": "monitoring",
       "title": "Monitoring",
       "version": "1.0.0"
     },
     {
-      "id": "6a22a32861dee157bb17ff2b",
+      "id": "1h0cob34mq0ry20v",
       "path_count": 1,
       "slug": "msp",
       "title": "MSP",
       "version": "0.0.1"
     },
     {
-      "id": "6a22a32c2a61c7be1338ec40",
+      "id": "efby17mq0ry5ie",
       "path_count": 10,
       "slug": "notifications",
       "title": "Notifications",
       "version": "0.0.1"
     },
     {
-      "id": "6a22a33161dee157bb1803c9",
+      "id": "1h0cob34mq0ry8ne",
       "path_count": 5,
       "slug": "reporting",
       "title": "Reporting",
       "version": "0.0.1"
     },
     {
-      "id": "6a22a3348777db1fd04db20b",
+      "id": "9a25qvfmq0ryd0e",
       "path_count": 47,
       "slug": "services",
       "title": "Services",
       "version": "0.0.1"
     },
     {
-      "id": "6a22a33ba66efc864511fdec",
+      "id": "b374ik26mq0ryji5",
       "path_count": 95,
       "slug": "troubleshooting",
       "title": "Troubleshooting",
@@ -52,6 +52,6 @@
     }
   ],
   "project": "new-central",
-  "source": "https://developer.arubanetworks.com/new-central/openapi/<apiSetting-id>",
+  "source": "https://dash.readme.com/api/v1/api-registry/<uuid> (discovered via https://developer.arubanetworks.com/new-central/reference)",
   "total_paths": 292
 }

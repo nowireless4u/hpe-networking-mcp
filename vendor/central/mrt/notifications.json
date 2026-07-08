@@ -2173,9 +2173,5 @@
       "description": "APIs for retrieving source recommendations.",
       "name": "Insights"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

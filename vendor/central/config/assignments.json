@@ -1468,9 +1468,5 @@
     {
       "name": "Config Assignment"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

@@ -152,16 +152,6 @@
         "title": "AuthMethod",
         "type": "string"
       },
-      "CentralMode": {
-        "description": "Central Mode",
-        "enum": [
-          "Classic Central",
-          "Central"
-        ],
-        "example": "Classic Central",
-        "title": "CentralMode",
-        "type": "string"
-      },
       "ContentType": {
         "description": "Content-Type of the Context Server Action. Note : For CUSTOM type use any string",
         "enum": [
@@ -202,7 +192,7 @@
             "type": "string"
           },
           "headers": {
-            "description": "Headers of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
+            "description": "Headers(key/value pairs) of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
             "type": "object"
           },
           "http_method": {
@@ -256,7 +246,7 @@
             "type": "string"
           },
           "headers": {
-            "description": "Headers of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
+            "description": "Headers(key/value pairs) of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
             "type": "object"
           },
           "http_method": {
@@ -348,7 +338,7 @@
             "type": "string"
           },
           "headers": {
-            "description": "Headers of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
+            "description": "Headers(key/value pairs) of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
             "type": "object"
           },
           "http_method": {
@@ -403,7 +393,7 @@
             "type": "string"
           },
           "headers": {
-            "description": "Headers of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
+            "description": "Headers(key/value pairs) of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
             "type": "object"
           },
           "http_method": {
@@ -466,7 +456,7 @@
             "type": "string"
           },
           "headers": {
-            "description": "Headers of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
+            "description": "Headers(key/value pairs) of the Context Server Action (e.g., [{\"attr_name\":\"key1\", \"attr_value\":\"value1\"},{\"attr_name\":\"key2\", \"attr_value\":\"value2\"}])",
             "type": "object"
           },
           "http_method": {
@@ -516,9 +506,6 @@
           "bypass_proxy": {
             "description": "Bypass Proxy",
             "type": "boolean"
-          },
-          "central_mode": {
-            "$ref": "#/components/schemas/CentralMode"
           },
           "device_insight_collector_id": {
             "description": "Device Insight Collector Id",
@@ -602,9 +589,6 @@
           "bypass_proxy": {
             "description": "Bypass Proxy",
             "type": "boolean"
-          },
-          "central_mode": {
-            "$ref": "#/components/schemas/CentralMode"
           },
           "device_insight_collector_id": {
             "description": "Device Insight Collector Id",
@@ -699,9 +683,6 @@
           "bypass_proxy": {
             "description": "Bypass Proxy",
             "type": "boolean"
-          },
-          "central_mode": {
-            "$ref": "#/components/schemas/CentralMode"
           },
           "device_insight_collector_id": {
             "description": "Device Insight Collector Id",
@@ -2222,6 +2203,7 @@
         "enum": [
           "Aruba Activate",
           "VMware AirWatch",
+          "JAMF",
           "MobileIron Core",
           "IBM MaaS360",
           "SAP Afaria",
@@ -2851,7 +2833,7 @@
   "info": {
     "contact": {},
     "title": "Integrations",
-    "version": "6.14.0"
+    "version": "6.12.7"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -10140,8 +10122,5 @@
       "key": "Authorization",
       "value": "Bearer <TOKEN>"
     }
-  ],
-  "x-readme": {
-    "proxy-enabled": true
-  }
+  ]
 }

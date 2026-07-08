@@ -2,7 +2,7 @@
   "definition_count": 1,
   "definitions": [
     {
-      "id": "698cac645fd48bc2c4883afd",
+      "id": "2j1jmli8l514",
       "path_count": 18,
       "slug": "hpe-networking-uxi-configuration",
       "title": "HPE Networking UXI Configuration",
@@ -10,6 +10,6 @@
     }
   ],
   "project": "uxi",
-  "source": "https://developer.arubanetworks.com/uxi/openapi/<apiSetting-id>",
+  "source": "https://dash.readme.com/api/v1/api-registry/<uuid> (discovered via https://developer.arubanetworks.com/uxi/reference)",
   "total_paths": 18
 }

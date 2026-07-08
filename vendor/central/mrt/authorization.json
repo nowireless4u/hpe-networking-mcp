@@ -88,9 +88,5 @@
     {
       "url": "https://sso.common.cloud.hpe.com"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

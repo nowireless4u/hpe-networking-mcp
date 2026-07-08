@@ -13007,9 +13007,5 @@
       "description": "Troubleshooting operations on Gateways",
       "name": "Gateways"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

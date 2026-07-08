@@ -1053,9 +1053,5 @@
       "description": "Configuration Health APIs - To get details about configuration status for devices and issues with devices",
       "name": "Configuration Health"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

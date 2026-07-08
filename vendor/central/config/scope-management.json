@@ -5870,9 +5870,5 @@
       "description": "Site management APIs for creating, updating, deleting sites and managing devices within sites.",
       "name": "Sites"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

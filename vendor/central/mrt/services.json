@@ -12804,9 +12804,5 @@
       "description": "APIs for managing webhooks.",
       "name": "Webhooks"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

@@ -1295,11 +1295,7 @@
         "description": "Authentication Protocol",
         "enum": [
           "MD5",
-          "SHA",
-          "SHA-224",
-          "SHA-256",
-          "SHA-384",
-          "SHA-512"
+          "SHA"
         ],
         "example": "MD5",
         "title": "AuthProtocol",
@@ -1468,10 +1464,6 @@
           "AutoBackupConfigOptions": {
             "$ref": "#/components/schemas/AutoBackupConfigOptions"
           },
-          "AutoBackupConfigPassword": {
-            "description": "Auto backup configuration password",
-            "type": "string"
-          },
           "CLISessionIdleTimeout": {
             "description": "CLI Session Idle Timeout in minutes",
             "type": "integer"
@@ -1514,6 +1506,12 @@
           "DesignatedStandbyPublisher": {
             "description": "Designated Standby Publisher",
             "type": "string"
+          },
+          "DisableTLS1.0": {
+            "$ref": "#/components/schemas/DisableTLS1.0"
+          },
+          "DisableTLS1.1": {
+            "$ref": "#/components/schemas/DisableTLS1.1"
           },
           "DisableTLS1.3": {
             "$ref": "#/components/schemas/DisableTLS1.3"
@@ -1566,10 +1564,6 @@
           "MACAddressFormat": {
             "$ref": "#/components/schemas/MACAddressFormat"
           },
-          "NetflowDecoderInactiveTimeout": {
-            "description": "Netflow Decoder Inactive Timeout",
-            "type": "integer"
-          },
           "NetflowReprofileInterval": {
             "description": "Netflow reprofile interval in days",
             "type": "integer"
@@ -1608,9 +1602,6 @@
           "PostAuthV2HttpEnforcement": {
             "$ref": "#/components/schemas/PostAuthV2HttpEnforcement"
           },
-          "PostureEngineAutoUpdatesFlag": {
-            "$ref": "#/components/schemas/PostureEngineAutoUpdatesFlag"
-          },
           "ProcessWiredFromIfMap": {
             "$ref": "#/components/schemas/ProcessWiredFromIfMap"
           },
@@ -1640,6 +1631,10 @@
           },
           "ProfilingAutoUpdatesFlag": {
             "$ref": "#/components/schemas/ProfilingAutoUpdatesFlag"
+          },
+          "SSHCipherMode": {
+            "description": "Allowed SSH Cipher Modes",
+            "type": "string"
           },
           "SessionLogsCleanupInterval": {
             "description": "Cleanup interval for Session log details in the database in days",
@@ -1762,10 +1757,6 @@
           "AutoBackupConfigOptions": {
             "$ref": "#/components/schemas/AutoBackupConfigOptions"
           },
-          "AutoBackupConfigPassword": {
-            "description": "Auto backup configuration password",
-            "type": "string"
-          },
           "CLISessionIdleTimeout": {
             "description": "CLI Session Idle Timeout in minutes",
             "type": "integer"
@@ -1808,6 +1799,12 @@
           "DesignatedStandbyPublisher": {
             "description": "Designated Standby Publisher",
             "type": "string"
+          },
+          "DisableTLS1.0": {
+            "$ref": "#/components/schemas/DisableTLS1.0"
+          },
+          "DisableTLS1.1": {
+            "$ref": "#/components/schemas/DisableTLS1.1"
           },
           "DisableTLS1.3": {
             "$ref": "#/components/schemas/DisableTLS1.3"
@@ -1860,10 +1857,6 @@
           "MACAddressFormat": {
             "$ref": "#/components/schemas/MACAddressFormat"
           },
-          "NetflowDecoderInactiveTimeout": {
-            "description": "Netflow Decoder Inactive Timeout",
-            "type": "integer"
-          },
           "NetflowReprofileInterval": {
             "description": "Netflow reprofile interval in days",
             "type": "integer"
@@ -1902,9 +1895,6 @@
           "PostAuthV2HttpEnforcement": {
             "$ref": "#/components/schemas/PostAuthV2HttpEnforcement"
           },
-          "PostureEngineAutoUpdatesFlag": {
-            "$ref": "#/components/schemas/PostureEngineAutoUpdatesFlag"
-          },
           "ProcessWiredFromIfMap": {
             "$ref": "#/components/schemas/ProcessWiredFromIfMap"
           },
@@ -1934,6 +1924,10 @@
           },
           "ProfilingAutoUpdatesFlag": {
             "$ref": "#/components/schemas/ProfilingAutoUpdatesFlag"
+          },
+          "SSHCipherMode": {
+            "description": "Allowed SSH Cipher Modes",
+            "type": "string"
           },
           "SessionLogsCleanupInterval": {
             "description": "Cleanup interval for Session log details in the database in days",
@@ -2003,7 +1997,6 @@
           "TacacsAllowUnencryptedCommunication",
           "AuditRecordsCleanupInterval",
           "AutoBackupConfigOptions",
-          "AutoBackupConfigPassword",
           "CLISessionIdleTimeout",
           "CSRCleanupInterval",
           "ClusterCommunicationMode",
@@ -2014,6 +2007,8 @@
           "ContextServerPollStartTime",
           "DbAppexternalUserPassword",
           "DesignatedStandbyPublisher",
+          "DisableTLS1.0",
+          "DisableTLS1.1",
           "EnableNTLMV1ForWmi",
           "EnablePublisherFailover",
           "EnableTelemetry",
@@ -2042,6 +2037,7 @@
           "ProfilerScanPorts",
           "ProfilerSubnetScanInterval",
           "ProfilingAutoUpdatesFlag",
+          "SSHCipherMode",
           "SessionLogsCleanupInterval",
           "SoftwareAutoUpdatesFlag",
           "ExtensionsAutoUpgradesFlag",
@@ -2415,6 +2411,30 @@
         "example": "1-365",
         "title": "DisableAfterUnchangedDays",
         "type": "integer"
+      },
+      "DisableTLS1.0": {
+        "description": "Disable TLSv1.0 support, this field cannot be modified in FIPS mode",
+        "enum": [
+          "None",
+          "Admin",
+          "Network",
+          "All"
+        ],
+        "example": "None",
+        "title": "DisableTLS1.0",
+        "type": "string"
+      },
+      "DisableTLS1.1": {
+        "description": "Disable TLSv1.1 support, this field cannot be modified in FIPS mode",
+        "enum": [
+          "None",
+          "Admin",
+          "Network",
+          "All"
+        ],
+        "example": "None",
+        "title": "DisableTLS1.1",
+        "type": "string"
       },
       "DisableTLS1.3": {
         "description": "",
@@ -3636,23 +3656,16 @@
         "title": "PostAuthV2HttpEnforcement",
         "type": "string"
       },
-      "PostureEngineAutoUpdatesFlag": {
-        "description": "Automatically check for available Posture Engine Updates",
-        "enum": [
-          "TRUE",
-          "FALSE"
-        ],
-        "example": "TRUE",
-        "title": "PostureEngineAutoUpdatesFlag",
-        "type": "string"
-      },
       "PrivProtocol": {
         "description": "Privacy Protocol",
         "enum": [
-          "AES-128",
-          "AES-256"
+          "DES_CBC",
+          "AES_128",
+          "AES_192",
+          "AES_256",
+          "AES_256_C"
         ],
-        "example": "AES-128",
+        "example": "DES_CBC",
         "title": "PrivProtocol",
         "type": "object"
       },
@@ -4375,7 +4388,7 @@
   "info": {
     "contact": {},
     "title": "Global Server Configuration",
-    "version": "6.14.0"
+    "version": "6.12.7"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -12682,8 +12695,5 @@
       "key": "Authorization",
       "value": "Bearer <TOKEN>"
     }
-  ],
-  "x-readme": {
-    "proxy-enabled": true
-  }
+  ]
 }

@@ -288666,9 +288666,5 @@
     {
       "url": "switch-ip/rest/v10.16"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

@@ -5693,9 +5693,5 @@
     {
       "name": "Dap Sla"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

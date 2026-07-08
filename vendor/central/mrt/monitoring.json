@@ -30952,9 +30952,5 @@
       "description": "Topology APIs to get Topology and device relationship information",
       "name": "Topology"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

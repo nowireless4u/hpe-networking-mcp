@@ -1564,9 +1564,5 @@
       "description": "Reporting APIs to manage network reports",
       "name": "Reporting"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

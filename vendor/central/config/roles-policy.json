@@ -47490,9 +47490,5 @@
     {
       "name": "Role Gpid"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

@@ -14189,9 +14189,5 @@
     {
       "name": "Vrrp Interface"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }
