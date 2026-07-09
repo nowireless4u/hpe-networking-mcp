@@ -5848,9 +5848,5 @@
       "name": "Static Tags"
     }
   ],
-  "x-original-swagger-version": "2.0",
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  "x-original-swagger-version": "2.0"
 }

@@ -30324,9 +30324,5 @@
     {
       "name": "Net Service"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

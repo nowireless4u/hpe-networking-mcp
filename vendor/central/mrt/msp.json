@@ -776,9 +776,5 @@
       "description": "MSP APIs to get and manage tenants related information.",
       "name": "MSP"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

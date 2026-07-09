@@ -8930,9 +8930,5 @@
     {
       "name": "Traffic Insight"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

@@ -14282,9 +14282,5 @@
     {
       "name": "Cda Static Tag"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

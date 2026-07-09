@@ -27,10 +27,6 @@
             "description": "Domain of the endpoint",
             "type": "string"
           },
-          "hostname": {
-            "description": "Hostname of the endpoint",
-            "type": "string"
-          },
           "ip": {
             "description": "IP Address of the endpoint",
             "type": "string"
@@ -84,7 +80,6 @@
           "ip",
           "ipv6",
           "user",
-          "hostname",
           "domain",
           "roles",
           "spt",
@@ -346,7 +341,7 @@
   "info": {
     "contact": {},
     "title": "Logs",
-    "version": "6.14.0"
+    "version": "6.12.7"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -881,8 +876,5 @@
       "key": "Authorization",
       "value": "Bearer <TOKEN>"
     }
-  ],
-  "x-readme": {
-    "proxy-enabled": true
-  }
+  ]
 }

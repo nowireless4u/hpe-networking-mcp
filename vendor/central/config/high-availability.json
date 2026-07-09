@@ -8652,9 +8652,5 @@
     {
       "name": "Vsx"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

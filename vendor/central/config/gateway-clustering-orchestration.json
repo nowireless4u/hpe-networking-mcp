@@ -1919,9 +1919,5 @@
     {
       "name": "Gw Cluster Intent"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }

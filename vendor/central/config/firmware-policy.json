@@ -1613,9 +1613,5 @@
     {
       "name": "Firmware Compliance"
     }
-  ],
-  "x-readme": {
-    "explorer-enabled": true,
-    "proxy-enabled": true
-  }
+  ]
 }
