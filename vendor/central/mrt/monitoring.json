@@ -1314,6 +1314,27 @@
           }
         }
       },
+      "GatewayModemStatsResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/GwModemStats"
+            }
+          }
+        },
+        "description": "The response object provides modem stats for the specified gateway.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "GatewayPortListResponse": {
         "content": {
           "application/json": {
@@ -2422,6 +2443,27 @@
           }
         }
       },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableErrorDetails"
+            }
+          }
+        },
+        "description": "Service unavailable.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
       "SiteHealthResponse": {
         "content": {
           "application/json": {
@@ -3070,7 +3112,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/WlanInfo"
+              "$ref": "#/components/schemas/WlanInfoV1"
             }
           }
         },
@@ -3667,6 +3709,9 @@
           },
           "duplex": {
             "$ref": "#/components/schemas/duplex"
+          },
+          "isUplink": {
+            "$ref": "#/components/schemas/isUplink"
           },
           "macAddress": {
             "$ref": "#/components/schemas/portMacAddress"
@@ -4762,6 +4807,136 @@
         "maxLength": 16,
         "type": "string"
       },
+      "ApplicationCategoryUsageItem": {
+        "description": "Usage statistics for a single application category.\n",
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp in RFC 3339 format.\n",
+            "example": "2024-11-20T14:14:33Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "description": "Human-readable application category name.\n",
+            "example": "Google",
+            "format": "const",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.\n",
+            "example": 1,
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the application category.\n",
+            "example": "google",
+            "format": "const",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "rxBytes": {
+            "description": "Bytes received by clients for this category.\n",
+            "example": 5242880,
+            "format": "double",
+            "minimum": 0,
+            "type": "number"
+          },
+          "txBytes": {
+            "description": "Bytes transmitted from clients for this category.\n",
+            "example": 1048576,
+            "format": "double",
+            "minimum": 0,
+            "type": "number"
+          },
+          "type": {
+            "description": "Resource type.\n",
+            "example": "network-monitoring/application-category",
+            "format": "const",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp in RFC 3339 format.\n",
+            "example": "2024-11-20T14:14:33Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "displayName",
+          "txBytes",
+          "rxBytes"
+        ],
+        "type": "object"
+      },
+      "ApplicationCategoryUsageList": {
+        "description": "Ordered list of application categories by usage.\n",
+        "example": {
+          "count": 2,
+          "items": [
+            {
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "Google",
+              "generation": 1,
+              "id": "google",
+              "rxBytes": 5242880,
+              "txBytes": 1048576,
+              "type": "network-monitoring/application-category",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            },
+            {
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "Social Media",
+              "generation": 1,
+              "id": "social",
+              "rxBytes": 2097152,
+              "txBytes": 524288,
+              "type": "network-monitoring/application-category",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            }
+          ],
+          "offset": 0,
+          "total": 10
+        },
+        "properties": {
+          "count": {
+            "description": "Number of category entries returned.\n",
+            "example": 2,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of application category usage entries.\n",
+            "items": {
+              "$ref": "#/components/schemas/ApplicationCategoryUsageItem"
+            },
+            "maxItems": 500,
+            "type": "array"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Totalapp"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
       "ApplicationItems": {
         "description": "This object gives details about the applications and websites.\n",
         "example": {
@@ -4936,53 +5111,51 @@
         "type": "object"
       },
       "ApplicationsResponse": {
-        "description": "List of applications and websites\n",
+        "description": "List of applications and websites.\n",
         "example": {
-          "applications": {
-            "count": 1,
-            "items": [
-              {
-                "applicationHostType": "Public",
-                "categories": [
-                  "Social Networking",
-                  "Social Networking Web"
-                ],
-                "certificateExpiryDate": "",
-                "destLocation": [
+          "count": 1,
+          "items": [
+            {
+              "applicationHostType": "Public",
+              "categories": [
+                "Social Networking",
+                "Social Networking Web"
+              ],
+              "certificateExpiryDate": "",
+              "destLocation": [
+                {
+                  "countryName": "United States"
+                }
+              ],
+              "experience": {
+                "groups": [
                   {
-                    "countryName": "United States"
+                    "count": 0,
+                    "name": "Poor"
+                  },
+                  {
+                    "count": 0,
+                    "name": "Fair"
+                  },
+                  {
+                    "count": 4,
+                    "name": "Good"
                   }
-                ],
-                "experience": {
-                  "groups": [
-                    {
-                      "count": 0,
-                      "name": "Poor"
-                    },
-                    {
-                      "count": 0,
-                      "name": "Fair"
-                    },
-                    {
-                      "count": 4,
-                      "name": "Good"
-                    }
-                  ]
-                },
-                "id": "244",
-                "lastUsedTime": "1725574810044",
-                "name": "Facebook",
-                "risk": "LOW",
-                "rxBytes": 82949479,
-                "state": "ALLOWED",
-                "tlsVersion": "",
-                "txBytes": 4615170,
-                "type": "/network-monitoring/applications"
-              }
-            ],
-            "offset": 0,
-            "total": 256
-          }
+                ]
+              },
+              "id": "244",
+              "lastUsedTime": "1725574810044",
+              "name": "Facebook",
+              "risk": "LOW",
+              "rxBytes": 82949479,
+              "state": "ALLOWED",
+              "tlsVersion": "",
+              "txBytes": 4615170,
+              "type": "/network-monitoring/applications"
+            }
+          ],
+          "next": "NyBErRdk6czGUyDAX5Cp",
+          "total": 256
         },
         "maxItems": 1000,
         "properties": {
@@ -4995,6 +5168,9 @@
             },
             "type": "array"
           },
+          "next": {
+            "$ref": "#/components/schemas/Next"
+          },
           "offset": {
             "$ref": "#/components/schemas/Offset"
           },
@@ -5004,7 +5180,7 @@
         },
         "required": [
           "items",
-          "offset",
+          "next",
           "count",
           "total"
         ],
@@ -5928,17 +6104,15 @@
       "ClientResponse": {
         "description": "List of clients.\n",
         "example": {
-          "clients": {
-            "count": 1,
-            "items": [
-              {
-                "clientMac": "00:00:00:00:00:00",
-                "clientUsername": "aruba-test@hpe.com"
-              }
-            ],
-            "offset": 0,
-            "total": 101
-          }
+          "count": 1,
+          "items": [
+            {
+              "clientMac": "00:00:00:00:00:00",
+              "clientUsername": "aruba-test@hpe.com"
+            }
+          ],
+          "next": "NyBErRdk6czGUyDAX5Cp",
+          "total": 101
         },
         "maxItems": 1000,
         "properties": {
@@ -5951,6 +6125,9 @@
             },
             "type": "array"
           },
+          "next": {
+            "$ref": "#/components/schemas/Next"
+          },
           "offset": {
             "$ref": "#/components/schemas/Offset"
           },
@@ -5960,7 +6137,7 @@
         },
         "required": [
           "items",
-          "offset",
+          "next",
           "count",
           "total"
         ],
@@ -5969,41 +6146,39 @@
       "ClientSessionLogResponse": {
         "description": "List of client firewall session logs.\n",
         "example": {
-          "clientFirewallSessionLogs": {
-            "count": 1,
-            "items": [
-              {
-                "applicationCategories": [
-                  "Streaming"
-                ],
-                "applicationName": "Netflix",
-                "blockedSessionReason": "Web Classification",
-                "clientConnectionType": "wireless",
-                "clientHostname": "host1",
-                "clientIp": "10.53.110.142",
-                "clientRole": "guest",
-                "clientUsername": "aruba-test@hpe.com",
-                "destinationIp": "13.107.42.14",
-                "deviceType": "DEVICE_TYPE_AP",
-                "id": "1699550427000-10.53.110.142-b8:27:eb:61:34:f0-13.107.42.14",
-                "rxBytes": 572522496,
-                "serialNumber": "CN00000000",
-                "sessionCount": 100,
-                "sessionType": "blocked",
-                "ssidName": "guestWifi",
-                "timestamp": "1699551447000",
-                "tunneledTraffic": false,
-                "txBytes": 5433,
-                "type": "network-monitoring/client-firewall-sessions",
-                "vlanId": 12,
-                "webCategories": "Streaming Media",
-                "webReputation": "Trustworthy",
-                "webUrl": "netflix.com"
-              }
-            ],
-            "offset": 0,
-            "total": 101
-          }
+          "count": 1,
+          "items": [
+            {
+              "applicationCategories": [
+                "Streaming"
+              ],
+              "applicationName": "Netflix",
+              "blockedSessionReason": "Web Classification",
+              "clientConnectionType": "wireless",
+              "clientHostname": "host1",
+              "clientIp": "10.53.110.142",
+              "clientRole": "guest",
+              "clientUsername": "aruba-test@hpe.com",
+              "destinationIp": "13.107.42.14",
+              "deviceType": "DEVICE_TYPE_AP",
+              "id": "1699550427000-10.53.110.142-b8:27:eb:61:34:f0-13.107.42.14",
+              "rxBytes": 572522496,
+              "serialNumber": "CN00000000",
+              "sessionCount": 100,
+              "sessionType": "blocked",
+              "ssidName": "guestWifi",
+              "timestamp": "1699551447000",
+              "tunneledTraffic": false,
+              "txBytes": 5433,
+              "type": "network-monitoring/client-firewall-sessions",
+              "vlanId": 12,
+              "webCategories": "Streaming Media",
+              "webReputation": "Trustworthy",
+              "webUrl": "netflix.com"
+            }
+          ],
+          "next": "NyBErRdk6czGUyDAX5Cp",
+          "total": 101
         },
         "maxItems": 1000,
         "properties": {
@@ -6016,6 +6191,9 @@
             },
             "type": "array"
           },
+          "next": {
+            "$ref": "#/components/schemas/Next"
+          },
           "offset": {
             "$ref": "#/components/schemas/Offset"
           },
@@ -6025,7 +6203,7 @@
         },
         "required": [
           "items",
-          "offset",
+          "next",
           "count",
           "total"
         ],
@@ -7002,7 +7180,7 @@
                       "$ref": "#/components/schemas/SiteIDdevice"
                     },
                     "siteName": {
-                      "$ref": "#/components/schemas/SiteName"
+                      "$ref": "#/components/schemas/SiteNamedevice"
                     },
                     "stackId": {
                       "$ref": "#/components/schemas/StackId"
@@ -7246,7 +7424,7 @@
             "$ref": "#/components/schemas/SiteIDdevice"
           },
           "siteName": {
-            "$ref": "#/components/schemas/SiteName"
+            "$ref": "#/components/schemas/SiteNamedevice"
           },
           "status": {
             "$ref": "#/components/schemas/Status"
@@ -11485,6 +11663,109 @@
         ],
         "type": "object"
       },
+      "GwModemStats": {
+        "example": {
+          "arfcn3g": 0,
+          "arfcnLte": 1615,
+          "cqi": 0,
+          "dataBilling": 1,
+          "dataLimit": "60 MB",
+          "dataUsage": "90 MB",
+          "id": "GW00000001",
+          "rscp3g": "0 dBm",
+          "rsrpLte": "-91 dBm",
+          "rsrq": "-13 dBm",
+          "rssi": "-61 dBm",
+          "signalStrength": 9,
+          "type": "network-monitoring/gateway-monitoring"
+        },
+        "properties": {
+          "arfcn3g": {
+            "description": "Absolute Radio Frequency Channel Number for 3G networks.\n",
+            "example": 0,
+            "format": "int32",
+            "type": "integer"
+          },
+          "arfcnLte": {
+            "description": "Absolute Radio Frequency Channel Number for LTE networks.\n",
+            "example": 1615,
+            "format": "int32",
+            "type": "integer"
+          },
+          "cqi": {
+            "description": "Channel Quality Indicator representing the quality of the wireless channel.\n",
+            "example": 0,
+            "format": "int32",
+            "type": "integer"
+          },
+          "dataBilling": {
+            "description": "It indicates the start date of the monthly billing cycle.\n",
+            "example": 1,
+            "format": "int64",
+            "maximum": 31,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "dataLimit": {
+            "description": "Data limit for the modem connection.\n",
+            "example": "60 MB",
+            "type": "string"
+          },
+          "dataUsage": {
+            "description": "Data usage for the modem connection.\n",
+            "example": "90 MB",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/IDgw"
+          },
+          "rscp3g": {
+            "description": "Received Signal Code Power for 3G networks.\n",
+            "example": "0 dBm",
+            "type": "string"
+          },
+          "rsrpLte": {
+            "description": "Reference Signal Received Power for LTE networks.\n",
+            "example": "-91 dBm",
+            "type": "string"
+          },
+          "rsrq": {
+            "description": "Reference Signal Received Quality for LTE networks.\n",
+            "example": "-13 dBm",
+            "type": "string"
+          },
+          "rssi": {
+            "description": "Received Signal Strength Indicator for the modem connection.\n",
+            "example": "-61 dBm",
+            "type": "string"
+          },
+          "signalStrength": {
+            "description": "Signal-to-Interference-plus-Noise Ratio for the modem connection.\n",
+            "example": 9,
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Typegw"
+          }
+        },
+        "required": [
+          "arfcn3g",
+          "arfcnLte",
+          "cqi",
+          "dataBilling",
+          "dataLimit",
+          "dataUsage",
+          "rscp3g",
+          "rsrpLte",
+          "rsrq",
+          "rssi",
+          "signalStrength",
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
       "GwProbeList": {
         "example": {
           "id": "GW00000001/uplinks/airtel/probes",
@@ -13133,6 +13414,18 @@
                   "example": "TW8AK7206R",
                   "type": "string"
                 },
+                "siteId": {
+                  "$ref": "#/components/schemas/SiteId",
+                  "description": "Site id of the neighbour device. This value will be null for unmanaged neighbours.",
+                  "example": "965498321",
+                  "nullable": true
+                },
+                "siteName": {
+                  "$ref": "#/components/schemas/SiteName",
+                  "description": "Site name of the neighbour device. This value will be null for unmanaged neighbours.",
+                  "example": "Site1",
+                  "nullable": true
+                },
                 "toPort": {
                   "description": "Port of the neighbour device connected to the local device",
                   "example": "1/1/46",
@@ -13234,7 +13527,8 @@
       "Offset": {
         "description": "The offset of the first item in the response.\n",
         "example": 0,
-        "format": "int64",
+        "format": "int32",
+        "minimum": 0,
         "type": "integer"
       },
       "OffsetParam": {
@@ -14429,6 +14723,9 @@
                     "id": {
                       "$ref": "#/components/schemas/RadioIdentifier"
                     },
+                    "isUplink": {
+                      "$ref": "#/components/schemas/isUplink"
+                    },
                     "macAddress": {
                       "$ref": "#/components/schemas/portMacAddress"
                     },
@@ -15333,6 +15630,71 @@
         "maxLength": 16,
         "type": "string"
       },
+      "Risk": {
+        "description": "A single risk level and its application count.\n",
+        "properties": {
+          "count": {
+            "description": "Number of applications at this risk level.\n",
+            "example": 3,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "createdAt": {
+            "description": "Creation timestamp in RFC 3339 format.\n",
+            "example": "2024-11-20T14:14:33Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "description": "Human-readable risk level name.\n",
+            "example": "High",
+            "format": "const",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.\n",
+            "example": 1,
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Risk level identifier.\n",
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW"
+            ],
+            "example": "HIGH",
+            "type": "string"
+          },
+          "type": {
+            "description": "Resource type.\n",
+            "example": "network-monitoring/security-risk",
+            "format": "const",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp in RFC 3339 format.\n",
+            "example": "2024-11-20T14:14:33Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "displayName",
+          "count"
+        ],
+        "type": "object"
+      },
       "RoamProtocol": {
         "description": "Specifies the type of roam that has happened.",
         "enum": [
@@ -15424,6 +15786,72 @@
         "maxLength": 256,
         "type": "string"
       },
+      "SecurityRiskInfoResponse": {
+        "description": "Security risk breakdown for applications in the requested scope.\n",
+        "example": {
+          "count": 3,
+          "items": [
+            {
+              "count": 3,
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "High",
+              "generation": 1,
+              "id": "HIGH",
+              "type": "network-monitoring/security-risk",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            },
+            {
+              "count": 12,
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "Medium",
+              "generation": 1,
+              "id": "MEDIUM",
+              "type": "network-monitoring/security-risk",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            },
+            {
+              "count": 27,
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "Low",
+              "generation": 1,
+              "id": "LOW",
+              "type": "network-monitoring/security-risk",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            }
+          ],
+          "offset": 0,
+          "total": 3
+        },
+        "properties": {
+          "count": {
+            "description": "Number of risk level entries returned.\n",
+            "example": 3,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of risk level entries.\n",
+            "items": {
+              "$ref": "#/components/schemas/Risk"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Totalapp"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
       "Serial": {
         "description": "The device serial number.",
         "example": "AP00000001",
@@ -15455,6 +15883,46 @@
         "example": "AP00000001",
         "format": "const",
         "type": "string"
+      },
+      "ServiceUnavailableErrorDetails": {
+        "description": "Error details.\n",
+        "properties": {
+          "debugId": {
+            "description": "Used for troubleshooting.\n",
+            "example": "abc-123-456",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "An internal error code.\n",
+            "example": "HPE_GL_ERROR_SERVICE_UNAVAILABLE",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code.\n",
+            "example": 503,
+            "maximum": 600,
+            "minimum": 400,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Error message indicating the cause of the failure.\n",
+            "example": "Service unavailable",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
       },
       "SessionItems": {
         "description": "This object gives details about the firewall session log.\n",
@@ -15703,43 +16171,41 @@
       "SessionLogResponse": {
         "description": "List of firewall session logs.\n",
         "example": {
-          "firewallSessionLogs": {
-            "count": 1,
-            "items": [
-              {
-                "applicationCategories": [
-                  "Streaming"
-                ],
-                "applicationName": "Netflix",
-                "blockedSessionReason": "Web Classification",
-                "certificateExpiryDate": 1907231844072,
-                "clientConnectionType": "wireless",
-                "clientMac": "b8:27:eb:61:34:f0",
-                "clientRole": "guest",
-                "clientUsername": "aruba-test@hpe.com",
-                "destinationIp": "13.107.42.14",
-                "destinationLocation": "United States",
-                "deviceType": "DEVICE_TYPE_AP",
-                "id": "1699550427000-10.53.110.142-b8:27:eb:61:34:f0-13.107.42.14",
-                "rxBytes": 572522496,
-                "serialNumber": "CN00000000",
-                "sessionType": "blocked",
-                "sourceIp": "10.53.110.142",
-                "ssidName": "guestWifi",
-                "timestamp": "1699551447000",
-                "tlsServerVersion": "tls_v1.2",
-                "tunneledTraffic": false,
-                "txBytes": 5433,
-                "type": "network-monitoring/site-firewall-sessions",
-                "vlanId": 12,
-                "webCategories": "Streaming Media",
-                "webReputation": "Trustworthy",
-                "webUrl": "netflix.com"
-              }
-            ],
-            "offset": 0,
-            "total": 101
-          }
+          "count": 1,
+          "items": [
+            {
+              "applicationCategories": [
+                "Streaming"
+              ],
+              "applicationName": "Netflix",
+              "blockedSessionReason": "Web Classification",
+              "certificateExpiryDate": 1907231844072,
+              "clientConnectionType": "wireless",
+              "clientMac": "b8:27:eb:61:34:f0",
+              "clientRole": "guest",
+              "clientUsername": "aruba-test@hpe.com",
+              "destinationIp": "13.107.42.14",
+              "destinationLocation": "United States",
+              "deviceType": "DEVICE_TYPE_AP",
+              "id": "1699550427000-10.53.110.142-b8:27:eb:61:34:f0-13.107.42.14",
+              "rxBytes": 572522496,
+              "serialNumber": "CN00000000",
+              "sessionType": "blocked",
+              "sourceIp": "10.53.110.142",
+              "ssidName": "guestWifi",
+              "timestamp": "1699551447000",
+              "tlsServerVersion": "tls_v1.2",
+              "tunneledTraffic": false,
+              "txBytes": 5433,
+              "type": "network-monitoring/site-firewall-sessions",
+              "vlanId": 12,
+              "webCategories": "Streaming Media",
+              "webReputation": "Trustworthy",
+              "webUrl": "netflix.com"
+            }
+          ],
+          "next": "NyBErRdk6czGUyDAX5Cp",
+          "total": 101
         },
         "maxItems": 1000,
         "properties": {
@@ -15752,6 +16218,9 @@
             },
             "type": "array"
           },
+          "next": {
+            "$ref": "#/components/schemas/Next"
+          },
           "offset": {
             "$ref": "#/components/schemas/Offset"
           },
@@ -15761,7 +16230,7 @@
         },
         "required": [
           "items",
-          "offset",
+          "next",
           "count",
           "total"
         ],
@@ -15896,8 +16365,8 @@
         "type": "object"
       },
       "SiteName": {
-        "description": "SiteName represents the name of the site where the device is located. This name is used to identify and manage devices based on their physical location, allowing for better organization and tracking.\n",
-        "example": "site_test_new",
+        "description": "Name of the site where the device is located.",
+        "example": "Site1",
         "format": "const",
         "maxLength": 256,
         "type": "string"
@@ -15912,6 +16381,13 @@
       "SiteNameclients": {
         "description": "The name of the site where the client is located.",
         "example": "Site-1",
+        "type": "string"
+      },
+      "SiteNamedevice": {
+        "description": "SiteName represents the name of the site where the device is located. This name is used to identify and manage devices based on their physical location, allowing for better organization and tracking.\n",
+        "example": "site_test_new",
+        "format": "const",
+        "maxLength": 256,
         "type": "string"
       },
       "SiteNamegw": {
@@ -19367,6 +19843,136 @@
         ],
         "type": "object"
       },
+      "WebsiteCategoryUsageItem": {
+        "description": "Usage statistics for a single website category.\n",
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp in RFC 3339 format.\n",
+            "example": "2024-11-20T14:14:33Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "displayName": {
+            "description": "Human-readable website category name.\n",
+            "example": "News",
+            "format": "const",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.\n",
+            "example": 1,
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the website category.\n",
+            "example": "news",
+            "format": "const",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "rxBytes": {
+            "description": "Bytes received by clients for this category.\n",
+            "example": 5242880,
+            "format": "double",
+            "minimum": 0,
+            "type": "number"
+          },
+          "txBytes": {
+            "description": "Bytes transmitted from clients for this category.\n",
+            "example": 1048576,
+            "format": "double",
+            "minimum": 0,
+            "type": "number"
+          },
+          "type": {
+            "description": "Resource type.\n",
+            "example": "network-monitoring/website-category",
+            "format": "const",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp in RFC 3339 format.\n",
+            "example": "2024-11-20T14:14:33Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "displayName",
+          "txBytes",
+          "rxBytes"
+        ],
+        "type": "object"
+      },
+      "WebsiteCategoryUsageList": {
+        "description": "Ordered list of website categories by usage.\n",
+        "example": {
+          "count": 2,
+          "items": [
+            {
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "News",
+              "generation": 1,
+              "id": "news",
+              "rxBytes": 5242880,
+              "txBytes": 1048576,
+              "type": "network-monitoring/website-category",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            },
+            {
+              "createdAt": "2024-11-20T14:14:33Z",
+              "displayName": "Social Media",
+              "generation": 1,
+              "id": "social",
+              "rxBytes": 2097152,
+              "txBytes": 524288,
+              "type": "network-monitoring/website-category",
+              "updatedAt": "2024-11-20T14:14:33Z"
+            }
+          ],
+          "offset": 0,
+          "total": 10
+        },
+        "properties": {
+          "count": {
+            "description": "Number of category entries returned.\n",
+            "example": 2,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of website category usage entries.\n",
+            "items": {
+              "$ref": "#/components/schemas/WebsiteCategoryUsageItem"
+            },
+            "maxItems": 500,
+            "type": "array"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Totalapp"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
       "WirelessBand": {
         "description": "Wireless frequency band used by the client.",
         "example": "5GHZ",
@@ -19396,6 +20002,56 @@
         "properties": {
           "band": {
             "$ref": "#/components/schemas/wlanBand"
+          },
+          "id": {
+            "$ref": "#/components/schemas/WLANIdentifier"
+          },
+          "security": {
+            "$ref": "#/components/schemas/security"
+          },
+          "securityLevel": {
+            "$ref": "#/components/schemas/securityLevel"
+          },
+          "status": {
+            "$ref": "#/components/schemas/wlanStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Typeap"
+          },
+          "vlan": {
+            "$ref": "#/components/schemas/wlanVlan"
+          },
+          "wlanName": {
+            "$ref": "#/components/schemas/wlanName",
+            "description": "The name of the WLAN."
+          }
+        },
+        "required": [
+          "wlanName",
+          "securityLevel",
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "WlanInfoV1": {
+        "example": {
+          "band": "2.4 GHz, 5 GHz",
+          "clientCount": 15,
+          "id": "wlans/wlan1",
+          "security": "Enhanced Open",
+          "securityLevel": "Personal",
+          "status": "ENABLED",
+          "type": "network-monitoring/access-point-monitoring",
+          "vlan": "1",
+          "wlanName": "wlan1"
+        },
+        "properties": {
+          "band": {
+            "$ref": "#/components/schemas/wlanBand"
+          },
+          "clientCount": {
+            "$ref": "#/components/schemas/clientCount"
           },
           "id": {
             "$ref": "#/components/schemas/WLANIdentifier"
@@ -19655,10 +20311,15 @@
       },
       "hasFloorFilter": {
         "description": "OData 4.0 filter string for hasFloors boolean field.",
-        "example": "hasFloors eq false",
+        "example": "hasFloors eq true",
         "format": "const",
         "maxLength": 20,
         "type": "string"
+      },
+      "isUplink": {
+        "description": "Indicates whether the port is currently used as an uplink.",
+        "example": false,
+        "type": "boolean"
       },
       "limitlocation": {
         "default": 20,
@@ -19865,10 +20526,196 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/network-monitoring/v1/application-categories": {
+      "get": {
+        "description": "This API endpoint returns the top N application categories ranked by usage (tx + rx bytes) for the requested scope. The maximum time range is 7 days. If the range between start-at and end-at exceeds 7 days, start-at is automatically adjusted to be 7 days before end-at. This is intentional behavior; no error is returned.\n",
+        "operationId": "listApplicationCategoriesV1",
+        "parameters": [
+          {
+            "description": "The start time in RFC 3339 Format or epoch milliseconds (must be within 7 days of end-at).\n",
+            "in": "query",
+            "name": "start-at",
+            "required": true,
+            "schema": {
+              "example": "2024-11-20T14:14:33Z",
+              "format": "date-time",
+              "maxLength": 27,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The end time in RFC 3339 Format or epoch milliseconds (must be greater than start-at).\n",
+            "in": "query",
+            "name": "end-at",
+            "required": true,
+            "schema": {
+              "example": "2024-11-21T14:14:33Z",
+              "format": "date-time",
+              "maxLength": 27,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by site identifier.\n",
+            "in": "query",
+            "name": "site-id",
+            "required": false,
+            "schema": {
+              "example": "2778382",
+              "format": "const",
+              "maxLength": 20,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by client MAC address. Forces use of the main data table (not aggregated).\n",
+            "in": "query",
+            "name": "client-id",
+            "required": false,
+            "schema": {
+              "example": "00:00:00:00:00:00",
+              "format": "const",
+              "maxLength": 17,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by device serial number. Forces use of the main data table (not aggregated).\n",
+            "in": "query",
+            "name": "serial-number",
+            "required": false,
+            "schema": {
+              "example": "CN12345678",
+              "format": "const",
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of items to return per page (1–500). Default: 100.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "example": 10,
+              "format": "int32",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter by SSID name.\n",
+            "in": "query",
+            "name": "ssid",
+            "required": false,
+            "schema": {
+              "example": "CorpWiFi",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by user role.\n",
+            "in": "query",
+            "name": "user-role",
+            "required": false,
+            "schema": {
+              "example": "admin",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based index of the first item to return. Default: 0.\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of top-ranked application categories to return in total across all pages (1–500). Default: 100.\n",
+            "in": "query",
+            "name": "top",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "example": 10,
+              "format": "int32",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationCategoryUsageList"
+                }
+              }
+            },
+            "description": "Successful operation.\n",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeaderapp"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeaderapp"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get top application categories by usage\n",
+        "tags": [
+          "Application Visibility"
+        ]
+      }
+    },
     "/network-monitoring/v1/applications": {
       "get": {
         "description": "This API endpoint retrieves applications accessed in a site by all clients or by a specific client.\n",
-        "operationId": "applicationsv1",
+        "operationId": "listApplicationsV1",
         "parameters": [
           {
             "description": "The ID of the site from which applications will be retrieved.\n",
@@ -19932,14 +20779,23 @@
             }
           },
           {
-            "description": "The offset of the item at which to begin the response.\n",
+            "description": "Cursor for the next page of results. Use the value returned in the `next` response field to retrieve the next page. Providing both `next` and `offset` in the same request returns `400 Bad Request`.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "example": "NyBErRdk6czGUyDAX5Cp",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The offset of the item at which to begin the response. Providing both `offset` and `next` in the same request returns `400 Bad Request`.\n",
             "in": "query",
             "name": "offset",
-            "required": true,
+            "required": false,
             "schema": {
               "example": 0,
               "format": "int32",
-              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             }
@@ -19999,11 +20855,17 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
@@ -21565,7 +22427,7 @@
     "/network-monitoring/v1/client-firewall-sessions": {
       "get": {
         "description": "This API endpoint retrieves sessions logs from access points, CX switches and gateways in a site based on the given client MAC and the filter.\n",
-        "operationId": "clientFirewallSessionLogsv1",
+        "operationId": "listClientFirewallSessionLogsV1",
         "parameters": [
           {
             "description": "The ID of the site from which to retrieve the firewall session logs.\n",
@@ -21638,14 +22500,23 @@
             }
           },
           {
-            "description": "The offset of the item at which to begin the response.\n",
+            "description": "Cursor for the next page of results. Use the value returned in the `next` response field to retrieve the next page. Providing both `next` and `offset` in the same request returns `400 Bad Request`.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "example": "NyBErRdk6czGUyDAX5Cp",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The offset of the item at which to begin the response. Providing both `offset` and `next` in the same request returns `400 Bad Request`.\n",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "example": 0,
               "format": "int32",
-              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             }
@@ -21682,11 +22553,17 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
@@ -23448,7 +24325,7 @@
     "/network-monitoring/v1/firewall-clients": {
       "get": {
         "description": "This API endpoint retrieves the list of clients from access points, CX switches, and/or gateways in a site based on the filter given.\n",
-        "operationId": "clientsv1",
+        "operationId": "listFirewallClientsV1",
         "parameters": [
           {
             "description": "The ID of the site from which to retrieve the firewall session logs.\n",
@@ -23509,14 +24386,23 @@
             }
           },
           {
-            "description": "The offset of the item at which to begin the response.\n",
+            "description": "Cursor for the next page of results. Use the value returned in the `next` response field to retrieve the next page. Providing both `next` and `offset` in the same request returns `400 Bad Request`.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "example": "NyBErRdk6czGUyDAX5Cp",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The offset of the item at which to begin the response. Providing both `offset` and `next` in the same request returns `400 Bad Request`.\n",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "example": 0,
               "format": "int32",
-              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             }
@@ -23553,11 +24439,17 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
@@ -24046,6 +24938,52 @@
           }
         ],
         "summary": "Get gateway memory utilization trend",
+        "tags": [
+          "Gateways"
+        ]
+      }
+    },
+    "/network-monitoring/v1/gateways/{serial-number}/modem-stat": {
+      "get": {
+        "description": "Retrieves modem statistics data for the specified gateway.\n",
+        "operationId": "getGatewayModemStatsV1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SerialNumbergw"
+          },
+          {
+            "$ref": "#/components/parameters/SiteId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/GatewayModemStatsResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get gateway uplink modem stats",
         "tags": [
           "Gateways"
         ]
@@ -25578,10 +26516,182 @@
         ]
       }
     },
+    "/network-monitoring/v1/security-risks": {
+      "get": {
+        "description": "This API endpoint returns a breakdown of application security risks (High / Medium / Low) for the requested scope. The maximum time range is 7 days. If the range between start-at and end-at exceeds 7 days, start-at is automatically adjusted to be 7 days before end-at. This is intentional behavior; no error is returned.\n",
+        "operationId": "listSecurityRisksV1",
+        "parameters": [
+          {
+            "description": "The start time in RFC 3339 Format or epoch milliseconds (must be within 7 days of end-at).\n",
+            "in": "query",
+            "name": "start-at",
+            "required": true,
+            "schema": {
+              "example": "2024-11-20T14:14:33Z",
+              "format": "date-time",
+              "maxLength": 27,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The end time in RFC 3339 Format or epoch milliseconds (must be greater than start-at).\n",
+            "in": "query",
+            "name": "end-at",
+            "required": true,
+            "schema": {
+              "example": "2024-11-21T14:14:33Z",
+              "format": "date-time",
+              "maxLength": 27,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by site identifier.\n",
+            "in": "query",
+            "name": "site-id",
+            "required": false,
+            "schema": {
+              "example": "2778382",
+              "format": "const",
+              "maxLength": 20,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by client MAC address. Forces use of the main data table (not aggregated).\n",
+            "in": "query",
+            "name": "client-id",
+            "required": false,
+            "schema": {
+              "example": "00:00:00:00:00:00",
+              "format": "const",
+              "maxLength": 17,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by device serial number. Forces use of the main data table (not aggregated).\n",
+            "in": "query",
+            "name": "serial-number",
+            "required": false,
+            "schema": {
+              "example": "CN12345678",
+              "format": "const",
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by SSID name.\n",
+            "in": "query",
+            "name": "ssid",
+            "required": false,
+            "schema": {
+              "example": "CorpWiFi",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by user role.\n",
+            "in": "query",
+            "name": "user-role",
+            "required": false,
+            "schema": {
+              "example": "admin",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based index of the first item to return. Default: 0.\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of risk level entries to return (1-100). Default: 100.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "example": 100,
+              "format": "int32",
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityRiskInfoResponse"
+                }
+              }
+            },
+            "description": "Successful operation.\n",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeaderapp"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeaderapp"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get security risk info for applications\n",
+        "tags": [
+          "Application Visibility"
+        ]
+      }
+    },
     "/network-monitoring/v1/site-firewall-sessions": {
       "get": {
         "description": "This API endpoint retrieves blocked/denied sessions logs from access points, CX switches, gateways in a site.\n",
-        "operationId": "firewallSessionLogsv1",
+        "operationId": "listSiteFirewallSessionLogsV1",
         "parameters": [
           {
             "description": "The ID of the site from which to retrieve the firewall session logs.\n",
@@ -25642,14 +26752,23 @@
             }
           },
           {
-            "description": "The offset of the item at which to begin the response.\n",
+            "description": "Cursor for the next page of results. Use the value returned in the `next` response field to retrieve the next page. Providing both `next` and `offset` in the same request returns `400 Bad Request`.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "example": "NyBErRdk6czGUyDAX5Cp",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The offset of the item at which to begin the response. Providing both `offset` and `next` in the same request returns `400 Bad Request`.\n",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
               "example": 0,
               "format": "int32",
-              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             }
@@ -25686,11 +26805,17 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
@@ -25828,11 +26953,11 @@
     },
     "/network-monitoring/v1/sitemaps/sites": {
       "get": {
-        "description": "This API provides a list of sites with and without floor information",
-        "operationId": "getSites",
+        "description": "This API provides a list of sites that have floors configured or sites that do not have any floors configured.",
+        "operationId": "listSitemapSitesV1",
         "parameters": [
           {
-            "description": "An OData 4.0 filter can be provided with `hasFloors` (use `eq` operator, e.g. `hasFloors eq true`).\n",
+            "description": "An OData 4.0 filter can be provided with `hasFloors` (use `eq` operator, e.g. `hasFloors eq false`). Default value is `true`. When `hasFloors eq true`, returns sites that have floors. When `hasFloors eq false`, returns sites without floors.\n",
             "in": "query",
             "name": "filter",
             "required": false,
@@ -25903,7 +27028,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Retrieve sites with floor and without floor information",
+        "summary": "Retrieve sites with or without floor configuration",
         "tags": [
           "FloorPlan"
         ]
@@ -26485,16 +27610,15 @@
     },
     "/network-monitoring/v1/sitemaps/{site-id}/floors/{floor-id}/image": {
       "get": {
-        "description": "This API is to get FloorMap Image of a given floor",
+        "description": "Retrieves the background image associated with a specific floor within a site.\n\nThe image is returned as a **binary stream**. Callers must inspect the `Content-Type` response header to determine the exact image format before processing or displaying the image.\n\n### Supported Output Formats\n\n- **`image/png` (Binary)** — Always returned when `raster=true`; also returned when the original upload was a PNG file\n- **`image/jpeg` (Binary)** — Returned when `raster=false` and the original upload was a JPEG file  \n- **`image/svg+xml` (UTF-8 XML)** — Returned when `raster=false` and the original upload was an SVG file",
         "operationId": "getFloorMapImageV1",
         "parameters": [
           {
-            "description": "Determines the type of image to retrieve. true: Retrieves a raster image. false: Retrieves actual floormap image",
+            "description": "Controls which image variant is returned.\n\n- `true` — Returns a **raster (bitmap) rendering** of the floor map **always as PNG** (`Content-Type: image/png`), regardless of the original upload format. \n- `false` — Returns the **original uploaded file** in its native format. Check the `Content-Type` header, which will be one of: `image/png`, `image/jpeg`, or `image/svg+xml`.",
             "in": "query",
             "name": "raster",
             "required": true,
             "schema": {
-              "description": "Raster flag (true/false)",
               "example": true,
               "type": "boolean"
             }
@@ -26503,11 +27627,29 @@
         "responses": {
           "200": {
             "content": {
-              "image/jpeg": {},
-              "image/png": {},
-              "image/svg+xml": {}
+              "image/jpeg": {
+                "schema": {
+                  "description": "Raw JPEG image bytes.",
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "description": "Raw PNG image bytes.",
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/svg+xml": {
+                "example": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"600\" viewBox=\"0 0 800 600\"><rect x=\"0\" y=\"0\" width=\"800\" height=\"600\" fill=\"#f0f0f0\"/><path d=\"M 100 100 L 700 100 L 700 500 L 100 500 Z\" stroke=\"black\" fill=\"none\"/></svg>",
+                "schema": {
+                  "description": "UTF-8 encoded SVG XML text document representing the floor map. SVG preserves full vector fidelity and can be scaled without quality loss.",
+                  "type": "string"
+                }
+              }
             },
-            "description": "FloorMap image has been fetched for a given FloorMap.",
+            "description": "Floor map image has been fetched for a given floor.",
             "headers": {
               "X-RateLimit-Limit": {
                 "$ref": "#/components/headers/XRateLimitLimitHeaderlocation"
@@ -26544,7 +27686,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Retrieve FloorMap Image",
+        "summary": "Retrieve Floor Map Image",
         "tags": [
           "FloorPlan"
         ]
@@ -28870,7 +30012,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns stack member details for the given stack-id or conductor serial.",
+        "summary": "Get a list of Stack Members",
         "tags": [
           "Switch"
         ]
@@ -29087,7 +30229,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns the list of switches associated to a customer, based on the query parameters provided.",
+        "summary": "Get a list of Switches",
         "tags": [
           "Switch"
         ]
@@ -29130,7 +30272,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns Top-n interface trends for the tenant-id and given site.",
+        "summary": "Get Top-N Switch interface trends",
         "tags": [
           "Switch"
         ]
@@ -29173,7 +30315,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns the switch details for the given serial or stack id.",
+        "summary": "Get Switch details",
         "tags": [
           "Switch"
         ]
@@ -29216,7 +30358,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns hardware details for the given serial or stack id.",
+        "summary": "Get hardware categories for a Switch",
         "tags": [
           "Switch"
         ]
@@ -29265,7 +30407,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns hardware trends for the given serial and site.",
+        "summary": "Get hardware trends for a Switch",
         "tags": [
           "Switch"
         ]
@@ -29308,7 +30450,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns interface poe for the given serial and site.",
+        "summary": "Get interface PoE for a Switch",
         "tags": [
           "Switch"
         ]
@@ -29363,7 +30505,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns interface trends for the given serial and site.",
+        "summary": "Get interface trends for a Switch",
         "tags": [
           "Switch"
         ]
@@ -29449,7 +30591,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns interface details for the given serial or stack id.",
+        "summary": "Get a list of Switch interfaces",
         "tags": [
           "Switch"
         ]
@@ -29492,7 +30634,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns lag summary details for the given serial or stack id.",
+        "summary": "Get LAG summary for a Switch",
         "tags": [
           "Switch"
         ]
@@ -29578,7 +30720,7 @@
             "OAuth2": []
           }
         ],
-        "summary": "Returns vlans details for the given serial or stack id.",
+        "summary": "Get a list of Switch VLANs",
         "tags": [
           "Switch"
         ]
@@ -29587,7 +30729,7 @@
     "/network-monitoring/v1/switches/{serial-number}/vsx": {
       "get": {
         "description": "This API provides Virtual Switching Extension (VSX) configuration and operational details for a specific switch identified by its serial number. If the switch does not support VSX or VSX is not configured, the API returns a 200 response with an empty VSX object (all fields null).",
-        "operationId": "getVsx",
+        "operationId": "getVsxV1",
         "parameters": [
           {
             "$ref": "#/components/parameters/serial-numbervsx"
@@ -30387,6 +31529,9 @@
               }
             }
           },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
           "404": {
             "content": {
               "application/json": {
@@ -30649,6 +31794,192 @@
         "summary": "Update Wall Types",
         "tags": [
           "FloorPlan"
+        ]
+      }
+    },
+    "/network-monitoring/v1/website-categories": {
+      "get": {
+        "description": "This API endpoint returns the top N website categories ranked by usage (tx + rx bytes) for the requested scope. The maximum time range is 7 days. If the range between start-at and end-at exceeds 7 days, start-at is automatically adjusted to be 7 days before end-at. This is intentional behavior; no error is returned.\n",
+        "operationId": "listWebsiteCategoriesV1",
+        "parameters": [
+          {
+            "description": "The start time in RFC 3339 Format or epoch milliseconds (must be within 7 days of end-at).\n",
+            "in": "query",
+            "name": "start-at",
+            "required": true,
+            "schema": {
+              "example": "2024-11-20T14:14:33Z",
+              "format": "date-time",
+              "maxLength": 27,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The end time in RFC 3339 Format or epoch milliseconds (must be greater than start-at).\n",
+            "in": "query",
+            "name": "end-at",
+            "required": true,
+            "schema": {
+              "example": "2024-11-21T14:14:33Z",
+              "format": "date-time",
+              "maxLength": 27,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by site identifier.\n",
+            "in": "query",
+            "name": "site-id",
+            "required": false,
+            "schema": {
+              "example": "2778382",
+              "format": "const",
+              "maxLength": 20,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by client MAC address. Forces use of the main data table (not aggregated).\n",
+            "in": "query",
+            "name": "client-id",
+            "required": false,
+            "schema": {
+              "example": "00:00:00:00:00:00",
+              "format": "const",
+              "maxLength": 17,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by device serial number. Forces use of the main data table (not aggregated).\n",
+            "in": "query",
+            "name": "serial-number",
+            "required": false,
+            "schema": {
+              "example": "CN12345678",
+              "format": "const",
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of items to return per page (1–500). Default: 100.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "example": 20,
+              "format": "int32",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter by SSID name.\n",
+            "in": "query",
+            "name": "ssid",
+            "required": false,
+            "schema": {
+              "example": "CorpWiFi",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by user role.\n",
+            "in": "query",
+            "name": "user-role",
+            "required": false,
+            "schema": {
+              "example": "admin",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Zero-based index of the first item to return. Default: 0.\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "example": 0,
+              "format": "int32",
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Maximum number of top-ranked website categories to return in total across all pages (1–500). Default: 100.\n",
+            "in": "query",
+            "name": "top",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "example": 10,
+              "format": "int32",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebsiteCategoryUsageList"
+                }
+              }
+            },
+            "description": "Successful operation.\n",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimitHeaderapp"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemainingHeaderapp"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitResetHeader"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get top website categories by usage\n",
+        "tags": [
+          "Application Visibility"
         ]
       }
     },

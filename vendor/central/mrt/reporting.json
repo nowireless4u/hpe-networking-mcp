@@ -50,6 +50,27 @@
           }
         }
       },
+      "ConflictError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "Conflict. The request could not be completed because the resource already exists or is in a conflicting state.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
       "Forbidden": {
         "content": {
           "application/json": {
@@ -155,6 +176,180 @@
           }
         }
       },
+      "ReportsMetadataResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "KPI Sample": {
+                "value": {
+                  "createdAt": "2024-01-15T08:00:00.000Z",
+                  "generation": 1,
+                  "id": "123e4567-e89b-12d3-a456-426614174000",
+                  "kpiWidgets": [
+                    {
+                      "allowedRenderTypes": [
+                        "DONUT_CHART",
+                        "TABLE",
+                        "DONUT_TABLE"
+                      ],
+                      "columns": [
+                        {
+                          "column": "name",
+                          "displayName": "Name",
+                          "optionality": "MANDATORY"
+                        },
+                        {
+                          "column": "count",
+                          "displayName": "Device Count",
+                          "optionality": "MANDATORY"
+                        },
+                        {
+                          "column": "totalPercentage",
+                          "displayName": "Percentage",
+                          "optionality": "MANDATORY"
+                        }
+                      ],
+                      "description": "Vendor Summary",
+                      "displayName": "Vendor Summary",
+                      "filters": [
+                        {
+                          "description": "Global Filter",
+                          "displayName": "Global",
+                          "filter": "global",
+                          "validations": []
+                        },
+                        {
+                          "description": "Sites Filter",
+                          "displayName": "Sites",
+                          "filter": "sites",
+                          "validations": [
+                            {
+                              "type": "REQUIRED"
+                            }
+                          ]
+                        },
+                        {
+                          "description": "List of Device Types",
+                          "displayName": "Device Types",
+                          "filter": "deviceTypes",
+                          "validations": [
+                            {
+                              "type": "REQUIRED"
+                            },
+                            {
+                              "type": "ENUM",
+                              "values": [
+                                "access_points",
+                                "switches",
+                                "gateways"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "isTimeSliceEnabled": false,
+                      "kpi": "vendorSummary",
+                      "kpiDescription": "Vendor Summary",
+                      "kpiDisplayName": "Vendor Summary",
+                      "kpiWidget": "vendorSummary",
+                      "reportCategory": "infrastructure",
+                      "reportName": "Inventory",
+                      "reportType": "inventory"
+                    },
+                    {
+                      "allowedRenderTypes": [
+                        "DONUT_CHART",
+                        "TABLE",
+                        "DONUT_TABLE"
+                      ],
+                      "columns": [
+                        {
+                          "column": "name",
+                          "displayName": "Firmware Version",
+                          "optionality": "MANDATORY"
+                        },
+                        {
+                          "column": "count",
+                          "displayName": "Device Count",
+                          "optionality": "MANDATORY"
+                        },
+                        {
+                          "column": "totalPercentage",
+                          "displayName": "Percentage",
+                          "optionality": "MANDATORY"
+                        }
+                      ],
+                      "description": "Firmware Summary",
+                      "displayName": "Firmware Summary",
+                      "filters": [
+                        {
+                          "description": "Global Filter",
+                          "displayName": "Global",
+                          "filter": "global",
+                          "validations": []
+                        },
+                        {
+                          "description": "Sites Filter",
+                          "displayName": "Sites",
+                          "filter": "sites",
+                          "validations": [
+                            {
+                              "type": "REQUIRED"
+                            }
+                          ]
+                        },
+                        {
+                          "description": "List of Device Types",
+                          "displayName": "Device Types",
+                          "filter": "deviceTypes",
+                          "validations": [
+                            {
+                              "type": "REQUIRED"
+                            },
+                            {
+                              "type": "ENUM",
+                              "values": [
+                                "access_points",
+                                "switches",
+                                "gateways"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "isTimeSliceEnabled": false,
+                      "kpi": "firmwareSummary",
+                      "kpiDescription": "Firmware Summary",
+                      "kpiDisplayName": "Firmware Summary",
+                      "kpiWidget": "firmwareSummary",
+                      "reportCategory": "infrastructure",
+                      "reportName": "Inventory",
+                      "reportType": "inventory"
+                    }
+                  ],
+                  "type": "network-reporting/reports-meta",
+                  "updatedAt": "2024-01-15T08:00:00.000Z"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/ReportsMetadata"
+            }
+          }
+        },
+        "description": "Get Reports Metadata Response \n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
       "TooManyRequests": {
         "content": {
           "application/json": {
@@ -237,8 +432,122 @@
         ],
         "type": "object"
       },
+      "Columns": {
+        "properties": {
+          "column": {
+            "examples": [
+              "name"
+            ],
+            "type": "string"
+          },
+          "displayName": {
+            "examples": [
+              "Name"
+            ],
+            "type": "string"
+          },
+          "optionality": {
+            "enum": [
+              "OPTIONAL",
+              "OPTIONAL_PRESELECTED",
+              "MANDATORY"
+            ],
+            "examples": [
+              "MANDATORY"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ConflictError": {
+        "description": "Conflict error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "Error code\n",
+            "enum": [
+              "HPE_GL_NETWORK_REPORTING_CONFLICT"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_REPORTING_CONFLICT"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              409
+            ],
+            "maximum": 409,
+            "minimum": 409,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "CreateReportsInput": {
+        "properties": {
+          "email": {
+            "properties": {
+              "formats": {
+                "$ref": "#/components/schemas/ReportFormats"
+              },
+              "recipients": {
+                "$ref": "#/components/schemas/Emails"
+              }
+            },
+            "type": "object"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/Filters"
+          },
+          "kpiWidgets": {
+            "items": {
+              "$ref": "#/components/schemas/KPIWidgetInput"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reportPeriod": {
+            "$ref": "#/components/schemas/ReportPeriodInput"
+          },
+          "reportSchedule": {
+            "$ref": "#/components/schemas/ReportScheduleInput"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "timeZone",
+          "filters",
+          "reportPeriod",
+          "reportSchedule"
+        ],
+        "type": "object"
+      },
       "CreatedAt": {
-        "description": "Specifies the report creation time stamp in UTC+0 timezone (RFC 3339 format).",
+        "description": "Specifies the report creation timestamp in UTC+0 timezone (RFC 3339 format).",
         "examples": [
           "2019-10-12T07:20:50Z"
         ],
@@ -258,7 +567,6 @@
         "examples": [
           "78f002e32e0cefba3d8cc94fa8179342"
         ],
-        "format": "const",
         "maxLength": 512,
         "type": "string"
       },
@@ -289,7 +597,6 @@
         "examples": [
           "Error message indicating the cause of the failure."
         ],
-        "format": "const",
         "maxLength": 512,
         "type": "string"
       },
@@ -316,6 +623,60 @@
           "COMPLETED"
         ],
         "type": "string"
+      },
+      "Filter": {
+        "properties": {
+          "filterType": {
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "filterType",
+          "values"
+        ],
+        "type": "object"
+      },
+      "FilterMeta": {
+        "properties": {
+          "description": {
+            "examples": [
+              "Sites Filter"
+            ],
+            "type": "string"
+          },
+          "displayName": {
+            "examples": [
+              "Sites"
+            ],
+            "type": "string"
+          },
+          "filter": {
+            "examples": [
+              "sites"
+            ],
+            "type": "string"
+          },
+          "validations": {
+            "items": {
+              "$ref": "#/components/schemas/ReportValidation"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "Filters": {
+        "description": "Report filters",
+        "items": {
+          "$ref": "#/components/schemas/Filter"
+        },
+        "type": "array"
       },
       "ForbiddenError": {
         "description": "Forbidden error details returned from the server.\n",
@@ -352,6 +713,15 @@
         ],
         "type": "object"
       },
+      "Generation": {
+        "description": "Monotonically increasing update counter for the report / report schedule resource.",
+        "examples": [
+          1
+        ],
+        "format": "int64",
+        "minimum": 0,
+        "type": "integer"
+      },
       "InternalServerError": {
         "description": "Internal server error details returned from the server.\n",
         "properties": {
@@ -366,7 +736,6 @@
             "examples": [
               "HPE_GL_NETWORK_REPORTING_INTERNAL_SERVER_ERROR"
             ],
-            "format": "const",
             "maxLength": 128,
             "type": "string"
           },
@@ -391,8 +760,121 @@
         ],
         "type": "object"
       },
+      "KPIWidget": {
+        "properties": {
+          "allowedRenderTypes": {
+            "examples": [
+              "TABLE",
+              "DONUT_CHART"
+            ],
+            "items": {
+              "description": "Specifies the allowed render type. Valid values can be got dynamically via GET /network-reporting/v1/reports-meta.",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/Columns"
+            },
+            "type": "array"
+          },
+          "description": {
+            "examples": [
+              "Vendor Summary"
+            ],
+            "type": "string"
+          },
+          "displayName": {
+            "examples": [
+              "Vendor Summary"
+            ],
+            "type": "string"
+          },
+          "filters": {
+            "items": {
+              "$ref": "#/components/schemas/FilterMeta"
+            },
+            "type": "array"
+          },
+          "isTimeSliceEnabled": {
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "kpi": {
+            "examples": [
+              "vendorSummary"
+            ],
+            "type": "string"
+          },
+          "kpiDescription": {
+            "examples": [
+              "Vendor Summary"
+            ],
+            "type": "string"
+          },
+          "kpiDisplayName": {
+            "examples": [
+              "Vendor Summary"
+            ],
+            "type": "string"
+          },
+          "kpiWidget": {
+            "examples": [
+              "VendorSummary"
+            ],
+            "type": "string"
+          },
+          "reportCategory": {
+            "examples": [
+              "infrastructure"
+            ],
+            "type": "string"
+          },
+          "reportName": {
+            "examples": [
+              "Inventory"
+            ],
+            "type": "string"
+          },
+          "reportType": {
+            "examples": [
+              "inventory"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "kpiWidget",
+          "allowedRenderTypes"
+        ],
+        "type": "object"
+      },
+      "KPIWidgetInput": {
+        "properties": {
+          "columns": {
+            "items": {
+              "description": "Specifies the column required",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kpiWidget": {
+            "description": "Specifies the KPI Widget",
+            "type": "string"
+          },
+          "renderType": {
+            "description": "Specifies the render type. Valid values can be got dynamically via GET /network-reporting/v1/reports-meta.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "LastModifiedAt": {
-        "description": "Specifies the report modified time stamp in UTC+0 timezone (RFC 3339 format).",
+        "deprecated": true,
+        "description": "Specifies the report modified timestamp in UTC+0 timezone (RFC 3339 format).",
         "examples": [
           "2019-10-12T07:20:50Z"
         ],
@@ -401,6 +883,7 @@
         "type": "string"
       },
       "LastModifiedBy": {
+        "deprecated": true,
         "description": "The user who modified the report / report schedule.",
         "examples": [
           "user1@mail.com"
@@ -432,7 +915,7 @@
         "type": "string"
       },
       "ListReportRuns": {
-        "description": "List of report runs response",
+        "description": "List of report runs response.",
         "properties": {
           "count": {
             "description": "The number of report runs",
@@ -474,7 +957,8 @@
         },
         "required": [
           "items",
-          "count"
+          "count",
+          "next"
         ],
         "type": "object"
       },
@@ -519,7 +1003,8 @@
         },
         "required": [
           "items",
-          "count"
+          "count",
+          "next"
         ],
         "type": "object"
       },
@@ -531,7 +1016,7 @@
         "type": "string"
       },
       "NextRunTs": {
-        "description": "Specifies the report period next run time stamp in UTC+0 timezone (RFC 3339 format).",
+        "description": "Specifies the report period next run timestamp in UTC+0 timezone (RFC 3339 format).",
         "examples": [
           "2019-10-12T07:20:50Z"
         ],
@@ -553,7 +1038,6 @@
             "examples": [
               "HPE_GL_NETWORK_REPORTING_NOT_FOUND"
             ],
-            "format": "const",
             "maxLength": 256,
             "type": "string"
           },
@@ -586,6 +1070,9 @@
           "createdBy": {
             "$ref": "#/components/schemas/CreatedBy"
           },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
           "id": {
             "$ref": "#/components/schemas/ReportID"
           },
@@ -610,14 +1097,23 @@
           "type": {
             "description": "Type of the resource.",
             "examples": [
-              "Report"
+              "network-reporting/report"
             ],
             "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          },
+          "updatedBy": {
+            "$ref": "#/components/schemas/UpdatedBy"
           }
         },
         "required": [
           "id",
-          "type"
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
         ],
         "type": "object"
       },
@@ -649,11 +1145,90 @@
         "examples": [
           "24833497"
         ],
-        "format": "const",
         "type": "string"
+      },
+      "ReportPeriodInput": {
+        "properties": {
+          "from": {
+            "description": "Specifies the report period `from` date timestamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          },
+          "sliceDays": {
+            "items": {
+              "enum": [
+                "MON",
+                "TUE",
+                "WED",
+                "THU",
+                "FRI",
+                "SAT",
+                "SUN"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "sliceTime": {
+            "properties": {
+              "from": {
+                "description": "Specifies the `from` slice time timestamp in UTC+0 timezone (RFC 3339 format).",
+                "examples": [
+                  "2:50"
+                ],
+                "format": "time",
+                "pattern": "^([01]?[0-9]|2[0-3]):([0-5]?[0-9])$",
+                "type": "string"
+              },
+              "to": {
+                "description": "Specifies the `to` slice time timestamp in UTC+0 timezone (RFC 3339 format).",
+                "examples": [
+                  "20:50"
+                ],
+                "format": "time",
+                "pattern": "^([01]?[0-9]|2[0-3]):([0-5]?[0-9])$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "to": {
+            "description": "Specifies the report period `to` date timestamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "SNAPSHOT",
+              "LAST_DAY",
+              "LAST_WEEK",
+              "LAST_MONTH",
+              "CUSTOM_RANGE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
       },
       "ReportRun": {
         "properties": {
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "createdBy": {
+            "$ref": "#/components/schemas/CreatedBy"
+          },
           "exportDetails": {
             "description": "Specifies the Export Details",
             "items": {
@@ -662,7 +1237,7 @@
             "type": "array"
           },
           "fromTs": {
-            "description": "Specifies the report run start time stamp in UTC+0 timezone (RFC 3339 format).",
+            "description": "Specifies the report run start timestamp in UTC+0 timezone (RFC 3339 format).",
             "examples": [
               "2019-10-12T07:20:50Z"
             ],
@@ -670,11 +1245,15 @@
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
             "type": "string"
           },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
           "id": {
             "$ref": "#/components/schemas/ReportID"
           },
           "modifiedAt": {
-            "description": "Specifies the report run modified time stamp in UTC+0 timezone (RFC 3339 format).",
+            "deprecated": true,
+            "description": "Specifies the report run modified timestamp in UTC+0 timezone (RFC 3339 format).",
             "examples": [
               "2019-10-12T07:20:50Z"
             ],
@@ -686,7 +1265,7 @@
             "$ref": "#/components/schemas/runStatus"
           },
           "toTs": {
-            "description": "Specifies the report run end time stamp in UTC+0 timezone (RFC 3339 format).",
+            "description": "Specifies the report run end timestamp in UTC+0 timezone (RFC 3339 format).",
             "examples": [
               "2019-10-12T07:20:50Z"
             ],
@@ -697,14 +1276,23 @@
           "type": {
             "description": "Type of the resource.",
             "examples": [
-              "ReportRun"
+              "network-reporting/report-run"
             ],
             "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          },
+          "updatedBy": {
+            "$ref": "#/components/schemas/UpdatedBy"
           }
         },
         "required": [
           "id",
-          "type"
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
         ],
         "type": "object"
       },
@@ -743,6 +1331,41 @@
         },
         "type": "object"
       },
+      "ReportScheduleInput": {
+        "properties": {
+          "endDate": {
+            "description": "Specifies the `end` date timestamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          },
+          "recurrenceType": {
+            "enum": [
+              "EVERY_MONTH",
+              "EVERY_WEEK",
+              "EVERY_DAY",
+              "ONE_TIME"
+            ],
+            "type": "string"
+          },
+          "startDate": {
+            "description": "Specifies the `start` date timestamp in UTC+0 timezone (RFC 3339 format).",
+            "examples": [
+              "2019-10-12T07:20:50Z"
+            ],
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recurrenceType"
+        ],
+        "type": "object"
+      },
       "ReportScope": {
         "description": "Specifies the scope type and target values for the report",
         "properties": {
@@ -769,15 +1392,105 @@
         "type": "object"
       },
       "ReportType": {
-        "description": "Specifies the particular report type like inventory, client session etc.",
+        "description": "Specifies the particular report type (lowerCamelCase or lowercase). Valid values: appAnalytics, capacityPlanning, clientInventory, clientSession, custom, deviceUptime, licenses, mspcustomer, mspinventory, msplicense, mspsubscription, networkUsage, resourceUtilization, rfHealth, securityCompliance, visitor, wids. Refer to the Create Report operation documentation for complete details on supported types and their associated filters.",
         "examples": [
-          "inventory"
+          "inventory",
+          "appAnalytics",
+          "clientInventory",
+          "custom"
         ],
-        "pattern": "^[a-z]+(?:_[a-z]+)*$",
+        "pattern": "^[a-z][a-zA-Z0-9]*$",
         "type": "string"
       },
+      "ReportValidation": {
+        "properties": {
+          "description": {
+            "examples": [
+              "Minimum Value"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "examples": [
+              "MIN"
+            ],
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "examples": [
+                "60"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "ReportsMetadata": {
+        "properties": {
+          "createdAt": {
+            "description": "Timestamp when the resource was created (RFC 3339 UTC).",
+            "examples": [
+              "2024-01-15T08:00:00.000Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "generation": {
+            "description": "Monotonically increasing update counter.",
+            "examples": [
+              1
+            ],
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the reports metadata resource.",
+            "examples": [
+              "123e4567-e89b-12d3-a456-426614174000"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "kpiWidgets": {
+            "items": {
+              "$ref": "#/components/schemas/KPIWidget"
+            },
+            "type": "array"
+          },
+          "type": {
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-reporting/reports-meta"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Timestamp when the resource was last updated (RFC 3339 UTC).",
+            "examples": [
+              "2024-01-15T08:00:00.000Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "ScheduleEnd": {
-        "description": "Specifies the scheduled end time stamp in UTC+0 timezone (RFC 3339 format).",
+        "description": "Specifies the scheduled end timestamp in UTC+0 timezone (RFC 3339 format).",
         "examples": [
           "2019-10-12T07:20:50Z"
         ],
@@ -786,14 +1499,12 @@
         "type": "string"
       },
       "ScheduleType": {
-        "description": "Specifies the Schedule types Once, Every Day, Every Week, Every Month, Every Year, Sliding Window etc.",
+        "description": "Specifies the Schedule types Once, Every Day, Every Week, Every Month etc.",
         "enum": [
           "ONE_TIME",
           "EVERY_DAY",
           "EVERY_WEEK",
-          "EVERY_MONTH",
-          "EVERY_YEAR",
-          "SLIDING_WINDOW"
+          "EVERY_MONTH"
         ],
         "examples": [
           "ONE_TIME"
@@ -835,6 +1546,13 @@
         ],
         "type": "object"
       },
+      "Type": {
+        "description": "Specifies the report type. Valid values can be got dynamically via GET /network-reporting/v1/reports-meta.",
+        "examples": [
+          "inventory"
+        ],
+        "type": "string"
+      },
       "UnauthorizedError": {
         "description": "Unauthorized error details returned from the server.\n",
         "properties": {
@@ -869,6 +1587,22 @@
           "debugId"
         ],
         "type": "object"
+      },
+      "UpdatedAt": {
+        "description": "Specifies the report modified timestamp in UTC+0 timezone (RFC 3339 format).",
+        "examples": [
+          "2019-10-12T07:20:50Z"
+        ],
+        "format": "date-time",
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+        "type": "string"
+      },
+      "UpdatedBy": {
+        "description": "The user who modified the report / report schedule.",
+        "examples": [
+          "user1@mail.com"
+        ],
+        "type": "string"
       },
       "runStatus": {
         "description": "Specifies the report export status as New, In Progress, Completed, or Failed",
@@ -911,8 +1645,8 @@
   "paths": {
     "/network-reporting/v1/reports": {
       "get": {
-        "description": "This endpoint returns User Reports filtered by the specified query parameters. Each report contains key details such as ID, name, type, and scope. Use the query parameters to filter results and retrieve only data that matches your specific requirements.",
-        "operationId": "listReports",
+        "description": "This API endpoint returns User Reports filtered by the specified query parameters. Each report contains key details such as ID, name, type, and scope. Use the query parameters to filter results and retrieve only data that matches your specific requirements.",
+        "operationId": "listReportsV1",
         "parameters": [
           {
             "description": "Search the Report based on Name, Type, Status and Saved By",
@@ -949,7 +1683,6 @@
                 "createdBy asc",
                 "scheduleEnd desc"
               ],
-              "format": "const",
               "maxLength": 256,
               "type": "string"
             }
@@ -1009,12 +1742,711 @@
         "tags": [
           "Reporting"
         ]
+      },
+      "post": {
+        "description": "This API endpoint allows users to generate reports based on report-specific filters, report periods, and scheduling options. Reports can be scheduled for one-time or recurring execution and sent by email in multiple formats.\n\n## General Parameters\n\n| Parameter | Description | Required |\n|-----------|-------------|----------|\n| **name** | Name of the report. | true |\n| **type** | Type of the report. <br> Refer **Report Type** for more details. | true |\n| **timeZone** | User time zone in IANA format (for example, `America/New_York`). | true |\n| **filters** | Filters applied to refine report data. <br> Refer **Report Filter** for more details. | true |\n| **reportPeriod** | Time range defining the report data scope. <br> Refer **Report Period** for more details. | true |\n| **reportSchedule** | Defines how often the report is generated. <br> Refer **Report Schedule** for more details. | true |\n| **email** | Email recipients and report output formats. | false |\n\n## Report Type\n\nThe following report types and filter mappings are derived from Reports Metadata.\n\n| Report Name | Report Type | Supported Filters |\n|-------------|-------------|------------------|\n| Application Analytics | **appAnalytics** | `appCategories`, `connectionType`, `deviceTypes`, `scope`, `sites` |\n| Capacity Planning | **capacityPlanning** | `connectionType`, `deviceTypes`, `excludeDevices`, `gatewayCapacityThreshold`, `gatewayPercentageOfTimeGreaterThanThreshold`, `includeDevices`, `scope`, `sites`, `switchCapacityThreshold`, `switchPercentageOfTimeGreaterThanThreshold` |\n| Client Inventory | **clientInventory** | `connectionType`, `deviceTypes`, `excludeDevices`, `excludeUCClients`, `includeDevices`, `includeUCClients`, `includeUCModelOs`, `includeUCRole`, `includeUCSSIDs`, `includeUCVendor`, `scope`, `sites` |\n| Client Session | **clientSession** | `connectionType`, `deviceTypes`, `excludeDevices`, `excludeUCClients`, `includeDevices`, `includeUCClients`, `includeUCModelOs`, `includeUCRole`, `includeUCSSIDs`, `includeUCVendor`, `scope`, `sites` |\n| Device Uptime | **deviceUptime** | `deviceTypes`, `excludeDevices`, `includeDevices`, `scope`, `sites` |\n| Licenses | **licenses** | `scope` (global only) |\n| MSP Customer (For MSP Customers) | **mspcustomer** | `deviceOwnership`, `scope` (global only) |\n| MSP Inventory (For MSP Customers) | **mspinventory** | `scope` (global only) |\n| MSP License (For MSP Customers) | **msplicense** | `scope` (global only) |\n| MSP Subscription (For MSP Customers) | **mspsubscription** | `scope` (global only) |\n| Network Usage | **networkUsage** | `deviceTypes`, `excludeDevices`, `excludeUCSSIDs`, `includeDevices`, `includeUCSSIDs`, `scope`, `sites` |\n| Resource Utilization | **resourceUtilization** | `apCpuUtilThreshold`, `apMemoryUtilThreshold`, `deviceTypes`, `excludeDevices`, `gatewayCpuUtilThreshold`, `gatewayMemoryUtilThreshold`, `includeDevices`, `scope`, `sites`, `switchCpuUtilThreshold`, `switchMemoryUtilThreshold` |\n| RF Health | **rfHealth** | `excludeDevices`, `includeDevices`, `radioFrequency`, `scope`, `sites` |\n| Security Compliance | **securityCompliance** | `scope` (global only) |\n| Visitor | **visitor** | `scope`, `ssids` |\n| WIDS | **wids** | `scope`, `sites` |\n| Custom | **custom** | Filter support varies with respect to KPI selection. Refer Reports Metadata API |\n\n## Report Filter\n\n| Filter Name | Filter Type | Description | Required |\n|--------|-------------|-------------|----------|\n| Scope | **scope** | Scope filter for report. Allowed values are `global` and `sites`. | true if applicable |\n| Sites | **sites** | Site IDs filter for report. | true if `scope` is `sites` |\n| Device Types | **deviceTypes** | Device type filter. Allowed values: `access_points`, `switches`, `gateways`. | true if applicable |\n| Connection Type | **connectionType** | Connection type filter. Allowed values: `wired`, `wireless`, `all`. | true if applicable |\n| Device Ownership | **deviceOwnership** | Device ownership type filter. Allowed values: `MSP`, `CUSTOMER`. | true if applicable |\n| Application Categories | **appCategories** | Application category filter. Allowed values from metadata (for example, `Any`). | true if applicable |\n| Radio Frequency | **radioFrequency** | Frequency band filter. Allowed values: `2.4GHz`, `5GHz`, `6GHz`. | true if applicable |\n| SSID | **ssids** | SSID values used for visitor reports. | true if applicable |\n| Include Devices | **includeDevices** | Device serial numbers to include in report output. | false |\n| Exclude Devices | **excludeDevices** | Device serial numbers to exclude from report output. | false |\n| Include Unified Clients | **includeUCClients** | Unified client identifiers to include. | false |\n| Exclude Unified Clients | **excludeUCClients** | Unified client identifiers to exclude. | false |\n| Include Unified Client Vendor | **includeUCVendor** | Unified client vendor values to include. | false |\n| Include Unified Client Model/OS | **includeUCModelOs** | Unified client model or OS values to include. | false |\n| Include Unified Client Role | **includeUCRole** | Unified client role values to include. | false |\n| Include Unified Client SSIDs | **includeUCSSIDs** | Unified client SSIDs to include. | false |\n| Exclude Unified Client SSIDs | **excludeUCSSIDs** | Unified client SSIDs to exclude. | false |\n| AP CPU Utilization Threshold | **apCpuUtilThreshold** | AP CPU utilization threshold filter. Range: `0-100` (default: `70`). | false |\n| Switch CPU Utilization Threshold | **switchCpuUtilThreshold** | Switch CPU utilization threshold filter. Range: `0-100` (default: `70`). | false |\n| Gateway CPU Utilization Threshold | **gatewayCpuUtilThreshold** | Gateway CPU utilization threshold filter. Range: `0-100` (default: `70`). | false |\n| AP Memory Utilization Threshold | **apMemoryUtilThreshold** | AP memory utilization threshold filter. Range: `0-100` (default: `70`). | false |\n| Switch Memory Utilization Threshold | **switchMemoryUtilThreshold** | Switch memory utilization threshold filter. Range: `0-100` (default: `70`). | false |\n| Gateway Memory Utilization Threshold | **gatewayMemoryUtilThreshold** | Gateway memory utilization threshold filter. Range: `0-100` (default: `70`). | false |\n| Switch Capacity Threshold | **switchCapacityThreshold** | Switch capacity threshold filter. Range: `0-99` (default: `40`). | false |\n| Switch Percentage Of Time Greater Than Threshold | **switchPercentageOfTimeGreaterThanThreshold** | Percentage of time switch exceeds threshold. Range: `0-99` (default: `25`). | false |\n| Gateway Capacity Threshold | **gatewayCapacityThreshold** | Gateway capacity threshold filter. | false |\n| Gateway Percentage Of Time Greater Than Threshold | **gatewayPercentageOfTimeGreaterThanThreshold** | Percentage of time gateway exceeds threshold. | false |\n\n## Report Period\n\n| Report Period | Allowed Fields | Allowed Schedules |\n|--------------|----------------|------------------|\n| **SNAPSHOT** | None | `ONE_TIME`, `EVERY_DAY`, `EVERY_WEEK`, `EVERY_MONTH` |\n| **LAST_DAY** | `sliceTime` | `ONE_TIME`, `EVERY_DAY` |\n| **LAST_WEEK** | `sliceTime`, `sliceDays` | `ONE_TIME`, `EVERY_WEEK`, `EVERY_MONTH` |\n| **LAST_MONTH** | `sliceTime`, `sliceDays` | `ONE_TIME`, `EVERY_MONTH` |\n| **CUSTOM_RANGE** | `from`, `to` timestamps (without `sliceDays` or `sliceTime`) | `ONE_TIME` |\n\n`sliceTime` and `sliceDays` are applicable only for `resourceUtilization` and `capacityPlanning` report types.\n\n## Report Schedule\n\n| Schedule Type | Required Fields | Applicable Report Periods |\n|--------------|----------------|---------------------------|\n| **ONE_TIME** | None | All report periods |\n| **EVERY_DAY** | `startDate`, `endDate` | `LAST_DAY` |\n| **EVERY_WEEK** | `startDate`, `endDate` | `LAST_WEEK` |\n| **EVERY_MONTH** | `startDate`, `endDate` | `LAST_WEEK`, `LAST_MONTH` |",
+        "operationId": "createUserReportV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "appAnalytics": {
+                  "summary": "Application Analytics Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "global"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "access_points"
+                          ]
+                        },
+                        {
+                          "filterType": "connectionType",
+                          "values": [
+                            "wireless"
+                          ]
+                        },
+                        {
+                          "filterType": "appCategories",
+                          "values": [
+                            "Any"
+                          ]
+                        }
+                      ],
+                      "name": "Application Analytics Report",
+                      "reportPeriod": {
+                        "type": "LAST_WEEK"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-06-01T00:00:00Z",
+                        "recurrenceType": "EVERY_WEEK",
+                        "startDate": "2025-03-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "appAnalytics"
+                    }
+                  }
+                },
+                "capacityPlanning": {
+                  "summary": "Capacity Planning Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "global"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "switches"
+                          ]
+                        },
+                        {
+                          "filterType": "connectionType",
+                          "values": [
+                            "wired"
+                          ]
+                        },
+                        {
+                          "filterType": "switchPercentageOfTimeGreaterThanThreshold",
+                          "values": [
+                            "55"
+                          ]
+                        },
+                        {
+                          "filterType": "switchCapacityThreshold",
+                          "values": [
+                            "70"
+                          ]
+                        }
+                      ],
+                      "name": "Capacity Planning Report",
+                      "reportPeriod": {
+                        "type": "LAST_MONTH"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-06-01T00:00:00Z",
+                        "recurrenceType": "EVERY_MONTH",
+                        "startDate": "2025-02-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "capacityPlanning"
+                    }
+                  }
+                },
+                "clientInventory": {
+                  "summary": "Client Inventory Report",
+                  "value": {
+                    "report": {
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "global"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "access_points",
+                            "switches"
+                          ]
+                        },
+                        {
+                          "filterType": "connectionType",
+                          "values": [
+                            "all"
+                          ]
+                        }
+                      ],
+                      "name": "Client Inventory Report",
+                      "reportPeriod": {
+                        "type": "LAST_DAY"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-03-31T00:00:00Z",
+                        "recurrenceType": "EVERY_DAY",
+                        "startDate": "2025-03-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "clientInventory"
+                    }
+                  }
+                },
+                "clientSession": {
+                  "summary": "Client Session Report",
+                  "value": {
+                    "report": {
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "switches",
+                            "gateways"
+                          ]
+                        },
+                        {
+                          "filterType": "connectionType",
+                          "values": [
+                            "wired"
+                          ]
+                        }
+                      ],
+                      "name": "Client Session Report",
+                      "reportPeriod": {
+                        "from": "2025-01-01T00:00:00Z",
+                        "to": "2025-02-01T00:00:00Z",
+                        "type": "CUSTOM_RANGE"
+                      },
+                      "reportSchedule": {
+                        "recurrenceType": "ONE_TIME"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "clientSession"
+                    }
+                  }
+                },
+                "custom": {
+                  "summary": "Custom Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "radioFrequency",
+                          "values": [
+                            "2.4GHz",
+                            "5GHz",
+                            "6GHz"
+                          ]
+                        }
+                      ],
+                      "kpiWidgets": [
+                        {
+                          "kpiWidget": "sitesByPoorRadios24ghz",
+                          "renderType": "TABLE"
+                        },
+                        {
+                          "columns": [
+                            "siteName",
+                            "timeBreachedChannelQuality",
+                            "timeBreachedChannelUtilization",
+                            "timeBreachedFrameDrops"
+                          ],
+                          "kpiWidget": "sitesByPoorRadios5ghz",
+                          "renderType": "TABLE"
+                        }
+                      ],
+                      "name": "Custom Report",
+                      "reportPeriod": {
+                        "type": "LAST_WEEK"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-06-01T00:00:00Z",
+                        "recurrenceType": "EVERY_WEEK",
+                        "startDate": "2025-03-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "custom"
+                    }
+                  }
+                },
+                "deviceUptime": {
+                  "summary": "Device Uptime Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "gateways"
+                          ]
+                        }
+                      ],
+                      "name": "Device Uptime Report",
+                      "reportPeriod": {
+                        "type": "LAST_DAY"
+                      },
+                      "reportSchedule": {
+                        "recurrenceType": "ONE_TIME"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "deviceUptime"
+                    }
+                  }
+                },
+                "inventory": {
+                  "summary": "Inventory Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "switches"
+                          ]
+                        }
+                      ],
+                      "name": "Inventory Report",
+                      "reportPeriod": {
+                        "type": "LAST_WEEK"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-06-01T00:00:00Z",
+                        "recurrenceType": "EVERY_WEEK",
+                        "startDate": "2025-03-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "inventory"
+                    }
+                  }
+                },
+                "networkUsage": {
+                  "summary": "Network Usage Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "switches"
+                          ]
+                        }
+                      ],
+                      "name": "Network Usage Report",
+                      "reportPeriod": {
+                        "from": "2025-01-01T00:00:00Z",
+                        "to": "2025-02-01T00:00:00Z",
+                        "type": "CUSTOM_RANGE"
+                      },
+                      "reportSchedule": {
+                        "recurrenceType": "ONE_TIME"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "networkUsage"
+                    }
+                  }
+                },
+                "resourceUtilization": {
+                  "summary": "Resource Utilization Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "deviceTypes",
+                          "values": [
+                            "access_points",
+                            "switches",
+                            "gateways"
+                          ]
+                        },
+                        {
+                          "filterType": "apMemoryUtilThreshold",
+                          "values": [
+                            "80"
+                          ]
+                        },
+                        {
+                          "filterType": "switchMemoryUtilThreshold",
+                          "values": [
+                            "75"
+                          ]
+                        },
+                        {
+                          "filterType": "gatewayMemoryUtilThreshold",
+                          "values": [
+                            "75"
+                          ]
+                        },
+                        {
+                          "filterType": "apCpuUtilThreshold",
+                          "values": [
+                            "80"
+                          ]
+                        },
+                        {
+                          "filterType": "switchCpuUtilThreshold",
+                          "values": [
+                            "75"
+                          ]
+                        },
+                        {
+                          "filterType": "gatewayCpuUtilThreshold",
+                          "values": [
+                            "75"
+                          ]
+                        }
+                      ],
+                      "name": "Resource Utilization Report",
+                      "reportPeriod": {
+                        "sliceDays": [
+                          "MON",
+                          "TUE",
+                          "WED",
+                          "THU"
+                        ],
+                        "sliceTime": {
+                          "from": "01:00",
+                          "to": "22:00"
+                        },
+                        "type": "LAST_WEEK"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-06-01T00:00:00Z",
+                        "recurrenceType": "EVERY_WEEK",
+                        "startDate": "2025-03-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "resourceUtilization"
+                    }
+                  }
+                },
+                "rfHealth": {
+                  "summary": "RF Health Report",
+                  "value": {
+                    "report": {
+                      "email": {
+                        "formats": [
+                          "CSV",
+                          "PDF"
+                        ],
+                        "recipients": [
+                          "user1@mail.com",
+                          "user2@mail.com"
+                        ]
+                      },
+                      "filters": [
+                        {
+                          "filterType": "scope",
+                          "values": [
+                            "sites"
+                          ]
+                        },
+                        {
+                          "filterType": "sites",
+                          "values": [
+                            "123456"
+                          ]
+                        },
+                        {
+                          "filterType": "radioFrequency",
+                          "values": [
+                            "2.4GHz",
+                            "5GHz",
+                            "6GHz"
+                          ]
+                        }
+                      ],
+                      "name": "RF Health Report",
+                      "reportPeriod": {
+                        "type": "LAST_WEEK"
+                      },
+                      "reportSchedule": {
+                        "endDate": "2025-06-01T00:00:00Z",
+                        "recurrenceType": "EVERY_WEEK",
+                        "startDate": "2025-03-01T00:00:00Z"
+                      },
+                      "timeZone": "America/New_York",
+                      "type": "rfHealth"
+                    }
+                  }
+                }
+              },
+              "schema": {
+                "properties": {
+                  "report": {
+                    "$ref": "#/components/schemas/CreateReportsInput"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Created report resource.",
+                  "properties": {
+                    "report": {
+                      "$ref": "#/components/schemas/Report"
+                    }
+                  },
+                  "required": [
+                    "report"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successfully created report.",
+            "headers": {
+              "Location": {
+                "description": "URI of the created report resource",
+                "example": "/network-reporting/v1/reports/13570",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create Report",
+        "tags": [
+          "Reporting"
+        ]
+      }
+    },
+    "/network-reporting/v1/reports-meta": {
+      "get": {
+        "description": "This API endpoint allows users to retrieve reports metadata such as list of kpis, filters applicable for report types. This information is required when creating reports.",
+        "operationId": "getReportsMetadataV1",
+        "parameters": [
+          {
+            "description": "Report Type of report.",
+            "example": "inventory",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "KPI Widget name of reports.",
+            "example": "listApDevices",
+            "in": "query",
+            "name": "kpi-widget",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ReportsMetadataResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get Reports Metadata",
+        "tags": [
+          "Reporting"
+        ]
       }
     },
     "/network-reporting/v1/reports/{report-id}": {
       "delete": {
         "description": "This API endpoint deletes particular user report with report ID, it will also delete associated report runs in the process of deleting report. Report ID can be obtained from **List Reports API**.",
-        "operationId": "deleteUserReport",
+        "operationId": "deleteUserReportV1",
         "parameters": [
           {
             "description": "The unique identifier of the user report.",
@@ -1086,9 +2518,75 @@
           "Reporting"
         ]
       },
+      "get": {
+        "description": "This API endpoint retrieves a specific user report by report ID. Report ID can be obtained from **List Reports API** or will be in **Create Report API** response.",
+        "operationId": "getUserReportV1",
+        "parameters": [
+          {
+            "description": "The unique identifier of the user report.",
+            "example": "13570",
+            "in": "path",
+            "name": "report-id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            },
+            "description": "Successfully retrieved user report.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get Report",
+        "tags": [
+          "Reporting"
+        ]
+      },
       "put": {
         "description": "This API endpoint updates a User Report with a report ID. Report ID can be obtained from **List Reports API**.",
-        "operationId": "updateUserReport",
+        "operationId": "updateUserReportV1",
         "parameters": [
           {
             "description": "The unique identifier of the user report.",
@@ -1195,8 +2693,8 @@
     },
     "/network-reporting/v1/reports/{report-id}/report-runs": {
       "get": {
-        "description": "This endpoint retrieves report execution history for a specific report ID. Each report run contains execution details including run ID, status, export data, and start/end timestamps. Obtain the required report ID from the List Reports API.",
-        "operationId": "listReportRun",
+        "description": "This API endpoint retrieves report execution history for a specific report ID. Each report run contains execution details including run ID, status, export data, and start/end timestamps. Obtain the required report ID from the List Reports API.",
+        "operationId": "listReportRunsV1",
         "parameters": [
           {
             "description": "The unique identifier of the user report.",
@@ -1218,7 +2716,6 @@
               "examples": [
                 "modifiedAt desc, status desc"
               ],
-              "format": "const",
               "maxLength": 256,
               "type": "string"
             }
@@ -1234,7 +2731,7 @@
             }
           },
           {
-            "description": "Maximum number of reports to be returned. Allowed range is 1 to 100.",
+            "description": "Maximum number of report runs to be returned. Allowed range is 1 to 100.",
             "example": 10,
             "in": "query",
             "name": "limit",
@@ -1283,7 +2780,7 @@
     "/network-reporting/v1/reports/{report-id}/report-runs/{report-run-id}": {
       "delete": {
         "description": "This API endpoint deletes particular report runs with report run ID. Report ID can be obtained from **List Reports API** and Report run ID can be obtained from **List Report Runs API**.",
-        "operationId": "deleteReportRun",
+        "operationId": "deleteReportRunV1",
         "parameters": [
           {
             "description": "The unique identifier of the user report.",
@@ -1368,8 +2865,8 @@
     },
     "/network-reporting/v1/reports/{report-id}/report-runs/{report-run-id}/download-link": {
       "post": {
-        "description": "This endpoint allows users to retrieve a downloadable link for a previously generated report run. Users can specify the export file format (CSV or PDF) by providing the appropriate `exportType` parameter in the request body. The response will contain the file's download URL, MIME type (application/zip for CSV file format and application/pdf for PDF file format), and the suggested file name for the report. Report ID can be obtained from **List Reports API** and Report run ID can be obtained from **List Report Runs API**.",
-        "operationId": "downloadReportLink",
+        "description": "This API endpoint allows users to retrieve a downloadable link for a previously generated report run. Users can specify the export file format (CSV or PDF) by providing the appropriate `exportType` parameter in the request body. The response will contain the file's download URL, MIME type (application/zip for CSV file format and application/pdf for PDF file format), and the suggested file name for the report. Report ID can be obtained from **List Reports API** and Report run ID can be obtained from **List Report Runs API**.",
+        "operationId": "downloadReportLinkV1",
         "parameters": [
           {
             "description": "The unique identifier of the user report.",

@@ -1,6 +1,15 @@
 {
   "components": {
     "headers": {
+      "RetryAfter": {
+        "description": "Number of seconds to wait before retrying the request.",
+        "schema": {
+          "example": 60,
+          "format": "int32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
       "XRateLimitLimit": {
         "description": "Request limit per hour.",
         "schema": {
@@ -272,6 +281,27 @@
           }
         }
       },
+      "ConflictError": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "Conflict. The resource already exists.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "Forbidden": {
         "content": {
           "application/json": {
@@ -355,11 +385,96 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/NotFoundError"
+              "$ref": "#/components/schemas/NotFoundErrorDetails"
             }
           }
         },
-        "description": "Not Found Error",
+        "description": "The requested resource was not found.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "NotificationRule": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotificationRule"
+            }
+          }
+        },
+        "description": "Notification rule.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "NotificationRuleCreated": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotificationRule"
+            }
+          }
+        },
+        "description": "Notification rule created successfully.",
+        "headers": {
+          "Location": {
+            "description": "URI of the newly created notification rule.",
+            "schema": {
+              "example": "/network-notifications/v1/notification-rules/3f96ffea-73fe-4a9b-b253-ddc58c76fe25",
+              "format": "uri",
+              "type": "string"
+            }
+          },
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "NotificationRules": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/NotificationRules"
+            }
+          }
+        },
+        "description": "List of notification rules.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ResponseWithNoContent": {
+        "description": "Operation completed successfully with no response.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -456,8 +571,11 @@
             }
           }
         },
-        "description": "Too many requests. Rate limit exceeded.",
+        "description": "Too Many Requests. Rate limit exceeded.",
         "headers": {
+          "Retry-After": {
+            "$ref": "#/components/headers/RetryAfter"
+          },
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
           },
@@ -478,6 +596,27 @@
           }
         },
         "description": "Unauthorized request.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnprocessableEntityErrorDetails"
+            }
+          }
+        },
+        "description": "Unprocessable Entity. The request was well-formed but failed semantic validation.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -1079,27 +1218,29 @@
         "type": "object"
       },
       "BadRequestErrorDetails": {
-        "description": "Error details returned from the server.\n",
+        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.\n",
-            "example": "HPE_GL_ERROR_BAD_REQUEST",
-            "format": "const",
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_BAD_REQUEST",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.\n",
+            "description": "HTTP status code.",
             "example": 400,
-            "maximum": 500,
+            "maximum": 400,
             "minimum": 400,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Invalid input received for notification rule.",
+            "maxLength": 512,
+            "type": "string"
           }
         },
         "required": [
@@ -1168,16 +1309,44 @@
         ],
         "type": "object"
       },
-      "DebugId": {
-        "description": "A unique identifier used for troubleshooting and debugging purposes.\n",
-        "example": "78f002e32e0cefba3d8cc94fa8179342",
-        "format": "const",
-        "maxLength": 512,
-        "type": "string"
+      "ConflictError": {
+        "description": "Conflict Error details returned from the server.",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_CONFLICT",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "example": 409,
+            "maximum": 409,
+            "minimum": 409,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Conflict. The resource already exists.",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
       },
-      "DebugIdinsights": {
-        "description": "Unique identifier for debugging purposes. This ID can be used to trace the error in server logs.",
-        "maxLength": 256,
+      "DebugId": {
+        "description": "A unique identifier used for troubleshooting and debugging purposes.",
+        "example": "78f002e32e0cefba3d8cc94fa8179342",
+        "maxLength": 512,
         "type": "string"
       },
       "DeferAlertsRequest": {
@@ -1207,40 +1376,30 @@
         ],
         "type": "object"
       },
-      "ErrorMessage": {
-        "description": "Error message indicating the cause of the failure.\n",
-        "example": "Error message indicating the cause of the failure.",
-        "format": "const",
-        "maxLength": 512,
-        "type": "string"
-      },
-      "ErrorMessageinsights": {
-        "description": "Error message providing additional details about the error.",
-        "maxLength": 512,
-        "type": "string"
-      },
       "ForbiddenErrorDetails": {
-        "description": "Error details returned from the server.\n",
+        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.\n",
-            "example": "HPE_GL_ERROR_FORBIDDEN",
-            "format": "const",
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_FORBIDDEN",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.\n",
+            "description": "HTTP status code.",
             "example": 403,
-            "maximum": 500,
-            "minimum": 400,
+            "maximum": 403,
+            "minimum": 403,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Access forbidden.",
+            "maxLength": 512,
+            "type": "string"
           }
         },
         "required": [
@@ -1252,27 +1411,29 @@
         "type": "object"
       },
       "InternalServerErrorDetails": {
-        "description": "Error details returned from the server.\n",
+        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.\n",
-            "example": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
-            "format": "const",
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_INTERNAL_SERVER_ERROR",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.\n",
+            "description": "HTTP status code.",
             "example": 500,
             "maximum": 500,
-            "minimum": 400,
+            "minimum": 500,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Internal Server Error while processing the request.",
+            "maxLength": 512,
+            "type": "string"
           }
         },
         "required": [
@@ -1282,6 +1443,15 @@
           "debugId"
         ],
         "type": "object"
+      },
+      "LimitParam": {
+        "default": 20,
+        "description": "Specifies the number of results to be returned. (Default: 20)",
+        "example": 10,
+        "format": "int32",
+        "maximum": 20,
+        "minimum": 1,
+        "type": "integer"
       },
       "LogMessage": {
         "description": "A log message entry.\n",
@@ -1300,24 +1470,30 @@
         },
         "type": "object"
       },
-      "NotFoundError": {
+      "NotFoundErrorDetails": {
+        "description": "Not Found error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugIdinsights"
+            "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "example": "HPE_GL_NETWORKING_ERROR_NOT_FOUND",
-            "maxLength": 128,
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_NOT_FOUND",
+            "maxLength": 256,
             "type": "string"
           },
           "httpStatusCode": {
+            "description": "HTTP status code.",
             "example": 404,
             "maximum": 404,
             "minimum": 404,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessageinsights"
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Notification rule not found.",
+            "maxLength": 512,
+            "type": "string"
           }
         },
         "required": [
@@ -1325,6 +1501,543 @@
           "errorCode",
           "message",
           "debugId"
+        ],
+        "type": "object"
+      },
+      "NotificationRule": {
+        "description": "Notification rule details.",
+        "properties": {
+          "description": {
+            "description": "Description of the notification rule.",
+            "example": "Notification rule for email alerts.",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/NotificationRuleDestination"
+          },
+          "enabled": {
+            "description": "Indicates whether the notification rule is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Unique identifier of the notification rule.",
+            "example": "3f96ffea-73fe-4a9b-b253-ddc58c76fe25",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the notification rule.",
+            "example": "email-rule",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NotificationRuleSource"
+          },
+          "sourceTypes": {
+            "description": "List of source types for the notification rule.",
+            "items": {
+              "enum": [
+                "ALERTS"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": {
+            "const": "network-notifications/notification-rule",
+            "description": "Type identifier for the notification rule.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleConfigInput": {
+        "description": "Notification rule config input details.",
+        "properties": {
+          "description": {
+            "description": "Description of the notification rule.",
+            "example": "Notification rule for email alerts.",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationInput"
+          },
+          "enabled": {
+            "description": "Indicates whether the notification rule is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Name of the notification rule.",
+            "example": "email-rule",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NotificationRuleSourceInput"
+          },
+          "sourceTypes": {
+            "description": "List of source types for the notification rule.",
+            "items": {
+              "enum": [
+                "ALERTS"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleDestination": {
+        "description": "Notification destination details for the notification rule.",
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationEmail"
+          },
+          "syslog": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationSyslog"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationWebhook"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleDestinationEmail": {
+        "description": "Email destination details for the notification rule.",
+        "properties": {
+          "emailIds": {
+            "description": "List of email addresses for the notification rule.",
+            "items": {
+              "example": "admin@domain.com",
+              "format": "email",
+              "maxLength": 256,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Indicates whether the email destination is enabled.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleDestinationEmailInput": {
+        "description": "Email destination details for the notification rule.",
+        "properties": {
+          "emailIds": {
+            "description": "List of email addresses for the notification rule. \nNOTE: The contents of this field are ignored if email destination is not enabled.",
+            "items": {
+              "example": "admin@domain.com",
+              "format": "email",
+              "maxLength": 256,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Indicates whether the email destination is enabled.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleDestinationInput": {
+        "description": "Notification destination details for the notification rule.\nNOTE: At least one of the destination types (email, webhook or syslog) should be enabled to create or update a notification rule.",
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationEmailInput"
+          },
+          "syslog": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationSyslogInput"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationWebhookInput"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleDestinationSyslog": {
+        "description": "Syslog destination details for the notification rule.\nNOTE: Syslog destination is only supported in the Central On-Premise environment.",
+        "properties": {
+          "enabled": {
+            "description": "Indicates whether the syslog destination is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "serverIds": {
+            "description": "List of syslog server UUIDs for the notification rule.",
+            "items": {
+              "example": "4d113fgh-abcd-ef",
+              "format": "uuid",
+              "maxLength": 256,
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleDestinationSyslogInput": {
+        "description": "Syslog destination details for the notification rule.\nNOTE: Syslog destination is only supported in the Central On-Premise environment.",
+        "properties": {
+          "enabled": {
+            "description": "Indicates whether the syslog destination is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "serverIds": {
+            "description": "List of syslog servers UUIDs for the notification rule.\nNOTE: The contents of this field are ignored if syslog destination is not enabled.",
+            "items": {
+              "example": "4d113fgh-abcd-ef",
+              "format": "uuid",
+              "maxLength": 256,
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleDestinationWebhook": {
+        "description": "Webhook destination details for the notification rule.",
+        "properties": {
+          "enabled": {
+            "description": "Indicates whether the webhook destination is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "webhookIds": {
+            "description": "List of webhook subscription UUIDs for the notification rule.",
+            "items": {
+              "example": "4d113fgh-abcd-ef",
+              "format": "uuid",
+              "maxLength": 512,
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleDestinationWebhookInput": {
+        "description": "Webhook destination details for the notification rule.",
+        "properties": {
+          "enabled": {
+            "description": "Indicates whether the webhook destination is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "webhookIds": {
+            "description": "List of webhook subscription UUIDs for the notification rule.\n  The contents of this field are ignored if webhook destination is not enabled.\nNOTE: Check the Webhook API details for fetching the list of supported webhook subscription details.",
+            "items": {
+              "example": "4d113fgh-abcd-ef",
+              "format": "uuid",
+              "maxLength": 512,
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleSource": {
+        "description": "Data source details for the notification rule.",
+        "properties": {
+          "alerts": {
+            "$ref": "#/components/schemas/NotificationRuleSourceAlerts"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleSourceAlerts": {
+        "description": "Alert source details for the notification rule.",
+        "properties": {
+          "alertNames": {
+            "description": "List of alert names for the notification rule.",
+            "items": {
+              "example": "AP CPU Utilization",
+              "maxLength": 256,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Indicates whether the alert source is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "minAlertSeverity": {
+            "description": "Minimum alert severity for the notification rule.",
+            "enum": [
+              "CRITICAL",
+              "MAJOR",
+              "MINOR",
+              "INFO"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleSourceAlertsInput": {
+        "description": "Alert source details for the notification rule.",
+        "properties": {
+          "alertNames": {
+            "description": "List of alert names for the notification rule.\nNOTE: Check the Alerts configuration API details for fetching the list of supported alerts.",
+            "items": {
+              "example": "AP CPU Utilization",
+              "maxLength": 256,
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Indicates whether the alert source is enabled. \nNOTE: This field should be true to use alert source type. \n If this field is false, the notification rule will not be created.",
+            "example": true,
+            "type": "boolean"
+          },
+          "minAlertSeverity": {
+            "description": "Minimum alert severity for the notification rule.",
+            "enum": [
+              "CRITICAL",
+              "MAJOR",
+              "MINOR",
+              "INFO"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "alertNames"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleSourceAlertsSummary": {
+        "description": "Alert source details for the notification rule.",
+        "properties": {
+          "alertCount": {
+            "description": "Count of alert names configured for the notification rule.",
+            "example": 10,
+            "format": "int32",
+            "maximum": 300,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "enabled": {
+            "description": "Indicates whether the alert source is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "minAlertSeverity": {
+            "description": "Minimum alert severity for the notification rule.",
+            "enum": [
+              "CRITICAL",
+              "MAJOR",
+              "MINOR",
+              "INFO"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleSourceInput": {
+        "description": "Data source details for the notification rule.",
+        "properties": {
+          "alerts": {
+            "$ref": "#/components/schemas/NotificationRuleSourceAlertsInput"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleSourceSummary": {
+        "description": "Data source details for the notification rule.",
+        "properties": {
+          "alerts": {
+            "$ref": "#/components/schemas/NotificationRuleSourceAlertsSummary"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRuleSummary": {
+        "description": "Notification rule details.",
+        "properties": {
+          "description": {
+            "description": "Description of the notification rule.",
+            "example": "Notification rule for email alerts.",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/NotificationRuleDestination"
+          },
+          "enabled": {
+            "description": "Indicates whether the notification rule is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Unique identifier of the notification rule.",
+            "example": "3f96ffea-73fe-4a9b-b253-ddc58c76fe25",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the notification rule.",
+            "example": "email-rule",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NotificationRuleSourceSummary"
+          },
+          "sourceTypes": {
+            "description": "List of source types for the notification rule.",
+            "items": {
+              "enum": [
+                "ALERTS"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": {
+            "const": "network-notifications/notification-rule",
+            "description": "Type identifier for the notification rule.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name"
+        ],
+        "type": "object"
+      },
+      "NotificationRuleUpdateInput": {
+        "description": "Notification rule config input details for Update operation.",
+        "properties": {
+          "description": {
+            "description": "Description of the notification rule.",
+            "example": "Notification rule for email alerts.",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/NotificationRuleDestinationInput"
+          },
+          "enabled": {
+            "description": "Indicates whether the notification rule is enabled.",
+            "example": true,
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NotificationRuleSourceInput"
+          },
+          "sourceTypes": {
+            "description": "List of source types for the notification rule.",
+            "items": {
+              "enum": [
+                "ALERTS"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "NotificationRules": {
+        "allOf": [
+          {
+            "description": "Notification rule details",
+            "properties": {
+              "items": {
+                "description": "List of notification rules.",
+                "items": {
+                  "$ref": "#/components/schemas/NotificationRuleSummary"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponseProperties"
+          }
+        ]
+      },
+      "OffsetParam": {
+        "default": 0,
+        "description": "Specifies the zero-based resource offset from which to start the response.",
+        "example": 10,
+        "format": "int32",
+        "maximum": 19,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "PaginationResponseProperties": {
+        "description": "Fields appended to a list to facilitate paging.",
+        "properties": {
+          "count": {
+            "description": "The number of objects returned in the current list.",
+            "example": 1,
+            "format": "int32",
+            "maximum": 20,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "offset": {
+            "description": "The offset index to start returning results from in offset-based pagination. Set to null when no more pages remain.",
+            "example": 1,
+            "format": "int32",
+            "maximum": 19,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of objects contained in the datastore.",
+            "example": 1,
+            "format": "int32",
+            "maximum": 20,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "total",
+          "offset"
         ],
         "type": "object"
       },
@@ -1382,27 +2095,29 @@
         "type": "object"
       },
       "TooManyRequestsErrorDetails": {
-        "description": "Error details returned from the server.\n",
+        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.\n",
-            "example": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
-            "format": "const",
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_TOO_MANY_REQUESTS",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.\n",
+            "description": "HTTP status code.",
             "example": 429,
-            "maximum": 500,
-            "minimum": 400,
+            "maximum": 429,
+            "minimum": 429,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Too Many Requests. Rate limit exceeded.",
+            "maxLength": 512,
+            "type": "string"
           }
         },
         "required": [
@@ -1414,27 +2129,63 @@
         "type": "object"
       },
       "UnauthorizedErrorDetails": {
-        "description": "Error details returned from the server.\n",
+        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.\n",
-            "example": "HPE_GL_ERROR_UNAUTHORIZED",
-            "format": "const",
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_UNAUTHORIZED",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.\n",
+            "description": "HTTP status code.",
             "example": 401,
-            "maximum": 500,
-            "minimum": 400,
+            "maximum": 401,
+            "minimum": 401,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Unauthorized request.",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UnprocessableEntityErrorDetails": {
+        "description": "Error details returned when semantic validation fails (e.g., invalid email format, unknown alertName).",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "Internal error code.",
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_UNPROCESSABLE_ENTITY",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "example": 422,
+            "maximum": 422,
+            "minimum": 422,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Error message indicating the cause of the failure.",
+            "example": "Unprocessable Entity. The request was well-formed but failed semantic validation.",
+            "maxLength": 512,
+            "type": "string"
           }
         },
         "required": [
@@ -1460,13 +2211,13 @@
     }
   },
   "info": {
-    "description": "This is a v1 release of source recommendation APIs under network notifications.",
+    "description": "This is a v1 release of the Notification platform APIs.",
     "license": {
       "name": "HPE",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
     },
     "title": "Notifications",
-    "version": "0.0.1"
+    "version": "1.0.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2092,6 +2843,292 @@
           "Insights"
         ]
       }
+    },
+    "/network-notifications/v1/notification-rules": {
+      "get": {
+        "description": "This API endpoint retrieves the list of notification rules. The notification rules list includes data source and destination channel details.\nNOTE: The source.alerts.alertCount field in responses is a summary count; use getNotificationRuleV1 to retrieve the full list of alertNames",
+        "operationId": "getNotificationRulesV1",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/LimitParam"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OffsetParam"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NotificationRules"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List all notification rules",
+        "tags": [
+          "Notification Rules"
+        ]
+      },
+      "post": {
+        "description": "This API is used to create a notification rule.",
+        "operationId": "createNotificationRuleV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "notificationRuleInput": {
+                    "$ref": "#/components/schemas/NotificationRuleConfigInput"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/NotificationRuleCreated",
+            "description": "Notification rule created successfully."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictError"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create a notification rule",
+        "tags": [
+          "Notification Rules"
+        ]
+      }
+    },
+    "/network-notifications/v1/notification-rules/{id}": {
+      "delete": {
+        "description": "This API is used to delete a notification rule.",
+        "operationId": "deleteNotificationRuleV1",
+        "parameters": [
+          {
+            "description": "ID of the notification rule.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3f96ffea-73fe-4a9b-b253-ddc58c76fe25",
+              "maxLength": 128,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/ResponseWithNoContent",
+            "description": "Notification rule deleted successfully."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete a notification rule",
+        "tags": [
+          "Notification Rules"
+        ]
+      },
+      "get": {
+        "description": "This API endpoint retrieves a notification rule based on the id provided. The notification rule includes data source and destination channel details.",
+        "operationId": "getNotificationRuleV1",
+        "parameters": [
+          {
+            "description": "ID of the notification rule.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3f96ffea-73fe-4a9b-b253-ddc58c76fe25",
+              "maxLength": 128,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NotificationRule"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Retrieve a notification rule by its ID",
+        "tags": [
+          "Notification Rules"
+        ]
+      },
+      "patch": {
+        "description": "This API is used to update a notification rule.",
+        "operationId": "updateNotificationRuleV1",
+        "parameters": [
+          {
+            "description": "ID of the notification rule.",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "example": "3f96ffea-73fe-4a9b-b253-ddc58c76fe25",
+              "maxLength": 128,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "properties": {
+                  "notificationRuleInput": {
+                    "$ref": "#/components/schemas/NotificationRuleUpdateInput"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NotificationRule",
+            "description": "Notification rule updated successfully."
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictError"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update a notification rule",
+        "tags": [
+          "Notification Rules"
+        ]
+      }
     }
   },
   "servers": [
@@ -2172,6 +3209,10 @@
     {
       "description": "APIs for retrieving source recommendations.",
       "name": "Insights"
+    },
+    {
+      "description": "APIs for managing notification rules.",
+      "name": "Notification Rules"
     }
   ]
 }

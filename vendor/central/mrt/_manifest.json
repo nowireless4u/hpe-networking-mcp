@@ -9,42 +9,42 @@
       "version": "1.0.0"
     },
     {
-      "id": "18et12mq0rxypw",
-      "path_count": 133,
+      "id": "7wjo8aumqquw9y2",
+      "path_count": 137,
       "slug": "monitoring",
       "title": "Monitoring",
       "version": "1.0.0"
     },
     {
-      "id": "1h0cob34mq0ry20v",
+      "id": "4mz010mqquwd6p",
       "path_count": 1,
       "slug": "msp",
       "title": "MSP",
       "version": "0.0.1"
     },
     {
-      "id": "efby17mq0ry5ie",
-      "path_count": 10,
+      "id": "dpi09gmqquwgm4",
+      "path_count": 12,
       "slug": "notifications",
       "title": "Notifications",
-      "version": "0.0.1"
+      "version": "1.0.0"
     },
     {
-      "id": "1h0cob34mq0ry8ne",
-      "path_count": 5,
+      "id": "11dzpz39mqquwjy2",
+      "path_count": 6,
       "slug": "reporting",
       "title": "Reporting",
       "version": "0.0.1"
     },
     {
-      "id": "9a25qvfmq0ryd0e",
+      "id": "11dzpz39mqquwpe3",
       "path_count": 47,
       "slug": "services",
       "title": "Services",
       "version": "0.0.1"
     },
     {
-      "id": "b374ik26mq0ryji5",
+      "id": "5v41h1vmqquwwi3",
       "path_count": 95,
       "slug": "troubleshooting",
       "title": "Troubleshooting",
@@ -53,5 +53,5 @@
   ],
   "project": "new-central",
   "source": "https://dash.readme.com/api/v1/api-registry/<uuid> (discovered via https://developer.arubanetworks.com/new-central/reference)",
-  "total_paths": 292
+  "total_paths": 299
 }

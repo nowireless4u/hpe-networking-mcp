@@ -677,7 +677,7 @@
           }
         }
       },
-      "ErrorNotFound": {
+      "Error404audit": {
         "content": {
           "application/json": {
             "schema": {
@@ -7268,7 +7268,7 @@
     }
   },
   "info": {
-    "description": "`Webhooks` APIs.",
+    "description": "Serves Wi-Fi client locations with filtering options available.",
     "license": {
       "name": "HPE",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
@@ -7281,7 +7281,7 @@
     "/network-services/v1/airmatch-ap": {
       "get": {
         "description": "Returns AP Information for all APs for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_all_ap",
+        "operationId": "listApsV1",
         "parameters": [
           {
             "description": "Offset for pagination of results",
@@ -7371,7 +7371,7 @@
     "/network-services/v1/airmatch-ap-coverage-plan": {
       "get": {
         "description": "Returns all AP Coverage Plan documents for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_all_ap_coverage_plan",
+        "operationId": "listApCoveragePlansV1",
         "parameters": [
           {
             "description": "Request ID filter to return specific AP Coverage Plan using request id provided by user in query parameter",
@@ -7477,7 +7477,7 @@
     "/network-services/v1/airmatch-ap-coverage-plan/{serial-number}": {
       "get": {
         "description": "Returns AP Coverage Plan for a given AP Serial Number for a tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_ap_coverage_plan_by_ap_serial",
+        "operationId": "getApCoveragePlanV1",
         "parameters": [
           {
             "description": "AP Serial Number filter to get AP Coverage Plan",
@@ -7593,7 +7593,7 @@
     "/network-services/v1/airmatch-ap-neighbor-list/{serial-number}": {
       "get": {
         "description": "Get list of AP neighbors in the form of AP Serial Numbers for a given AP Serial Number for a tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.process_ap_neighbors_get_req",
+        "operationId": "getApNeighborsV1",
         "parameters": [
           {
             "description": "AP Serial Number used to look up list of AP neighbors for that AP Serial Number",
@@ -7703,7 +7703,7 @@
     "/network-services/v1/airmatch-ap-radio-relations/{serial-number}": {
       "get": {
         "description": "Returns AP Radio Relations Information for a specific AP based on its AP Serial number",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_ap_radio_relations",
+        "operationId": "getApRadioRelationsV1",
         "parameters": [
           {
             "description": "AP Serial number to query radio relations for that AP",
@@ -7803,7 +7803,7 @@
     "/network-services/v1/airmatch-ap/{serial-number}": {
       "get": {
         "description": "Returns Access Point (AP) Information based on its Serial number for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_ap",
+        "operationId": "getApV1",
         "parameters": [
           {
             "description": "AP Serial number to look up information for that AP",
@@ -7903,7 +7903,7 @@
     "/network-services/v1/airmatch-board-limit/{serial-number}/{radio-mac}": {
       "get": {
         "description": "Returns Board limits of the radio for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_radio_board_limit",
+        "operationId": "getBoardLimitsV1",
         "parameters": [
           {
             "description": "AP Serial",
@@ -8014,7 +8014,7 @@
     "/network-services/v1/airmatch-device-config/{serial-number}": {
       "get": {
         "description": "Returns Device Configuration for a specific AP Serial number for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_device_config_by_ap_serial",
+        "operationId": "getDeviceConfigV1",
         "parameters": [
           {
             "description": "AP Serial Num to get Device Config for",
@@ -8114,7 +8114,7 @@
     "/network-services/v1/airmatch-global-config-id": {
       "get": {
         "description": "Returns the global configuration ID for the tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_global_config_id",
+        "operationId": "getGlobalConfigIdV1",
         "parameters": [
           {
             "description": "Limit for pagination of results",
@@ -8204,7 +8204,7 @@
     "/network-services/v1/airmatch-history/{radio-mac}": {
       "get": {
         "description": "Returns Radio History events for a specific Radio MAC address for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_history_by_radio_mac",
+        "operationId": "getRadioHistoryV1",
         "parameters": [
           {
             "description": "Radio MAC address to look up list of radio history events for that radio",
@@ -8325,7 +8325,7 @@
     "/network-services/v1/airmatch-non-friend/{radio-mac}": {
       "get": {
         "description": "Returns list of non friend (non-neighbor) radios for that radio mac for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_non_friends",
+        "operationId": "getNonFriendsV1",
         "parameters": [
           {
             "description": "Reporting MAC address to look up list of non friend (non-neighbor) radios",
@@ -8446,7 +8446,7 @@
     "/network-services/v1/airmatch-partition": {
       "get": {
         "description": "Returns RF Partition information for a given tenant with list of radios in that partition along with RF domain and partition information for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.process_partition_get_req",
+        "operationId": "getRfPartitionV1",
         "parameters": [
           {
             "description": "Radio Frequency band filter to return partitions for that band",
@@ -8591,7 +8591,7 @@
       },
       "post": {
         "description": "Sends an RF Partition Request to Airmatch to create new RF partitioning based on current pathloss information",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.process_partition_post_req",
+        "operationId": "createRfPartitionV1",
         "responses": {
           "200": {
             "content": {
@@ -8656,7 +8656,7 @@
     "/network-services/v1/airmatch-pathloss/{radio-mac}": {
       "get": {
         "description": "Returns all neighbors and pathloss information heard by a radio for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_radio_all_nbr_pathloss",
+        "operationId": "getPathlossV1",
         "parameters": [
           {
             "description": "Reporting MAC address to look up list of Neighbors for that radio mac",
@@ -8790,7 +8790,7 @@
     "/network-services/v1/airmatch-priority-rf-events": {
       "get": {
         "description": "Returns all Priority Radio Frequency (RF) channel change events caused by radar and noise for a tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_all_priority_rf_events",
+        "operationId": "listPriorityRfEventsV1",
         "parameters": [
           {
             "description": "Timestamp of oldest Priority RF Event to start query result",
@@ -8900,7 +8900,7 @@
     "/network-services/v1/airmatch-priority-rf-events/{radio-mac}": {
       "get": {
         "description": "Returns list of Priority Radio Frequency (RF) events that caused channel change due to radar and noise for a specific Radio MAC address for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_priority_rf_events_by_radio_mac",
+        "operationId": "getPriorityRfEventsV1",
         "parameters": [
           {
             "description": "Radio MAC address to look up list of Priority RF events",
@@ -9021,7 +9021,7 @@
     "/network-services/v1/airmatch-radio": {
       "get": {
         "description": "Returns reporting radio information for all radios for that tenant or radios based on AP Serial if query parameter provided.",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_radios",
+        "operationId": "listRadiosV1",
         "parameters": [
           {
             "description": "AP Serial number to get reporting radio information for radios on that AP",
@@ -9129,7 +9129,7 @@
     "/network-services/v1/airmatch-radio-feasibility": {
       "get": {
         "description": "Returns current radio feasibility for all radios for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_all_radio_feas",
+        "operationId": "listRadioFeasibilityV1",
         "parameters": [
           {
             "description": "Offset for pagination of results",
@@ -9219,7 +9219,7 @@
     "/network-services/v1/airmatch-radio-feasibility/{radio-mac}": {
       "get": {
         "description": "Returns current radio feasibility for a specific radio MAC address for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_radio_feas_by_radio_mac",
+        "operationId": "getRadioFeasibilityV1",
         "parameters": [
           {
             "description": "Radio MAC to look up list of radio feasibility for that radio",
@@ -9320,7 +9320,7 @@
     "/network-services/v1/airmatch-radio-partition/{radio-mac}": {
       "get": {
         "description": "Returns rf domain and friend partition id for a specific radio mac address for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_friend_partition_key",
+        "operationId": "getRadioPartitionV1",
         "parameters": [
           {
             "description": "Radio MAC address to find in partition",
@@ -9435,7 +9435,7 @@
     "/network-services/v1/airmatch-radio/{radio-mac}": {
       "get": {
         "description": "Returns the reporting radio information for a specific tenant based on radio MAC address.",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_radio",
+        "operationId": "getRadioV1",
         "parameters": [
           {
             "description": "Radio MAC address to look up reporting radio information",
@@ -9545,7 +9545,7 @@
     "/network-services/v1/airmatch-rf-events": {
       "get": {
         "description": "Returns all non Priority Radio Frequency (RF) events for a tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_all_rf_events",
+        "operationId": "listRfEventsV1",
         "parameters": [
           {
             "description": "Timestamp of oldest RF Event to start query result",
@@ -9655,7 +9655,7 @@
     "/network-services/v1/airmatch-rf-events/{radio-mac}": {
       "get": {
         "description": "Returns non Priority Radio Frequency (RF) events for a specific Radio MAC address for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_rf_events_by_radio_mac",
+        "operationId": "getRfEventsV1",
         "parameters": [
           {
             "description": "Radio MAC to look up list of RF events for that radio",
@@ -9776,7 +9776,7 @@
     "/network-services/v1/airmatch-runnow": {
       "post": {
         "description": "Sends an optimization request to Airmatch to compute and deploy a solution based on user provided runmode and other parameters. Runmode is a required parameter and valid values are ON-DEMAND, INCREMENTAL, and OPMODE.",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.process_optimization_post_req",
+        "operationId": "runOptimizationV1",
         "parameters": [
           {
             "description": "runmode (case-insensitive). Valid values: ON-DEMAND, INCREMENTAL, OPMODE",
@@ -9884,7 +9884,7 @@
     "/network-services/v1/airmatch-service-config": {
       "get": {
         "description": "Returns Device Running Configuration for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_service_config",
+        "operationId": "getServiceConfigV1",
         "parameters": [
           {
             "description": "Limit for pagination of results",
@@ -9974,7 +9974,7 @@
     "/network-services/v1/airmatch-solution": {
       "get": {
         "description": "Returns the list of solver optimizations/solutions generated by Airmatch for a given tenant. This endpoint supports multiple query parameters to filter and paginate the list of solutions returned. If no query parameters are provided, it will return all solutions for the tenant up to the default pagination limit.",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.process_optimization_get_req",
+        "operationId": "listSolutionsV1",
         "parameters": [
           {
             "description": "Number of solutions to return.",
@@ -10176,7 +10176,7 @@
     "/network-services/v1/airmatch-solution/{radio-mac}": {
       "get": {
         "description": "Returns Solution/Radio Plan of a specific radio for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.get_radio_plan_by_radio_mac",
+        "operationId": "getSolutionV1",
         "parameters": [
           {
             "description": "Radio MAC address to get solution for that radio mac",
@@ -10332,7 +10332,7 @@
     "/network-services/v1/airmatch-state": {
       "get": {
         "description": "Retrieve the current migration state for a given tenant",
-        "operationId": "am_api.public_api_handlers.AirmatchAPI.migration_state_get_req",
+        "operationId": "getMigrationStateV1",
         "parameters": [
           {
             "description": "Limit for pagination of results",
@@ -11122,7 +11122,7 @@
             "$ref": "#/components/responses/ForbiddenRequestaudit"
           },
           "404": {
-            "$ref": "#/components/responses/ErrorNotFound"
+            "$ref": "#/components/responses/Error404audit"
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
@@ -11197,7 +11197,7 @@
             "$ref": "#/components/responses/ForbiddenRequestaudit"
           },
           "404": {
-            "$ref": "#/components/responses/ErrorNotFound"
+            "$ref": "#/components/responses/Error404audit"
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
@@ -11220,7 +11220,7 @@
     "/network-services/v1/fco-resp-info-all": {
       "get": {
         "description": "This API retrieves the Automated Frequency Coordination channel and EIRP data for all the access points.",
-        "operationId": "fco_internal_api.api_handlers.public_api_handler.FcoInfo.get_all_afc_resp_info",
+        "operationId": "listAfcRespInfoV1",
         "parameters": [
           {
             "description": "The maximum number of items to return.",
@@ -11291,7 +11291,7 @@
     "/network-services/v1/fco-resp-info/{serial-number}": {
       "get": {
         "description": "This API retrieves the Automated Frequency Coordination channel and EIRP data for the specific AP serial number that has been provided.",
-        "operationId": "fco_internal_api.api_handlers.public_api_handler.FcoInfo.get_afc_resp_info",
+        "operationId": "getAfcRespInfoV1",
         "parameters": [
           {
             "description": "The serial number of the access point for which AFC channel data is required",
