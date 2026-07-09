@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.2.1] - 2026-07-08
+
+**Patch — aos-migration skill: render the `file_manager` upload widget "render-and-stop" (mitigates the upload-widget hang).** The MCP-Apps upload widget re-initializes on every *subsequent* tool call in the same turn — the client re-renders and re-mounts it on each later call, and a chain of trailing tool calls can leave it stuck on "waiting for content," never settling enough to accept a drop. This is a client-side host limitation ([modelcontextprotocol/ext-apps#701](https://github.com/modelcontextprotocol/ext-apps/issues/701); widget-side hardening at [PrefectHQ/prefab#479](https://github.com/PrefectHQ/prefab/issues/479)) whose trigger is post-render tool-call volume, so it surfaced most under high-reasoning-effort turns.
+
+### Changed
+- **Stage 1-ALT Option 2 (configuration upload)** now instructs the model to render `file_manager` as the **terminal action of the turn** — emit the operator instruction, call `file_manager`, then stop and end the turn, running no further tools until the operator uploads and the flow resumes in a new turn. Rendering the widget last (nothing re-mounts it) is the reliable workaround while the upstream host bug is open.
+
 ## [3.5.2.0] - 2026-07-08
 
 **Minor — Kubernetes- and Docker-friendly HTTP health endpoints (#582).** The MCP protocol endpoint (`/mcp`) is not a clean `httpGet` probe target — a bare `GET` can return `406` and `HEAD` can return `405`, neither of which Kubernetes treats as success (only `200`–`399` pass), so Docker healthchecks had to special-case tolerated non-2xx statuses from `/mcp`. New plain HTTP endpoints give orchestrators a normal probe surface that never requires MCP stream negotiation.
