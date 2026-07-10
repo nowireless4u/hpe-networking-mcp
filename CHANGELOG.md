@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.0] - 2026-07-10
+
+**Minor — 10 new Aruba Central MRT tools from the 2026-07 OAS refresh (Central 659 → 669).** The scheduled Aruba OAS sync (#581) pulled new `network-monitoring` / `network-reporting` / `network-notifications` endpoints; these hand-curated wrappers surface them. All read tools + notification create/delete are **live-verified against a real tenant**.
+
+### Added
+- **Application visibility** (`mrt_applications.py`): `central_get_application_categories`, `central_get_website_categories` (top categories by usage over a `start_at`/`end_at` window), `central_get_security_risks` (per-application risk scoring). Shared usage-scope filters (site/client/serial/ssid/user-role); `{items, count, total, offset}` shape.
+- **Gateway**: `central_get_gateway_modem_stats` — cellular/LTE uplink modem telemetry (RSSI/RSRP/RSRQ/CQI, ARFCN, data-plan usage).
+- **Reporting** (`mrt_reporting.py`): `central_get_reports_metadata` (report types + KPI widgets), `central_get_report` (single definition), and `central_create_report` (write — new report definition, gated).
+- **Notification rules** (`mrt_notifications.py`): `central_get_notification_rules` / `central_get_notification_rule` reads; `central_manage_notification_rule` for **create + delete** (write-gated). A rule requires an enabled `source.alerts` and an enabled `destination` (`email.emailIds` accepts raw addresses).
+
+### Known limitations
+- **Notification-rule *update* is not supported** (create/delete only). The `PATCH /notification-rules/{id}` endpoint is unusable through the current client — the OAS's `application/merge-patch+json` content-type is gateway-rejected (403), and `application/json` PATCH is treated as a full replace that fails validation regardless of body shape. Tracked in **#606**; recreate the rule to change it.
+
+### Notes
+- All 4 write tools use `Capability.WRITE_DELETE` (the only tag Central's write-gate honors) → hidden unless `ENABLE_CENTRAL_WRITE_TOOLS=true`, and they fire an elicitation confirmation.
+
 ## [3.5.2.1] - 2026-07-08
 
 **Patch — aos-migration skill: render the `file_manager` upload widget "render-and-stop" (mitigates the upload-widget hang).** The MCP-Apps upload widget re-initializes on every *subsequent* tool call in the same turn — the client re-renders and re-mounts it on each later call, and a chain of trailing tool calls can leave it stuck on "waiting for content," never settling enough to accept a drop. This is a client-side host limitation ([modelcontextprotocol/ext-apps#701](https://github.com/modelcontextprotocol/ext-apps/issues/701); widget-side hardening at [PrefectHQ/prefab#479](https://github.com/PrefectHQ/prefab/issues/479)) whose trigger is post-render tool-call volume, so it surfaced most under high-reasoning-effort turns.

@@ -393,6 +393,29 @@ async def central_get_gateway_dhcp(
 
 
 # ---------------------------------------------------------------------------
+# Modem / cellular uplink
+# ---------------------------------------------------------------------------
+
+
+@tool(capability=Capability.READ)
+async def central_get_gateway_modem_stats(
+    ctx: Context,
+    serial_number: Annotated[str, Field(description="Gateway serial number.")],
+    site_id: Annotated[str | None, Field(description="Optional site ID to scope the lookup.")] = None,
+) -> dict | str:
+    """Get a gateway's cellular/LTE uplink modem stats.
+
+    Returns the current modem telemetry for a gateway's cellular WAN
+    uplink — signal strength (RSSI/RSRP/RSRQ/CQI), 3G/LTE ARFCN, and the
+    data-plan usage/limit/billing counters — for troubleshooting cellular
+    backup links.
+    """
+    conn = get_central_conn(ctx)
+    params = {"site-id": site_id} if site_id else {}
+    return await _get(conn, f"network-monitoring/v1/gateways/{path_seg(serial_number)}/modem-stat", params)
+
+
+# ---------------------------------------------------------------------------
 # Clusters
 # ---------------------------------------------------------------------------
 

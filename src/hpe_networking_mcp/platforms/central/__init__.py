@@ -619,9 +619,22 @@ TOOLS = {
     ],
     "mrt_msp": ["central_list_msp_tenants"],
     "mrt_insights": ["central_get_insights"],
+    "mrt_applications": [
+        "central_get_application_categories",
+        "central_get_security_risks",
+        "central_get_website_categories",
+    ],
+    "mrt_notifications": [
+        "central_get_notification_rule",
+        "central_get_notification_rules",
+        "central_manage_notification_rule",
+    ],
     "mrt_reporting": [
+        "central_create_report",
+        "central_get_report",
         "central_get_report_runs",
         "central_get_reports",
+        "central_get_reports_metadata",
         "central_update_report",
     ],
     "mrt_webhooks": [
@@ -730,6 +743,7 @@ TOOLS = {
         "central_get_cluster_members",
         "central_get_cluster_summary",
         "central_get_gateway_dhcp",
+        "central_get_gateway_modem_stats",
         "central_get_gateway_port",
         "central_get_gateway_port_trend",
         "central_get_gateway_ports",
