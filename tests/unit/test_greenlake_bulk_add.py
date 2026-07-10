@@ -279,7 +279,7 @@ class TestGreenlakeBulkAddDevices:
         mock_limiter = self._make_limiter_mock()
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch(
@@ -324,7 +324,7 @@ class TestGreenlakeBulkAddDevices:
         mock_limiter = self._make_limiter_mock()
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch(
@@ -373,7 +373,7 @@ class TestGreenlakeBulkAddDevices:
         mock_limiter = self._make_limiter_mock()
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch(
@@ -421,7 +421,7 @@ class TestGreenlakeBulkAddDevices:
 
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch(
@@ -462,7 +462,7 @@ class TestGreenlakeBulkAddDevices:
         mock_limiter = self._make_limiter_mock()
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch("hpe_networking_mcp.platforms.greenlake.tools.bulk_add.AsyncLimiter", return_value=mock_limiter),
@@ -511,7 +511,7 @@ class TestGreenlakeBulkAddDevices:
         mock_limiter = self._make_limiter_mock()
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch("hpe_networking_mcp.platforms.greenlake.tools.bulk_add.AsyncLimiter", return_value=mock_limiter),
@@ -551,7 +551,7 @@ class TestGreenlakeBulkAddDevices:
         mock_limiter = self._make_limiter_mock()
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client_instance,
             ),
             patch("hpe_networking_mcp.platforms.greenlake.tools.bulk_add.AsyncLimiter", return_value=mock_limiter),
@@ -750,7 +750,7 @@ class TestBulkAddPhase20Integration:
 
         with (
             patch(
-                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.GreenLakeHttpClient",
+                "hpe_networking_mcp.platforms.greenlake.tools.bulk_add.get_greenlake_client",
                 return_value=mock_client,
             ),
             patch(

@@ -103,7 +103,11 @@ def _open_csv_source(csv_path: str | None, csv_text: str | None):
     """
     if csv_path is not None:
         return open(csv_path, encoding="utf-8-sig", newline="")
-    return io.StringIO(csv_text)
+    # Strip a leading UTF-8 BOM (U+FEFF; Excel exports it into copy/pasted or
+    # uploaded text); the csv_path branch already handles it via utf-8-sig.
+    # Without this the BOM prefixes the first header ("\ufeffserialNumber") and
+    # schema validation falsely fails "missing serialNumber" (#593).
+    return io.StringIO((csv_text or "").lstrip("\ufeff"))
 
 
 def validate_row(row: dict, row_num: int) -> str | None:
@@ -124,12 +128,14 @@ def validate_row(row: dict, row_num: int) -> str | None:
         ``None`` on success.
     """
     errors = []
-    sn_raw = row.get("serialNumber", "").strip()
+    # ``or ""`` guards a short row: csv.DictReader fills missing trailing columns
+    # with None (restval), and ``None.strip()`` would crash validation (#593).
+    sn_raw = (row.get("serialNumber") or "").strip()
     if not sn_raw:
         errors.append("missing serialNumber")
     else:
         row["serialNumber"] = sn_raw.upper()  # GreenLake requires uppercase serial numbers
-    mac_raw = row.get("macAddress", "").strip()
+    mac_raw = (row.get("macAddress") or "").strip()
     if not mac_raw:
         errors.append("missing macAddress")
     else:
@@ -173,6 +179,7 @@ def parse_csv(csv_path: str | None, csv_text: str | None) -> ParseResult:
             return ParseResult(error=schema_error)
 
         result = ParseResult()
+        seen_serials: set[str] = set()
         for row_num, row in enumerate(reader, start=2):
             canonical_row = {header_map[k]: v for k, v in row.items() if k is not None}
             err = validate_row(canonical_row, row_num)
@@ -184,8 +191,23 @@ def parse_csv(csv_path: str | None, csv_text: str | None) -> ParseResult:
                         "error": err,
                     }
                 )
-            else:
-                result.valid_rows.append(canonical_row)
+                continue
+            # Reject duplicate serials: the per-serial keymap/cache collapses them
+            # to one entry, so a duplicate row would skew row-count totals and cache
+            # cleanup vs the deduped cache (#593). ``serialNumber`` is already
+            # uppercased by validate_row, so the comparison is case-consistent.
+            sn = canonical_row["serialNumber"]
+            if sn in seen_serials:
+                result.invalid_rows.append(
+                    {
+                        "row_num": row_num,
+                        "serial": sn,
+                        "error": f"Row {row_num}: duplicate serialNumber {sn}",
+                    }
+                )
+                continue
+            seen_serials.add(sn)
+            result.valid_rows.append(canonical_row)
         return result
     finally:
         if hasattr(source, "close"):

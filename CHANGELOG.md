@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.2] - 2026-07-10
+
+**Patch — GreenLake bulk-add robustness (Casey Jones full-project review: #591–#594).** Four write-path integrity fixes in `greenlake_bulk_add_devices`.
+
+### Fixed
+- **#591 (high) — transport failures no longer abort a run or corrupt resume state.** `_poll_async_operation` now contains HTTP/transport exceptions (transient-retry, then `None` → the batch is marked `timed_out`), so a 5xx/timeout after a 202-accepted POST/PATCH doesn't tear down the tool. This restores the `Never raises` contract of the assignment/enrichment PATCH helpers (their poll ran outside the protected block). The batch `POST` is now wrapped too — a transport error fails just that batch and the run continues.
+- **#592 (medium) — a FAILED async-operation is no longer reported as success.** When polling returned no `items`, any dict `result` was treated as a partial-success list and every serial not in `failedDevicesSerial` was marked `SUCCEEDED` without checking terminal status — so a `{"status":"FAILED"}` with empty/`{}` result cached devices as onboarded (no `device_id`) and resume skipped them forever. Now: an explicit `failedDevicesSerial` breakdown is trusted (legit partial success), a confirmed `SUCCEEDED` status with no breakdown succeeds, and **everything else fails closed**.
+- **#593 (medium) — CSV input/cache hygiene.** Short rows (missing trailing columns → `None`) are reported in `invalid_rows` instead of crashing on `None.strip()`; a UTF-8 BOM in `csv_text`/uploaded text is stripped (matching the `csv_path` `utf-8-sig` path) so it no longer falsely fails schema validation; duplicate serials are rejected into `invalid_rows` so per-serial cache counts stay consistent with row totals.
+- **#594 (low) — guarded client path.** The tool built `GreenLakeHttpClient` from lifespan context directly, so a failed/absent token-manager raised an opaque `AttributeError`. It now uses `get_greenlake_client()`, returning the documented **503 ToolError** when GreenLake is not configured.
+
 ## [3.5.3.1] - 2026-07-10
 
 **Patch — PII/redaction hardening (Casey Jones full-project review: #586–#590).** Five correctness/security fixes in the tokenization layer.

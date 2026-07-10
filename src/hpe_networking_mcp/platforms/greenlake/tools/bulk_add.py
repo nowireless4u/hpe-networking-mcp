@@ -23,7 +23,7 @@ from pydantic import Field
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.greenlake._registry import tool
-from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient
+from hpe_networking_mcp.platforms.greenlake.client import GreenLakeHttpClient, get_greenlake_client
 from hpe_networking_mcp.platforms.greenlake.tools._bulk_assignment import (
     _assign_for_row,
     build_result_envelope,
@@ -142,8 +142,25 @@ async def _poll_async_operation(
     Non-terminal: INITIALIZED, RUNNING.
     """
     endpoint = f"/devices/v1/async-operations/{path_seg(async_op_id)}"
-    for _ in range(MAX_POLL_ATTEMPTS):
-        result = await client.get(endpoint)
+    for attempt in range(MAX_POLL_ATTEMPTS):
+        try:
+            result = await client.get(endpoint)
+        except Exception as exc:
+            # Contain transport/HTTP failures so a transient 5xx/timeout mid-poll
+            # never aborts the run or breaks the ``Never raises`` contract of the
+            # assignment/enrichment PATCH helpers that call this (#591). Treat it
+            # as transient — log and retry; if it persists to the attempt cap the
+            # caller gets ``None`` and marks the batch ``timed_out`` (a safe
+            # resume state), rather than a raw exception tearing down the tool.
+            logger.warning(
+                "greenlake poll transport error (attempt {}/{}) op={}: {}",
+                attempt + 1,
+                MAX_POLL_ATTEMPTS,
+                async_op_id,
+                exc,
+            )
+            await asyncio.sleep(POLL_INTERVAL_SECONDS)
+            continue
         status = result.get("status", "")
         if status in ("SUCCEEDED", "FAILED", "TIMEOUT", "TIMEDOUT"):
             # Normalise to a consistent items list. For postDevicesResponse the
@@ -276,12 +293,11 @@ async def greenlake_bulk_add_devices(
     # SECTION 4 — PII serial redactor (D-02): [[SERIAL:uuid]] token or [serial] fallback.
     _safe_serial = make_safe_serial(ctx)
 
-    # SECTION 5 — Client setup
-    token_manager = ctx.lifespan_context["greenlake_token_manager"]
-    config = ctx.lifespan_context["config"]
-    base_url = config.greenlake.api_base_url
-
-    client = GreenLakeHttpClient(token_manager=token_manager, base_url=base_url)
+    # SECTION 5 — Client setup. Use the shared guarded factory so a
+    # not-configured / failed-to-init GreenLake returns the documented 503
+    # ToolError instead of an opaque AttributeError on ``config.greenlake`` or a
+    # None token manager (#594).
+    client = get_greenlake_client(ctx)
     try:
         # SECTION 6 — Batch loop
         if pending_rows:
@@ -297,11 +313,35 @@ async def greenlake_bulk_add_devices(
                 )
 
                 # 6b. Rate gate (ONBOARD-05)
-                async with device_add_limiter:
-                    response = await client.post_raw(
-                        "/devices/v1/devices",
-                        data=_build_post_payload(batch_rows),
+                try:
+                    async with device_add_limiter:
+                        response = await client.post_raw(
+                            "/devices/v1/devices",
+                            data=_build_post_payload(batch_rows),
+                        )
+                except Exception as exc:
+                    # Contain POST transport/HTTP failures (#591): a transient
+                    # connect/timeout fails this batch and continues the run
+                    # rather than aborting with a raw exception. The devices were
+                    # not accepted, so re-submission on resume is safe.
+                    reason = f"POST transport error: {exc}"
+                    for row in batch_rows:
+                        cache[row["serialNumber"]] = {
+                            "status": "failed",
+                            "device_id": None,
+                            "row_index": row.get("_row_index"),
+                            "reason": reason,
+                        }
+                    _write_cache_atomic(cache_path, cache)
+                    await ctx.report_progress(
+                        progress=float(batch_num),
+                        total=float(total_batches),
+                        message=(
+                            f"Batch {batch_num}/{total_batches}: 0 succeeded, "
+                            f"{len(batch_rows)} failed (transport error)"
+                        ),
                     )
+                    continue
 
                 # 6c. Non-202 handling (D-03) — mark failed, continue run
                 if response.status_code != 202:
@@ -388,21 +428,38 @@ async def greenlake_bulk_add_devices(
                     else poll_result.get("succeeded", []) + poll_result.get("failed", [])
                 )
                 if not items:
-                    batch_result = poll_result.get("result", {})
-                    if isinstance(batch_result, dict):
-                        # Shape C: synthesize per-device items from failedDevicesSerial
-                        failed_set = set(batch_result.get("failedDevicesSerial", []))
+                    op_status = poll_result.get("status", "")
+                    batch_result = poll_result.get("result")
+                    if isinstance(batch_result, dict) and "failedDevicesSerial" in batch_result:
+                        # Shape C: an explicit failed-serial breakdown. Serials NOT
+                        # listed did onboard — trust it even when op_status is FAILED
+                        # (partial: the listed ones already existed / bad serial-MAC).
+                        failed_set = set(batch_result.get("failedDevicesSerial") or [])
                         items = [
                             {
                                 "serialNumber": r["serialNumber"],
                                 "status": "FAILED" if r["serialNumber"] in failed_set else "SUCCEEDED",
-                                "reason": "device already exists in workspace or invalid serial/MAC combination",
+                                "reason": (
+                                    "device already exists in workspace or invalid serial/MAC combination"
+                                    if r["serialNumber"] in failed_set
+                                    else None
+                                ),
                             }
                             for r in batch_rows
                         ]
-                    elif poll_result.get("status") == "SUCCEEDED":
-                        # Shape B: batch succeeded with no per-device breakdown
+                    elif op_status == "SUCCEEDED":
+                        # Shape B: batch succeeded with no per-device breakdown.
                         items = [{"serialNumber": r["serialNumber"], "status": "SUCCEEDED"} for r in batch_rows]
+                    else:
+                        # #592 — fail closed. A terminal FAILED/TIMEOUT (or an empty/
+                        # missing/unexpected result shape) must NOT synthesize success;
+                        # otherwise a failed op is cached as onboarded with no device_id
+                        # and resume skips it forever.
+                        reason = f"async operation {op_status or 'terminated'} with no per-device result"
+                        items = [
+                            {"serialNumber": r["serialNumber"], "status": "FAILED", "reason": reason}
+                            for r in batch_rows
+                        ]
                 item_by_serial: dict[str, dict] = {item.get("serialNumber", ""): item for item in items}
 
                 batch_succeeded = 0
