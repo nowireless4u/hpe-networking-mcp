@@ -243,7 +243,9 @@ def _walk_dict(
         new_key = key
         if isinstance(key, str):
             # Apply to KEYS the same identifier handling values get, so maps
-            # keyed by MAC / email / username don't leak the identifier (#589).
+            # keyed by a MAC or an email-shaped identifier don't leak it (#589).
+            # (Plain strings — e.g. a bare username ``alice`` — are left alone;
+            # they're only tokenized with parent context, same as values.)
             # Inbound ``_detokenize_walk`` already restores tokenized keys, so
             # the round-trip stays symmetric. MAC normalization is always-on
             # (independent of the tokenizer, like value-side normalization).
