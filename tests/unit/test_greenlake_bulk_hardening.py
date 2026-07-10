@@ -92,6 +92,31 @@ class TestPollContainment:
         assert client.get.call_count == 3
 
 
+class TestPostContainment:
+    async def test_post_transport_error_marks_unconfirmed_not_definite_failure(self, tmp_path: pathlib.Path) -> None:
+        # Casey #609: a POST timeout/reset after send may have been accepted
+        # server-side, so it must be recorded as unknown (timed_out), not a
+        # definite failure claiming the devices were never accepted.
+        csv_file = _one_row_csv(tmp_path)
+        client = MagicMock()
+        client.post_raw = AsyncMock(side_effect=RuntimeError("connection reset"))
+        client.get = AsyncMock(return_value={"items": []})
+        client.close = AsyncMock()
+        limiter = _limiter()
+        with (
+            patch(f"{_BULK}.get_greenlake_client", return_value=client),
+            patch(f"{_BULK}.AsyncLimiter", return_value=limiter),
+            patch(f"{_BULK}.make_patch_limiter", return_value=limiter),
+        ):
+            result = await greenlake_bulk_add_devices(_ctx(), csv_path=str(csv_file))
+        # Run continued (no raw exception) and the batch counts as not-succeeded.
+        assert result["succeeded"] == 0
+        assert result["failed"] == 1  # timed_out rolls into the failed total
+        assert result["failures"]
+        reason = result["failures"][0]["reason"].lower()
+        assert "unknown" in reason or "transport" in reason
+
+
 # ---------------------------------------------------------------------------
 # #592 — fail closed on FAILED / empty result
 # ---------------------------------------------------------------------------

@@ -322,12 +322,18 @@ async def greenlake_bulk_add_devices(
                 except Exception as exc:
                     # Contain POST transport/HTTP failures (#591): a transient
                     # connect/timeout fails this batch and continues the run
-                    # rather than aborting with a raw exception. The devices were
-                    # not accepted, so re-submission on resume is safe.
-                    reason = f"POST transport error: {exc}"
+                    # rather than aborting with a raw exception. Record it as
+                    # ``timed_out`` (server acceptance UNKNOWN), NOT a definite
+                    # failure — a timeout / reset / response-read error after the
+                    # body was sent may have been accepted server-side; we just
+                    # lost the 202 + Location (Casey review on #609). It still
+                    # counts as not-succeeded, so resume revisits it — and a
+                    # re-add of an already-accepted device lands in the
+                    # already-exists path rather than creating a duplicate.
+                    reason = f"POST transport error (server acceptance unknown): {exc}"
                     for row in batch_rows:
                         cache[row["serialNumber"]] = {
-                            "status": "failed",
+                            "status": "timed_out",
                             "device_id": None,
                             "row_index": row.get("_row_index"),
                             "reason": reason,
@@ -338,7 +344,7 @@ async def greenlake_bulk_add_devices(
                         total=float(total_batches),
                         message=(
                             f"Batch {batch_num}/{total_batches}: 0 succeeded, "
-                            f"{len(batch_rows)} failed (transport error)"
+                            f"{len(batch_rows)} unconfirmed (transport error)"
                         ),
                     )
                     continue
