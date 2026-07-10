@@ -186,6 +186,10 @@ class ServerConfig:
     # consistency). Off by default this release; flip default in PR 2.
     enable_pii_tokenization: bool = False
     pii_max_tokens_per_session: int = 10_000
+    # Idle-TTL (seconds) after which a session's token keymap is purged by the
+    # opportunistic sweep in ``TokenStore.get_or_create`` (issue #586). Bounds
+    # how long plaintext secrets linger for dead sessions. 0/negative disables.
+    pii_session_ttl_seconds: float = 3600.0
 
     # Code-mode sandbox wall-clock budget (v3.2.1.11). The MontySandboxProvider
     # kills an ``execute()`` block that runs longer than this. The default 30s
@@ -626,6 +630,11 @@ def load_config() -> ServerConfig:
             "Invalid PII_MAX_TOKENS_PER_SESSION; defaulting to 10000",
         )
         pii_max_tokens = 10_000
+    try:
+        pii_session_ttl = float(os.getenv("PII_SESSION_TTL_SECONDS", "3600"))
+    except ValueError:
+        logger.warning("Invalid PII_SESSION_TTL_SECONDS; defaulting to 3600")
+        pii_session_ttl = 3600.0
 
     # Code-mode sandbox wall-clock budget (CODE_SANDBOX_MAX_DURATION_SECS).
     # Must be positive; invalid or non-positive values fall back to 30s.
@@ -670,6 +679,7 @@ def load_config() -> ServerConfig:
         allowed_origins=allowed_origins,
         enable_pii_tokenization=enable_pii_tokenization,
         pii_max_tokens_per_session=pii_max_tokens,
+        pii_session_ttl_seconds=pii_session_ttl,
         code_sandbox_max_duration_secs=sandbox_max_duration,
         mist=mist,
         central=central,

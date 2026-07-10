@@ -25,19 +25,23 @@ import re
 # MAC format detection
 # ---------------------------------------------------------------------------
 
-# Accepts the four common MAC formats:
+# Accepts the five common MAC formats:
 #   aa:bb:cc:dd:ee:ff  (colon-separated, lowercase or uppercase)
-#   aa-bb-cc-dd-ee-ff  (hyphen-separated)
+#   aa-bb-cc-dd-ee-ff  (hyphen-separated, six groups of two)
 #   aabb.ccdd.eeff     (Cisco dot-separated)
+#   aabbcc-ddeeff      (ArubaOS-S / ProCurve, two groups of six)
 #   aabbccddeeff       (no separators)
 #
 # Anchored with word boundaries so it doesn't match the middle of a UUID
 # (UUIDs contain stretches of hex that could otherwise match
-# ``aabbccddeeff``-style MACs as a substring).
+# ``aabbccddeeff``-style MACs as a substring). The bare-12-hex pattern MUST
+# stay last — ``normalize_macs_in_value`` slices it off (``[:-1]``) to keep
+# the low-false-positive, explicit-separator formats for free-text sweeps.
 _MAC_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"\b([0-9a-fA-F]{2}(?::[0-9a-fA-F]{2}){5})\b"),
     re.compile(r"\b([0-9a-fA-F]{2}(?:-[0-9a-fA-F]{2}){5})\b"),
     re.compile(r"\b([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})\b"),
+    re.compile(r"\b([0-9a-fA-F]{6}-[0-9a-fA-F]{6})\b"),
     re.compile(r"\b([0-9a-fA-F]{12})\b"),
 )
 
@@ -97,8 +101,9 @@ def normalize_macs_in_value(value: str) -> str:
         return value
 
     result = value
-    # Apply the formats with explicit separators only — they have low
-    # false-positive rates inside free text.
-    for pattern in _MAC_PATTERNS[:3]:
+    # Apply the formats with explicit separators only (everything except the
+    # trailing bare-12-hex pattern) — they have low false-positive rates
+    # inside free text.
+    for pattern in _MAC_PATTERNS[:-1]:
         result = pattern.sub(lambda m: canonicalize_mac(m.group(1)), result)
     return result

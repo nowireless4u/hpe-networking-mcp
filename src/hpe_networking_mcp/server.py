@@ -387,7 +387,11 @@ def create_server(config: ServerConfig) -> FastMCP:
     # The token store is process-scoped (one TokenStore per FastMCP
     # instance, with per-session keymaps inside). It is passed to the
     # middleware so it survives across tool calls within a session.
-    token_store = TokenStore(max_entries_per_session=config.pii_max_tokens_per_session)
+    token_store = TokenStore(
+        max_entries_per_session=config.pii_max_tokens_per_session,
+        # 0/negative disables the idle-TTL sweep (keymaps live until restart).
+        session_ttl_seconds=(config.pii_session_ttl_seconds if config.pii_session_ttl_seconds > 0 else None),
+    )
 
     # Middleware order (outermost → innermost):
     #   NullStrip           — drop nulls before validation

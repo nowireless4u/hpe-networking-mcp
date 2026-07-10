@@ -82,33 +82,40 @@ class PIITokenizationMiddleware(Middleware):
         tool_name = context.message.name
 
         # --- Inbound: detokenize arguments ---
-        if self._enabled and session_id:
-            inbound_keymap = self._store.get(session_id)
-            if inbound_keymap is not None and context.message.arguments:
-                inbound_tokenizer = Tokenizer(
-                    inbound_keymap,
-                    session_id=session_id,
-                    max_entries=self._store.max_entries_per_session,
+        # ``get_or_create`` (not ``get``): keymaps are created lazily on
+        # outbound responses, so a resumed conversation can issue the FIRST
+        # call of a fresh session carrying a dead-session ``[[KIND:uuid]]``
+        # token before any keymap exists. Walking against a freshly-created
+        # (empty) keymap flags every such token as unknown, so we refuse the
+        # call rather than passing literal bracket text downstream (#587). A
+        # token-free call walks to a no-op — the outbound path allocates the
+        # same keymap anyway.
+        if self._enabled and session_id and context.message.arguments:
+            inbound_keymap = self._store.get_or_create(session_id)
+            inbound_tokenizer = Tokenizer(
+                inbound_keymap,
+                session_id=session_id,
+                max_entries=self._store.max_entries_per_session,
+            )
+            new_args, unknown = detokenize_arguments(context.message.arguments, inbound_tokenizer)
+            if unknown:
+                logger.warning(
+                    "pii.unknown_inbound_tokens session={} tool={} tokens={}",
+                    session_id[:_SESSION_ID_LOG_LEN],
+                    tool_name,
+                    sorted(set(unknown)),
                 )
-                new_args, unknown = detokenize_arguments(context.message.arguments, inbound_tokenizer)
-                if unknown:
-                    logger.warning(
-                        "pii.unknown_inbound_tokens session={} tool={} tokens={}",
-                        session_id[:_SESSION_ID_LOG_LEN],
-                        tool_name,
-                        sorted(set(unknown)),
-                    )
-                    return _make_unknown_token_error(unknown, tool_name)
+                return _make_unknown_token_error(unknown, tool_name)
 
-                if new_args is not context.message.arguments:
-                    logger.info(
-                        "pii.detokenize session={} tool={} kinds={}",
-                        session_id[:_SESSION_ID_LOG_LEN],
-                        tool_name,
-                        sorted(_kinds_used_in_args(context.message.arguments)),
-                    )
-                    new_message = context.message.model_copy(update={"arguments": new_args})
-                    context = context.copy(message=new_message)
+            if new_args is not context.message.arguments:
+                logger.info(
+                    "pii.detokenize session={} tool={} kinds={}",
+                    session_id[:_SESSION_ID_LOG_LEN],
+                    tool_name,
+                    sorted(_kinds_used_in_args(context.message.arguments)),
+                )
+                new_message = context.message.model_copy(update={"arguments": new_args})
+                context = context.copy(message=new_message)
 
         # --- Forward to next middleware / handler ---
         result = await call_next(context)

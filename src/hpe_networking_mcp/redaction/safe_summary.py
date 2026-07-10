@@ -38,9 +38,16 @@ _MAX_VALUE_LEN = 120
 
 
 def is_sensitive_key(key: str) -> bool:
-    """True when a (normalized) parameter key names secret material."""
+    """True when a (normalized) parameter key names secret material.
+
+    Matches the singular *and* trailing-plural form so list-of-secrets fields
+    redact too — ``shared_secrets`` / ``api_keys`` / ``radiusSecrets`` all
+    resolve to a known suffix (#588). Over-redaction is acceptable; leaking is
+    not.
+    """
     normalized = "".join(ch for ch in key.lower() if ch.isalnum())
-    return any(normalized == suffix or normalized.endswith(suffix) for suffix in _SENSITIVE_KEY_SUFFIXES)
+    forms = (normalized, normalized[:-1]) if normalized.endswith("s") else (normalized,)
+    return any(form == suffix or form.endswith(suffix) for form in forms for suffix in _SENSITIVE_KEY_SUFFIXES)
 
 
 def safe_value_summary(value: Any, *, field_name: str | None = None, max_len: int = _MAX_VALUE_LEN) -> str:
@@ -76,8 +83,15 @@ def summarize_validation_errors(tool_name: str, errors: Sequence[Mapping[str, An
         msg = err.get("msg", "invalid")
         err_input = err.get("input")
         if err_input is not None:
-            field = loc_parts[-1] if loc_parts else None
-            got = safe_value_summary(err_input, field_name=field)
+            # Sensitivity can live at ANY level of the loc, not just the leaf.
+            # Pydantic locs often end in a list index (``("shared_secrets", 1)``)
+            # or a union tag (``("password", "str")``), so keying off only the
+            # last part would echo the raw secret. Redact if any loc part names
+            # secret material (#588).
+            if any(is_sensitive_key(part) for part in loc_parts):
+                got = REDACTED
+            else:
+                got = safe_value_summary(err_input, field_name=None)
             lines.append(f"  - {loc}: {msg} (got: {got})")
         else:
             lines.append(f"  - {loc}: {msg}")

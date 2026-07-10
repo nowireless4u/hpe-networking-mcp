@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.1] - 2026-07-10
+
+**Patch — PII/redaction hardening (Casey Jones full-project review: #586–#590).** Five correctness/security fixes in the tokenization layer.
+
+### Fixed
+- **#586 — session keymaps are now purged.** `TokenStore.end_session()` had no production caller, so plaintext keymaps for dead sessions lived until process exit. Added an **idle-TTL sweep**: every `get_or_create()` first drops any session not accessed within `PII_SESSION_TTL_SECONDS` (default 3600; `0`/negative disables). Bounds memory + plaintext-secret lifetime without a background task.
+- **#587 — dead-session tokens are refused on the first call of a fresh session.** The inbound middleware only detokenized/refused when a keymap already existed (created lazily outbound), so a resumed conversation's first call could pass a literal `[[KIND:uuid]]` downstream. Inbound now uses `get_or_create`, so a fresh (empty) keymap flags every unknown token and refuses the call.
+- **#588 — validation-error summaries no longer leak secrets at non-leaf locs.** `summarize_validation_errors()` keyed sensitivity off only the last `loc` element, so `("shared_secrets", 1)` (list index) and `("password", "str")` (union tag) echoed the raw secret. Sensitivity is now detected from **any** loc part, and `is_sensitive_key()` matches trailing-plural forms (`shared_secrets` → `secret`).
+- **#589 — outbound tokenization now sweeps identifier-bearing dict *keys*.** Maps keyed by email/username/MAC previously left the key cleartext (only values + wrapper keys were handled). Keys now get the same universal identifier tokenization + MAC normalization as values; inbound detokenization already restores tokenized keys, so the round-trip stays symmetric.
+- **#590 — MAC normalizer recognizes the ArubaOS-S/ProCurve `aabbcc-ddeeff` format** (two groups of six). Structured and free-text normalization rewrite it to `aa:bb:cc:dd:ee:ff`; UUID/token safety preserved.
+
+### Added
+- `PII_SESSION_TTL_SECONDS` env var (default `3600`) — idle-TTL for session keymap purge.
+
 ## [3.5.3.0] - 2026-07-10
 
 **Minor — 10 new Aruba Central MRT tools from the 2026-07 OAS refresh (Central 659 → 669).** The scheduled Aruba OAS sync (#581) pulled new `network-monitoring` / `network-reporting` / `network-notifications` endpoints; these hand-curated wrappers surface them. All read tools + notification create/delete are **live-verified against a real tenant**.

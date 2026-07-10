@@ -241,8 +241,16 @@ def _walk_dict(
             parent_field_name=parent_field_name,
         )
         new_key = key
-        if tokenizer is not None and isinstance(key, str):
-            new_key = _rewrite_wrapper_key(key, tokenizer)
+        if isinstance(key, str):
+            # Apply to KEYS the same identifier handling values get, so maps
+            # keyed by MAC / email / username don't leak the identifier (#589).
+            # Inbound ``_detokenize_walk`` already restores tokenized keys, so
+            # the round-trip stays symmetric. MAC normalization is always-on
+            # (independent of the tokenizer, like value-side normalization).
+            new_key = normalize_macs_in_value(key)
+            if tokenizer is not None:
+                new_key = _rewrite_wrapper_key(new_key, tokenizer)
+                new_key = _universal_scan(new_key, tokenizer)
         out[new_key] = new_value
     return out
 
