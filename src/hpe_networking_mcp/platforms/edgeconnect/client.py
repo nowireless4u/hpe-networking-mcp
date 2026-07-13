@@ -235,7 +235,7 @@ class EdgeConnectClient:
         Returns:
             The httpx.Response after ``raise_for_status()``.
         """
-        token = await self._tokens.get_token()
+        token, generation = await self._tokens.get_token_with_generation()
         merged_params = {**_SOURCE_PARAM, **(params or {})}
 
         def _build_kwargs(tok: str) -> dict[str, Any]:
@@ -266,7 +266,11 @@ class EdgeConnectClient:
         response = await self._http.request(method, path, **_build_kwargs(token))
         if response.status_code == 401:
             logger.info("EdgeConnect: 401 on {} {} — refreshing auth once", method, path)
-            token = await self._tokens.refresh()
+            # Collapse concurrent 401s to one login: refresh_if_stale re-logs in
+            # only if no sibling already re-acquired since we read our token, so a
+            # sibling's login never clears the cookie jar out from under this
+            # retry (user/pass mode) — see #603.
+            token = await self._tokens.refresh_if_stale(generation)
             response = await self._http.request(method, path, **_build_kwargs(token))
         response.raise_for_status()
         return response
@@ -359,9 +363,12 @@ async def edgeconnect_request(
 def format_http_error(exc: BaseException) -> dict[str, Any]:
     """Shape any exception into a consistent dict for tool returns.
 
-    Surfaces status code and response body for ``httpx.HTTPStatusError``;
-    everything else falls back to a generic shape. Same pattern as every other
-    platform.
+    Surfaces the real status code and response body for
+    ``httpx.HTTPStatusError``; any other exception (DNS failure, TLS error,
+    connect/read timeout, connection reset) is a transport/upstream failure with
+    no HTTP status, so it maps to ``502`` — keeping EdgeConnect inside the
+    documented 4xx-vs-5xx status domain instead of an unclassifiable ``0``
+    (#602). Same pattern as every other platform.
     """
     if isinstance(exc, httpx.HTTPStatusError):
         status = exc.response.status_code
@@ -371,4 +378,4 @@ def format_http_error(exc: BaseException) -> dict[str, Any]:
         except (ValueError, json.JSONDecodeError):
             body = text
         return {"status_code": status, "message": str(exc), "body": body}
-    return {"status_code": 0, "message": str(exc), "body": None}
+    return {"status_code": 502, "message": f"EdgeConnect upstream/transport failure: {exc}", "body": None}

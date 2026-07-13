@@ -155,6 +155,70 @@ class TestAsyncTokenManagerLifecycle:
 
 
 @pytest.mark.unit
+class TestGenerationAndCollapse:
+    """generation + refresh_if_stale: collapse concurrent post-401 refreshes (#603)."""
+
+    async def test_generation_advances_on_each_acquisition(self):
+        fetch, _ = _counting_fetch([TokenResult("t1", expires_in=None), TokenResult("t2", expires_in=None)])
+        mgr = AsyncTokenManager(fetch, name="test")
+        assert mgr.generation == 0
+        _, gen1 = await mgr.get_token_with_generation()
+        assert gen1 == 1
+        await mgr.refresh()
+        assert mgr.generation == 2
+
+    async def test_get_token_with_generation_is_consistent(self):
+        fetch, _ = _counting_fetch([TokenResult("t1", expires_in=None)])
+        mgr = AsyncTokenManager(fetch, name="test")
+        token, gen = await mgr.get_token_with_generation()
+        assert (token, gen) == ("t1", 1)
+        # Fresh path returns the same pair without re-fetching.
+        assert await mgr.get_token_with_generation() == ("t1", 1)
+
+    async def test_refresh_if_stale_collapses_concurrent_401s(self):
+        """Two victims observing the same generation trigger exactly one re-login."""
+        results = [
+            TokenResult("t1", expires_in=None),
+            TokenResult("t2", expires_in=None),
+            TokenResult("t3", expires_in=None),
+        ]
+        calls: list[int] = []
+
+        async def fetch() -> TokenResult:
+            calls.append(1)
+            await asyncio.sleep(0)  # force the second caller to block on the lock
+            return results[len(calls) - 1]
+
+        mgr = AsyncTokenManager(fetch, name="test")
+        _, gen = await mgr.get_token_with_generation()  # calls=1, gen=1
+        both = await asyncio.gather(mgr.refresh_if_stale(gen), mgr.refresh_if_stale(gen))
+        assert len(calls) == 2  # one initial + exactly one collapse re-acquisition
+        assert both == ["t2", "t2"]  # the loser returns the winner's fresh token
+        assert mgr.generation == 2
+
+    async def test_refresh_if_stale_reacquires_when_generation_matches(self):
+        results = [TokenResult("t1", expires_in=None), TokenResult("t2", expires_in=None)]
+        calls: list[int] = []
+
+        async def fetch() -> TokenResult:
+            calls.append(1)
+            return results[len(calls) - 1]
+
+        mgr = AsyncTokenManager(fetch, name="test")
+        _, gen = await mgr.get_token_with_generation()
+        assert await mgr.refresh_if_stale(gen) == "t2"
+        assert len(calls) == 2
+
+    async def test_refresh_if_stale_skips_when_already_advanced(self):
+        fetch, calls = _counting_fetch([TokenResult("t1", expires_in=None)])
+        mgr = AsyncTokenManager(fetch, name="test")
+        _, gen = await mgr.get_token_with_generation()  # gen=1
+        # A sibling already refreshed → generation is now ahead of what we saw.
+        assert await mgr.refresh_if_stale(gen - 1) == "t1"
+        assert len(calls) == 1  # no extra fetch
+
+
+@pytest.mark.unit
 class TestOAuth2ClientCredentials:
     """The OAuth2 fetcher extracted from UXI's `_fetch_token_locked`."""
 

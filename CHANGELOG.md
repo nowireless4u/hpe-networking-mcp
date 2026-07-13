@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.5] - 2026-07-13
+
+**Patch — EdgeConnect transport & auth robustness (Casey Jones full-project review: #602, #603).** Two low-severity correctness fixes to the EdgeConnect Orchestrator client.
+
+### Fixed
+- **#602 — transport failures return a 502, not an unclassifiable `0`.** `format_http_error` mapped every non-`HTTPStatusError` exception (DNS failure, TLS error, connect/read timeout, connection reset) to `status_code: 0`, so AI clients and middleware couldn't place EdgeConnect transport failures in the documented 4xx-vs-5xx status domain. Non-HTTP upstream/transport failures now map to `502`; genuine HTTP status errors still preserve the real upstream status and body.
+- **#603 — concurrent 401 refreshes collapse to one login.** In user/password mode a 401 forced an unconditional re-login, so two in-flight calls hitting session expiry each cleared and re-established the shared cookie jar — a sibling retry could be built against a jar another refresh had just cleared, producing intermittent spurious 401s and login bursts. `AsyncTokenManager` now carries a monotonic acquisition `generation`; the client reads `(token, generation)` together (`get_token_with_generation`) and, on a 401, calls `refresh_if_stale(generation)`, which re-acquires only if no sibling has already refreshed. Concurrent victims collapse to a single login serialized under the existing lock, so no retry is built against a jar a sibling cleared.
+
+### Changed
+- `AsyncTokenManager` (shared across all platforms) gains a `generation` property, `get_token_with_generation()`, and `refresh_if_stale(observed_generation)`. Existing `get_token()`/`refresh()` behavior is unchanged.
+
 ## [3.5.3.4] - 2026-07-13
 
 **Patch — ClearPass policy-visualizer correctness, part 2 (Casey Jones full-project review: #595, #598).** The simulation / graph-semantics fixes of the ClearPass visualizer cluster.

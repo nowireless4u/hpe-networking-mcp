@@ -99,6 +99,7 @@ class AsyncTokenManager:
         self._buffer = expiry_buffer
         self._token: str | None = None
         self._expires_at: float | None = None  # Unix timestamp; None = no expiry
+        self._generation = 0  # bumped on every successful acquisition (see refresh_if_stale)
         self._lock = asyncio.Lock()
 
     @classmethod
@@ -130,6 +131,17 @@ class AsyncTokenManager:
         """Unix timestamp the cached token expires at, or ``None`` for no expiry."""
         return self._expires_at
 
+    @property
+    def generation(self) -> int:
+        """Monotonic counter incremented on every successful acquisition.
+
+        Callers that must collapse concurrent post-401 refreshes read this
+        alongside the token (via :meth:`get_token_with_generation`) and pass it
+        back to :meth:`refresh_if_stale` so a sibling that already re-acquired
+        wins instead of every 401-victim forcing its own login.
+        """
+        return self._generation
+
     def prime(self, token: str, expires_in: float | None = None) -> None:
         """Seed the cache directly (static tokens, tests).
 
@@ -156,16 +168,27 @@ class AsyncTokenManager:
 
     async def get_token(self) -> str:
         """Return the cached token, acquiring one under the lock if stale."""
+        token, _ = await self.get_token_with_generation()
+        return token
+
+    async def get_token_with_generation(self) -> tuple[str, int]:
+        """Return ``(token, generation)`` atomically, acquiring one if stale.
+
+        The pair is read without an intervening ``await`` so it is internally
+        consistent: the ``generation`` is exactly the one that produced
+        ``token``. Pass the generation back to :meth:`refresh_if_stale` on a
+        401 so concurrent victims collapse to a single re-acquisition.
+        """
         if self._is_fresh():
             assert self._token is not None
-            return self._token
+            return self._token, self._generation
         async with self._lock:
             # Re-check inside the lock — another coroutine may have fetched.
             if not self._is_fresh():
                 await self._fetch_locked()
-        if self._token is None:  # guard: assert is stripped under python -O
-            raise AuthError(f"{self._name}: token fetch succeeded but no token is cached")
-        return self._token
+            if self._token is None:  # guard: assert is stripped under python -O
+                raise AuthError(f"{self._name}: token fetch succeeded but no token is cached")
+            return self._token, self._generation
 
     async def refresh(self) -> str:
         """Force re-acquisition under the lock (e.g. after a 401) and return it."""
@@ -176,6 +199,25 @@ class AsyncTokenManager:
             raise AuthError(f"{self._name}: token refresh succeeded but no token is cached")
         return self._token
 
+    async def refresh_if_stale(self, observed_generation: int) -> str:
+        """Re-acquire only if no sibling has refreshed since ``observed_generation``.
+
+        Collapses concurrent post-401 refreshes to a single acquisition: the
+        first victim to win the lock advances the generation and re-fetches;
+        every later victim sees ``self._generation != observed_generation`` and
+        returns the already-fresh token without triggering another login (which,
+        for cookie-session platforms, would clear the jar a sibling retry still
+        needs). Callers obtain ``observed_generation`` from
+        :meth:`get_token_with_generation`.
+        """
+        async with self._lock:
+            if self._generation == observed_generation:
+                self.invalidate()
+                await self._fetch_locked()
+            if self._token is None:
+                raise AuthError(f"{self._name}: token refresh succeeded but no token is cached")
+            return self._token
+
     async def _fetch_locked(self) -> None:
         """Run the fetch strategy and cache its result. Caller holds the lock."""
         result = await self._fetch()
@@ -183,6 +225,7 @@ class AsyncTokenManager:
             raise AuthError(f"{self._name}: fetch strategy returned an empty token")
         self._token = result.token
         self._expires_at = time.time() + result.expires_in if result.expires_in is not None else None
+        self._generation += 1
 
 
 def oauth2_client_credentials(
