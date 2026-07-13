@@ -2200,52 +2200,6 @@
         },
         "type": "object"
       },
-      "activationTokenRequest-v1beta1": {
-        "description": "Activation Token request",
-        "properties": {
-          "expirationInHours": {
-            "default": 72,
-            "description": "Expiration duration of the generated activation token. Default is set as 72 hours.",
-            "maximum": 168,
-            "minimum": 0.5,
-            "type": "number"
-          },
-          "subscriptionKey": {
-            "description": "Device subscription key",
-            "example": "ABC123",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "activationTokenResponse-v1beta1": {
-        "description": "Response of Activation Key generation",
-        "properties": {
-          "activationKey": {
-            "description": "JSON Web token generated to onboard servers.",
-            "format": "application/jwt",
-            "type": "string"
-          },
-          "createdAt": {
-            "description": "Time of activation token creation.",
-            "example": "2024-05-20 06:51:59.654591",
-            "format": "date-time",
-            "type": "string"
-          },
-          "id": {
-            "description": "Primary identifier of the activation token resource given by the system.",
-            "example": "f1a58cb3-90ba-4937-ab35-edc5e2089384",
-            "format": "uuid",
-            "type": "string"
-          },
-          "type": {
-            "const": "compute-ops-mgmt/activation-token",
-            "description": "Type of the resource",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "activity-v1beta2": {
         "properties": {
           "associatedServerUri": {
@@ -26869,68 +26823,6 @@
         "summary": "Delete an activation key by activation key",
         "tags": [
           "activation-keys - v1beta1"
-        ]
-      }
-    },
-    "/compute-ops-mgmt/v1beta1/activation-tokens": {
-      "post": {
-        "deprecated": true,
-        "description": "**Note:** This path operation is going to be **deprecated and sunset!**\n- Deprecated at: `Fri, 07 March 2025 23:59:59 GMT`\n- Sunset at: `Mon, 07 April 2025 23:59:59 GMT`\n- Successor version: `compute-ops-mgmt/v1beta1/activation-keys`\n\nThis API generates a new activation token, valid for a specified duration. \nOnce created, the activation token cannot be retrieved. If needed, a new\nactivation token can be generated.\n",
-        "operationId": "create_activation-tokens_v1_beta1",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/contentTypeHeaderJson"
-          },
-          {
-            "$ref": "#/components/parameters/tenantAcidHeader"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/activationTokenRequest-v1beta1"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/activationTokenResponse-v1beta1"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "400": {
-            "$ref": "#/components/responses/400-badRequestResponse"
-          },
-          "401": {
-            "$ref": "#/components/responses/401-unauthorizedResponse"
-          },
-          "403": {
-            "$ref": "#/components/responses/403-forbiddenResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/404-notFoundResponse"
-          },
-          "406": {
-            "$ref": "#/components/responses/406-notAcceptableResponse"
-          },
-          "415": {
-            "$ref": "#/components/responses/415-unsupportedMediaTypeResponse"
-          },
-          "500": {
-            "$ref": "#/components/responses/500-internalServerErrorResponse"
-          }
-        },
-        "summary": "Generate an activation token to onboard servers",
-        "tags": [
-          "activation-tokens - v1beta1"
         ]
       }
     },

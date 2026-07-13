@@ -1475,7 +1475,7 @@
                 }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict - Duplicate location name found. Response includes existingLocationId"
           },
           "500": {
             "content": {
@@ -2000,7 +2000,7 @@
                 }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict - Duplicate location name found. Response includes existingLocationId"
           },
           "500": {
             "content": {
@@ -2218,7 +2218,7 @@
                 }
               }
             },
-            "description": "Conflict"
+            "description": "Conflict - Duplicate location name found. Response includes existingLocationId"
           },
           "500": {
             "content": {

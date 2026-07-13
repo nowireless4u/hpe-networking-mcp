@@ -387,12 +387,12 @@
     }
   },
   "info": {
-    "description": "The HPE GreenLake for Reporting service provides a collection of RESTful APIs for generating reports, retrieving supported columns and filters, monitoring asynchronous operations, and querying the status of reports.",
+    "description": "The GreenLake for Reporting service provides a collection of RESTful APIs for generating reports, retrieving supported columns and filters, monitoring asynchronous operations, and querying the status of reports.",
     "license": {
       "name": "HPE License",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
     },
-    "title": "HPE GreenLake for Reporting",
+    "title": "GreenLake for Reporting",
     "version": "v1"
   },
   "openapi": "3.1.0",
@@ -515,7 +515,7 @@
             "headers": {
               "Location": {
                 "description": "URL where the generated resource can be accessed",
-                "example": "/reporting/v1/async-operations/1fa85f64-5434-9980-b3fc-3c963f44fgh9",
+                "example": "/reporting/v1alpha1/async-operations/1fa85f64-5434-9980-b3fc-3c963f44fgh9",
                 "schema": {
                   "format": "uri",
                   "type": "string"
