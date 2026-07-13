@@ -110,7 +110,15 @@ def _adapt_enf_rule(rest_rule: dict, index: int) -> dict:
     return {
         "index": index,
         "expression": expression,
-        "results": [{"name": "Enforcement-Profile", "displayValue": ", ".join(profile_names)}],
+        # ``values`` carries the name list verbatim so a profile name containing
+        # a comma survives; ``displayValue`` stays human-readable (#601).
+        "results": [
+            {
+                "name": "Enforcement-Profile",
+                "displayValue": ", ".join(profile_names),
+                "values": list(profile_names),
+            }
+        ],
     }
 
 

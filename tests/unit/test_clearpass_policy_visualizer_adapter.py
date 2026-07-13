@@ -46,9 +46,10 @@ class TestOpFromRaw:
     def test_known_operators(self, raw, expected):
         assert Op.from_raw(raw) is expected
 
-    def test_unknown_operator_raises(self):
-        with pytest.raises(ValueError, match="Unknown ClearPass operator"):
-            Op.from_raw("DOES_NOT_EXIST")
+    def test_unknown_operator_is_contained_as_sentinel(self):
+        # #600: an unrecognized operator no longer raises (which failed the whole
+        # compile) — it maps to the ``unknown`` sentinel and evaluates uncertain.
+        assert Op.from_raw("DOES_NOT_EXIST") is Op.unknown
 
 
 # ---------------------------------------------------------------------------
@@ -327,7 +328,14 @@ class TestAdapterRules:
         assert ep["policyType"] == "RADIUS"
         assert ep["defaultProfile"] == "[AirGroup Response]"
         rule = ep["rules"][0]
-        assert rule["results"] == [{"name": "Enforcement-Profile", "displayValue": "[Profile A], [Profile B]"}]
+        # #601: results now also carry a verbatim ``values`` list (comma-safe).
+        assert rule["results"] == [
+            {
+                "name": "Enforcement-Profile",
+                "displayValue": "[Profile A], [Profile B]",
+                "values": ["[Profile A]", "[Profile B]"],
+            }
+        ]
         expr = rule["expression"]
         # 2 conditions, no match_type → default AND
         assert expr["operator"] == "and"

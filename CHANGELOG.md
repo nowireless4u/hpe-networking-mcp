@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.3] - 2026-07-13
+
+**Patch — ClearPass policy-visualizer correctness, part 1 (Casey Jones full-project review: #596, #599, #600, #601).** The data-model / classification fixes of the ClearPass visualizer cluster; the flow-graph simulation-semantics fixes (#595/#597/#598) follow separately.
+
+### Fixed
+- **#596 (high) — action-less side-effect profiles are no longer classified as deny.** A generic/TACACS enforcement profile with no (or a non-accept, non-reject) action was mapped to `generic_reject` / `tacacs_other` and read as DENY, so a rule that actually grants access while applying a side-effect profile (logging, attribute push) reported DENY. Classification now keys off explicit action: `accept` → `*_accept`, an explicit `deny`/`reject`/`drop` → the reject type, anything else → a neutral `*_sideeffect` type the flow graph does not treat as deny.
+- **#599 (medium) — per-rule details reflect evaluate-all.** `PolicyRule.flow.on_match` was always the default `stop`; `build()` never propagated the policy's combine algorithm. Rules of an `evaluate-all` role-mapping / enforcement policy now report `continue`; first-applicable still reports `stop`.
+- **#600 (low) — an unknown operator no longer fails the whole compile.** `Op.from_raw` raised `ValueError` for any operator not in the local map, so one exotic operator in an unrelated policy failed `clearpass_compile_policy_flow` for every requested service. Unknown operators now map to an `Op.unknown` sentinel (logged), keep their `raw_operator` for display, and evaluate as uncertain (`None`).
+- **#601 (low) — enforcement profile names containing commas survive.** The adapter comma-joined the profile-name list and the model split it back on every comma, so `Allow, Log Session` became two bogus placeholder profiles. The adapter now also emits a verbatim `values` list which the model consumes directly; `displayValue` stays human-readable.
+
 ## [3.5.3.2] - 2026-07-10
 
 **Patch — GreenLake bulk-add robustness (Casey Jones full-project review: #591–#594).** Four write-path integrity fixes in `greenlake_bulk_add_devices`.

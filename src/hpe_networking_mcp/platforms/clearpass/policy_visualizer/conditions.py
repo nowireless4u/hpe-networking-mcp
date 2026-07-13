@@ -10,9 +10,12 @@ compiler can walk.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
+
+logger = logging.getLogger(__name__)
 
 
 class Op(StrEnum):
@@ -51,6 +54,10 @@ class Op(StrEnum):
     not_matches_all = "not_matches_all"
     not_matches_any = "not_matches_any"
     in_range = "in_range"
+    # Sentinel for an operator not in the local map. Contained rather than
+    # fatal (#600): the predicate keeps its ``raw_operator`` for display and
+    # evaluates as uncertain (None) instead of failing the whole compile.
+    unknown = "unknown"
 
     @classmethod
     def from_raw(cls, raw: str) -> Op:
@@ -92,9 +99,11 @@ class Op(StrEnum):
             "IN_RANGE": cls.in_range,
         }
         upper = raw.upper()
-        if upper not in mapping:
-            raise ValueError(f"Unknown ClearPass operator: {raw!r}")
-        return mapping[upper]
+        # Contain unrecognized operators (#600): return the ``unknown`` sentinel
+        # instead of raising, so one exotic operator in an unrelated policy can't
+        # fail compile for every requested service. The predicate keeps
+        # ``raw_operator`` for display and evaluates as uncertain (None).
+        return mapping.get(upper, cls.unknown)
 
 
 @dataclass
@@ -308,6 +317,8 @@ def evaluate(expr: BooleanExpr | None, context: dict[str, str | list[str]]) -> b
 def _evaluate_predicate(predicate: Predicate, context: dict[str, str | list[str]]) -> bool | None:
     """Evaluate a single predicate. Returns None when the attribute is unknown."""
     op = predicate.op
+    if op is Op.unknown:
+        return None  # unrecognized operator — uncertain, never a false match (#600)
     # Exists / not_exists are special — they only need to know presence
     if op is Op.exists:
         return _attribute_path(predicate) in context
@@ -353,13 +364,17 @@ def _eval_or(results: list[bool | None]) -> bool | None:
 
 
 def _normalize_predicate(raw_attr: dict) -> Predicate:
+    raw_op = raw_attr.get("operator", "EQUALS")
+    op = Op.from_raw(raw_op)
+    if op is Op.unknown:
+        logger.warning("Unknown ClearPass operator %r — condition treated as uncertain (#600)", raw_op)
     return Predicate(
         namespace=raw_attr.get("type", ""),
         attribute=raw_attr.get("name", ""),
-        op=Op.from_raw(raw_attr.get("operator", "EQUALS")),
+        op=op,
         rhs_raw=raw_attr.get("value", ""),
         rhs_display=raw_attr.get("displayValue", ""),
-        raw_operator=raw_attr.get("operator", ""),
+        raw_operator=raw_op,
     )
 
 

@@ -130,8 +130,11 @@ class EnforcementProfile:
     id: str
     name: str
     # profile_type is one of: radius_accept, radius_reject, tacacs_accept,
-    # tacacs_other, radius_coa, generic_accept, generic_reject, post_auth,
-    # builtin (last one is used for placeholder objects).
+    # tacacs_other, tacacs_sideeffect, radius_coa, generic_accept,
+    # generic_reject, generic_sideeffect, post_auth, builtin (last one is used
+    # for placeholder objects). Only the *_reject / tacacs_other types (assigned
+    # on an explicit deny action) are treated as deny by the flow graph; the
+    # *_sideeffect types are action-less side-effects (not a deny — #596).
     profile_type: str
     action: str = ""
     description: str = ""
@@ -172,6 +175,26 @@ class PolicyModel:
 # ---------------------------------------------------------------------------
 # Builder
 # ---------------------------------------------------------------------------
+
+# Explicit deny/reject action words. A TACACS / generic enforcement profile is
+# classified as a deny type ONLY when its action is one of these — a missing /
+# other action is a side-effect profile (logging, attribute push), not a deny
+# (#596). ``flow_graph._DENY_PROFILE_TYPES`` keys off the resulting reject types.
+_DENY_ACTION_WORDS = frozenset({"deny", "reject", "drop"})
+
+
+def _classify_action_type(action: str, accept_type: str, deny_type: str, neutral_type: str) -> str:
+    """Map an enforcement-profile action to a profile_type (accept/deny/neutral).
+
+    ``accept`` → ``accept_type``; an explicit deny/reject/drop → ``deny_type``;
+    anything else (empty, side-effect, unknown) → ``neutral_type`` — which is
+    NOT a deny type, so an action-less side-effect profile no longer reads DENY.
+    """
+    if action == "accept":
+        return accept_type
+    if action in _DENY_ACTION_WORDS:
+        return deny_type
+    return neutral_type
 
 
 def build(raw: dict[str, Any]) -> PolicyModel:
@@ -244,7 +267,9 @@ def build(raw: dict[str, Any]) -> PolicyModel:
         model.enforcement_profiles[pid] = EnforcementProfile(
             id=pid,
             name=tp["name"],
-            profile_type="tacacs_accept" if action == "accept" else "tacacs_other",
+            # Only an explicit deny action → tacacs_other (deny); an action-less
+            # TACACS side-effect profile is neutral, not a deny (#596).
+            profile_type=_classify_action_type(action, "tacacs_accept", "tacacs_other", "tacacs_sideeffect"),
             action=action,
             description=tp.get("description", ""),
             attributes=list(tp.get("attributes") or []),
@@ -265,16 +290,23 @@ def build(raw: dict[str, Any]) -> PolicyModel:
         model.enforcement_profiles[pid] = EnforcementProfile(
             id=pid,
             name=gp["name"],
-            profile_type="generic_accept" if action == "accept" else "generic_reject",
+            # Only an explicit deny action → generic_reject (deny); an action-less
+            # generic side-effect profile is neutral, not a deny (#596).
+            profile_type=_classify_action_type(action, "generic_accept", "generic_reject", "generic_sideeffect"),
             action=action,
             description=gp.get("description", ""),
             attributes=list(gp.get("attributes") or []),
         )
     profile_by_name = {v.name: v for v in model.enforcement_profiles.values()}
 
-    def _resolve_profiles(display_value: str, context: str = "") -> tuple[list[str], list[str]]:
-        """Parse a comma-separated displayValue of profile names into (ids, names)."""
-        names = [n.strip() for n in display_value.split(",") if n.strip()]
+    def _resolve_profiles(raw_names: list[str], context: str = "") -> tuple[list[str], list[str]]:
+        """Resolve a LIST of profile names into (ids, names).
+
+        Takes a real list rather than a comma-joined string so a profile name
+        that itself contains a comma (e.g. ``Allow, Log Session``) survives
+        intact instead of being split into bogus placeholders (#601).
+        """
+        names = [n.strip() for n in raw_names if n and n.strip()]
         ids = []
         for n in names:
             if n in profile_by_name:
@@ -323,7 +355,14 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             else:
                 then = SetRole(role_id="unknown", role_name="Unknown")
             rule_id = f"{rmid}_rule_{raw_rule['index']}"
-            rules.append(PolicyRule(id=rule_id, index=raw_rule["index"], when=expr, then=then))
+            # Propagate the policy's combine algorithm to per-rule flow so
+            # details report continue for evaluate-all policies (#599).
+            rm_on_match = "continue" if rm.get("ruleCombineAlgo") == "evaluate-all" else "stop"
+            rules.append(
+                PolicyRule(
+                    id=rule_id, index=raw_rule["index"], when=expr, then=then, flow=RuleFlow(on_match=rm_on_match)
+                )
+            )
 
         default_role_name = rm.get("defaultRole", "")
         default_role = role_by_name.get(default_role_name)
@@ -368,10 +407,21 @@ def build(raw: dict[str, Any]) -> PolicyModel:
             profile_names: list[str] = []
             if enf_result:
                 ctx = f"rule in EnforcementPolicy '{ep['name']}'"
-                profile_ids, profile_names = _resolve_profiles(enf_result.get("displayValue", ""), ctx)
+                # Prefer the verbatim ``values`` list (adapter-provided, #601);
+                # fall back to comma-splitting displayValue for legacy sources.
+                enf_names = enf_result.get("values")
+                if enf_names is None:
+                    enf_names = enf_result.get("displayValue", "").split(",")
+                profile_ids, profile_names = _resolve_profiles(enf_names, ctx)
             then = ApplyProfiles(profile_ids=profile_ids, profile_names=profile_names)
             rule_id = f"{epid}_rule_{raw_rule['index']}"
-            rules.append(PolicyRule(id=rule_id, index=raw_rule["index"], when=expr, then=then))
+            # Propagate the policy's combine algorithm to per-rule flow (#599).
+            ep_on_match = "continue" if ep.get("ruleCombineAlgo") == "evaluate-all" else "stop"
+            rules.append(
+                PolicyRule(
+                    id=rule_id, index=raw_rule["index"], when=expr, then=then, flow=RuleFlow(on_match=ep_on_match)
+                )
+            )
 
         default_profile_name = ep.get("defaultProfile", "")
         default_profile = profile_by_name.get(default_profile_name)
