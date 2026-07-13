@@ -163,10 +163,10 @@ class TestCompileServiceFirstApplicable:
         model = build(_minimal_raw(rm_rules=rm_rules, enf_rules=enf_rules))
         flow = compile_service(next(iter(model.services.values())), model)
         end_nodes = [n for n in flow.nodes if n.type == "end"]
-        # Expected ends (no rm_default, no enf_default — both produce extra
-        # implicit-deny terminations):
-        #   no_match + auth_fail + 2 enf rule ends + enf_implicit_deny + no_role
-        assert len(end_nodes) == 6
+        # Expected ends: no_match + auth_fail + 2 enf rule ends + enf_implicit_deny.
+        # The role-mapping no-default path is NOT a terminal deny anymore — it
+        # continues to enforcement (#598), so there is no separate no_role end.
+        assert len(end_nodes) == 5
         allow_ends = [n for n in end_nodes if "ALLOW" in n.label]
         deny_ends = [n for n in end_nodes if "DENY" in n.label]
         assert len(allow_ends) >= 1
@@ -602,3 +602,88 @@ class TestBuildDetails:
         assert "[Allow Access Profile]" in details["enforcement_rules"][0]["action_text"]
         # Service-match key is always synthesized into rule_index
         assert any(k.endswith("__match") for k in details["rule_index"])
+
+
+def _pred(ns: str, name: str, value: str) -> dict:
+    return {"operator": "and", "attributes": [{"type": ns, "name": name, "operator": "EQUALS", "value": value}]}
+
+
+class TestRoleMappingNoDefaultContinuesToEnforcement:
+    """#598: a role-mapping with no default role and no match is NOT a terminal
+    deny — the graph continues to enforcement (agreeing with the simulator)."""
+
+    def test_no_role_end_removed_and_continues_to_enforcement(self):
+        rm_rules = [
+            {
+                "index": 0,
+                "expression": _single_predicate("v1"),
+                "results": [{"name": "Role", "displayValue": "[Contractor]"}],
+            }
+        ]
+        enf_rules = [
+            {
+                "index": 0,
+                "expression": _single_predicate("X"),
+                "results": [{"name": "Enforcement-Profile", "displayValue": "[Allow Access Profile]"}],
+            }
+        ]
+        model = build(_minimal_raw(rm_rules=rm_rules, rm_default="", enf_rules=enf_rules))
+        flow = compile_service(next(iter(model.services.values())), model)
+        assert not any("no role" in n.label.lower() for n in flow.nodes if n.type == "end")
+        rm_dec = next(n for n in flow.nodes if n.id.endswith("__rm_rule_0"))
+        assert any(e.from_id == rm_dec.id and e.to_id.endswith("__enf_rule_0") and e.label == "NO" for e in flow.edges)
+
+
+class TestRoleMappingUncertaintyFailsClosed:
+    """#595: role-mapping uncertainty makes the whole simulation uncertain, even
+    when an enforcement rule matched on an explicitly-provided role."""
+
+    def test_uncertain_rm_rule_forces_unknown(self):
+        rm_rules = [
+            {
+                "index": 0,
+                "expression": _pred("Authorization", "memberOf", "Admins"),
+                "results": [{"name": "Role", "displayValue": "[Contractor]"}],
+            }
+        ]
+        enf_rules = [
+            {
+                "index": 0,
+                "expression": _single_predicate("[Employee]"),
+                "results": [{"name": "Enforcement-Profile", "displayValue": "[Allow Access Profile]"}],
+            }
+        ]
+        model = build(_minimal_raw(rm_rules=rm_rules, rm_default="", enf_rules=enf_rules))
+        svc = next(iter(model.services.values()))
+        # "AirGroup" satisfies the service match; "[Employee]" matches the enf rule.
+        # Authorization:memberOf is NOT supplied → the rm rule is uncertain.
+        flow = compile_service(svc, model, simulated_attributes={"Tips:Role": ["AirGroup", "[Employee]"]})
+        assert flow.simulation.status == "uncertain"
+        assert flow.simulation.access_decision == "UNKNOWN"
+
+    def test_deterministic_rm_no_match_still_resolves(self):
+        # Guard against over-marking: when the rm attribute IS provided (rule
+        # deterministically does not match), there is no uncertainty.
+        rm_rules = [
+            {
+                "index": 0,
+                "expression": _pred("Authorization", "memberOf", "Admins"),
+                "results": [{"name": "Role", "displayValue": "[Contractor]"}],
+            }
+        ]
+        enf_rules = [
+            {
+                "index": 0,
+                "expression": _single_predicate("[Employee]"),
+                "results": [{"name": "Enforcement-Profile", "displayValue": "[Allow Access Profile]"}],
+            }
+        ]
+        model = build(_minimal_raw(rm_rules=rm_rules, rm_default="", enf_rules=enf_rules))
+        svc = next(iter(model.services.values()))
+        flow = compile_service(
+            svc,
+            model,
+            simulated_attributes={"Tips:Role": ["AirGroup", "[Employee]"], "Authorization:memberOf": "Users"},
+        )
+        assert flow.simulation.status == "resolved"
+        assert flow.simulation.access_decision == "ALLOW"

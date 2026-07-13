@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.4] - 2026-07-13
+
+**Patch — ClearPass policy-visualizer correctness, part 2 (Casey Jones full-project review: #595, #598).** The simulation / graph-semantics fixes of the ClearPass visualizer cluster.
+
+### Fixed
+- **#595 (high) — the simulator no longer reports a confident decision when role mapping is uncertain.** `_apply_simulation` tracked role-mapping uncertainty (`rm_uncertain`) but did not fold it into the final status, so a matched enforcement rule produced a confident `resolved` ALLOW/DENY even though a role-mapping rule it couldn't evaluate might add a role that matches a different (earlier, first-applicable) enforcement rule. Any consulted role-mapping uncertainty now fails the whole decision closed: `status="uncertain"`, `access_decision="UNKNOWN"`. (Deterministic role-mapping no-match — the attribute *was* supplied — still resolves normally.)
+- **#598 (medium) — role-mapping no-match/no-default continues to enforcement in the diagram.** When a role-mapping policy had no default role and no rule matched, the graph terminated at `Access: DENY (no role matched)` while the simulator (and ClearPass) continue to enforcement, where a default/role-independent profile may grant access. The graph now continues the NO path to the enforcement entry, agreeing with the simulation.
+
+### Deferred
+- **#597** (evaluate-all graph routing) is intentionally not in this release: a *static* diagram can't distinguish "matched rule 0 but rule 1 didn't" from "nothing matched" (both traverse the same NO edge) in evaluate-all mode, so a correct fix is a representation-design decision rather than a wiring change. Tracked for a dedicated pass. The machine-readable simulator already handles evaluate-all accumulation correctly.
+
 ## [3.5.3.3] - 2026-07-13
 
 **Patch — ClearPass policy-visualizer correctness, part 1 (Casey Jones full-project review: #596, #599, #600, #601).** The data-model / classification fixes of the ClearPass visualizer cluster; the flow-graph simulation-semantics fixes (#595/#597/#598) follow separately.

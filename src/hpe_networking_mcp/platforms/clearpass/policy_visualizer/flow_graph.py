@@ -432,14 +432,12 @@ def compile_service(
                 flow.add_edge(current_tail, def_role.id, current_label)
                 flow.add_edge(def_role.id, enf_entry_id)
             else:
-                no_role_end = flow.add_node(
-                    FlowNode(
-                        id=f"{sid}__no_role",
-                        type="end",
-                        label="Access: DENY\n(no role matched)",
-                    )
-                )
-                flow.add_edge(current_tail, no_role_end.id, current_label)
+                # No default role AND no rule matched is NOT a terminal deny —
+                # ClearPass (and the module's own simulator) continue to
+                # enforcement with no role, where a default / role-independent
+                # profile may still grant access. Continue to enforcement so the
+                # diagram agrees with the simulation (#598).
+                flow.add_edge(current_tail, enf_entry_id, current_label)
         else:
             # No role mapping — go straight to enforcement
             flow.add_edge(current_tail, enf_entry_id, current_label)
@@ -539,6 +537,9 @@ def _apply_simulation(
     # ---- Role mapping (skipped for RADIUS_PROXY)
     matching_rm_rules: list[str] = []
     resulting_roles: list[str] = []
+    # Track role-mapping uncertainty at function scope so the final outcome can
+    # fail closed on it (#595) even for RADIUS_PROXY / no-role-mapping services.
+    rm_uncertain = False
     if service.service_type != "RADIUS_PROXY":
         rm = model.role_mapping_policies.get(service.role_mapping_policy_id)
         if rm is None:
@@ -651,7 +652,12 @@ def _apply_simulation(
         matching_ep_rule = f"{ep.id}__default"
 
     # ---- Determine outcome
-    if ep_uncertain or matching_ep_rule is None and unknown_attrs:
+    # ``rm_uncertain`` fails the whole decision closed (#595): a role-mapping
+    # rule we couldn't evaluate might add a role that matches a different
+    # (earlier, in first-applicable) enforcement rule, so a confident ALLOW/DENY
+    # here would be wrong. We don't attempt to prove the missing role is
+    # irrelevant — uncertain is the safe answer.
+    if ep_uncertain or rm_uncertain or (matching_ep_rule is None and unknown_attrs):
         status = "uncertain"
         access = "UNKNOWN"
     elif matching_ep_rule is None:
