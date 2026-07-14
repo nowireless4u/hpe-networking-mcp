@@ -175,6 +175,25 @@ class TestGenerationAndCollapse:
         # Fresh path returns the same pair without re-fetching.
         assert await mgr.get_token_with_generation() == ("t1", 1)
 
+    async def test_concurrent_get_token_with_generation_from_stale_cache(self):
+        """N concurrent callers from an empty cache: exactly one fetch, all get the same pair.
+
+        Guards the locked-re-check fall-through: the sibling that finds the token
+        fresh under the lock must still return ``(token, generation)`` — never
+        ``None`` (which would blow up the ``token, gen = ...`` unpack).
+        """
+        calls: list[int] = []
+
+        async def slow_fetch() -> TokenResult:
+            calls.append(1)
+            await asyncio.sleep(0.01)  # hold the lock so siblings pile up behind it
+            return TokenResult("tok-1", expires_in=None)
+
+        mgr = AsyncTokenManager(slow_fetch, name="test")
+        results = await asyncio.gather(*(mgr.get_token_with_generation() for _ in range(4)))
+        assert len(calls) == 1  # double-checked locking: one fetch
+        assert all(r == ("tok-1", 1) for r in results)  # no None fall-through
+
     async def test_refresh_if_stale_collapses_concurrent_401s(self):
         """Two victims observing the same generation trigger exactly one re-login."""
         results = [
