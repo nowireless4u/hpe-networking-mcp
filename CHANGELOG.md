@@ -7,14 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Feature in progress — spec-lookup index (part 1 of N). Not yet released.** A deterministic SQLite/FTS5 index of the vendored OpenAPI corpus, and its first consumer. Held from release until the feature is complete (distilled-artifact retirement + dynamic-mode parity still to land).
+**Feature in progress — spec-lookup index. Not yet released.** A deterministic SQLite/FTS5 index of the vendored OpenAPI corpus, now the single schema source of truth for tool-body enrichment in both tool modes. Held from release until the maintainer signs off on the complete feature.
 
 ### Added
 - **Spec-lookup index** (`scripts/build_spec_index.py` → `src/hpe_networking_mcp/spec_index/`). Parses all 82 vendored specs (aoscx excluded — orphan, no tools) into `endpoints` / `parameters` / `schemas` / `fields` / `responses` tables + FTS5 mirrors: **6,000 endpoints, 17,939 params, 13,656 schemas, 51,916 fields, 39,775 responses**. Captures field types/enums (property- *and* schema-level, resolved via `$ref`), constraints, formats, examples (field + request-body), `readOnly`/`writeOnly`, `deprecated` (+ `x-deprecation-notice`), `oneOf`/`anyOf` variants, `x-supportedDeviceType`, and per-platform source trust. Stdlib-only (`sqlite3`); baked into the image at build time (dedicated Docker stage), gitignored otherwise. Read-only `SpecIndex` query layer degrades to empty (never raises) when absent.
 - **`get_schema` config-body enrichment (code mode).** `get_schema` now appends the network-config body schema — fields, enums, constraints, device-type applicability, examples, and the scope query params — for the opaque `payload: dict` config tools (`central_manage_*` / `central_get_*`), sourced from the spec index. Closes the gap where those tools exposed no field set and the model authored the body blind (the AP-rename report). Live-verified: `get_schema(["central_manage_system_info"])` now surfaces `hostname` + scope params.
 
+- **Mist body enrichment + both-mode coverage (part 2).** `get_schema` (code mode) and `<platform>_get_tool_schema` (dynamic mode) now both surface request-body schemas for the opaque `body: dict` **Mist** write tools too (`mist_create_*` / `mist_update_*` / …), resolved by reversing the `mist_<snake(operationId)>` name. One generic provider feeds both modes.
+- **Non-object bodies** (arrays, `oneOf`/`anyOf`, free-form `additionalProperties` maps) surface a compact `root` / `variants` shape instead of a blank schema; `allOf: [$ref]` config bodies are flattened to the referenced base's fields. Central resource segments are read from tool source (`_get_resource` / explicit `api_path`), so renamed/hand-curated tools resolve exactly. Result: **100% parity** with the retired artifacts (Central 436/436, Mist 352/352) in both modes.
+
+### Removed
+- **Distilled schema artifacts retired** — `platforms/central/_config_payload_schemas.json` + `config_schemas.py` and `platforms/mist/_request_body_schemas.json` + `request_body_schemas.py`, plus their local distiller scripts. The spec-lookup index is now the single source (complete where the distilled artifacts were not — e.g. it has `system-info`, which the Central artifact lacked). `build_meta_tools`'s `payload_schema_provider` for Central and Mist now points at the index-backed provider.
+
 ### Notes
-- Follow-up (same feature): retire the distilled `_config_payload_schemas.json` / `_request_body_schemas.json` mechanism (Central + Mist) in favor of the single spec-index source, and wire dynamic-mode `<platform>_get_tool_schema` to the same generic provider.
 - Scripts reorg: local-only generators moved to gitignored `scripts/internal/`; pushable build infra (the index builder) stays under `scripts/`.
 
 ## [3.5.3.6] - 2026-07-15

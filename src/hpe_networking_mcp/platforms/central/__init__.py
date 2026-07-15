@@ -826,10 +826,11 @@ def register_tools(mcp: FastMCP, config: ServerConfig) -> int:
     # reachable via ``await call_tool("central_list_tools", ...)`` from inside
     # ``execute()`` even though they're hidden from the top-level catalog.
     # The payload-schema provider lets central_get_tool_schema surface the
-    # distilled config-model field set for opaque ``payload`` dicts (#384).
-    from hpe_networking_mcp.platforms.central.config_schemas import lookup_payload_schema
+    # config-model field set for opaque ``payload`` dicts (#384) — now sourced
+    # from the single spec-lookup index (supersedes the distilled artifact).
+    from hpe_networking_mcp.spec_index.tool_schema import payload_schema_for_tool
 
-    build_meta_tools("central", mcp, payload_schema_provider=lookup_payload_schema)
+    build_meta_tools("central", mcp, payload_schema_provider=payload_schema_for_tool)
     logger.info(
         "Central: {} underlying tools + 3 meta-tools registered ({} mode)",
         len(loaded),
