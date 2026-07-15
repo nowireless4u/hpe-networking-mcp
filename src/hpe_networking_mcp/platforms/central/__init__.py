@@ -706,7 +706,7 @@ TOOLS = {
         "central_get_neighbours",
         "central_get_topology",
         "central_get_unmanaged_device",
-        "central_update_device",
+        "central_update_device_notes",
     ],
     "mrt_switch": [
         "central_get_switch_hardware_categories",

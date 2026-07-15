@@ -92,25 +92,34 @@ async def central_get_device_inventory(
 
 
 @tool(capability=Capability.WRITE_DELETE)
-async def central_update_device(
+async def central_update_device_notes(
     ctx: Context,
-    serial_number: Annotated[str, Field(description="Device serial number to update.")],
-    payload: Annotated[
-        dict,
-        Field(description="Device-field updates (PATCH semantics — only included fields change)."),
+    serial_number: Annotated[str, Field(description="Device serial number.")],
+    notes: Annotated[
+        str,
+        Field(
+            description=(
+                "Free-text operator notes for the device — the note shown in the "
+                "device overview. Pass an empty string to clear the note."
+            )
+        ),
     ],
 ) -> dict | str:
-    """Update a device record (PATCH /devices/:serial-number).
+    """Update the operator **notes** on a device record (PATCH /devices/:serial-number).
 
-    Requires ``ENABLE_CENTRAL_WRITE_TOOLS=true``. Typical use: rename a
-    device, change its assigned site, update notes.
+    This sets ONLY the free-text ``notes`` field shown in the device overview
+    (upstream ``updateDeviceNotesV1`` — the ``network-monitoring/v1`` device
+    PATCH accepts no other field). It does **not** rename, re-site, or otherwise
+    reconfigure the device. To rename an AP, set the ``hostname`` field via
+    ``central_manage_system_info`` at the device scope. Requires
+    ``ENABLE_CENTRAL_WRITE_TOOLS=true``.
     """
     conn = get_central_conn(ctx)
     response = await retry_central_command(
         central_conn=conn,
         api_method="PATCH",
         api_path=f"network-monitoring/v1/devices/{path_seg(serial_number)}",
-        api_data=payload,
+        api_data={"notes": notes},
     )
     code = response.get("code", 0)
     if 200 <= code < 300:

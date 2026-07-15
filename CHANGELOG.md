@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.3.6] - 2026-07-15
+
+**Patch — `central_update_device` renamed to `central_update_device_notes` (notes-only truth-in-naming; closes #615).** An operator trying to rename a Central-managed AP hit a tool whose name and docstring overstated its scope.
+
+### Fixed
+- **#615 — `central_update_device` is notes-only, not a general device update.** The tool wraps `PATCH network-monitoring/v1/devices/{serial}`, whose upstream operation is `updateDeviceNotesV1` — a single required `notes` field, nothing else. But the tool was named `central_update_device` and its docstring claimed *"Typical use: rename a device, change its assigned site, update notes,"* so a caller trying `name`/`deviceName`/`hostname` got generic `Bad Request` for each. Renamed to **`central_update_device_notes`**; the parameter is now a typed `notes: str` (was a free-form `payload: dict`, which re-invited field-name guessing) so the tool cannot accept a field the endpoint rejects. Docstring corrected: it updates only the device-overview notes field and does not rename/re-site/reconfigure — AP rename is `central_manage_system_info` (`hostname`) at the device scope. Registration and `INSTRUCTIONS.md` updated. (Tool count unchanged — a rename, not an add/remove.)
+
+### Notes
+- The companion audit issue #616 tracks reviewing all **hand-curated** tools (which the OAS-driven regen pipeline does not validate) for name/docstring alignment with their actual endpoint schemas — this was one proven instance of that class.
+- The model-facing half of this failure (a tool whose schema the model can't see, so it guesses field names) is what the planned spec-lookup index addresses.
+
 ## [3.5.3.5] - 2026-07-13
 
 **Patch — EdgeConnect transport & auth robustness (Casey Jones full-project review: #602, #603).** Two low-severity correctness fixes to the EdgeConnect Orchestrator client.
