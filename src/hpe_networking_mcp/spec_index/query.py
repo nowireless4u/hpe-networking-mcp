@@ -152,7 +152,7 @@ class SpecIndex:
             clauses.append("method=?")
             args.append(method.upper())
         row = con.execute(
-            f"SELECT * FROM endpoints WHERE {' AND '.join(clauses)} LIMIT 1",
+            f"SELECT * FROM endpoints WHERE {' AND '.join(clauses)} LIMIT 1",  # nosec B608 — clauses are literals, values parameterized
             args,  # noqa: S608 — clauses are literals
         ).fetchone()
         if row is None:
@@ -273,7 +273,7 @@ class SpecIndex:
         args: list[Any] = [match]
         plat_col = "e.platform" if kind in ("endpoint", "parameter", "response") else "s.platform"
         if platform:
-            sql += f" AND {plat_col}=?"  # noqa: S608 — plat_col is a literal
+            sql += f" AND {plat_col}=?"  # noqa: S608  # nosec B608 — plat_col is a literal, value parameterized
             args.append(platform)
         sql += " LIMIT ?"
         args.append(limit)
