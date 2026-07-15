@@ -110,6 +110,7 @@ class SpecIndex:
                     "write_only": bool(f["write_only"]),
                     "deprecated": bool(f["deprecated"]),
                     "deprecated_note": f["deprecated_note"],
+                    "device_types": json.loads(f["device_types"]) if f["device_types"] else None,
                     "description": f["description"],
                 }
             )

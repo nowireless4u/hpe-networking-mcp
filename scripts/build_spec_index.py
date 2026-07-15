@@ -227,6 +227,9 @@ def _field_row(fname: str, fdef: dict[str, Any], required: bool) -> dict[str, An
         "deprecated_note": _deprecated_note(fdef),
         "example": _example_json(fdef),
         "variants_json": json.dumps(variants) if variants else None,
+        "device_types": (
+            json.dumps(fdef["x-supportedDeviceType"]) if isinstance(fdef.get("x-supportedDeviceType"), list) else None
+        ),
         "description": fdef.get("description"),
     }
 
@@ -254,7 +257,8 @@ CREATE TABLE fields (
     id INTEGER PRIMARY KEY, schema_id INTEGER, field_name TEXT, type TEXT,
     ref_schema TEXT, item_type TEXT, item_ref TEXT, format TEXT, required INTEGER,
     "default" TEXT, enum_json TEXT, constraints_json TEXT, read_only INTEGER,
-    write_only INTEGER, deprecated INTEGER, deprecated_note TEXT, example TEXT, variants TEXT, description TEXT
+    write_only INTEGER, deprecated INTEGER, deprecated_note TEXT, example TEXT, variants TEXT,
+    device_types TEXT, description TEXT
 );
 CREATE INDEX idx_endpoints_platform ON endpoints(platform);
 CREATE INDEX idx_endpoints_opid ON endpoints(operation_id);
@@ -367,7 +371,8 @@ def _insert_field(con: sqlite3.Connection, schema_id: int, row: dict[str, Any], 
     cur = con.execute(
         "INSERT INTO fields(schema_id, field_name, type, ref_schema, item_type, item_ref, format, "
         'required, "default", enum_json, constraints_json, read_only, write_only, deprecated, '
-        "deprecated_note, example, variants, description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "deprecated_note, example, variants, device_types, description) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (
             schema_id,
             row["field_name"],
@@ -386,6 +391,7 @@ def _insert_field(con: sqlite3.Connection, schema_id: int, row: dict[str, Any], 
             row["deprecated_note"],
             row["example"],
             row["variants_json"],
+            row["device_types"],
             row["description"],
         ),
     )

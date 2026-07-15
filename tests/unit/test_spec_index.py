@@ -171,6 +171,12 @@ class TestRichMetadata:
         (n,) = con.execute("SELECT COUNT(*) FROM fields WHERE variants IS NOT NULL").fetchone()
         assert n > 0
 
+    def test_device_types_captured(self, index_db: Path):
+        """x-supportedDeviceType parity with the distilled Central artifact."""
+        con = sqlite3.connect(index_db)
+        (n,) = con.execute("SELECT COUNT(*) FROM fields WHERE device_types IS NOT NULL").fetchone()
+        assert n > 1000  # 14k occurrences in central config specs
+
     def test_endpoint_exposes_responses_and_flags(self, idx: SpecIndex):
         ep = idx.endpoint("central", operation_id="updateDeviceNotesV1")
         assert ep is not None
