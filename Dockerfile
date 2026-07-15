@@ -11,6 +11,17 @@ COPY pyproject.toml ./
 # Install dependencies (no dev deps, no project itself yet)
 RUN uv sync --frozen --no-dev --no-install-project 2>/dev/null || uv sync --no-dev --no-install-project
 
+# --- Spec-index build stage ---
+# Bakes the deterministic OpenAPI lookup index (SQLite/FTS5) from the vendored
+# specs. Stdlib-only (json + sqlite3), so it needs no project deps — just the
+# builder script and vendor/. Only the resulting .db ships to the runtime image;
+# the 90 vendored specs stay out of it.
+FROM python:3.13-slim-trixie AS specindex
+WORKDIR /app
+COPY scripts/build_spec_index.py ./scripts/build_spec_index.py
+COPY vendor/ ./vendor/
+RUN python scripts/build_spec_index.py /tmp/spec_index.db
+
 # --- Runtime stage ---
 FROM python:3.13-slim-trixie
 
@@ -34,6 +45,10 @@ COPY --from=deps /app/.venv /app/.venv
 # Copy project files
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
+
+# Bake the spec-lookup index beside its query module (before the project install
+# so it ships whether the project installs editable or as a built wheel).
+COPY --from=specindex /tmp/spec_index.db ./src/hpe_networking_mcp/spec_index/spec_index.db
 
 # Install the project itself (as root so it can write to .venv/bin)
 RUN uv sync --frozen --no-dev 2>/dev/null || uv sync --no-dev

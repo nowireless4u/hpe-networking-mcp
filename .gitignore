@@ -127,14 +127,12 @@ docs/skills/
 # Pre-regen backup of the Central tool surface (local safety copy, never committed)
 central-tools-backup/
 
-# Tool generators / schema distillers are local-only — not tracked or uploaded.
+# Local-only tooling lives under scripts/internal/ — not tracked or uploaded.
 # The GENERATED tool files under platforms/*/tools/ (and distilled schema JSON)
-# ARE committed; the scripts that emit them are not. Regeneration is a local
-# maintainer step at release time.
-scripts/generate_edgeconnect_tools.py
-scripts/generate_greenlake_tools.py
-scripts/_mist_generator.py
-scripts/regenerate_mist_tools.py
-scripts/import_central_config_tools.py
-scripts/distill_mist_schemas.py
-scripts/distill_central_config_schemas.py
+# ARE committed; the generators/distillers that emit them are not. Regeneration
+# is a local maintainer step at release time. Pushable build infrastructure
+# (e.g. scripts/build_spec_index.py) stays directly under scripts/ and IS tracked.
+scripts/internal/
+
+# Baked spec-lookup index (built at image time by scripts/build_spec_index.py)
+src/hpe_networking_mcp/spec_index/spec_index.db
