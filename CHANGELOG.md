@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+**Feature in progress — spec-lookup index (part 1 of N). Not yet released.** A deterministic SQLite/FTS5 index of the vendored OpenAPI corpus, and its first consumer. Held from release until the feature is complete (distilled-artifact retirement + dynamic-mode parity still to land).
+
+### Added
+- **Spec-lookup index** (`scripts/build_spec_index.py` → `src/hpe_networking_mcp/spec_index/`). Parses all 82 vendored specs (aoscx excluded — orphan, no tools) into `endpoints` / `parameters` / `schemas` / `fields` / `responses` tables + FTS5 mirrors: **6,000 endpoints, 17,939 params, 13,656 schemas, 51,916 fields, 39,775 responses**. Captures field types/enums (property- *and* schema-level, resolved via `$ref`), constraints, formats, examples (field + request-body), `readOnly`/`writeOnly`, `deprecated` (+ `x-deprecation-notice`), `oneOf`/`anyOf` variants, `x-supportedDeviceType`, and per-platform source trust. Stdlib-only (`sqlite3`); baked into the image at build time (dedicated Docker stage), gitignored otherwise. Read-only `SpecIndex` query layer degrades to empty (never raises) when absent.
+- **`get_schema` config-body enrichment (code mode).** `get_schema` now appends the network-config body schema — fields, enums, constraints, device-type applicability, examples, and the scope query params — for the opaque `payload: dict` config tools (`central_manage_*` / `central_get_*`), sourced from the spec index. Closes the gap where those tools exposed no field set and the model authored the body blind (the AP-rename report). Live-verified: `get_schema(["central_manage_system_info"])` now surfaces `hostname` + scope params.
+
+### Notes
+- Follow-up (same feature): retire the distilled `_config_payload_schemas.json` / `_request_body_schemas.json` mechanism (Central + Mist) in favor of the single spec-index source, and wire dynamic-mode `<platform>_get_tool_schema` to the same generic provider.
+- Scripts reorg: local-only generators moved to gitignored `scripts/internal/`; pushable build infra (the index builder) stays under `scripts/`.
+
 ## [3.5.3.6] - 2026-07-15
 
 **Patch — `central_update_device` renamed to `central_update_device_notes` (notes-only truth-in-naming; closes #615).** An operator trying to rename a Central-managed AP hit a tool whose name and docstring overstated its scope.
