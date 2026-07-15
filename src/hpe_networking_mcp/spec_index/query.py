@@ -35,6 +35,7 @@ class SpecIndex:
     def __init__(self, db_path: Path | str | None = None) -> None:
         self._path = Path(db_path) if db_path else _DEFAULT_DB
         self._con: sqlite3.Connection | None = None
+        self._op_schema_cache: dict[str, dict[str, str]] = {}
 
     @property
     def available(self) -> bool:
@@ -190,6 +191,49 @@ class SpecIndex:
             "parameters": params,
         }
 
+    def operation_schemas(self, platform: str) -> dict[str, str]:
+        """``{operation_id: request_schema}`` for a platform's body-bearing endpoints.
+
+        Cached per instance (the index is immutable). Used to map a generated
+        tool back to its request body schema by operationId (e.g. Mist tools are
+        ``mist_<snake(operationId)>``).
+        """
+        cached = self._op_schema_cache.get(platform)
+        if cached is not None:
+            return cached
+        con = self._conn()
+        result: dict[str, str] = {}
+        if con is not None:
+            for r in con.execute(
+                "SELECT operation_id, request_schema FROM endpoints "
+                "WHERE platform=? AND operation_id IS NOT NULL AND request_schema IS NOT NULL",
+                (platform,),
+            ):
+                result[r["operation_id"]] = r["request_schema"]
+        self._op_schema_cache[platform] = result
+        return result
+
+    def schema_body(self, platform: str, schema_name: str) -> dict[str, Any] | None:
+        """A body descriptor for a schema: ``fields`` (object), else ``root``
+        (array/scalar), else ``variants`` (oneOf/anyOf). ``None`` if unknown."""
+        fields = self.schema_fields(platform, schema_name)
+        if fields:
+            return {"fields": fields}
+        con = self._conn()
+        if con is None:
+            return None
+        row = con.execute(
+            "SELECT root, variants FROM schemas WHERE platform=? AND schema_name=? LIMIT 1",
+            (platform, schema_name),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["variants"]:
+            return {"variants": json.loads(row["variants"])}
+        if row["root"]:
+            return {"root": row["root"]}
+        return None
+
     def config_body(self, platform: str, resource: str) -> dict[str, Any] | None:
         """Resolve a config-object's writable body schema by its path segment.
 
@@ -211,8 +255,8 @@ class SpecIndex:
         ).fetchone()
         if row is None:
             return None
-        fields = self.schema_fields(platform, row["request_schema"])
-        if not fields:
+        body = self.schema_body(platform, row["request_schema"])
+        if body is None:
             return None
         scope_params = [
             {"name": p["name"], "in": p["location"], "required": bool(p["required"]), "description": p["description"]}
@@ -224,7 +268,7 @@ class SpecIndex:
             "object": resource,
             "path": row["path"],
             "method": row["method"],
-            "fields": fields,
+            **body,
             "scope_parameters": scope_params,
         }
 

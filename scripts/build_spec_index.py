@@ -111,6 +111,35 @@ def _deprecated_note(node: dict[str, Any]) -> str | None:
     return str(note) if note else None
 
 
+def _root_descriptor(schema: dict[str, Any]) -> str | None:
+    """A compact shape for a non-object body (array of primitives, or a scalar).
+
+    Object bodies (fields) and oneOf/anyOf bodies (variants) are described
+    elsewhere; this covers ``[string]`` / ``[<Schema>]`` / bare scalar bodies so
+    enrichment isn't blank for e.g. Mist's ``claim``/``import`` serial-list tools.
+    Returns ``None`` for object schemas (they have fields).
+    """
+    t = schema.get("type")
+    if t == "array":
+        items = schema.get("items") or {}
+        if isinstance(items, dict):
+            item = _ref_name(items.get("$ref")) or _as_type(items.get("type")) or "object"
+        else:
+            item = "object"
+        return f"array[{item}]"
+    if isinstance(t, str) and t in ("string", "integer", "number", "boolean"):
+        return t
+    # Free-form map: object with dynamic keys (additionalProperties) and no fixed
+    # properties — e.g. Mist per-port / per-device config keyed by name.
+    ap = schema.get("additionalProperties")
+    if ap and not schema.get("properties"):
+        val = "any"
+        if isinstance(ap, dict):
+            val = _ref_name(ap.get("$ref")) or _as_type(ap.get("type")) or "object"
+        return f"map[string→{val}]"
+    return None
+
+
 def _variant_refs(node: dict[str, Any]) -> list[str]:
     """Schema names a field/schema may take via ``oneOf``/``anyOf`` (alternatives).
 
@@ -178,21 +207,48 @@ def _request_example(spec: dict[str, Any], request_body: dict[str, Any]) -> str 
     return _example_json(media) if isinstance(media, dict) else None
 
 
-def _iter_field_defs(spec: dict[str, Any], schema: dict[str, Any]) -> list[tuple[str, dict, bool]]:
-    """Yield (field_name, field_def, required) for a schema, following allOf.
+def _iter_field_defs(
+    spec: dict[str, Any], schema: dict[str, Any], _seen: set[str] | None = None
+) -> list[tuple[str, dict, bool]]:
+    """Yield (field_name, field_def, required) for a schema, flattening allOf.
 
-    Inline ``allOf`` members are merged; ``$ref`` members are left to their own
-    indexed schema row (navigable via the composition). oneOf/anyOf are not
-    flattened (their variants are separate schemas).
+    Both inline **and** ``$ref`` ``allOf`` members are merged (recursively, with
+    cycle protection) — many Central config bodies are a pure
+    ``{"allOf": [{"$ref": Base}]}`` whose fields live entirely in the referenced
+    base, so not following the ref would leave the composed schema with zero
+    fields. oneOf/anyOf are not flattened (their variants are separate schemas).
     """
+    _seen = _seen if _seen is not None else set()
     out: list[tuple[str, dict, bool]] = []
     required = set(schema.get("required", []) or [])
     props = schema.get("properties", {}) or {}
     for fname, fdef in props.items():
         if isinstance(fdef, dict):
             out.append((fname, fdef, fname in required))
+    # Array body: fields live on the element schema (many Mist bulk/import tools
+    # take ``[{item}]``), so descend into ``items`` so the body isn't empty.
+    items = schema.get("items")
+    if not props and isinstance(items, dict):
+        if "$ref" in items and items["$ref"] not in _seen:
+            _seen.add(items["$ref"])
+            resolved = _resolve_ref(spec, items["$ref"])
+            if isinstance(resolved, dict):
+                out.extend(_iter_field_defs(spec, resolved, _seen))
+        elif "properties" in items or "allOf" in items:
+            out.extend(_iter_field_defs(spec, items, _seen))
     for member in schema.get("allOf", []) or []:
-        if isinstance(member, dict) and "properties" in member:
+        if not isinstance(member, dict):
+            continue
+        if "$ref" in member:
+            ref = member["$ref"]
+            if ref in _seen:
+                continue
+            _seen.add(ref)
+            resolved = _resolve_ref(spec, ref)
+            if isinstance(resolved, dict):
+                for fname, fdef, req in _iter_field_defs(spec, resolved, _seen):
+                    out.append((fname, fdef, req or fname in required))
+        elif "properties" in member:
             member_req = set(member.get("required", []) or [])
             for fname, fdef in (member.get("properties") or {}).items():
                 if isinstance(fdef, dict):
@@ -251,7 +307,7 @@ CREATE TABLE parameters (
 );
 CREATE TABLE schemas (
     id INTEGER PRIMARY KEY, platform TEXT, spec_file TEXT, schema_name TEXT,
-    description TEXT, enum_json TEXT, example TEXT, variants TEXT, trust TEXT
+    description TEXT, enum_json TEXT, example TEXT, variants TEXT, root TEXT, trust TEXT
 );
 CREATE TABLE fields (
     id INTEGER PRIMARY KEY, schema_id INTEGER, field_name TEXT, type TEXT,
@@ -463,8 +519,8 @@ def _insert_schema(
     enum_json = json.dumps(enum) if isinstance(enum, list) and enum else None
     variants = _variant_refs(sdef)
     cur = con.execute(
-        "INSERT INTO schemas(platform, spec_file, schema_name, description, enum_json, example, variants, trust) "
-        "VALUES (?,?,?,?,?,?,?,?)",
+        "INSERT INTO schemas(platform, spec_file, schema_name, description, enum_json, example, variants, root, trust) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
         (
             platform,
             spec_file,
@@ -473,6 +529,7 @@ def _insert_schema(
             enum_json,
             _example_json(sdef),
             json.dumps(variants) if variants else None,
+            _root_descriptor(sdef),
             trust,
         ),
     )
