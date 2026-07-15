@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from hpe_networking_mcp.spec_index import SpecIndex
+from hpe_networking_mcp.spec_index import tool_schema as ts
 
 _REPO = Path(__file__).resolve().parents[2]
 _BUILDER = _REPO / "scripts" / "build_spec_index.py"
@@ -189,6 +190,41 @@ class TestRichMetadata:
         assert fields
         for key in ("read_only", "write_only", "deprecated", "example", "variants", "constraints"):
             assert all(key in f for f in fields)
+
+
+@pytest.mark.unit
+class TestConfigBodyProvider:
+    """The get_schema enrichment path for opaque payload:dict config tools (Mike's case)."""
+
+    def test_config_body_resolves_system_info(self, idx: SpecIndex):
+        body = idx.config_body("central", "system-info")
+        assert body is not None
+        names = {f["name"] for f in body["fields"]}
+        assert "hostname" in names
+        scope = {p["name"] for p in body["scope_parameters"]}
+        assert {"scope-id", "object-type", "device-function"} <= scope
+
+    def test_config_body_unknown_returns_none(self, idx: SpecIndex):
+        assert idx.config_body("central", "no-such-resource-xyz") is None
+
+    def test_payload_schema_for_config_tool(self, idx: SpecIndex, monkeypatch):
+        monkeypatch.setattr(ts, "get_spec_index", lambda: idx)
+        ps = ts.payload_schema_for_tool("central_manage_system_info")
+        assert ps is not None and any(f["name"] == "hostname" for f in ps["fields"])
+        # the get_* twin resolves the same body
+        assert ts.payload_schema_for_tool("central_get_system_info") is not None
+
+    def test_payload_schema_none_for_non_config_tool(self, idx: SpecIndex, monkeypatch):
+        monkeypatch.setattr(ts, "get_spec_index", lambda: idx)
+        assert ts.payload_schema_for_tool("mist_get_self") is None
+        assert ts.payload_schema_for_tool("") is None
+
+    def test_render_payload_schema_text(self, idx: SpecIndex):
+        body = idx.config_body("central", "system-info")
+        text = ts.render_payload_schema("central_manage_system_info", body)
+        assert "PAYLOAD SCHEMA for central_manage_system_info" in text
+        assert "hostname" in text
+        assert "scope query params" in text
 
 
 @pytest.mark.unit

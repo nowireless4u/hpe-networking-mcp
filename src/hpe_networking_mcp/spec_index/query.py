@@ -190,6 +190,44 @@ class SpecIndex:
             "parameters": params,
         }
 
+    def config_body(self, platform: str, resource: str) -> dict[str, Any] | None:
+        """Resolve a config-object's writable body schema by its path segment.
+
+        Maps a resource segment (e.g. ``"system-info"``) to its write endpoint
+        (``.../network-config/.../system-info/{name}``), returning the body
+        field set plus the scope query params a caller must supply. This is what
+        powers ``get_schema`` enrichment for the opaque ``payload: dict`` config
+        tools — the model no longer authors the body blind. Returns ``None`` when
+        no matching writable endpoint is found.
+        """
+        con = self._conn()
+        if con is None:
+            return None
+        row = con.execute(
+            "SELECT * FROM endpoints WHERE platform=? AND request_schema IS NOT NULL "
+            "AND (path LIKE ? OR path LIKE ?) "
+            "ORDER BY CASE method WHEN 'PATCH' THEN 0 WHEN 'PUT' THEN 1 WHEN 'POST' THEN 2 ELSE 3 END LIMIT 1",
+            (platform, f"%/{resource}", f"%/{resource}/%"),
+        ).fetchone()
+        if row is None:
+            return None
+        fields = self.schema_fields(platform, row["request_schema"])
+        if not fields:
+            return None
+        scope_params = [
+            {"name": p["name"], "in": p["location"], "required": bool(p["required"]), "description": p["description"]}
+            for p in con.execute(
+                "SELECT * FROM parameters WHERE endpoint_id=? AND location='query' ORDER BY name", (row["id"],)
+            )
+        ]
+        return {
+            "object": resource,
+            "path": row["path"],
+            "method": row["method"],
+            "fields": fields,
+            "scope_parameters": scope_params,
+        }
+
     def search(
         self, query: str, *, kind: str = "field", platform: str | None = None, limit: int = 20
     ) -> list[dict[str, Any]]:

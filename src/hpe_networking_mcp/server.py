@@ -866,6 +866,52 @@ def _make_skill_aware_search(tool: FunctionTool) -> _SkillAwareSearchTool:
     return aware
 
 
+class _SpecEnrichedGetSchemaTool(_ArgTolerantFunctionTool):
+    """`get_schema` that appends spec-index payload schemas for config tools.
+
+    The opaque ``payload: dict`` config tools (``central_manage_*`` /
+    ``central_get_*``) expose no body field set, so the model authors the payload
+    blind — the failure mode behind the AP-rename report. For each requested tool
+    that resolves to a config object, append its network-config body schema
+    (fields, enums, examples, constraints, device types, scope params) from the
+    spec index. Inert for non-config tools and when the index is unavailable, so
+    the base ``get_schema`` output is otherwise unchanged. Structural enrichment
+    (the ``_SkillAwareSearchTool`` pattern), not an instruction the model must
+    trust.
+    """
+
+    async def run(self, arguments: dict[str, Any]) -> ToolResult:
+        from mcp.types import TextContent
+
+        from hpe_networking_mcp.spec_index.tool_schema import payload_schema_for_tool, render_payload_schema
+
+        result = await super().run(arguments)
+        tools = (arguments or {}).get("tools") or []
+        if isinstance(tools, str):
+            tools = [tools]
+        blocks: list[str] = []
+        for name in tools:
+            if not isinstance(name, str):
+                continue
+            try:
+                schema = payload_schema_for_tool(name)
+            except Exception as exc:  # enrichment must never break discovery
+                logger.warning("get_schema: spec-index enrichment failed for {!r} — {}", name, exc)
+                continue
+            if schema:
+                blocks.append(render_payload_schema(name, schema))
+        if not blocks:
+            return result
+        result.content = [*result.content, TextContent(type="text", text="\n\n" + "\n\n".join(blocks))]
+        return result
+
+
+def _make_spec_enriched_get_schema(tool: FunctionTool) -> _SpecEnrichedGetSchemaTool:
+    """Reconstruct the produced `get_schema` tool as the spec-enriched subclass,
+    preserving the #488 arg-tolerance."""
+    return _SpecEnrichedGetSchemaTool(**{f: getattr(tool, f) for f in type(tool).model_fields})
+
+
 def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
 
@@ -914,7 +960,7 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         def __call__(self, get_catalog):
             tool = super().__call__(get_catalog)
             tool.description = _GET_SCHEMA_DESCRIPTION
-            return _make_arg_tolerant(tool)
+            return _make_spec_enriched_get_schema(tool)
 
     limits = ResourceLimits(
         max_duration_secs=max_duration_secs,
