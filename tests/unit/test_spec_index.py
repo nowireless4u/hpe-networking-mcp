@@ -128,6 +128,62 @@ class TestSearch:
         with pytest.raises(ValueError, match="kind must be one of"):
             idx.search("x", kind="bogus")
 
+    def test_response_search(self, idx: SpecIndex):
+        assert isinstance(idx.search("token", kind="response", platform="mist"), list)
+
+
+@pytest.mark.unit
+class TestRichMetadata:
+    """Examples, readOnly/writeOnly, deprecated(+note), oneOf/anyOf variants, all responses."""
+
+    def test_error_responses_captured_with_descriptions(self, index_db: Path):
+        """The AI learns what 429 means from the indexed response description."""
+        con = sqlite3.connect(index_db)
+        con.row_factory = sqlite3.Row
+        row = con.execute(
+            "SELECT r.description FROM responses r JOIN endpoints e ON r.endpoint_id=e.id "
+            "WHERE e.platform='mist' AND r.status_code='429' AND r.description IS NOT NULL LIMIT 1"
+        ).fetchone()
+        assert row is not None and row["description"].strip()
+
+    def test_field_examples_captured(self, index_db: Path):
+        con = sqlite3.connect(index_db)
+        (n,) = con.execute("SELECT COUNT(*) FROM fields WHERE example IS NOT NULL").fetchone()
+        assert n > 1000  # widespread across greenlake/edgeconnect/central
+        (n,) = con.execute("SELECT COUNT(*) FROM endpoints WHERE request_example IS NOT NULL").fetchone()
+        assert n > 0
+
+    def test_readonly_writeonly_captured(self, index_db: Path):
+        con = sqlite3.connect(index_db)
+        (n,) = con.execute("SELECT COUNT(*) FROM fields WHERE read_only=1").fetchone()
+        assert n > 100  # mist alone has ~600
+
+    def test_deprecated_flag_and_note(self, index_db: Path):
+        con = sqlite3.connect(index_db)
+        con.row_factory = sqlite3.Row
+        (dep,) = con.execute("SELECT COUNT(*) FROM endpoints WHERE deprecated=1").fetchone()
+        assert dep > 0
+        note = con.execute("SELECT deprecated_note FROM endpoints WHERE deprecated_note IS NOT NULL LIMIT 1").fetchone()
+        assert note is not None and note["deprecated_note"]
+
+    def test_oneof_anyof_variants_captured(self, index_db: Path):
+        con = sqlite3.connect(index_db)
+        (n,) = con.execute("SELECT COUNT(*) FROM fields WHERE variants IS NOT NULL").fetchone()
+        assert n > 0
+
+    def test_endpoint_exposes_responses_and_flags(self, idx: SpecIndex):
+        ep = idx.endpoint("central", operation_id="updateDeviceNotesV1")
+        assert ep is not None
+        assert isinstance(ep["responses"], list) and ep["responses"]
+        assert all("status" in r for r in ep["responses"])
+        assert "deprecated" in ep and "request_example" in ep
+
+    def test_schema_fields_expose_rich_attrs(self, idx: SpecIndex):
+        fields = idx.schema_fields("mist", "wlan")
+        assert fields
+        for key in ("read_only", "write_only", "deprecated", "example", "variants", "constraints"):
+            assert all(key in f for f in fields)
+
 
 @pytest.mark.unit
 class TestGracefulDegradation:

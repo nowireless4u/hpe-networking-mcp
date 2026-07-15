@@ -103,7 +103,13 @@ class SpecIndex:
                     "enum": self._resolve_field_enum(platform, f),
                     "default": json.loads(f["default"]) if f["default"] else None,
                     "ref_schema": f["ref_schema"] or f["item_ref"],
+                    "variants": json.loads(f["variants"]) if f["variants"] else None,
                     "constraints": json.loads(f["constraints_json"]) if f["constraints_json"] else None,
+                    "example": json.loads(f["example"]) if f["example"] else None,
+                    "read_only": bool(f["read_only"]),
+                    "write_only": bool(f["write_only"]),
+                    "deprecated": bool(f["deprecated"]),
+                    "deprecated_note": f["deprecated_note"],
                     "description": f["description"],
                 }
             )
@@ -158,9 +164,15 @@ class SpecIndex:
                 "type": p["type"],
                 "format": p["format"],
                 "enum": json.loads(p["enum_json"]) if p["enum_json"] else None,
+                "example": json.loads(p["example"]) if p["example"] else None,
+                "deprecated": bool(p["deprecated"]),
                 "description": p["description"],
             }
             for p in con.execute("SELECT * FROM parameters WHERE endpoint_id=? ORDER BY name", (row["id"],))
+        ]
+        responses = [
+            {"status": r["status_code"], "description": r["description"], "schema": r["schema_name"]}
+            for r in con.execute("SELECT * FROM responses WHERE endpoint_id=? ORDER BY status_code", (row["id"],))
         ]
         return {
             "platform": row["platform"],
@@ -169,7 +181,10 @@ class SpecIndex:
             "operation_id": row["operation_id"],
             "summary": row["summary"],
             "request_schema": row["request_schema"],
-            "response_schema": row["response_schema"],
+            "request_example": json.loads(row["request_example"]) if row["request_example"] else None,
+            "responses": responses,
+            "deprecated": bool(row["deprecated"]),
+            "deprecated_note": row["deprecated_note"],
             "trust": row["trust"],
             "parameters": params,
         }
@@ -208,12 +223,16 @@ class SpecIndex:
                 "SELECT e.platform, e.path, p.name, p.location FROM parameters_fts x "
                 "JOIN parameters p ON p.id=x.rowid JOIN endpoints e ON p.endpoint_id=e.id WHERE parameters_fts MATCH ?"
             ),
+            "response": (
+                "SELECT e.platform, e.path, rs.status_code, rs.description FROM responses_fts x "
+                "JOIN responses rs ON rs.id=x.rowid JOIN endpoints e ON rs.endpoint_id=e.id WHERE responses_fts MATCH ?"
+            ),
         }
         sql = specs.get(kind)
         if sql is None:
             raise ValueError(f"kind must be one of {sorted(specs)}, got {kind!r}")
         args: list[Any] = [match]
-        plat_col = "e.platform" if kind in ("endpoint", "parameter") else "s.platform"
+        plat_col = "e.platform" if kind in ("endpoint", "parameter", "response") else "s.platform"
         if platform:
             sql += f" AND {plat_col}=?"  # noqa: S608 — plat_col is a literal
             args.append(platform)

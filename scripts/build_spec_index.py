@@ -82,6 +82,51 @@ def _as_type(value: Any) -> str | None:
     return str(value)
 
 
+def _example_json(node: dict[str, Any]) -> str | None:
+    """A representative example from a schema/param/media node, JSON-encoded.
+
+    Prefers the singular ``example``; falls back to the first ``value`` of an
+    ``examples`` map (OpenAPI media-type / parameter style — e.g. Mist's request
+    body examples). Gives the model a known-valid starting value.
+    """
+    if "example" in node:
+        return json.dumps(node["example"])
+    examples = node.get("examples")
+    if isinstance(examples, dict):
+        for ex in examples.values():
+            if isinstance(ex, dict) and "value" in ex:
+                return json.dumps(ex["value"])
+    return None
+
+
+def _deprecated_note(node: dict[str, Any]) -> str | None:
+    """Deprecation reason/sunset text from vendor extensions, if present.
+
+    OpenAPI ``deprecated`` is only a boolean; vendors carry the *why*/*when* in
+    ``x-deprecation-notice`` / ``x-deprecated-reason`` (EdgeConnect) — or inline
+    in ``description`` (GreenLake), which is already indexed. Surfacing the
+    extension lets the model see the sunset context.
+    """
+    note = node.get("x-deprecation-notice") or node.get("x-deprecated-reason")
+    return str(note) if note else None
+
+
+def _variant_refs(node: dict[str, Any]) -> list[str]:
+    """Schema names a field/schema may take via ``oneOf``/``anyOf`` (alternatives).
+
+    Unlike ``allOf`` (merged), these are mutually-exclusive shapes; capturing the
+    variant names lets enrichment show "this may be any of [A, B, C]".
+    """
+    out: list[str] = []
+    for key in ("oneOf", "anyOf"):
+        for member in node.get(key, []) or []:
+            if isinstance(member, dict):
+                name = _ref_name(member.get("$ref"))
+                if name:
+                    out.append(name)
+    return out
+
+
 def _resolve_ref(spec: dict[str, Any], ref: str) -> Any:
     """Resolve a local ``#/a/b/c`` JSON pointer within one spec."""
     node: Any = spec
@@ -116,15 +161,21 @@ def _schema_from_content(spec: dict[str, Any], container: dict[str, Any]) -> tup
     return None, sch
 
 
-def _response_schema(spec: dict[str, Any], op: dict[str, Any]) -> tuple[str | None, dict | None]:
-    responses = op.get("responses", {}) or {}
-    for code in ("200", "201", "202", "2XX", "default"):
-        if code in responses:
-            return _schema_from_content(spec, responses[code])
-    for code, resp in responses.items():
-        if str(code).startswith("2"):
-            return _schema_from_content(spec, resp)
-    return None, None
+def _request_example(spec: dict[str, Any], request_body: dict[str, Any]) -> str | None:
+    """A copy-paste-valid request body example, if the spec provides one."""
+    if not isinstance(request_body, dict):
+        return None
+    if "$ref" in request_body:
+        request_body = _resolve_ref(spec, request_body["$ref"]) or {}
+    content = request_body.get("content", {}) or {}
+    media = None
+    for mt in _BODY_MEDIA_PRIORITY:
+        if mt in content:
+            media = content[mt]
+            break
+    if media is None and content:
+        media = next(iter(content.values()))
+    return _example_json(media) if isinstance(media, dict) else None
 
 
 def _iter_field_defs(spec: dict[str, Any], schema: dict[str, Any]) -> list[tuple[str, dict, bool]]:
@@ -158,6 +209,7 @@ def _field_row(fname: str, fdef: dict[str, Any], required: bool) -> dict[str, An
         item_type = items.get("type")
     enum = fdef.get("enum")
     constraints = {k: fdef[k] for k in _CONSTRAINT_KEYS if k in fdef}
+    variants = _variant_refs(fdef)
     return {
         "field_name": fname,
         "type": _as_type(fdef.get("type")),
@@ -169,6 +221,12 @@ def _field_row(fname: str, fdef: dict[str, Any], required: bool) -> dict[str, An
         "default": json.dumps(fdef["default"]) if "default" in fdef else None,
         "enum_json": json.dumps(enum) if isinstance(enum, list) and enum else None,
         "constraints_json": json.dumps(constraints) if constraints else None,
+        "read_only": 1 if fdef.get("readOnly") else 0,
+        "write_only": 1 if fdef.get("writeOnly") else 0,
+        "deprecated": 1 if fdef.get("deprecated") else 0,
+        "deprecated_note": _deprecated_note(fdef),
+        "example": _example_json(fdef),
+        "variants_json": json.dumps(variants) if variants else None,
         "description": fdef.get("description"),
     }
 
@@ -177,24 +235,31 @@ _SCHEMA = """
 CREATE TABLE endpoints (
     id INTEGER PRIMARY KEY, platform TEXT, spec_file TEXT, path TEXT, method TEXT,
     operation_id TEXT, summary TEXT, description TEXT, tags TEXT,
-    request_schema TEXT, response_schema TEXT, trust TEXT
+    request_schema TEXT, request_example TEXT, deprecated INTEGER, deprecated_note TEXT, trust TEXT
+);
+CREATE TABLE responses (
+    id INTEGER PRIMARY KEY, endpoint_id INTEGER, status_code TEXT,
+    description TEXT, schema_name TEXT
 );
 CREATE TABLE parameters (
     id INTEGER PRIMARY KEY, endpoint_id INTEGER, name TEXT, location TEXT,
-    required INTEGER, type TEXT, format TEXT, enum_json TEXT, description TEXT
+    required INTEGER, type TEXT, format TEXT, enum_json TEXT, example TEXT,
+    deprecated INTEGER, description TEXT
 );
 CREATE TABLE schemas (
     id INTEGER PRIMARY KEY, platform TEXT, spec_file TEXT, schema_name TEXT,
-    description TEXT, enum_json TEXT, trust TEXT
+    description TEXT, enum_json TEXT, example TEXT, variants TEXT, trust TEXT
 );
 CREATE TABLE fields (
     id INTEGER PRIMARY KEY, schema_id INTEGER, field_name TEXT, type TEXT,
     ref_schema TEXT, item_type TEXT, item_ref TEXT, format TEXT, required INTEGER,
-    "default" TEXT, enum_json TEXT, constraints_json TEXT, description TEXT
+    "default" TEXT, enum_json TEXT, constraints_json TEXT, read_only INTEGER,
+    write_only INTEGER, deprecated INTEGER, deprecated_note TEXT, example TEXT, variants TEXT, description TEXT
 );
 CREATE INDEX idx_endpoints_platform ON endpoints(platform);
 CREATE INDEX idx_endpoints_opid ON endpoints(operation_id);
 CREATE INDEX idx_endpoints_path ON endpoints(path);
+CREATE INDEX idx_responses_endpoint ON responses(endpoint_id);
 CREATE INDEX idx_params_endpoint ON parameters(endpoint_id);
 CREATE INDEX idx_schemas_name ON schemas(platform, schema_name);
 CREATE INDEX idx_fields_schema ON fields(schema_id);
@@ -204,6 +269,7 @@ CREATE VIRTUAL TABLE endpoints_fts USING fts5(text);
 CREATE VIRTUAL TABLE fields_fts USING fts5(text);
 CREATE VIRTUAL TABLE schemas_fts USING fts5(text);
 CREATE VIRTUAL TABLE parameters_fts USING fts5(text);
+CREATE VIRTUAL TABLE responses_fts USING fts5(text);
 """
 
 
@@ -213,7 +279,15 @@ def build(db_path: Path) -> dict[str, int]:
         db_path.unlink()
     con = sqlite3.connect(db_path)
     con.executescript(_SCHEMA)
-    counts = {"specs": 0, "endpoints": 0, "parameters": 0, "schemas": 0, "fields": 0, "skipped": 0}
+    counts = {
+        "specs": 0,
+        "endpoints": 0,
+        "responses": 0,
+        "parameters": 0,
+        "schemas": 0,
+        "fields": 0,
+        "skipped": 0,
+    }
 
     for spec_path in sorted(VENDOR.rglob("*.json")):
         platform = _platform_of(spec_path)
@@ -242,24 +316,19 @@ def build(db_path: Path) -> dict[str, int]:
                 op = path_item.get(method)
                 if not isinstance(op, dict):
                     continue
-                req_name, req_inline = _schema_from_content(spec, op.get("requestBody", {}) or {})
-                resp_name, resp_inline = _response_schema(spec, op)
+                request_body = op.get("requestBody", {}) or {}
+                req_name, req_inline = _schema_from_content(spec, request_body)
                 op_id = op.get("operationId")
-
-                # Synthesize schema rows for inline request/response bodies.
                 synth = op_id or f"{method}:{path}"
                 if req_inline is not None:
                     req_name = _index_inline_schema(
                         con, platform, spec_file, trust, f"{synth}__request", spec, req_inline, counts
                     )
-                if resp_inline is not None:
-                    resp_name = _index_inline_schema(
-                        con, platform, spec_file, trust, f"{synth}__response", spec, resp_inline, counts
-                    )
 
                 cur = con.execute(
                     "INSERT INTO endpoints(platform, spec_file, path, method, operation_id, summary, "
-                    "description, tags, request_schema, response_schema, trust) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    "description, tags, request_schema, request_example, deprecated, deprecated_note, trust) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (
                         platform,
                         spec_file,
@@ -270,7 +339,9 @@ def build(db_path: Path) -> dict[str, int]:
                         op.get("description"),
                         json.dumps(op.get("tags")) if op.get("tags") else None,
                         req_name,
-                        resp_name,
+                        _request_example(spec, request_body),
+                        1 if op.get("deprecated") else 0,
+                        _deprecated_note(op),
                         trust,
                     ),
                 )
@@ -280,6 +351,7 @@ def build(db_path: Path) -> dict[str, int]:
                     "INSERT INTO endpoints_fts(rowid, text) VALUES (?,?)",
                     (eid, f"{path} {op_id or ''} {op.get('summary') or ''} {' '.join(op.get('tags') or [])}"),
                 )
+                _insert_responses(con, spec, platform, spec_file, trust, eid, synth, op, counts)
                 for p in list(shared_params) + list(op.get("parameters", []) or []):
                     _insert_parameter(con, spec, eid, p, counts)
 
@@ -294,7 +366,8 @@ def build(db_path: Path) -> dict[str, int]:
 def _insert_field(con: sqlite3.Connection, schema_id: int, row: dict[str, Any], counts: dict[str, int]) -> None:
     cur = con.execute(
         "INSERT INTO fields(schema_id, field_name, type, ref_schema, item_type, item_ref, format, "
-        'required, "default", enum_json, constraints_json, description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+        'required, "default", enum_json, constraints_json, read_only, write_only, deprecated, '
+        "deprecated_note, example, variants, description) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         (
             schema_id,
             row["field_name"],
@@ -307,6 +380,12 @@ def _insert_field(con: sqlite3.Connection, schema_id: int, row: dict[str, Any], 
             row["default"],
             row["enum_json"],
             row["constraints_json"],
+            row["read_only"],
+            row["write_only"],
+            row["deprecated"],
+            row["deprecated_note"],
+            row["example"],
+            row["variants_json"],
             row["description"],
         ),
     )
@@ -316,6 +395,45 @@ def _insert_field(con: sqlite3.Connection, schema_id: int, row: dict[str, Any], 
         "INSERT INTO fields_fts(rowid, text) VALUES (?,?)",
         (cur.lastrowid, f"{row['field_name']} {row['description'] or ''} {enum_text}"),
     )
+
+
+def _insert_responses(
+    con: sqlite3.Connection,
+    spec: dict[str, Any],
+    platform: str,
+    spec_file: str,
+    trust: str,
+    endpoint_id: int,
+    synth: str,
+    op: dict[str, Any],
+    counts: dict[str, int],
+) -> None:
+    """Record every declared response (all status codes) + its description + body.
+
+    The description is what tells the model "429 = rate limited". The success
+    (2xx) body schema is materialized so its fields are queryable; inline error
+    bodies are not synthesized (keeps the index bounded — ClearPass alone has
+    thousands of error responses).
+    """
+    for code, resp in (op.get("responses") or {}).items():
+        if isinstance(resp, dict) and "$ref" in resp:
+            resp = _resolve_ref(spec, resp["$ref"]) or {}
+        if not isinstance(resp, dict):
+            continue
+        schema_name, inline = _schema_from_content(spec, resp)
+        if inline is not None and str(code).startswith("2"):
+            schema_name = _index_inline_schema(
+                con, platform, spec_file, trust, f"{synth}__resp_{code}", spec, inline, counts
+            )
+        cur = con.execute(
+            "INSERT INTO responses(endpoint_id, status_code, description, schema_name) VALUES (?,?,?,?)",
+            (endpoint_id, str(code), resp.get("description"), schema_name),
+        )
+        counts["responses"] += 1
+        con.execute(
+            "INSERT INTO responses_fts(rowid, text) VALUES (?,?)",
+            (cur.lastrowid, f"{code} {resp.get('description') or ''}"),
+        )
 
 
 def _insert_schema(
@@ -337,9 +455,20 @@ def _insert_schema(
     """
     enum = sdef.get("enum")
     enum_json = json.dumps(enum) if isinstance(enum, list) and enum else None
+    variants = _variant_refs(sdef)
     cur = con.execute(
-        "INSERT INTO schemas(platform, spec_file, schema_name, description, enum_json, trust) VALUES (?,?,?,?,?,?)",
-        (platform, spec_file, name, sdef.get("description"), enum_json, trust),
+        "INSERT INTO schemas(platform, spec_file, schema_name, description, enum_json, example, variants, trust) "
+        "VALUES (?,?,?,?,?,?,?,?)",
+        (
+            platform,
+            spec_file,
+            name,
+            sdef.get("description"),
+            enum_json,
+            _example_json(sdef),
+            json.dumps(variants) if variants else None,
+            trust,
+        ),
     )
     sid = cur.lastrowid
     counts["schemas"] += 1
@@ -377,8 +506,8 @@ def _insert_parameter(
     psch = param.get("schema", {}) or {}
     enum = psch.get("enum")
     cur = con.execute(
-        "INSERT INTO parameters(endpoint_id, name, location, required, type, format, enum_json, description) "
-        "VALUES (?,?,?,?,?,?,?,?)",
+        "INSERT INTO parameters(endpoint_id, name, location, required, type, format, enum_json, "
+        "example, deprecated, description) VALUES (?,?,?,?,?,?,?,?,?,?)",
         (
             endpoint_id,
             param.get("name"),
@@ -387,6 +516,8 @@ def _insert_parameter(
             _as_type(psch.get("type")),
             psch.get("format"),
             json.dumps(enum) if isinstance(enum, list) and enum else None,
+            _example_json(param) or _example_json(psch),
+            1 if param.get("deprecated") else 0,
             param.get("description"),
         ),
     )
