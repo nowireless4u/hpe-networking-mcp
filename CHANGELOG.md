@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.6.0.0] - 2026-07-16
 
-**Feature in progress — spec-lookup index. Not yet released.** A deterministic SQLite/FTS5 index of the vendored OpenAPI corpus, now the single schema source of truth for tool-body enrichment in both tool modes. Held from release until the maintainer signs off on the complete feature.
+**Minor — spec-lookup index (substantial new subsystem): the single schema source of truth for tool-body + error enrichment in both tool modes.** A deterministic SQLite/FTS5 index of the vendored OpenAPI corpus that supersedes the distilled per-platform schema artifacts. It closes the failure that started this — an operator (via a peer's report) couldn't rename a Central-managed AP because the config tools exposed an opaque `payload: dict` with no field set to author against, so field names got guessed against the live tenant.
 
 ### Added
 - **Spec-lookup index** (`scripts/build_spec_index.py` → `src/hpe_networking_mcp/spec_index/`). Parses all 82 vendored specs (aoscx excluded — orphan, no tools) into `endpoints` / `parameters` / `schemas` / `fields` / `responses` tables + FTS5 mirrors: **6,000 endpoints, 17,939 params, 13,656 schemas, 51,916 fields, 39,775 responses**. Captures field types/enums (property- *and* schema-level, resolved via `$ref`), constraints, formats, examples (field + request-body), `readOnly`/`writeOnly`, `deprecated` (+ `x-deprecation-notice`), `oneOf`/`anyOf` variants, `x-supportedDeviceType`, and per-platform source trust. Stdlib-only (`sqlite3`); baked into the image at build time (dedicated Docker stage), gitignored otherwise. Read-only `SpecIndex` query layer degrades to empty (never raises) when absent.
