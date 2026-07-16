@@ -69,6 +69,18 @@ class ValidationCatchMiddleware(Middleware):
             error_text = summarize_validation_errors(tool_name, e.errors())
             logger.debug("ValidationCatchMiddleware: caught {} → {}", tool_name, error_text)
 
+            # Reactive spec-index enrichment: append the legal body field set (and
+            # the documented 422 meaning) so the model can fix an opaque-body
+            # config/write call. Best-effort — never mask the validation error.
+            try:
+                from hpe_networking_mcp.spec_index.error_help import reactive_hint
+
+                hint = reactive_hint(tool_name, _VALIDATION_STATUS)
+            except Exception:  # pragma: no cover - enrichment must never break dispatch
+                hint = None
+            if hint:
+                error_text += hint
+
             # Build a proper envelope so code-mode callers receive a dict
             # via ``call_tool(...)`` instead of a bare string (#309). The
             # text content is preserved for clients that read the text

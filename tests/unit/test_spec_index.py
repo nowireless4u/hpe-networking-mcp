@@ -263,6 +263,45 @@ class TestBodyResolutionParity:
 
 
 @pytest.mark.unit
+class TestReactiveEnrichment:
+    """Reactive all-non-2xx error enrichment (Phase 3)."""
+
+    def test_response_description_representative(self, idx: SpecIndex):
+        desc = idx.response_description("mist", "429")
+        assert desc is not None and "many" in desc.lower()
+
+    def test_response_description_skips_non_representative(self, idx: SpecIndex):
+        # EdgeConnect documents per-endpoint 400s → no dominant description → skip.
+        assert idx.response_description("edgeconnect", "400") is None
+
+    def test_reactive_hint_status_meaning(self, idx: SpecIndex, monkeypatch):
+        from hpe_networking_mcp.spec_index import error_help
+
+        monkeypatch.setattr(error_help, "get_spec_index", lambda: idx)
+        monkeypatch.setattr(ts, "get_spec_index", lambda: idx)
+        hint = error_help.reactive_hint("mist_get_self", 429)
+        assert hint and "429" in hint and "spec-index" in hint
+
+    def test_reactive_hint_input_error_lists_fields(self, idx: SpecIndex, monkeypatch):
+        from hpe_networking_mcp.spec_index import error_help
+
+        monkeypatch.setattr(error_help, "get_spec_index", lambda: idx)
+        monkeypatch.setattr(ts, "get_spec_index", lambda: idx)
+        # Mist body tool (no registry needed) on a 400 lists its body fields.
+        hint = error_help.reactive_hint("mist_create_site_wlan", 400)
+        assert hint and "valid body fields" in hint
+
+    def test_reactive_hint_none_cases(self, idx: SpecIndex, monkeypatch):
+        from hpe_networking_mcp.spec_index import error_help
+
+        monkeypatch.setattr(error_help, "get_spec_index", lambda: idx)
+        monkeypatch.setattr(ts, "get_spec_index", lambda: idx)
+        assert error_help.reactive_hint("mist_get_self", 200) is None  # not an error
+        assert error_help.reactive_hint("unknown_tool", 500) is None  # no platform
+        assert error_help.reactive_hint("", 500) is None
+
+
+@pytest.mark.unit
 class TestGracefulDegradation:
     """A missing index must never raise — enrichment degrades to 'no hint'."""
 

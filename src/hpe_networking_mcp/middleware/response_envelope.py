@@ -339,6 +339,22 @@ class ResponseEnvelopeMiddleware(Middleware):
             )
             logger.debug("response_envelope: wrapped {} (platform={})", tool_name, platform)
 
+        # Reactive spec-index enrichment: on a non-2xx status from a genuine
+        # UPSTREAM error payload (not our own gate/control blocked-states, whose
+        # codes are our semantics, not the API's), append the API's documented
+        # meaning of that code (+ legal body fields for 400/422) so the model
+        # self-corrects instead of retrying blind. Best-effort — never break dispatch.
+        env_status = envelope.get("status")
+        if blocked is None and isinstance(env_status, int) and not (200 <= env_status < 300):
+            try:
+                from hpe_networking_mcp.spec_index.error_help import reactive_hint
+
+                hint = reactive_hint(tool_name, env_status)
+            except Exception:  # pragma: no cover - enrichment must never break dispatch
+                hint = None
+            if hint:
+                envelope["message"] = (envelope.get("message") or "") + hint
+
         return ToolResult(
             content=result.content,
             structured_content=envelope,

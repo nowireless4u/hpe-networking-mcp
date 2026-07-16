@@ -191,6 +191,30 @@ class SpecIndex:
             "parameters": params,
         }
 
+    def response_description(self, platform: str, status_code: str, *, min_share: float = 0.6) -> str | None:
+        """The API's documented meaning of a status code for a platform.
+
+        Returns the most-common response description for ``(platform, code)`` —
+        but only when it dominates (``>= min_share`` of that code's responses),
+        so uniform codes (429/401/403 on most platforms) enrich safely while
+        endpoint-specific ones (EdgeConnect's per-path 400s) return ``None``
+        rather than a misleading generic.
+        """
+        con = self._conn()
+        if con is None:
+            return None
+        rows = con.execute(
+            "SELECT r.description, COUNT(*) c FROM responses r JOIN endpoints e ON r.endpoint_id=e.id "
+            "WHERE e.platform=? AND r.status_code=? AND r.description IS NOT NULL "
+            "GROUP BY r.description ORDER BY c DESC",
+            (platform, str(status_code)),
+        ).fetchall()
+        if not rows:
+            return None
+        total = sum(r["c"] for r in rows)
+        top = rows[0]
+        return top["description"] if total and top["c"] / total >= min_share else None
+
     def operation_schemas(self, platform: str) -> dict[str, str]:
         """``{operation_id: request_schema}`` for a platform's body-bearing endpoints.
 

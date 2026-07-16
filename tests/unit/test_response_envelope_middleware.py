@@ -328,6 +328,30 @@ class TestBlockedStateEnvelope:
         assert env["message"] == "writes are disabled for central"
         assert env["data"] == raw  # original payload preserved under data
 
+    async def test_upstream_error_gets_reactive_hint(self, monkeypatch):
+        """A genuine upstream non-2xx payload is enriched with the spec-index hint."""
+        import hpe_networking_mcp.spec_index.error_help as eh
+
+        monkeypatch.setattr(eh, "reactive_hint", lambda name, code: "  [spec-index] HINT")
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_get_something")
+        raw = {"status_code": 400, "message": "bad"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert "HINT" in (env["message"] or "")
+
+    async def test_blocked_state_not_enriched(self, monkeypatch):
+        """Our own gate/control blocked-states carry our semantics — not enriched."""
+        import hpe_networking_mcp.spec_index.error_help as eh
+
+        monkeypatch.setattr(eh, "reactive_hint", lambda name, code: "  [spec-index] HINT")
+        middleware = ResponseEnvelopeMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        raw = {"status": "forbidden", "message": "writes are disabled"}
+        call_next = AsyncMock(return_value=_make_tool_result(structured=raw))
+        env = (await middleware.on_call_tool(ctx, call_next)).structured_content
+        assert "HINT" not in (env["message"] or "")
+
     @pytest.mark.asyncio
     async def test_confirmation_required_marks_ok_false_4xx(self):
         middleware = ResponseEnvelopeMiddleware()
