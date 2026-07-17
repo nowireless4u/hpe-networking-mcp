@@ -168,6 +168,96 @@ class TestLocalViewRequiresScope:
         assert mock_cmd.call_args.kwargs["api_params"] == {"view-type": "LIBRARY"}
 
 
+class TestHandCuratedReaders:
+    """The hand-curated readers build their own api_path, so the sweep that
+    keyed on ``_get_resource`` callers missed them (#623 follow-up)."""
+
+    @patch(_PATCH_TARGET)
+    async def test_wlan_profiles_forwards_scope_params(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.wlan_profiles import central_get_wlan_profiles
+
+        mock_cmd.return_value = {"code": 200, "msg": {"wlan-ssid": []}}
+        await central_get_wlan_profiles(_ctx(), scope_id="scope-1", effective=True)
+
+        kwargs = mock_cmd.call_args.kwargs
+        assert kwargs["api_path"] == "network-config/v1alpha1/wlan-ssids"
+        assert kwargs["api_params"] == {"scope-id": "scope-1", "effective": True}
+
+    @patch(_PATCH_TARGET)
+    async def test_wlan_profiles_unparameterized_is_unchanged(self, mock_cmd):
+        """The pre-existing no-arg call must behave exactly as before."""
+        from hpe_networking_mcp.platforms.central.tools.wlan_profiles import central_get_wlan_profiles
+
+        mock_cmd.return_value = {"code": 200, "msg": {"wlan-ssid": []}}
+        await central_get_wlan_profiles(_ctx())
+
+        assert mock_cmd.call_args.kwargs["api_params"] is None
+
+    @patch("hpe_networking_mcp.platforms.central.tools.roles.retry_central_command")
+    async def test_role_with_policy_scopes_role_and_policies_alike(self, mock_cmd):
+        """Scope must apply to the policy fetches too — a role read at a site
+        bundled with library policies would describe no real client's access."""
+        from hpe_networking_mcp.platforms.central.tools.roles import central_get_role_with_policy
+
+        mock_cmd.side_effect = [
+            {"code": 200, "msg": {"name": "r1", "policies": [{"name": "p1"}]}},
+            {"code": 200, "msg": {"name": "p1"}},
+        ]
+        await central_get_role_with_policy(_ctx(), name="r1", scope_id="scope-1", effective=True)
+
+        expected = {"scope-id": "scope-1", "effective": True}
+        assert mock_cmd.call_args_list[0].kwargs["api_params"] == expected  # role
+        assert mock_cmd.call_args_list[1].kwargs["api_params"] == expected  # policy
+
+    @patch("hpe_networking_mcp.platforms.central.tools.roles.retry_central_command")
+    async def test_role_with_policy_rejects_local_without_scope(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.roles import central_get_role_with_policy
+
+        with pytest.raises(ToolError) as exc:
+            await central_get_role_with_policy(_ctx(), name="r1", view_type="LOCAL")
+
+        assert exc.value.args[0]["status_code"] == 400
+        mock_cmd.assert_not_called()
+
+    def test_role_with_policy_has_no_pagination(self):
+        """It resolves named objects, not a collection — limit/offset would lie."""
+        import inspect
+
+        from hpe_networking_mcp.platforms.central.tools.roles import central_get_role_with_policy
+
+        params = inspect.signature(central_get_role_with_policy).parameters
+        assert "limit" not in params
+        assert "offset" not in params
+        assert "scope_id" in params
+
+
+class TestConfigAssignments:
+    @patch("hpe_networking_mcp.platforms.central.tools.config_assignments.retry_central_command")
+    async def test_profile_type_is_forwarded(self, mock_cmd):
+        from hpe_networking_mcp.platforms.central.tools.config_assignments import (
+            central_get_config_assignments,
+        )
+
+        mock_cmd.return_value = {"code": 200, "msg": {"config-assignment": []}}
+        await central_get_config_assignments(_ctx(), profile_type="wlan-ssids")
+
+        assert mock_cmd.call_args.kwargs["api_params"] == {"profile-type": "wlan-ssids"}
+
+    @patch("hpe_networking_mcp.platforms.central.tools.config_assignments.retry_central_command")
+    async def test_callable_with_no_filters(self, mock_cmd):
+        """The docstring promises "if omitted, returns all assignments" — the
+        params carried Field(default=None) but no Python default, so a direct
+        call raised TypeError rather than listing everything."""
+        from hpe_networking_mcp.platforms.central.tools.config_assignments import (
+            central_get_config_assignments,
+        )
+
+        mock_cmd.return_value = {"code": 200, "msg": {"config-assignment": []}}
+        await central_get_config_assignments(_ctx())
+
+        assert mock_cmd.call_args.kwargs["api_params"] == {}
+
+
 class TestCoverage:
     """Guard the sweep itself: the params must be on the tools, not just the helper."""
 
@@ -188,11 +278,13 @@ class TestCoverage:
             for name, spec in reg.items()
             if name.startswith("central_get_") and "effective" in inspect.signature(spec.func).parameters
         ]
-        # 209 config-read tools sit on the standard 8-param endpoints. The
+        # 211 config-read tools expose the scope params: 209 on the standard
+        # 8-param endpoints, plus the hand-curated wlan_profiles and
+        # role_with_policy, which build their own api_path. The
         # remaining central_get_* tools are either non-config reads or the
         # cnac-*/device-collections endpoints, which document a different
         # param set (search/sort/next/filter) and are intentionally excluded.
-        assert len(scoped) == 209, f"expected 209 scope-aware config reads, found {len(scoped)}"
+        assert len(scoped) == 211, f"expected 211 scope-aware config reads, found {len(scoped)}"
 
     def test_non_standard_endpoints_do_not_advertise_scope_params(self):
         """cnac-* endpoints ignore scope params upstream; advertising them would mislead."""

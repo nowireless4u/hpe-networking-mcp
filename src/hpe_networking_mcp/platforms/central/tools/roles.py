@@ -11,11 +11,22 @@ API: GET /network-config/v1alpha1/roles/{name},
      GET /network-config/v1alpha1/policies/{name}
 """
 
+from typing import Annotated
+
 from fastmcp import Context
 
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
+from hpe_networking_mcp.platforms.central.tools.security_policy import (
+    _READ_DETAILED_FIELD,
+    _READ_DEVICE_FUNCTION_FIELD,
+    _READ_EFFECTIVE_FIELD,
+    _READ_OBJECT_TYPE_FIELD,
+    _READ_SCOPE_ID_FIELD,
+    _READ_VIEW_TYPE_FIELD,
+    build_config_read_params,
+)
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 
@@ -58,6 +69,12 @@ def _extract_policy_names(role_body: dict) -> list[str]:
 async def central_get_role_with_policy(
     ctx: Context,
     name: str,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
 ) -> dict | str:
     """
     Get a Central role's config bundled with its bound access policies.
@@ -84,6 +101,21 @@ async def central_get_role_with_policy(
         name: Role name as it appears in Central (case-sensitive in the
             REST path). Matches the value pushed by ClearPass via the
             ``Aruba-User-Role`` RADIUS attribute.
+        view_type: ``'LOCAL'`` to resolve at a scope (requires ``scope_id``),
+            or ``'LIBRARY'`` for the shared library.
+        object_type: Filter to ``'LOCAL'`` or ``'SHARED'`` objects.
+        scope_id: Scope to resolve the role and its policies at. Required with
+            ``view_type='LOCAL'``. Get IDs from ``central_get_scope_tree``.
+        device_function: Filter to a device function.
+        effective: ``True`` for effective (inherited/merged) config — what a
+            client at this scope actually gets; ``False`` for only what is
+            committed here.
+        detailed: ``True`` to annotate results with scope/device-function
+            origin.
+
+        The scope parameters apply to **both** the role and its bound policies,
+        so the bundle describes one consistent view. ``limit``/``offset`` are
+        deliberately absent — this resolves named objects, not a collection.
 
     Returns:
         Dict with keys:
@@ -105,6 +137,18 @@ async def central_get_role_with_policy(
     """
     conn = get_central_conn(ctx)
 
+    # Resolve the role and its policies from the same scope/view — a role read
+    # at a site and its policies read from the library would not describe any
+    # real client's access. Raises 400 for view_type='LOCAL' without scope_id.
+    api_params = build_config_read_params(
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+    )
+
     result: dict = {
         "name": name,
         "role": None,
@@ -121,6 +165,7 @@ async def central_get_role_with_policy(
             central_conn=conn,
             api_method="GET",
             api_path=role_path,
+            api_params=api_params or None,
         )
         body = response.get("msg")
         # Central returns 200 + empty dict for "not present" on this endpoint.
@@ -140,6 +185,7 @@ async def central_get_role_with_policy(
                 central_conn=conn,
                 api_method="GET",
                 api_path=policy_path,
+                api_params=api_params or None,
             )
             body = response.get("msg")
             if isinstance(body, dict) and body:

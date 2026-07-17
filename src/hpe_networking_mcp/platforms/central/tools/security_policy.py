@@ -92,6 +92,69 @@ _READ_OFFSET_FIELD = Field(
 # ---------------------------------------------------------------------------
 
 
+def build_config_read_params(
+    *,
+    view_type: str | None = None,
+    object_type: str | None = None,
+    scope_id: str | None = None,
+    device_function: str | None = None,
+    effective: bool | None = None,
+    detailed: bool | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+) -> dict:
+    """Build the kebab-case query dict for a network-config/v1alpha1 GET.
+
+    Shared by ``_get_resource`` and the hand-curated config readers that can't
+    delegate to it (composite fetchers that collect per-resource errors instead
+    of raising). Keeping the rules here means the two upstream quirks below are
+    enforced once rather than re-derived per tool.
+
+    Both quirks were confirmed against the live API, which **ignores** unknown
+    or incomplete query params rather than erroring — so getting either wrong
+    fails silently with plausible-looking data:
+
+    * ``limit`` is only honored when ``offset`` is also sent. On its own it is
+      ignored and the full collection comes back, so a caller who asked for a
+      page silently receives everything. A ``limit`` without an ``offset``
+      therefore defaults the offset to 0.
+    * ``view_type='LOCAL'`` without a ``scope_id`` returns *another* scope's
+      configuration instead of failing, so it is rejected.
+
+    Returns:
+        Query params with ``None`` values omitted, so the API's own defaults
+        apply for anything the caller didn't ask for.
+
+    Raises:
+        ToolError: 400 when ``view_type='LOCAL'`` is given without ``scope_id``.
+    """
+    if view_type and view_type.upper() == "LOCAL" and not scope_id:
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": (
+                    "view_type='LOCAL' requires scope_id — without it the API returns "
+                    "a different scope's configuration instead of failing."
+                ),
+            }
+        )
+
+    if limit is not None and offset is None:
+        offset = 0
+
+    params = {
+        "view-type": view_type,
+        "object-type": object_type,
+        "scope-id": scope_id,
+        "device-function": device_function,
+        "effective": effective,
+        "detailed": detailed,
+        "limit": limit,
+        "offset": offset,
+    }
+    return {k: v for k, v in params.items() if v is not None}
+
+
 async def _get_resource(
     ctx: Context,
     api_base: str,
@@ -109,50 +172,26 @@ async def _get_resource(
     """Generic GET for /network-config/v1alpha1/{api_base}[/{name}].
 
     The keyword-only arguments map to the query parameters documented on every
-    ``network-config/v1alpha1`` GET endpoint. ``None`` values are omitted from
-    the request, so the API's own defaults apply.
-
-    Two upstream quirks are normalized here (both confirmed against the live
-    API, which ignores unknown/incomplete query params rather than erroring):
-
-    * ``limit`` is only honored when ``offset`` is also sent — on its own it is
-      silently ignored and the full collection comes back. A ``limit`` without
-      an ``offset`` therefore defaults the offset to 0 so the caller gets the
-      page size they asked for instead of everything.
-    * ``view_type='LOCAL'`` without a ``scope_id`` returns another scope's
-      configuration instead of failing, so it is rejected here.
+    ``network-config/v1alpha1`` GET endpoint; see
+    :func:`build_config_read_params` for how they're normalized.
 
     Raises:
         ToolError: 400 when ``view_type='LOCAL'`` is requested without a
-            ``scope_id``.
+            ``scope_id``; the upstream status when the GET itself fails.
     """
-    if view_type and view_type.upper() == "LOCAL" and not scope_id:
-        raise ToolError(
-            {
-                "status_code": 400,
-                "message": (
-                    "view_type='LOCAL' requires scope_id — without it the API returns "
-                    "a different scope's configuration instead of failing."
-                ),
-            }
-        )
-
-    if limit is not None and offset is None:
-        offset = 0
+    api_params = build_config_read_params(
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
     conn = get_central_conn(ctx)
     api_path = f"network-config/v1alpha1/{api_base}/{path_seg(name)}" if name else f"network-config/v1alpha1/{api_base}"
-    api_params: dict = {
-        "view-type": view_type,
-        "object-type": object_type,
-        "scope-id": scope_id,
-        "device-function": device_function,
-        "effective": effective,
-        "detailed": detailed,
-        "limit": limit,
-        "offset": offset,
-    }
-    api_params = {k: v for k, v in api_params.items() if v is not None}
     response = await retry_central_command(
         central_conn=conn,
         api_method="GET",

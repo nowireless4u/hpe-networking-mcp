@@ -55,7 +55,7 @@ async def central_get_config_assignments(
             ),
             default=None,
         ),
-    ],
+    ] = None,
     device_function: Annotated[
         str | None,
         Field(
@@ -66,7 +66,19 @@ async def central_get_config_assignments(
             ),
             default=None,
         ),
-    ],
+    ] = None,
+    profile_type: Annotated[
+        str | None,
+        Field(
+            description=(
+                "Profile type filter — return only assignments of this profile "
+                "type (e.g. 'wlan-ssids', 'roles', 'policies'), matching the "
+                "'profile-type' field of the returned entries. If omitted, "
+                "returns assignments of every profile type."
+            ),
+            default=None,
+        ),
+    ] = None,
 ) -> dict | list | str:
     """
     Get configuration assignments from Aruba Central.
@@ -78,6 +90,7 @@ async def central_get_config_assignments(
     Parameters:
         scope_id: Filter by scope ID. Get IDs from central_get_scope_tree.
         device_function: Filter by device function (e.g. CAMPUS_AP for WLANs).
+        profile_type: Filter by profile type (e.g. 'wlan-ssids', 'roles').
 
     Returns:
         List of config-assignment entries with scope-id, device-function,
@@ -90,6 +103,8 @@ async def central_get_config_assignments(
         api_params["scope-id"] = scope_id
     if device_function:
         api_params["device-function"] = device_function
+    if profile_type:
+        api_params["profile-type"] = profile_type
 
     response = await retry_central_command(
         central_conn=conn,
