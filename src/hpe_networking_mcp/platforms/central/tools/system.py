@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -94,6 +95,7 @@ async def central_manage_ap_system(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -112,6 +114,7 @@ async def central_manage_ap_system(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -172,6 +175,7 @@ async def central_manage_container_networks(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -190,6 +194,7 @@ async def central_manage_container_networks(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -248,6 +253,7 @@ async def central_manage_containers(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -266,6 +272,7 @@ async def central_manage_containers(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -324,6 +331,7 @@ async def central_manage_countermon(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -342,6 +350,7 @@ async def central_manage_countermon(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -434,6 +443,7 @@ async def central_manage_db_observer(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -452,6 +462,7 @@ async def central_manage_db_observer(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -510,6 +521,7 @@ async def central_manage_ddns(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -528,6 +540,7 @@ async def central_manage_ddns(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -586,6 +599,7 @@ async def central_manage_dns(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -604,6 +618,7 @@ async def central_manage_dns(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -662,6 +677,7 @@ async def central_manage_dump_server(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -680,6 +696,7 @@ async def central_manage_dump_server(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -738,6 +755,7 @@ async def central_manage_gw_system(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -756,6 +774,7 @@ async def central_manage_gw_system(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -814,6 +833,7 @@ async def central_manage_hardware_modules(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -832,6 +852,7 @@ async def central_manage_hardware_modules(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -890,6 +911,7 @@ async def central_manage_http_proxy_servers(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -908,6 +930,7 @@ async def central_manage_http_proxy_servers(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -966,6 +989,7 @@ async def central_manage_ip_source_interfaces(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -984,6 +1008,7 @@ async def central_manage_ip_source_interfaces(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1042,6 +1067,7 @@ async def central_manage_ipm(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1060,6 +1086,7 @@ async def central_manage_ipm(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1118,6 +1145,7 @@ async def central_manage_job_scheduler(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1136,6 +1164,7 @@ async def central_manage_job_scheduler(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1194,6 +1223,7 @@ async def central_manage_local_management(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1212,6 +1242,7 @@ async def central_manage_local_management(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1270,6 +1301,7 @@ async def central_manage_logging(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1288,6 +1320,7 @@ async def central_manage_logging(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1346,6 +1379,7 @@ async def central_manage_management_server(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1364,6 +1398,7 @@ async def central_manage_management_server(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1422,6 +1457,7 @@ async def central_manage_management_user_groups(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1440,6 +1476,7 @@ async def central_manage_management_user_groups(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1498,6 +1535,7 @@ async def central_manage_management_users(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1516,6 +1554,7 @@ async def central_manage_management_users(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1574,6 +1613,7 @@ async def central_manage_nae_agents(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1592,6 +1632,7 @@ async def central_manage_nae_agents(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1650,6 +1691,7 @@ async def central_manage_nae_scripts(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1668,6 +1710,7 @@ async def central_manage_nae_scripts(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1726,6 +1769,7 @@ async def central_manage_ntp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1744,6 +1788,7 @@ async def central_manage_ntp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1802,6 +1847,7 @@ async def central_manage_packet_capture(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1820,6 +1866,7 @@ async def central_manage_packet_capture(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1878,6 +1925,7 @@ async def central_manage_remote_management(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1896,6 +1944,7 @@ async def central_manage_remote_management(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1954,6 +2003,7 @@ async def central_manage_rmon_alarms(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1972,6 +2022,7 @@ async def central_manage_rmon_alarms(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2030,6 +2081,7 @@ async def central_manage_snmp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2048,6 +2100,7 @@ async def central_manage_snmp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2106,6 +2159,7 @@ async def central_manage_snmp_trap(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2124,6 +2178,7 @@ async def central_manage_snmp_trap(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2182,6 +2237,7 @@ async def central_manage_speed_test(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2200,6 +2256,7 @@ async def central_manage_speed_test(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2260,6 +2317,7 @@ async def central_manage_switch_chassis(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2278,6 +2336,7 @@ async def central_manage_switch_chassis(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2336,6 +2395,7 @@ async def central_manage_switch_profiles(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2354,6 +2414,7 @@ async def central_manage_switch_profiles(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2412,6 +2473,7 @@ async def central_manage_switch_system(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2430,6 +2492,7 @@ async def central_manage_switch_system(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2488,6 +2551,7 @@ async def central_manage_sysmon(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2506,6 +2570,7 @@ async def central_manage_sysmon(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2558,6 +2623,7 @@ async def central_manage_system_info(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2576,6 +2642,7 @@ async def central_manage_system_info(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2634,6 +2701,7 @@ async def central_manage_telemetry(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2652,6 +2720,7 @@ async def central_manage_telemetry(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -2710,6 +2779,7 @@ async def central_manage_time_ranges(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -2728,4 +2798,5 @@ async def central_manage_time_ranges(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

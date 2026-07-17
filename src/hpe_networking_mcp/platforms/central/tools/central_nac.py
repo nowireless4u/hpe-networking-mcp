@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -134,6 +135,7 @@ async def central_manage_auth_profiles(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -152,6 +154,7 @@ async def central_manage_auth_profiles(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -210,6 +213,7 @@ async def central_manage_authz_policies(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -228,6 +232,7 @@ async def central_manage_authz_policies(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -288,6 +293,7 @@ async def central_manage_custom_messages(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -306,6 +312,7 @@ async def central_manage_custom_messages(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -366,6 +373,7 @@ async def central_manage_default_custom_messages(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -384,6 +392,7 @@ async def central_manage_default_custom_messages(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -442,6 +451,7 @@ async def central_manage_identity_stores(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -460,6 +470,7 @@ async def central_manage_identity_stores(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -520,6 +531,7 @@ async def central_manage_message_providers(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -538,6 +550,7 @@ async def central_manage_message_providers(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -596,6 +609,7 @@ async def central_manage_overrides(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -614,6 +628,7 @@ async def central_manage_overrides(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -672,6 +687,7 @@ async def central_manage_portals(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -690,6 +706,7 @@ async def central_manage_portals(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -748,6 +765,7 @@ async def central_manage_skins(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -766,6 +784,7 @@ async def central_manage_skins(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -824,6 +843,7 @@ async def central_manage_static_tag(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -842,4 +862,5 @@ async def central_manage_static_tag(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

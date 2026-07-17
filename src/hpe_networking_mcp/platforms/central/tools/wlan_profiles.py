@@ -15,6 +15,8 @@ from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
+    _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -23,7 +25,9 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _READ_OFFSET_FIELD,
     _READ_SCOPE_ID_FIELD,
     _READ_VIEW_TYPE_FIELD,
+    _SCOPE_ID_FIELD,
     _get_resource,
+    build_config_write_params,
 )
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
@@ -149,6 +153,9 @@ async def central_manage_wlan_profile(
             default=False,
         ),
     ] = False,
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[
         bool,
         Field(
@@ -237,6 +244,10 @@ async def central_manage_wlan_profile(
     if action_type != "delete":
         api_data = payload
 
+    # Scope selection (LOCAL vs SHARED library) — same rules as every other
+    # config write; raises 400 on an inconsistent object_type/scope combination.
+    api_params = build_config_write_params(object_type=object_type, scope_id=scope_id, device_function=device_function)
+
     logger.info("Central WLAN: {} '{}' — path: {}", api_method, ssid, api_path)
 
     response = await retry_central_command(
@@ -244,6 +255,7 @@ async def central_manage_wlan_profile(
         api_method=api_method,
         api_path=api_path,
         api_data=api_data,
+        api_params=api_params or None,
     )
 
     code = response.get("code", 0)

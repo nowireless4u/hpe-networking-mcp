@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -94,6 +95,7 @@ async def central_manage_aliases(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -112,6 +114,7 @@ async def central_manage_aliases(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -170,6 +173,7 @@ async def central_manage_named_conditions(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -188,6 +192,7 @@ async def central_manage_named_conditions(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -246,6 +251,7 @@ async def central_manage_net_services(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -264,4 +270,5 @@ async def central_manage_net_services(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -88,6 +89,7 @@ async def central_manage_device_firmware(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -106,6 +108,7 @@ async def central_manage_device_firmware(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -164,6 +167,7 @@ async def central_manage_dsm(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -182,6 +186,7 @@ async def central_manage_dsm(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -234,6 +239,7 @@ async def central_manage_features(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -252,6 +258,7 @@ async def central_manage_features(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -310,6 +317,7 @@ async def central_manage_node_operations(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -328,6 +336,7 @@ async def central_manage_node_operations(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -386,6 +395,7 @@ async def central_manage_overlay_wlan(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -404,6 +414,7 @@ async def central_manage_overlay_wlan(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -462,6 +473,7 @@ async def central_manage_vsx_config(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -480,6 +492,7 @@ async def central_manage_vsx_config(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -538,6 +551,7 @@ async def central_manage_vxlan(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -556,4 +570,5 @@ async def central_manage_vxlan(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

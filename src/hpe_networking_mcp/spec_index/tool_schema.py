@@ -33,7 +33,26 @@ _CENTRAL_RESOURCE_RE = re.compile(r'_(?:get|manage)_resource\(\s*ctx,\s*["\']([\
 # Hand-curated config tools call the API directly with an explicit path rather
 # than ``_manage_resource`` — read the resource segment out of that path.
 _CENTRAL_PATH_RE = re.compile(r"network-config/v[\w.]+/([\w-]+)")
+# Some hand-curated tools hit a *nested* endpoint on a different namespace
+# (e.g. ``network-monitoring/v1/sitemaps/{site-id}/buildings/{building-id}``)
+# that neither pattern above matches. Capture the whole literal ``api_path`` so
+# the resource segment can be taken from the tail of the path instead.
+_CENTRAL_LITERAL_PATH_RE = re.compile(r'api_path\s*=\s*f?["\']([^"\'{][^"\']*)["\']')
 _central_segment_cache: dict[str, str | None] = {}
+
+
+def _tail_segment(path_template: str) -> str | None:
+    """Last non-parameter segment of a URL path template.
+
+    ``.../sitemaps/{site-id}/buildings/{building-id}`` → ``buildings``. That
+    segment is what ``config_body`` matches on (``path LIKE '%/buildings/%'``),
+    so it resolves the write body for nested endpoints the flat network-config
+    patterns miss.
+    """
+    segs = [s for s in path_template.split("/") if s and not s.startswith("{")]
+    # Skip the version-prefix segments (namespace + ``v1``/``v1alpha1``).
+    meaningful = [s for s in segs if not re.fullmatch(r"v[\w.]+", s)]
+    return meaningful[-1] if meaningful else None
 
 
 def _central_segment(tool_name: str) -> str | None:
@@ -55,6 +74,11 @@ def _central_segment(tool_name: str) -> str | None:
             match = _CENTRAL_RESOURCE_RE.search(src) or _CENTRAL_PATH_RE.search(src)
             if match:
                 seg = match.group(1)
+            else:
+                # Nested / non-config path — take the tail resource segment.
+                lit = _CENTRAL_LITERAL_PATH_RE.search(src)
+                if lit:
+                    seg = _tail_segment(lit.group(1))
     except Exception:
         seg = None
     if seg is None:  # fall back to the name convention (covers regular tools pre-registration)
@@ -152,7 +176,11 @@ def render_payload_schema(tool_name: str, schema: dict[str, Any]) -> str:
         if f.get("description"):
             line += f" — {f['description']}"
         lines.append(line)
-    if schema.get("scope_parameters"):
-        scope = ", ".join(f"{p['name']}{'*' if p['required'] else ''}" for p in schema["scope_parameters"])
-        lines.append(f"scope query params: {scope}   (* = required)")
+    # Query/scope params (object-type, scope-id, device-function, …) are
+    # intentionally NOT rendered here: the tool signature declares them, so they
+    # already appear in the tool's own input_schema. Advertising them a second
+    # time from the spec index is what let get_schema list a parameter the
+    # wrapper didn't accept — the "advertised but rejected" mismatch. The index
+    # owns the request body (which the opaque payload: dict can't express); the
+    # tool owns its parameters.
     return "\n".join(lines)

@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -94,6 +95,7 @@ async def central_manage_client_insight(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -112,6 +114,7 @@ async def central_manage_client_insight(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -170,6 +173,7 @@ async def central_manage_client_iptracker(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -188,6 +192,7 @@ async def central_manage_client_iptracker(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -248,6 +253,7 @@ async def central_manage_client_iptracker_interface(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -266,6 +272,7 @@ async def central_manage_client_iptracker_interface(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -324,6 +331,7 @@ async def central_manage_devicefingerprinting(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -342,6 +350,7 @@ async def central_manage_devicefingerprinting(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -402,6 +411,7 @@ async def central_manage_devicefingerprinting_interface(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -420,6 +430,7 @@ async def central_manage_devicefingerprinting_interface(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -480,6 +491,7 @@ async def central_manage_devicefingerprinting_profile(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -498,6 +510,7 @@ async def central_manage_devicefingerprinting_profile(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -556,6 +569,7 @@ async def central_manage_flow_tracking(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -574,6 +588,7 @@ async def central_manage_flow_tracking(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -632,6 +647,7 @@ async def central_manage_ipfix_flow_exporter(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -650,6 +666,7 @@ async def central_manage_ipfix_flow_exporter(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -708,6 +725,7 @@ async def central_manage_traffic_insight(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -726,4 +744,5 @@ async def central_manage_traffic_insight(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

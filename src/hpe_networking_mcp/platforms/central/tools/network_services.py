@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -94,6 +95,7 @@ async def central_manage_dhcp_pool(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -112,6 +114,7 @@ async def central_manage_dhcp_pool(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -170,6 +173,7 @@ async def central_manage_dhcp_relay(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -188,6 +192,7 @@ async def central_manage_dhcp_relay(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -246,6 +251,7 @@ async def central_manage_dhcp_server(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -264,6 +270,7 @@ async def central_manage_dhcp_server(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -322,6 +329,7 @@ async def central_manage_dhcp_snooping(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -340,6 +348,7 @@ async def central_manage_dhcp_snooping(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -398,6 +407,7 @@ async def central_manage_dhcp_snooping_interface(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -416,6 +426,7 @@ async def central_manage_dhcp_snooping_interface(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -476,6 +487,7 @@ async def central_manage_dynamic_arp_inspection_interface(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -494,6 +506,7 @@ async def central_manage_dynamic_arp_inspection_interface(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -552,6 +565,7 @@ async def central_manage_external_storage(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -570,6 +584,7 @@ async def central_manage_external_storage(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -628,6 +643,7 @@ async def central_manage_ip_source_lockdown(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -646,6 +662,7 @@ async def central_manage_ip_source_lockdown(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -706,6 +723,7 @@ async def central_manage_ip_source_lockdown_interface(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -724,6 +742,7 @@ async def central_manage_ip_source_lockdown_interface(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -782,6 +801,7 @@ async def central_manage_ipsla(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -800,6 +820,7 @@ async def central_manage_ipsla(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -858,6 +879,7 @@ async def central_manage_mgmd_global(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -876,6 +898,7 @@ async def central_manage_mgmd_global(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -934,6 +957,7 @@ async def central_manage_multicast_dns(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -952,6 +976,7 @@ async def central_manage_multicast_dns(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1010,6 +1035,7 @@ async def central_manage_nae_lite(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1028,6 +1054,7 @@ async def central_manage_nae_lite(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1086,6 +1113,7 @@ async def central_manage_nd_snooping(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1104,6 +1132,7 @@ async def central_manage_nd_snooping(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1162,6 +1191,7 @@ async def central_manage_nd_snooping_interface(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1180,6 +1210,7 @@ async def central_manage_nd_snooping_interface(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1238,6 +1269,7 @@ async def central_manage_ptp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1256,6 +1288,7 @@ async def central_manage_ptp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1314,6 +1347,7 @@ async def central_manage_qos_global(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1332,6 +1366,7 @@ async def central_manage_qos_global(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1392,6 +1427,7 @@ async def central_manage_qos_queues(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1410,6 +1446,7 @@ async def central_manage_qos_queues(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1470,6 +1507,7 @@ async def central_manage_qos_schedules(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1488,6 +1526,7 @@ async def central_manage_qos_schedules(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1548,6 +1587,7 @@ async def central_manage_qos_thresholds(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1566,6 +1606,7 @@ async def central_manage_qos_thresholds(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1629,6 +1670,7 @@ async def central_manage_source_ip_bindings(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1647,6 +1689,7 @@ async def central_manage_source_ip_bindings(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1705,6 +1748,7 @@ async def central_manage_udp_broadcast_forwarders(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1723,4 +1767,5 @@ async def central_manage_udp_broadcast_forwarders(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

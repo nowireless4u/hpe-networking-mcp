@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -96,6 +97,7 @@ async def central_manage_ap_port_profiles(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -114,6 +116,7 @@ async def central_manage_ap_port_profiles(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -172,6 +175,7 @@ async def central_manage_ap_uplinks(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -190,6 +194,7 @@ async def central_manage_ap_uplinks(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -248,6 +253,7 @@ async def central_manage_cdp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -266,6 +272,7 @@ async def central_manage_cdp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -324,6 +331,7 @@ async def central_manage_device_profile(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -342,6 +350,7 @@ async def central_manage_device_profile(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -400,6 +409,7 @@ async def central_manage_dhcp_client(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -418,6 +428,7 @@ async def central_manage_dhcp_client(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -476,6 +487,7 @@ async def central_manage_ethernet_interfaces(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -494,6 +506,7 @@ async def central_manage_ethernet_interfaces(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -552,6 +565,7 @@ async def central_manage_fault_monitor(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -570,6 +584,7 @@ async def central_manage_fault_monitor(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -630,6 +645,7 @@ async def central_manage_gw_port_profiles(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -648,6 +664,7 @@ async def central_manage_gw_port_profiles(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -706,6 +723,7 @@ async def central_manage_interface_profiles(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -724,6 +742,7 @@ async def central_manage_interface_profiles(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -776,6 +795,7 @@ async def central_manage_lacp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -794,6 +814,7 @@ async def central_manage_lacp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -852,6 +873,7 @@ async def central_manage_lldp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -870,6 +892,7 @@ async def central_manage_lldp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -928,6 +951,7 @@ async def central_manage_loopback_interfaces(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -946,6 +970,7 @@ async def central_manage_loopback_interfaces(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1004,6 +1029,7 @@ async def central_manage_mgmt_interfaces(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1022,6 +1048,7 @@ async def central_manage_mgmt_interfaces(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1080,6 +1107,7 @@ async def central_manage_mirror_endpoint(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1098,6 +1126,7 @@ async def central_manage_mirror_endpoint(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1156,6 +1185,7 @@ async def central_manage_mirrors(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1174,6 +1204,7 @@ async def central_manage_mirrors(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1232,6 +1263,7 @@ async def central_manage_portchannels(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1250,6 +1282,7 @@ async def central_manage_portchannels(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1308,6 +1341,7 @@ async def central_manage_sflow(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1326,6 +1360,7 @@ async def central_manage_sflow(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1384,6 +1419,7 @@ async def central_manage_static_macs(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1402,6 +1438,7 @@ async def central_manage_static_macs(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1462,6 +1499,7 @@ async def central_manage_sub_interfaces(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1480,6 +1518,7 @@ async def central_manage_sub_interfaces(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1540,6 +1579,7 @@ async def central_manage_sw_port_profiles(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1558,6 +1598,7 @@ async def central_manage_sw_port_profiles(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1616,6 +1657,7 @@ async def central_manage_ufd(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1634,6 +1676,7 @@ async def central_manage_ufd(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1692,6 +1735,7 @@ async def central_manage_vlan_interfaces(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1710,4 +1754,5 @@ async def central_manage_vlan_interfaces(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )

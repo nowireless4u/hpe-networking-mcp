@@ -224,7 +224,27 @@ class TestConfigBodyProvider:
         text = ts.render_payload_schema("central_manage_system_info", body)
         assert "PAYLOAD SCHEMA for central_manage_system_info" in text
         assert "hostname" in text
-        assert "scope query params" in text
+
+    def test_render_omits_scope_query_params(self, idx: SpecIndex):
+        """The render describes the request body only. Scope/query params are
+        declared on the tool signature (they show in its input_schema), so the
+        index must not advertise them a second time — that double-advertising is
+        what let get_schema list a parameter the wrapper rejected."""
+        body = idx.config_body("central", "roles")
+        text = ts.render_payload_schema("central_manage_roles", body)
+        assert "scope query params" not in text
+        assert "object-type" not in text
+        # the body field set is still rendered
+        assert "PAYLOAD SCHEMA for central_manage_roles" in text
+
+    def test_tail_segment_of_nested_path(self):
+        """Nested / non-config paths resolve their body via the tail resource
+        segment (the flat network-config patterns miss them), so the MRT
+        sitemap write tools stop flying blind."""
+        assert ts._tail_segment("network-monitoring/v1/sitemaps/{site-id}/buildings/{building-id}") == "buildings"
+        assert ts._tail_segment("network-monitoring/v1/sitemaps/{site-id}/floors/{floor-id}/walls") == "walls"
+        assert ts._tail_segment("network-services/v1/webhooks/{id}") == "webhooks"
+        assert ts._tail_segment("") is None
 
 
 @pytest.mark.unit

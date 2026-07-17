@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.2.0] - 2026-07-17
+
+**Config-tool parameter architecture: the tool declares its parameters, the spec index describes its body.** Completes the write half of the config-tool audit. Reads gained their query params in #624/#626; this does the same for writes and reconciles the two so the spec-index enrichment can no longer advertise a parameter the wrapper rejects.
+
+### Added
+- **`object_type` on all 218 config-write tools** (`central_manage_*`, including the hand-curated `central_manage_wlan_profile`). The OAS documents `object-type` (`LOCAL` | `SHARED`, default `SHARED`) on every `network-config/v1alpha1` write, with `scope-id`/`device-function` mandatory for `LOCAL` and forbidden for `SHARED`. The tools previously **hardcoded `object-type=LOCAL`**, so creating a `SHARED` (library) object was impossible, and they silently dropped both scope params when only one was supplied — landing the write at the wrong scope, because the API ignores partial query params. A shared `build_config_write_params` helper now centralizes the rule: `SHARED` reachable and the default, `LOCAL` requires both scope params, and any inconsistent combination raises a 400 instead of failing silently. Backward compatible — a scoped write with no explicit `object_type` still resolves to `LOCAL`. Live-verified: a `SHARED` net-group create → read-back → delete round-trip now succeeds (was previously unreachable).
+
+### Fixed
+- **9 more write tools resolve a payload schema.** The MRT sitemap/floor/building/webhook writes (`central_manage_building`, `_floor`, `_floor_walls`, `_floor_zones`, `_device_location`, `_sitemap_devices`, `_asset_tag_metadata`, `_notification_rule`, plus the `network-services` webhook) hit nested `network-monitoring/v1/...` paths that the flat network-config segment resolver couldn't map, so `get_schema` returned no body guidance and the model authored those bodies blind. `_central_segment` now falls back to the tail resource segment of any literal `api_path`, resolving them against the (already-vendored) spec. Body coverage for body-bearing writes is now 231/232 — the one remaining (`central_manage_cnac_job`) has no write body documented in the vendored spec.
+- **The spec-index enrichment no longer advertises query params.** `render_payload_schema` described the request body **and** re-listed the scope query params (`object-type`, `scope-id`, `device-function`). Since the tool signature now declares those, they already appear in the tool's own `input_schema`; the index re-advertising them is what let `get_schema` list a parameter the wrapper rejected (the `extra_forbidden` failure). The index now renders the **body only** — the tool owns its parameters, the index owns the body it can't inline.
+
 ## [3.6.1.1] - 2026-07-17
 
 Follow-up to #624 (Central config-read query params). Closes the read-param gaps in the hand-curated readers that the #624 sweep missed, and fixes three PII-tokenization defects plus one code-mode error-handling defect surfaced while testing those params against a live tenant.

@@ -26,6 +26,7 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _OBJECT_TYPE_FIELD,
     _READ_DETAILED_FIELD,
     _READ_DEVICE_FUNCTION_FIELD,
     _READ_EFFECTIVE_FIELD,
@@ -96,6 +97,7 @@ async def central_manage_advanced_intelligent_forwarding(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -114,6 +116,7 @@ async def central_manage_advanced_intelligent_forwarding(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -174,6 +177,7 @@ async def central_manage_aspath_lists(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -192,6 +196,7 @@ async def central_manage_aspath_lists(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -250,6 +255,7 @@ async def central_manage_bfd(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -268,6 +274,7 @@ async def central_manage_bfd(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -326,6 +333,7 @@ async def central_manage_bgp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -344,6 +352,7 @@ async def central_manage_bgp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -407,6 +416,7 @@ async def central_manage_community_lists(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -425,6 +435,7 @@ async def central_manage_community_lists(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -483,6 +494,7 @@ async def central_manage_evpn(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -501,6 +513,7 @@ async def central_manage_evpn(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -559,6 +572,7 @@ async def central_manage_ip_routing(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -577,6 +591,7 @@ async def central_manage_ip_routing(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -635,6 +650,7 @@ async def central_manage_l3_route(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -653,6 +669,7 @@ async def central_manage_l3_route(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -711,6 +728,7 @@ async def central_manage_mpls(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -729,6 +747,7 @@ async def central_manage_mpls(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -787,6 +806,7 @@ async def central_manage_msdp(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -805,6 +825,7 @@ async def central_manage_msdp(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -863,6 +884,7 @@ async def central_manage_multicast_global(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -881,6 +903,7 @@ async def central_manage_multicast_global(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -939,6 +962,7 @@ async def central_manage_multicast_static_route(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -957,6 +981,7 @@ async def central_manage_multicast_static_route(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1015,6 +1040,7 @@ async def central_manage_nexthop_groups(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1033,6 +1059,7 @@ async def central_manage_nexthop_groups(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1091,6 +1118,7 @@ async def central_manage_ospfv2(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1109,6 +1137,7 @@ async def central_manage_ospfv2(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1167,6 +1196,7 @@ async def central_manage_ospfv3(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1185,6 +1215,7 @@ async def central_manage_ospfv3(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1243,6 +1274,7 @@ async def central_manage_pim_router(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1261,6 +1293,7 @@ async def central_manage_pim_router(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1321,6 +1354,7 @@ async def central_manage_prefix_lists(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1339,6 +1373,7 @@ async def central_manage_prefix_lists(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1397,6 +1432,7 @@ async def central_manage_rip(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1415,6 +1451,7 @@ async def central_manage_rip(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1475,6 +1512,7 @@ async def central_manage_route_maps(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1493,6 +1531,7 @@ async def central_manage_route_maps(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1551,6 +1590,7 @@ async def central_manage_static_route(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1569,6 +1609,7 @@ async def central_manage_static_route(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1629,6 +1670,7 @@ async def central_manage_tracking_object(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1647,6 +1689,7 @@ async def central_manage_tracking_object(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
 
 
@@ -1705,6 +1748,7 @@ async def central_manage_vrfs(
             )
         ),
     ],
+    object_type: Annotated[str | None, _OBJECT_TYPE_FIELD] = None,
     scope_id: Annotated[str | None, _SCOPE_ID_FIELD] = None,
     device_function: Annotated[str | None, _DEVICE_FUNCTION_FIELD] = None,
     confirmed: Annotated[bool, _CONFIRMED_FIELD] = False,
@@ -1723,4 +1767,5 @@ async def central_manage_vrfs(
         scope_id,
         device_function,
         confirmed,
+        object_type=object_type,
     )
