@@ -43,11 +43,17 @@ from hpe_networking_mcp.redaction.safe_summary import summarize_validation_error
 # tree consistent across validation rejections and upstream API 422s.
 _VALIDATION_STATUS = 422
 
-# ``input_value=...`` / ``input_type=...`` fragments in a rendered pydantic /
-# FastMCP validation message can echo the rejected value verbatim — a PSK,
-# token, or password the caller mis-supplied. Strip them before the message is
-# shown to the model or written to a log.
-_INPUT_ECHO_RE = re.compile(r",?\s*input_(?:value|type)=[^,\]]+")
+# A rendered pydantic / FastMCP validation error echoes the rejected value as
+# ``input_value=<repr>`` — a PSK, token, or password the caller mis-supplied.
+# The repr can contain commas, quotes, and ``]`` (e.g. ``input_value='a,b]c'``),
+# so a delimiter-bounded strip would leave a tail of the secret behind. Anchor
+# instead on the end of the line: pydantic renders each error's
+# ``[type=..., input_value=..., input_type=...]`` detail on a single line (any
+# newline inside the value is escaped to a literal ``\n``), so removing from
+# ``input_value=`` to the line end drops the value, the trailing
+# ``input_type=``, and any URL in one shot while preserving the field name and
+# human-readable message on the surrounding lines.
+_INPUT_ECHO_RE = re.compile(r",?\s*input_value=[^\n]*")
 
 
 def _summarize_message_only(tool_name: str, message: str) -> str:

@@ -211,6 +211,40 @@ class TestFastMCPValidationError:
         assert "hunter2-secret" not in env["message"]
         assert "input_value" not in env["message"]
 
+    @pytest.mark.parametrize(
+        "secret",
+        [
+            "secret,still-secret",  # comma inside the value
+            "a]b",  # closing bracket inside the value
+            "quoted, with] comma",  # both
+            "plain-secret",
+        ],
+    )
+    async def test_fastmcp_fallback_strips_whole_input_value(self, secret):
+        """The message-only scrubber must remove the entire rejected value even
+        when it contains commas or brackets — a delimiter-bounded strip left a
+        tail of the secret behind (Casey review, #626)."""
+        from fastmcp.exceptions import ValidationError as FastMCPValidationError
+
+        middleware = ValidationCatchMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        msg = (
+            f"1 validation error for call[central_invoke_tool]\npassphrase\n"
+            f"  Unexpected keyword argument [type=unexpected_keyword_argument, "
+            f"input_value='{secret}', input_type=str]"
+        )
+
+        async def raising_next(_: Any) -> Any:
+            raise FastMCPValidationError(msg)
+
+        result = await middleware.on_call_tool(ctx, raising_next)
+
+        message = result.structured_content["message"]
+        assert secret not in message
+        assert "input_value" not in message
+        # the readable part survives
+        assert "passphrase" in message
+
     async def test_fastmcp_error_names_the_bad_argument(self):
         """The model still needs to learn *which* argument was rejected."""
         from fastmcp.exceptions import ValidationError as FastMCPValidationError
