@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hpe-networking-mcp"
-version = "3.6.0.0"
+version = "3.6.0.1"
 description = "Unofficial, community-driven MCP server for Juniper Mist, Aruba Central, HPE GreenLake, and ClearPass. Not affiliated with HPE, Aruba, or Juniper."
 readme = "README.md"
 license = "MIT"
@@ -19,8 +19,10 @@ dependencies = [
     "fastmcp[code-mode,apps]>=3.4.0",
     # Async rate limiter -- used by greenlake bulk_add.py batch loop
     "aiolimiter>=1.2.1",
-    # MCP protocol — GreenLake requires >=1.20.0
-    "mcp[cli]>=1.20.0",
+    # MCP protocol — GreenLake requires >=1.20.0; floor raised to 1.28.1 to
+    # clear CVE-2026-52869 / CVE-2026-52870 (fixed 1.27.2) and CVE-2026-59950
+    # (fixed 1.28.1). Keep at/above 1.28.1 so a resolve can't fall back.
+    "mcp[cli]>=1.28.1",
     # Async HTTP client — used by all platforms (Central since v3.3.11.0,
     # replacing pycentral; Mist since v3.1.0.0, replacing mistapi)
     "httpx>=0.28.0",

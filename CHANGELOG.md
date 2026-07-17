@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0.1] - 2026-07-17
+
+### Security
+- **Bump `mcp` 1.27.0 → 1.28.1** to clear three advisories published against the locked version: CVE-2026-52869 and CVE-2026-52870 (fixed in 1.27.2) and CVE-2026-59950 (fixed in 1.28.1). The dependency floor is raised from `>=1.20.0` to `>=1.28.1` so a future resolve can't fall back to a vulnerable release. `pip-audit` reports no known vulnerabilities; full suite green on 1.28.1 with no code changes required.
+- Refreshes the stale `hpe-networking-mcp` self-version in `uv.lock` (3.4.7.1 → 3.6.0.0) as a side effect of re-locking.
+
 ## [3.6.0.0] - 2026-07-16
 
 **Minor — spec-lookup index (substantial new subsystem): the single schema source of truth for tool-body + error enrichment in both tool modes.** A deterministic SQLite/FTS5 index of the vendored OpenAPI corpus that supersedes the distilled per-platform schema artifacts. It closes the failure that started this — an operator (via a peer's report) couldn't rename a Central-managed AP because the config tools exposed an opaque `payload: dict` with no field set to author against, so field names got guessed against the live tenant.
