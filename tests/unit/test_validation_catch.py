@@ -157,6 +157,80 @@ class TestValidationCatchEnvelope:
         assert result is expected
 
 
+class TestFastMCPValidationError:
+    """FastMCP raises its OWN ``ValidationError`` (a ``FastMCPError``, NOT a
+    subclass of pydantic's) for a bad/unexpected argument during binding. The
+    middleware used to catch only pydantic's type, so this escaped — and in
+    code mode a host exception out of ``call_tool`` kills the whole
+    ``execute()`` block before the model's try/except can see it. Found during
+    testing (an ``object_type`` kwarg a tool never declared).
+    """
+
+    async def test_fastmcp_error_with_pydantic_cause_is_enveloped(self):
+        from fastmcp.exceptions import ValidationError as FastMCPValidationError
+
+        middleware = ValidationCatchMiddleware()
+        ctx = _make_context("central_get_config_assignments")
+        pyd = _trigger_validation_error()
+        wrapped = FastMCPValidationError("1 validation error for call[...]")
+        wrapped.__cause__ = pyd  # FastMCP stashes the original here
+
+        async def raising_next(_: Any) -> Any:
+            raise wrapped
+
+        result = await middleware.on_call_tool(ctx, raising_next)
+
+        env = result.structured_content
+        assert env is not None, "FastMCP ValidationError must be caught, not escape to the sandbox"
+        assert env["ok"] is False
+        assert env["status"] == 422
+        assert env["tool"] == "central_get_config_assignments"
+
+    async def test_fastmcp_error_without_cause_strips_input_echo(self):
+        """No ``__cause__`` → only the rendered string is available, and it can
+        embed ``input_value=`` echoing the rejected value. That echo must be
+        stripped so a mis-supplied secret never reaches the model or the log."""
+        from fastmcp.exceptions import ValidationError as FastMCPValidationError
+
+        middleware = ValidationCatchMiddleware()
+        ctx = _make_context("central_invoke_tool")
+        msg = (
+            "1 validation error for call[central_invoke_tool]\npassphrase\n"
+            "  Unexpected keyword argument [type=unexpected_keyword_argument, "
+            "input_value='hunter2-secret', input_type=str]"
+        )
+
+        async def raising_next(_: Any) -> Any:
+            raise FastMCPValidationError(msg)
+
+        result = await middleware.on_call_tool(ctx, raising_next)
+
+        env = result.structured_content
+        assert env["ok"] is False
+        assert env["status"] == 422
+        assert "hunter2-secret" not in env["message"]
+        assert "input_value" not in env["message"]
+
+    async def test_fastmcp_error_names_the_bad_argument(self):
+        """The model still needs to learn *which* argument was rejected."""
+        from fastmcp.exceptions import ValidationError as FastMCPValidationError
+
+        middleware = ValidationCatchMiddleware()
+        ctx = _make_context("central_get_roles")
+        msg = (
+            "1 validation error for call[central_get_roles]\nobject_type\n"
+            "  Unexpected keyword argument [type=unexpected_keyword_argument, "
+            "input_value='LOCAL', input_type=str]"
+        )
+
+        async def raising_next(_: Any) -> Any:
+            raise FastMCPValidationError(msg)
+
+        result = await middleware.on_call_tool(ctx, raising_next)
+
+        assert "object_type" in result.structured_content["message"]
+
+
 class _SecretModel(BaseModel):
     """Model with a sensitive field name to test value redaction."""
 

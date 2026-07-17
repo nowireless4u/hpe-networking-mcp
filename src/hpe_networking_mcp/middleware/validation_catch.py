@@ -24,9 +24,11 @@ it through unchanged, so the wrap is not double-applied.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import mcp.types
+from fastmcp.exceptions import ValidationError as FastMCPValidationError
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.tools.tool import ToolResult
 from loguru import logger
@@ -40,6 +42,26 @@ from hpe_networking_mcp.redaction.safe_summary import summarize_validation_error
 # raised a 422 — keeps RetryMiddleware's status-code-based decision
 # tree consistent across validation rejections and upstream API 422s.
 _VALIDATION_STATUS = 422
+
+# ``input_value=...`` / ``input_type=...`` fragments in a rendered pydantic /
+# FastMCP validation message can echo the rejected value verbatim — a PSK,
+# token, or password the caller mis-supplied. Strip them before the message is
+# shown to the model or written to a log.
+_INPUT_ECHO_RE = re.compile(r",?\s*input_(?:value|type)=[^,\]]+")
+
+
+def _summarize_message_only(tool_name: str, message: str) -> str:
+    """Redact a validation message we only have as a string.
+
+    Used for FastMCP's ``ValidationError``, which (unlike pydantic's) carries
+    no structured ``.errors()`` — only a rendered string that may embed the
+    rejected input value. Drop the ``input_value``/``input_type`` echoes and
+    collapse whitespace so the model still learns *which* argument was wrong
+    without the value leaking.
+    """
+    cleaned = _INPUT_ECHO_RE.sub("", message)
+    cleaned = " ".join(cleaned.split())
+    return f"Invalid arguments for tool {tool_name!r}: {cleaned}"
 
 
 class ValidationCatchMiddleware(Middleware):
@@ -59,14 +81,38 @@ class ValidationCatchMiddleware(Middleware):
     ) -> ToolResult:
         try:
             return await call_next(context)  # type: ignore[no-any-return]
-        except ValidationError as e:
+        except (ValidationError, FastMCPValidationError) as e:
             tool_name = getattr(context.message, "name", "unknown")
+            # Two distinct exception types reach here:
+            #
+            #   * pydantic ``ValidationError`` — raised by a tool's own body
+            #     validation. Carries structured ``.errors()``.
+            #   * fastmcp ``ValidationError`` — raised by FastMCP's argument
+            #     binding for a bad/unexpected kwarg (found during testing: an
+            #     ``object_type`` kwarg the tool never declared). This is a
+            #     plain ``FastMCPError`` with NO ``.errors()`` and only a string
+            #     message — and it does NOT subclass pydantic's, so the old
+            #     ``except ValidationError`` missed it entirely. In code mode
+            #     that meant the whole ``execute()`` block died before the
+            #     model's own try/except could see it, because a host exception
+            #     out of ``call_tool`` is fatal to the sandbox. FastMCP stashes
+            #     the originating pydantic error on ``__cause__`` when it has
+            #     one, so recover the structured form for a clean, redacted
+            #     summary and fall back to the (also redacted) string otherwise.
+            structured = e.errors() if isinstance(e, ValidationError) else None
+            cause = getattr(e, "__cause__", None)
+            if structured is None and isinstance(cause, ValidationError):
+                structured = cause.errors()
+
             # Build the message via the shared redactor (#523/#534): sensitive
             # field VALUES are redacted by name and complex/long inputs are
             # summarized by type/shape. The SAME redacted text feeds both the
             # model-visible response AND the log, so neither channel can leak a
             # password / token / PSK or dump a huge rejected payload.
-            error_text = summarize_validation_errors(tool_name, e.errors())
+            if structured is not None:
+                error_text = summarize_validation_errors(tool_name, structured)
+            else:
+                error_text = _summarize_message_only(tool_name, str(e))
             logger.debug("ValidationCatchMiddleware: caught {} → {}", tool_name, error_text)
 
             # Reactive spec-index enrichment: append the legal body field set (and

@@ -22,6 +22,8 @@ violate caller expectations.
 
 from __future__ import annotations
 
+import ast
+import json
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -257,6 +259,79 @@ def _walk_dict(
     return out
 
 
+#: Annotation fields whose value is a *stringified* list of records rather than
+#: a nested structure. The recursive walk cannot descend into them — it sees one
+#: opaque string — so anything sensitive inside reaches the client cleartext.
+#: Aruba Central returns ``scope_device_function`` this way on every read that
+#: asks for annotations.
+_STRINGIFIED_RECORD_FIELDS: frozenset[str] = frozenset({"aruba_annotation:scope_device_function"})
+
+
+def _parse_stringified_records(value: str) -> list | None:
+    """Parse a stringified list-of-records, or None if it isn't one.
+
+    Central emits this annotation in two different serializations — JSON
+    (double-quoted) and a Python ``repr`` (single-quoted) — sometimes within a
+    single response, so both are attempted. ``literal_eval`` is safe here: it
+    evaluates literals only and never executes code.
+    """
+    if not value or value[0] not in "[{":
+        return None
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            parsed = parser(value)
+        except (ValueError, SyntaxError, TypeError):
+            continue
+        if isinstance(parsed, list):
+            return parsed
+        if isinstance(parsed, dict):
+            return [parsed]
+    return None
+
+
+def _tokenize_stringified_records(value: str, tokenizer: Tokenizer) -> str:
+    """Tokenize device identifiers hiding inside a stringified annotation.
+
+    A scope of type ``DEVICE`` is *named by the device's serial* — verified
+    against a live tenant where all 119 DEVICE scope nodes had
+    ``scope_name == serial``. That serial is tokenized wherever it appears
+    under a ``serial`` key, so leaving it cleartext here lets anyone undo the
+    masking by correlating the two, which makes the token worthless. Found
+    during testing.
+
+    Only DEVICE-scoped names are touched. GLOBAL / SITE / DEVICE_COLLECTION
+    names are site and group labels, which the privacy model deliberately
+    passes through cleartext (see ``rules.py`` — they describe architecture and
+    carry audit value), so this does not widen masking beyond the device
+    identifier.
+
+    Returns ``value`` unchanged unless something was actually tokenized, so
+    responses that need no masking keep their original serialization byte for
+    byte.
+    """
+    records = _parse_stringified_records(value)
+    if records is None:
+        return value
+
+    changed = False
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        if str(record.get("scope_type", "")).upper() != "DEVICE":
+            continue
+        scope_name = record.get("scope_name")
+        if not isinstance(scope_name, str) or not scope_name:
+            continue
+        token = tokenize_value(tokenizer, TokenKind.SERIAL, scope_name)
+        if isinstance(token, str) and token != scope_name:
+            record["scope_name"] = token
+            changed = True
+
+    if not changed:
+        return value
+    return json.dumps(records)
+
+
 def _walk_pair(
     key: object,
     value: object,
@@ -295,6 +370,12 @@ def _walk_pair(
     if tokenizer is None or not isinstance(key, str):
         return value
 
+    # Stringified record blobs: parse and mask inside before classification.
+    # Without this the value is just a long string, classifies SKIP, and every
+    # identifier serialized into it ships cleartext.
+    if field_name_lower in _STRINGIFIED_RECORD_FIELDS and isinstance(value, str):
+        return _tokenize_stringified_records(value, tokenizer)
+
     classification, kind = classify_field(key, value, parent_keys=parent_keys, parent_field_name=parent_field_name)
 
     if classification == FieldClassification.MASKED_SECRET:
@@ -317,6 +398,15 @@ def _walk_pair(
             replayed = tokenizer.token_for_existing_cleartext(value)
             if replayed is not None:
                 return replayed
+            # Embedded replay: the whole-string match above only fires when the
+            # value *is* a known plaintext, so any known cleartext with text
+            # concatenated around it survived — a prefixed identifier
+            # (``management-users/<user>``) or a stringified JSON blob such as
+            # Central's ``scope_device_function`` annotation, which the walker
+            # cannot descend into because it is one opaque string. Re-mask any
+            # known plaintext embedded in the value before falling through
+            # (found during testing).
+            value = tokenizer.replace_known_cleartext(value)
             # Universal scan still runs on un-classified string values so
             # emails embedded in arbitrary fields (e.g. PSK ``name`` =
             # ``user@example.com``) and AWS-signed URLs in arbitrary fields

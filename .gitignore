@@ -136,3 +136,8 @@ scripts/internal/
 
 # Baked spec-lookup index (built at image time by scripts/build_spec_index.py)
 src/hpe_networking_mcp/spec_index/spec_index.db
+
+# Operator/AI session transcripts captured from live customer tenants for
+# debugging. These contain real device serials, scope names, and org-identifying
+# strings, and must never reach the public repo. Keep local-only.
+docs/issues/

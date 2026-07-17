@@ -18,6 +18,7 @@ mapped to the same token" without ever seeing the plaintext column.
 from __future__ import annotations
 
 import hashlib
+import re
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -32,6 +33,22 @@ from hpe_networking_mcp.redaction.token_store import (
 
 if TYPE_CHECKING:
     pass
+
+#: Character class treated as a "word" character when bounding an embedded
+#: cleartext match. A match must not be flanked by these on either side, so a
+#: short plaintext cannot fire inside a longer identifier that merely contains
+#: it (``admin`` inside ``administrator``). Separators that actually delimit
+#: values in the wild -- ``/``, quotes, whitespace, ``:``, ``,`` -- are not in
+#: the class, so ``management-users/<user>`` and a serialized ``'<serial>'``
+#: both match.
+_WORD_EDGE = r"[A-Za-z0-9_]"
+
+#: Shortest plaintext eligible for embedded replay. Below this a value is too
+#: ambiguous to substitute inside arbitrary text: the risk of mangling
+#: unrelated content outweighs re-masking a short identifier that is cheap to
+#: re-derive anyway. Whole-string matching (``token_for_existing_cleartext``)
+#: is unaffected and still covers short values exactly.
+_MIN_EMBEDDED_REPLAY_LEN = 6
 
 
 def _value_hash(plaintext: str) -> str:
@@ -66,6 +83,8 @@ class Tokenizer:
         self._session_id = session_id
         self._max_entries = max_entries
         self._cap_hit_logged = False
+        # (candidate_count, pattern) — rebuilt when the keymap grows.
+        self._embedded_cache: tuple[int, re.Pattern[str]] | None = None
 
     @property
     def keymap(self) -> SessionKeymap:
@@ -198,6 +217,69 @@ class Tokenizer:
             return None
         entry = self._keymap.by_plaintext_value.get(value)
         return entry.token if entry is not None else None
+
+    def replace_known_cleartext(self, value: str) -> str:
+        """Replace every known cleartext *embedded within* ``value``.
+
+        ``token_for_existing_cleartext`` only matches when a value is a known
+        plaintext in its entirety, which leaves the same secret cleartext the
+        moment anything is concatenated around it. Two live shapes found
+        during testing, both of which defeated the whole-string match:
+
+        * A value carrying a path/prefix — ``"management-users/<user>"`` where
+          only ``"<user>"`` is the tokenized plaintext.
+        * A *stringified* JSON blob. Aruba Central returns the
+          ``aruba-annotation:scope_device_function`` annotation as a string
+          holding serialized records, so the walker sees one opaque string and
+          never descends to the keys inside it. Every identifier in that blob
+          reached the client cleartext even when the same value was tokenized
+          elsewhere in the same response — and a token that can be undone by
+          correlating it against its own cleartext elsewhere is not masking.
+
+        Matching is bounded by ``_WORD_EDGE`` (a non-word character or the
+        string edge) on both sides, so ``"admin"`` will not fire inside
+        ``"administrator"``. Only plaintexts of at least
+        ``_MIN_EMBEDDED_REPLAY_LEN`` characters participate: short plaintexts
+        are both ambiguous and cheap to re-derive, and replacing them inside
+        arbitrary text does more damage than the leak it prevents.
+
+        Returns ``value`` unchanged when nothing matches, so the caller can
+        keep its existing SKIP semantics.
+        """
+        if not isinstance(value, str) or not value:
+            return value
+        if TOKEN_RE.fullmatch(value):
+            return value
+
+        pattern = self._embedded_pattern()
+        if pattern is None:
+            return value
+
+        def _sub(match: re.Match[str]) -> str:
+            entry = self._keymap.by_plaintext_value.get(match.group(0))
+            return entry.token if entry is not None else match.group(0)
+
+        return pattern.sub(_sub, value)
+
+    def _embedded_pattern(self) -> re.Pattern[str] | None:
+        """Compiled alternation of every replayable plaintext, longest first.
+
+        Rebuilt only when the keymap grows: sessions allocate tokens in bursts
+        and then read them back many times, so the cache holds across the reads
+        that matter. Longest-first ordering makes the alternation prefer the
+        most specific plaintext when one contains another.
+        """
+        candidates = [p for p in self._keymap.by_plaintext_value if len(p) >= _MIN_EMBEDDED_REPLAY_LEN]
+        if not candidates:
+            return None
+        if self._embedded_cache is not None and self._embedded_cache[0] == len(candidates):
+            return self._embedded_cache[1]
+
+        candidates.sort(key=len, reverse=True)
+        alternation = "|".join(re.escape(p) for p in candidates)
+        pattern = re.compile(f"(?<!{_WORD_EDGE})(?:{alternation})(?!{_WORD_EDGE})")
+        self._embedded_cache = (len(candidates), pattern)
+        return pattern
 
 
 def tokenize_value(

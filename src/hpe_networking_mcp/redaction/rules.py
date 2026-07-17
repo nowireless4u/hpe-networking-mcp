@@ -476,6 +476,44 @@ def looks_like_credential(value: str) -> bool:
     return classes >= 2 or has_special
 
 
+#: Minimum length for a value under a certificate-class field to be treated as
+#: certificate material. Real PEM/DER/PKCS12 payloads are hundreds of bytes;
+#: this only has to exclude the short scalars that share the key name.
+_CERT_MIN_MATERIAL_LEN = 40
+
+
+def looks_like_certificate(value: str) -> bool:
+    """Heuristic: does ``value`` hold certificate *material*?
+
+    ``TokenKind.CERT`` exists for PEM blocks, but the certificate-class field
+    names (``cert``, ``certificate``, ``chain``, ``pem``, ``pkcs12``, ...) are
+    exact-match secret fields, so they used to tokenize whatever sat under the
+    key regardless of shape. Anything reusing the word — a certificate *name*,
+    a count, or a caller's own scalar (found during testing: a diagnostic dict
+    keyed ``certificate`` whose value was the literal string ``"list"`` came
+    back as ``[[CERT:...]]``) — was masked as if it were key material. That is
+    over-masking: it destroys legible data and, because tokens are keyed by
+    plaintext, identical throwaway values collide onto one token and read like
+    a tokenizer fault.
+
+    Deliberately biased toward masking — a short value is only released when it
+    cannot plausibly be cert material:
+
+    * an explicit PEM/OpenSSH armor header → always material, and
+    * anything at/over ``_CERT_MIN_MATERIAL_LEN`` → treated as material, since
+      a long opaque blob under a cert key is far more likely a payload than a
+      label. Only short unarmored scalars are released.
+    """
+    if not isinstance(value, str):
+        return False
+    stripped = value.strip()
+    if not stripped:
+        return False
+    if "-----BEGIN" in stripped or stripped.startswith("ssh-"):
+        return True
+    return len(stripped) >= _CERT_MIN_MATERIAL_LEN
+
+
 def is_known_enum_value(value: str) -> bool:
     """Quick sanity check: is ``value`` an obvious enum/keyword?
 
@@ -656,7 +694,16 @@ def classify_field(
 
     # Exact-match secret fields
     if name in SECRET_FIELD_NAMES:
-        return FieldClassification.TOKENIZE_SECRET, SECRET_FIELD_NAMES[name]
+        secret_kind = SECRET_FIELD_NAMES[name]
+        # CERT is the one exact-match kind whose field names are also ordinary
+        # English words (``cert``, ``chain``, ``certificate``), so they collide
+        # with non-secret data that merely reuses the word. Every other kind
+        # here names a field that only ever holds a credential. Gate CERT on
+        # value shape so short non-material scalars stay legible; everything
+        # else keeps firing unconditionally.
+        if secret_kind is TokenKind.CERT and not (isinstance(value, str) and looks_like_certificate(value)):
+            return FieldClassification.SKIP, None
+        return FieldClassification.TOKENIZE_SECRET, secret_kind
 
     # Generic credential field names — only tokenize when value passes shape check
     if name in GENERIC_CREDENTIAL_FIELD_NAMES:
