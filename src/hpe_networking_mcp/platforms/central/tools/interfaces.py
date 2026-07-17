@@ -26,6 +26,14 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _READ_DETAILED_FIELD,
+    _READ_DEVICE_FUNCTION_FIELD,
+    _READ_EFFECTIVE_FIELD,
+    _READ_LIMIT_FIELD,
+    _READ_OBJECT_TYPE_FIELD,
+    _READ_OFFSET_FIELD,
+    _READ_SCOPE_ID_FIELD,
+    _READ_VIEW_TYPE_FIELD,
     _SCOPE_ID_FIELD,
     _get_resource,
     _manage_resource,
@@ -38,6 +46,14 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
 async def central_get_ap_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``ap-port-profiles`` configurations from Central.
 
@@ -46,7 +62,19 @@ async def central_get_ap_port_profiles(
     Parameters:
         profile_name: Specific ``ap-port-profiles`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "ap-port-profiles", profile_name)
+    return await _get_resource(
+        ctx,
+        "ap-port-profiles",
+        profile_name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -96,6 +124,14 @@ async def central_manage_ap_port_profiles(
 async def central_get_ap_uplinks(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``ap-uplinks`` configurations from Central.
 
@@ -104,7 +140,19 @@ async def central_get_ap_uplinks(
     Parameters:
         name: Specific ``ap-uplinks`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "ap-uplinks", name)
+    return await _get_resource(
+        ctx,
+        "ap-uplinks",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -152,6 +200,14 @@ async def central_manage_ap_uplinks(
 async def central_get_cdp(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``cdp`` configurations from Central.
 
@@ -160,7 +216,19 @@ async def central_get_cdp(
     Parameters:
         name: Specific ``cdp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "cdp", name)
+    return await _get_resource(
+        ctx,
+        "cdp",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -208,6 +276,14 @@ async def central_manage_cdp(
 async def central_get_device_profile(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``device-profile`` configurations from Central.
 
@@ -216,7 +292,19 @@ async def central_get_device_profile(
     Parameters:
         name: Specific ``device-profile`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "device-profile", name)
+    return await _get_resource(
+        ctx,
+        "device-profile",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -264,6 +352,14 @@ async def central_manage_device_profile(
 async def central_get_dhcp_client(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``dhcp-client`` configurations from Central.
 
@@ -272,7 +368,19 @@ async def central_get_dhcp_client(
     Parameters:
         name: Specific ``dhcp-client`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "dhcp-client", name)
+    return await _get_resource(
+        ctx,
+        "dhcp-client",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -320,6 +428,14 @@ async def central_manage_dhcp_client(
 async def central_get_ethernet_interfaces(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``ethernet-interfaces`` configurations from Central.
 
@@ -328,7 +444,19 @@ async def central_get_ethernet_interfaces(
     Parameters:
         name: Specific ``ethernet-interfaces`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "ethernet-interfaces", name)
+    return await _get_resource(
+        ctx,
+        "ethernet-interfaces",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -376,6 +504,14 @@ async def central_manage_ethernet_interfaces(
 async def central_get_fault_monitor(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``fault-monitor`` configurations from Central.
 
@@ -384,7 +520,19 @@ async def central_get_fault_monitor(
     Parameters:
         name: Specific ``fault-monitor`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "fault-monitor", name)
+    return await _get_resource(
+        ctx,
+        "fault-monitor",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -432,6 +580,14 @@ async def central_manage_fault_monitor(
 async def central_get_gw_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``gw-port-profiles`` configurations from Central.
 
@@ -440,7 +596,19 @@ async def central_get_gw_port_profiles(
     Parameters:
         profile_name: Specific ``gw-port-profiles`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "gw-port-profiles", profile_name)
+    return await _get_resource(
+        ctx,
+        "gw-port-profiles",
+        profile_name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -490,6 +658,14 @@ async def central_manage_gw_port_profiles(
 async def central_get_interface_profiles(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``interface-profiles`` configurations from Central.
 
@@ -498,7 +674,19 @@ async def central_get_interface_profiles(
     Parameters:
         name: Specific ``interface-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "interface-profiles", name)
+    return await _get_resource(
+        ctx,
+        "interface-profiles",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -545,12 +733,32 @@ async def central_manage_interface_profiles(
 @tool(capability=Capability.READ)
 async def central_get_lacp(
     ctx: Context,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get the ``lacp`` singleton configuration from Central.
 
     Port profiles, config parameters on the port such as VLAN settings, authentication methods, link speed, PoE settings, and more.
     """
-    return await _get_resource(ctx, "lacp", None)
+    return await _get_resource(
+        ctx,
+        "lacp",
+        None,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -596,6 +804,14 @@ async def central_manage_lacp(
 async def central_get_lldp(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``lldp`` configurations from Central.
 
@@ -604,7 +820,19 @@ async def central_get_lldp(
     Parameters:
         name: Specific ``lldp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "lldp", name)
+    return await _get_resource(
+        ctx,
+        "lldp",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -652,6 +880,14 @@ async def central_manage_lldp(
 async def central_get_loopback_interfaces(
     ctx: Context,
     id: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``loopback-interfaces`` configurations from Central.
 
@@ -660,7 +896,19 @@ async def central_get_loopback_interfaces(
     Parameters:
         id: Specific ``loopback-interfaces`` identifier (OpenAPI path param: ``id``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "loopback-interfaces", id)
+    return await _get_resource(
+        ctx,
+        "loopback-interfaces",
+        id,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -708,6 +956,14 @@ async def central_manage_loopback_interfaces(
 async def central_get_mgmt_interfaces(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mgmt-interfaces`` configurations from Central.
 
@@ -716,7 +972,19 @@ async def central_get_mgmt_interfaces(
     Parameters:
         name: Specific ``mgmt-interfaces`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mgmt-interfaces", name)
+    return await _get_resource(
+        ctx,
+        "mgmt-interfaces",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -764,6 +1032,14 @@ async def central_manage_mgmt_interfaces(
 async def central_get_mirror_endpoint(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mirror-endpoint`` configurations from Central.
 
@@ -772,7 +1048,19 @@ async def central_get_mirror_endpoint(
     Parameters:
         name: Specific ``mirror-endpoint`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mirror-endpoint", name)
+    return await _get_resource(
+        ctx,
+        "mirror-endpoint",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -820,6 +1108,14 @@ async def central_manage_mirror_endpoint(
 async def central_get_mirrors(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mirrors`` configurations from Central.
 
@@ -828,7 +1124,19 @@ async def central_get_mirrors(
     Parameters:
         name: Specific ``mirrors`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mirrors", name)
+    return await _get_resource(
+        ctx,
+        "mirrors",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -876,6 +1184,14 @@ async def central_manage_mirrors(
 async def central_get_portchannels(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``portchannels`` configurations from Central.
 
@@ -884,7 +1200,19 @@ async def central_get_portchannels(
     Parameters:
         name: Specific ``portchannels`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "portchannels", name)
+    return await _get_resource(
+        ctx,
+        "portchannels",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -932,6 +1260,14 @@ async def central_manage_portchannels(
 async def central_get_sflow(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``sflow`` configurations from Central.
 
@@ -940,7 +1276,19 @@ async def central_get_sflow(
     Parameters:
         name: Specific ``sflow`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "sflow", name)
+    return await _get_resource(
+        ctx,
+        "sflow",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -988,6 +1336,14 @@ async def central_manage_sflow(
 async def central_get_static_macs(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``static-macs`` configurations from Central.
 
@@ -996,7 +1352,19 @@ async def central_get_static_macs(
     Parameters:
         name: Specific ``static-macs`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "static-macs", name)
+    return await _get_resource(
+        ctx,
+        "static-macs",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1044,6 +1412,14 @@ async def central_manage_static_macs(
 async def central_get_sub_interfaces(
     ctx: Context,
     parent_name_id: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``sub-interfaces`` configurations from Central.
 
@@ -1052,7 +1428,19 @@ async def central_get_sub_interfaces(
     Parameters:
         parent_name_id: Specific ``sub-interfaces`` identifier (OpenAPI path param: ``parent-name-id``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "sub-interfaces", parent_name_id)
+    return await _get_resource(
+        ctx,
+        "sub-interfaces",
+        parent_name_id,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1102,6 +1490,14 @@ async def central_manage_sub_interfaces(
 async def central_get_sw_port_profiles(
     ctx: Context,
     profile_name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``sw-port-profiles`` configurations from Central.
 
@@ -1110,7 +1506,19 @@ async def central_get_sw_port_profiles(
     Parameters:
         profile_name: Specific ``sw-port-profiles`` identifier (OpenAPI path param: ``profile-name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "sw-port-profiles", profile_name)
+    return await _get_resource(
+        ctx,
+        "sw-port-profiles",
+        profile_name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1160,6 +1568,14 @@ async def central_manage_sw_port_profiles(
 async def central_get_ufd(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``ufd`` configurations from Central.
 
@@ -1168,7 +1584,19 @@ async def central_get_ufd(
     Parameters:
         name: Specific ``ufd`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "ufd", name)
+    return await _get_resource(
+        ctx,
+        "ufd",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1216,6 +1644,14 @@ async def central_manage_ufd(
 async def central_get_vlan_interfaces(
     ctx: Context,
     id: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``vlan-interfaces`` configurations from Central.
 
@@ -1224,7 +1660,19 @@ async def central_get_vlan_interfaces(
     Parameters:
         id: Specific ``vlan-interfaces`` identifier (OpenAPI path param: ``id``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "vlan-interfaces", id)
+    return await _get_resource(
+        ctx,
+        "vlan-interfaces",
+        id,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)

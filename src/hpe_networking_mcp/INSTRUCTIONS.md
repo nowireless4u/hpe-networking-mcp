@@ -449,6 +449,13 @@ When asked to create a new site based on an existing site:
   - **Valid opmode values**: OPEN, WPA2_PERSONAL, WPA3_SAE, WPA2_ENTERPRISE, WPA3_ENTERPRISE_CCM_128, WPA2_MPSK_AES, ENHANCED_OPEN, DPP. Note: `WPA2_PSK_AES` does NOT exist — use `WPA2_PERSONAL` for WPA2 PSK.
   - **Mist-to-Central opmode mapping**: Mist psk → `WPA2_PERSONAL`, Mist psk+wpa3 → `WPA3_SAE`, Mist eap → `WPA2_ENTERPRISE`, Mist eap+wpa3+wpa2 → `WPA3_ENTERPRISE_CCM_128`
   - **NEVER call this tool directly for cross-platform WLAN sync** — use the sync prompts instead
+- **Reading config-model objects at a scope** (applies to every `central_get_*` config tool — roles, policies, net-groups, VLANs, profiles, …; v3.6.1.0+): these reads accept `view_type`, `object_type`, `scope_id`, `device_function`, `effective`, `detailed`, `limit`, `offset`.
+  - **No params returns objects across all scopes** — fine for inventory, wrong for "what applies HERE".
+  - `view_type="LOCAL"` + `scope_id` → what is *committed at that scope*. `scope_id` is **required** with LOCAL (without it the API silently returns a different scope's config, so the tool rejects it with a 400). Get scope IDs from `central_get_scope_tree`.
+  - Add `effective=true` → the *inherited/merged* config a device actually gets. Committed `0` + effective `N` at a site is normal and means "all inherited from a parent" — do not report it as "nothing configured".
+  - `detailed=true` annotates each object with its origin scope/device-function — use when walking a hierarchy.
+  - `limit` is only honored upstream alongside `offset`; the tool defaults `offset=0` so `limit` works alone.
+  - The Central API **ignores** query params it doesn't support instead of erroring — a `200` does not prove a filter applied. The `cnac_*` and `device_collections` reads use `search`/`sort`/`next`/`filter` instead and do **not** take scope params.
 - **Roles**: central_get_roles, central_manage_roles
   - Use `central_get_roles` to read role configurations (VLAN, QoS, ACLs, bandwidth contracts)
   - Use `central_manage_roles` to create, update, or delete roles — requires `ENABLE_CENTRAL_WRITE_TOOLS=true`

@@ -26,6 +26,14 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _READ_DETAILED_FIELD,
+    _READ_DEVICE_FUNCTION_FIELD,
+    _READ_EFFECTIVE_FIELD,
+    _READ_LIMIT_FIELD,
+    _READ_OBJECT_TYPE_FIELD,
+    _READ_OFFSET_FIELD,
+    _READ_SCOPE_ID_FIELD,
+    _READ_VIEW_TYPE_FIELD,
     _SCOPE_ID_FIELD,
     _get_resource,
     _manage_resource,
@@ -38,6 +46,14 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
 async def central_get_aliases(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``aliases`` configurations from Central.
 
@@ -46,7 +62,19 @@ async def central_get_aliases(
     Parameters:
         name: Specific ``aliases`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "aliases", name)
+    return await _get_resource(
+        ctx,
+        "aliases",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -94,6 +122,14 @@ async def central_manage_aliases(
 async def central_get_named_conditions(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``named-conditions`` configurations from Central.
 
@@ -102,7 +138,19 @@ async def central_get_named_conditions(
     Parameters:
         name: Specific ``named-conditions`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "named-conditions", name)
+    return await _get_resource(
+        ctx,
+        "named-conditions",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -150,6 +198,14 @@ async def central_manage_named_conditions(
 async def central_get_net_services(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``net-services`` configurations from Central.
 
@@ -158,7 +214,19 @@ async def central_get_net_services(
     Parameters:
         name: Specific ``net-services`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "net-services", name)
+    return await _get_resource(
+        ctx,
+        "net-services",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)

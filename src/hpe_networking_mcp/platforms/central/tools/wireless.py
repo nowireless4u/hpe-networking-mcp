@@ -26,6 +26,14 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _READ_DETAILED_FIELD,
+    _READ_DEVICE_FUNCTION_FIELD,
+    _READ_EFFECTIVE_FIELD,
+    _READ_LIMIT_FIELD,
+    _READ_OBJECT_TYPE_FIELD,
+    _READ_OFFSET_FIELD,
+    _READ_SCOPE_ID_FIELD,
+    _READ_VIEW_TYPE_FIELD,
     _SCOPE_ID_FIELD,
     _get_resource,
     _manage_resource,
@@ -38,6 +46,14 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
 async def central_get_alg(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``alg`` configurations from Central.
 
@@ -46,7 +62,19 @@ async def central_get_alg(
     Parameters:
         name: Specific ``alg`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "alg", name)
+    return await _get_resource(
+        ctx,
+        "alg",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -94,6 +122,14 @@ async def central_manage_alg(
 async def central_get_ids(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``ids`` configurations from Central.
 
@@ -102,7 +138,19 @@ async def central_get_ids(
     Parameters:
         name: Specific ``ids`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "ids", name)
+    return await _get_resource(
+        ctx,
+        "ids",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -150,6 +198,14 @@ async def central_manage_ids(
 async def central_get_mesh(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mesh`` configurations from Central.
 
@@ -158,7 +214,19 @@ async def central_get_mesh(
     Parameters:
         name: Specific ``mesh`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mesh", name)
+    return await _get_resource(
+        ctx,
+        "mesh",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -206,6 +274,14 @@ async def central_manage_mesh(
 async def central_get_mpsk_local(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mpsk-local`` configurations from Central.
 
@@ -214,7 +290,19 @@ async def central_get_mpsk_local(
     Parameters:
         name: Specific ``mpsk-local`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mpsk-local", name)
+    return await _get_resource(
+        ctx,
+        "mpsk-local",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -262,6 +350,14 @@ async def central_manage_mpsk_local(
 async def central_get_passpoint(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``passpoint`` configurations from Central.
 
@@ -270,7 +366,19 @@ async def central_get_passpoint(
     Parameters:
         name: Specific ``passpoint`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "passpoint", name)
+    return await _get_resource(
+        ctx,
+        "passpoint",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -318,6 +426,14 @@ async def central_manage_passpoint(
 async def central_get_radio(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``radio`` configurations from Central.
 
@@ -326,7 +442,19 @@ async def central_get_radio(
     Parameters:
         name: Specific ``radio`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "radios", name)
+    return await _get_resource(
+        ctx,
+        "radios",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)

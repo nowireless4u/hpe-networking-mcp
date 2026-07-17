@@ -22,15 +22,143 @@ from hpe_networking_mcp.platforms._common.url import path_seg
 from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_central_command
 
 # ---------------------------------------------------------------------------
+# Shared config-read query parameters
+#
+# Every /network-config/v1alpha1/ GET endpoint documents the same eight query
+# parameters. They are defined once here so each read tool advertises an
+# identical, accurate schema. Descriptions come from the vendored OpenAPI spec.
+#
+# These are distinct from the write-side _SCOPE_ID_FIELD / _DEVICE_FUNCTION_FIELD
+# below: on a write, scope_id selects where an object is *created*; on a read it
+# selects which scope's configuration is *returned*.
+# ---------------------------------------------------------------------------
+
+_READ_VIEW_TYPE_FIELD = Field(
+    description=(
+        "'LOCAL' — configuration for a scope and one or more device functions "
+        "(requires scope_id). 'LIBRARY' — shared objects in the library; for "
+        "LIBRARY every other parameter except 'detailed' is ignored. "
+        "Omit to use the API default."
+    ),
+    default=None,
+)
+_READ_OBJECT_TYPE_FIELD = Field(
+    description=(
+        "Retrieve 'LOCAL' or 'SHARED' configuration objects. Omit for both (the API default). "
+        "This filters which objects come back — it does not select the scope; use scope_id for that."
+    ),
+    default=None,
+)
+_READ_SCOPE_ID_FIELD = Field(
+    description=(
+        "Return configuration at this scope ID. Mandatory when view_type='LOCAL'. "
+        "Get scope IDs from central_get_scope_tree."
+    ),
+    default=None,
+)
+_READ_DEVICE_FUNCTION_FIELD = Field(
+    description=(
+        "Filter configuration to this device-function type. If omitted when "
+        "view_type='LOCAL', the API defaults to all device functions. "
+        "Valid: CAMPUS_AP, ACCESS_SWITCH, BRANCH_GW, MOBILITY_GW, CORE_SWITCH, AGG_SWITCH, ALL."
+    ),
+    default=None,
+)
+_READ_EFFECTIVE_FIELD = Field(
+    description=(
+        "True — return effective (hierarchically merged / inherited) configuration. "
+        "False — return only the configuration committed at this scope."
+    ),
+    default=None,
+)
+_READ_DETAILED_FIELD = Field(
+    description=(
+        "True — annotate each returned object with its object type, scope, and device "
+        "function. Useful when walking a scope hierarchy."
+    ),
+    default=None,
+)
+_READ_LIMIT_FIELD = Field(
+    description="Pagination limit. Omit to use the API default page size.",
+    default=None,
+)
+_READ_OFFSET_FIELD = Field(
+    description="Pagination offset.",
+    default=None,
+)
+
+# ---------------------------------------------------------------------------
 # Factory helpers — avoid repeating the same CRUD logic across resources
 # ---------------------------------------------------------------------------
 
 
-async def _get_resource(ctx: Context, api_base: str, name: str | None) -> dict | list | str:
-    """Generic GET for /network-config/v1alpha1/{api_base}[/{name}]."""
+async def _get_resource(
+    ctx: Context,
+    api_base: str,
+    name: str | None,
+    *,
+    view_type: str | None = None,
+    object_type: str | None = None,
+    scope_id: str | None = None,
+    device_function: str | None = None,
+    effective: bool | None = None,
+    detailed: bool | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+) -> dict | list | str:
+    """Generic GET for /network-config/v1alpha1/{api_base}[/{name}].
+
+    The keyword-only arguments map to the query parameters documented on every
+    ``network-config/v1alpha1`` GET endpoint. ``None`` values are omitted from
+    the request, so the API's own defaults apply.
+
+    Two upstream quirks are normalized here (both confirmed against the live
+    API, which ignores unknown/incomplete query params rather than erroring):
+
+    * ``limit`` is only honored when ``offset`` is also sent — on its own it is
+      silently ignored and the full collection comes back. A ``limit`` without
+      an ``offset`` therefore defaults the offset to 0 so the caller gets the
+      page size they asked for instead of everything.
+    * ``view_type='LOCAL'`` without a ``scope_id`` returns another scope's
+      configuration instead of failing, so it is rejected here.
+
+    Raises:
+        ToolError: 400 when ``view_type='LOCAL'`` is requested without a
+            ``scope_id``.
+    """
+    if view_type and view_type.upper() == "LOCAL" and not scope_id:
+        raise ToolError(
+            {
+                "status_code": 400,
+                "message": (
+                    "view_type='LOCAL' requires scope_id — without it the API returns "
+                    "a different scope's configuration instead of failing."
+                ),
+            }
+        )
+
+    if limit is not None and offset is None:
+        offset = 0
+
     conn = get_central_conn(ctx)
     api_path = f"network-config/v1alpha1/{api_base}/{path_seg(name)}" if name else f"network-config/v1alpha1/{api_base}"
-    response = await retry_central_command(central_conn=conn, api_method="GET", api_path=api_path)
+    api_params: dict = {
+        "view-type": view_type,
+        "object-type": object_type,
+        "scope-id": scope_id,
+        "device-function": device_function,
+        "effective": effective,
+        "detailed": detailed,
+        "limit": limit,
+        "offset": offset,
+    }
+    api_params = {k: v for k, v in api_params.items() if v is not None}
+    response = await retry_central_command(
+        central_conn=conn,
+        api_method="GET",
+        api_path=api_path,
+        api_params=api_params or None,
+    )
     code = response.get("code", 0)
     if code and not 200 <= code < 300:
         raise ToolError(

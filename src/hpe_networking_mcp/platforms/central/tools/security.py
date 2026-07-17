@@ -26,6 +26,14 @@ from hpe_networking_mcp.platforms.central._registry import tool
 from hpe_networking_mcp.platforms.central.tools.security_policy import (
     _CONFIRMED_FIELD,
     _DEVICE_FUNCTION_FIELD,
+    _READ_DETAILED_FIELD,
+    _READ_DEVICE_FUNCTION_FIELD,
+    _READ_EFFECTIVE_FIELD,
+    _READ_LIMIT_FIELD,
+    _READ_OBJECT_TYPE_FIELD,
+    _READ_OFFSET_FIELD,
+    _READ_SCOPE_ID_FIELD,
+    _READ_VIEW_TYPE_FIELD,
     _SCOPE_ID_FIELD,
     _get_resource,
     _manage_resource,
@@ -38,6 +46,14 @@ from hpe_networking_mcp.platforms.central.tools.security_policy import (
 async def central_get_aaa_profile(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``aaa-profile`` configurations from Central.
 
@@ -46,7 +62,19 @@ async def central_get_aaa_profile(
     Parameters:
         name: Specific ``aaa-profile`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "aaa-profile", name)
+    return await _get_resource(
+        ctx,
+        "aaa-profile",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -94,6 +122,14 @@ async def central_manage_aaa_profile(
 async def central_get_auth_server_global_config(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``auth-server-global-config`` configurations from Central.
 
@@ -102,7 +138,19 @@ async def central_get_auth_server_global_config(
     Parameters:
         name: Specific ``auth-server-global-config`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "auth-server-global-config", name)
+    return await _get_resource(
+        ctx,
+        "auth-server-global-config",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -150,6 +198,14 @@ async def central_manage_auth_server_global_config(
 async def central_get_auth_servers(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``auth-servers`` configurations from Central.
 
@@ -158,7 +214,19 @@ async def central_get_auth_servers(
     Parameters:
         name: Specific ``auth-servers`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "auth-servers", name)
+    return await _get_resource(
+        ctx,
+        "auth-servers",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -206,6 +274,14 @@ async def central_manage_auth_servers(
 async def central_get_auth_survivability(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``auth-survivability`` configurations from Central.
 
@@ -214,7 +290,19 @@ async def central_get_auth_survivability(
     Parameters:
         name: Specific ``auth-survivability`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "auth-survivability", name)
+    return await _get_resource(
+        ctx,
+        "auth-survivability",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -262,6 +350,14 @@ async def central_manage_auth_survivability(
 async def central_get_bcn_rpt_req_profiles(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``bcn-rpt-req-profiles`` configurations from Central.
 
@@ -270,7 +366,19 @@ async def central_get_bcn_rpt_req_profiles(
     Parameters:
         name: Specific ``bcn-rpt-req-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "bcn-rpt-req-profiles", name)
+    return await _get_resource(
+        ctx,
+        "bcn-rpt-req-profiles",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -318,6 +426,14 @@ async def central_manage_bcn_rpt_req_profiles(
 async def central_get_captive_portal(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``captive-portal`` configurations from Central.
 
@@ -326,7 +442,19 @@ async def central_get_captive_portal(
     Parameters:
         name: Specific ``captive-portal`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "captive-portal", name)
+    return await _get_resource(
+        ctx,
+        "captive-portal",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -374,6 +502,14 @@ async def central_manage_captive_portal(
 async def central_get_certificate_rcp(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``certificate-rcp`` configurations from Central.
 
@@ -382,7 +518,19 @@ async def central_get_certificate_rcp(
     Parameters:
         name: Specific ``certificate-rcp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "certificate-rcp", name)
+    return await _get_resource(
+        ctx,
+        "certificate-rcp",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -430,6 +578,14 @@ async def central_manage_certificate_rcp(
 async def central_get_certificate_store(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``certificate-store`` configurations from Central.
 
@@ -438,7 +594,19 @@ async def central_get_certificate_store(
     Parameters:
         name: Specific ``certificate-store`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "certificate-store", name)
+    return await _get_resource(
+        ctx,
+        "certificate-store",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -486,6 +654,14 @@ async def central_manage_certificate_store(
 async def central_get_certificate_usage(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``certificate-usage`` configurations from Central.
 
@@ -494,7 +670,19 @@ async def central_get_certificate_usage(
     Parameters:
         name: Specific ``certificate-usage`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "certificate-usage", name)
+    return await _get_resource(
+        ctx,
+        "certificate-usage",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -542,6 +730,14 @@ async def central_manage_certificate_usage(
 async def central_get_certificates(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``certificates`` configurations from Central.
 
@@ -550,7 +746,19 @@ async def central_get_certificates(
     Parameters:
         name: Specific ``certificates`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "certificates", name)
+    return await _get_resource(
+        ctx,
+        "certificates",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -598,6 +806,14 @@ async def central_manage_certificates(
 async def central_get_copp(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``copp`` configurations from Central.
 
@@ -606,7 +822,19 @@ async def central_get_copp(
     Parameters:
         name: Specific ``copp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "copp", name)
+    return await _get_resource(
+        ctx,
+        "copp",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -654,6 +882,14 @@ async def central_manage_copp(
 async def central_get_device_certificates(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``device-certificates`` configurations from Central.
 
@@ -662,7 +898,19 @@ async def central_get_device_certificates(
     Parameters:
         name: Specific ``device-certificates`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "device-certificates", name)
+    return await _get_resource(
+        ctx,
+        "device-certificates",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -710,6 +958,14 @@ async def central_manage_device_certificates(
 async def central_get_dot11k_profiles(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``dot11k-profiles`` configurations from Central.
 
@@ -718,7 +974,19 @@ async def central_get_dot11k_profiles(
     Parameters:
         name: Specific ``dot11k-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "dot11k-profiles", name)
+    return await _get_resource(
+        ctx,
+        "dot11k-profiles",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -766,6 +1034,14 @@ async def central_manage_dot11k_profiles(
 async def central_get_dot1xauth(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``dot1xauth`` configurations from Central.
 
@@ -774,7 +1050,19 @@ async def central_get_dot1xauth(
     Parameters:
         name: Specific ``dot1xauth`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "dot1xauth", name)
+    return await _get_resource(
+        ctx,
+        "dot1xauth",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -822,6 +1110,14 @@ async def central_manage_dot1xauth(
 async def central_get_dot1xsupp(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``dot1xsupp`` configurations from Central.
 
@@ -830,7 +1126,19 @@ async def central_get_dot1xsupp(
     Parameters:
         name: Specific ``dot1xsupp`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "dot1xsupp", name)
+    return await _get_resource(
+        ctx,
+        "dot1xsupp",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -878,6 +1186,14 @@ async def central_manage_dot1xsupp(
 async def central_get_est_profiles(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``est-profiles`` configurations from Central.
 
@@ -886,7 +1202,19 @@ async def central_get_est_profiles(
     Parameters:
         name: Specific ``est-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "est-profiles", name)
+    return await _get_resource(
+        ctx,
+        "est-profiles",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -934,6 +1262,14 @@ async def central_manage_est_profiles(
 async def central_get_firewall(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``firewall`` configurations from Central.
 
@@ -942,7 +1278,19 @@ async def central_get_firewall(
     Parameters:
         name: Specific ``firewall`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "firewall", name)
+    return await _get_resource(
+        ctx,
+        "firewall",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -990,6 +1338,14 @@ async def central_manage_firewall(
 async def central_get_gw_certificate_usage(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``gw-certificate-usage`` configurations from Central.
 
@@ -998,7 +1354,19 @@ async def central_get_gw_certificate_usage(
     Parameters:
         name: Specific ``gw-certificate-usage`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "gw-certificate-usage", name)
+    return await _get_resource(
+        ctx,
+        "gw-certificate-usage",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1046,6 +1414,14 @@ async def central_manage_gw_certificate_usage(
 async def central_get_internal_user(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``internal-user`` configurations from Central.
 
@@ -1054,7 +1430,19 @@ async def central_get_internal_user(
     Parameters:
         name: Specific ``internal-user`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "internal-user", name)
+    return await _get_resource(
+        ctx,
+        "internal-user",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1102,6 +1490,14 @@ async def central_manage_internal_user(
 async def central_get_keychains(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``keychains`` configurations from Central.
 
@@ -1110,7 +1506,19 @@ async def central_get_keychains(
     Parameters:
         name: Specific ``keychains`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "keychains", name)
+    return await _get_resource(
+        ctx,
+        "keychains",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1158,6 +1566,14 @@ async def central_manage_keychains(
 async def central_get_mac_lockout(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mac-lockout`` configurations from Central.
 
@@ -1166,7 +1582,19 @@ async def central_get_mac_lockout(
     Parameters:
         name: Specific ``mac-lockout`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mac-lockout", name)
+    return await _get_resource(
+        ctx,
+        "mac-lockout",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1214,6 +1642,14 @@ async def central_manage_mac_lockout(
 async def central_get_macauth(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``macauth`` configurations from Central.
 
@@ -1222,7 +1658,19 @@ async def central_get_macauth(
     Parameters:
         name: Specific ``macauth`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "macauth", name)
+    return await _get_resource(
+        ctx,
+        "macauth",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1270,6 +1718,14 @@ async def central_manage_macauth(
 async def central_get_macsec(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``macsec`` configurations from Central.
 
@@ -1278,7 +1734,19 @@ async def central_get_macsec(
     Parameters:
         name: Specific ``macsec`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "macsec", name)
+    return await _get_resource(
+        ctx,
+        "macsec",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1326,6 +1794,14 @@ async def central_manage_macsec(
 async def central_get_mka(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``mka`` configurations from Central.
 
@@ -1334,7 +1810,19 @@ async def central_get_mka(
     Parameters:
         name: Specific ``mka`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "mka", name)
+    return await _get_resource(
+        ctx,
+        "mka",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1382,6 +1870,14 @@ async def central_manage_mka(
 async def central_get_net_groups(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``net-groups`` configurations from Central.
 
@@ -1390,7 +1886,19 @@ async def central_get_net_groups(
     Parameters:
         name: Specific ``net-groups`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "net-groups", name)
+    return await _get_resource(
+        ctx,
+        "net-groups",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1438,6 +1946,14 @@ async def central_manage_net_groups(
 async def central_get_passpoint_identity(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``passpoint-identity`` configurations from Central.
 
@@ -1446,7 +1962,19 @@ async def central_get_passpoint_identity(
     Parameters:
         name: Specific ``passpoint-identity`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "passpoint-identity", name)
+    return await _get_resource(
+        ctx,
+        "passpoint-identity",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1494,6 +2022,14 @@ async def central_manage_passpoint_identity(
 async def central_get_port_security(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``port-security`` configurations from Central.
 
@@ -1502,7 +2038,19 @@ async def central_get_port_security(
     Parameters:
         name: Specific ``port-security`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "port-security", name)
+    return await _get_resource(
+        ctx,
+        "port-security",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1550,6 +2098,14 @@ async def central_manage_port_security(
 async def central_get_radius_modifiers(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``radius-modifiers`` configurations from Central.
 
@@ -1558,7 +2114,19 @@ async def central_get_radius_modifiers(
     Parameters:
         name: Specific ``radius-modifiers`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "radius-modifiers", name)
+    return await _get_resource(
+        ctx,
+        "radius-modifiers",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1606,6 +2174,14 @@ async def central_manage_radius_modifiers(
 async def central_get_rrm_ie_profiles(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``rrm-ie-profiles`` configurations from Central.
 
@@ -1614,7 +2190,19 @@ async def central_get_rrm_ie_profiles(
     Parameters:
         name: Specific ``rrm-ie-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "rrm-ie-profiles", name)
+    return await _get_resource(
+        ctx,
+        "rrm-ie-profiles",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1662,6 +2250,14 @@ async def central_manage_rrm_ie_profiles(
 async def central_get_server_groups(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``server-groups`` configurations from Central.
 
@@ -1670,7 +2266,19 @@ async def central_get_server_groups(
     Parameters:
         name: Specific ``server-groups`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "server-groups", name)
+    return await _get_resource(
+        ctx,
+        "server-groups",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1718,6 +2326,14 @@ async def central_manage_server_groups(
 async def central_get_stateful_dot1x_profiles(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``stateful-dot1x-profiles`` configurations from Central.
 
@@ -1726,7 +2342,19 @@ async def central_get_stateful_dot1x_profiles(
     Parameters:
         name: Specific ``stateful-dot1x-profiles`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "stateful-dot1x-profiles", name)
+    return await _get_resource(
+        ctx,
+        "stateful-dot1x-profiles",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)
@@ -1774,6 +2402,14 @@ async def central_manage_stateful_dot1x_profiles(
 async def central_get_ubt(
     ctx: Context,
     name: str | None = None,
+    view_type: Annotated[str | None, _READ_VIEW_TYPE_FIELD] = None,
+    object_type: Annotated[str | None, _READ_OBJECT_TYPE_FIELD] = None,
+    scope_id: Annotated[str | None, _READ_SCOPE_ID_FIELD] = None,
+    device_function: Annotated[str | None, _READ_DEVICE_FUNCTION_FIELD] = None,
+    effective: Annotated[bool | None, _READ_EFFECTIVE_FIELD] = None,
+    detailed: Annotated[bool | None, _READ_DETAILED_FIELD] = None,
+    limit: Annotated[int | None, _READ_LIMIT_FIELD] = None,
+    offset: Annotated[int | None, _READ_OFFSET_FIELD] = None,
 ) -> dict | list | str:
     """Get ``ubt`` configurations from Central.
 
@@ -1782,7 +2418,19 @@ async def central_get_ubt(
     Parameters:
         name: Specific ``ubt`` identifier (OpenAPI path param: ``name``). If omitted, returns all.
     """
-    return await _get_resource(ctx, "ubt", name)
+    return await _get_resource(
+        ctx,
+        "ubt",
+        name,
+        view_type=view_type,
+        object_type=object_type,
+        scope_id=scope_id,
+        device_function=device_function,
+        effective=effective,
+        detailed=detailed,
+        limit=limit,
+        offset=offset,
+    )
 
 
 @tool(capability=Capability.WRITE_DELETE)

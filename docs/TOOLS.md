@@ -1488,6 +1488,16 @@ Six read-only tools for inspecting the Central scope hierarchy (Global → Site 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | name | str | No | Specific role name. If omitted, returns all roles. |
+| view_type | str | No | `LOCAL` — config for a scope (requires `scope_id`); `LIBRARY` — shared library objects (ignores every other param except `detailed`). |
+| object_type | str | No | Filter to `LOCAL` or `SHARED` objects. Omit for both. Does **not** select the scope — use `scope_id`. |
+| scope_id | str | No | Return config at this scope. **Required** when `view_type='LOCAL'`. From `central_get_scope_tree`. |
+| device_function | str | No | Filter to a device function: `CAMPUS_AP`, `ACCESS_SWITCH`, `BRANCH_GW`, `MOBILITY_GW`, `CORE_SWITCH`, `AGG_SWITCH`, `ALL`. |
+| effective | bool | No | `true` — effective (inherited/merged) config; `false` — only what is committed at this scope. |
+| detailed | bool | No | `true` — annotate each object with its object type, scope, and device function. |
+| limit | int | No | Pagination limit. |
+| offset | int | No | Pagination offset. |
+
+> **Scoped reads (v3.6.1.0+):** the eight query params above are shared by all 209 `central_get_*` config-model read tools. `view_type='LOCAL'` + `scope_id` shows what is committed at a scope; add `effective=true` for what a device actually inherits. A site commonly returns `0` committed and `N` effective — that means "inherited from a parent", not "unconfigured". `limit` is only honored upstream when `offset` is sent, so the tools default `offset=0` when you pass `limit` alone. The `cnac_*` / `device_collections` reads use a different param set (`search` / `sort` / `next` / `filter`) and do not accept scope params.
 
 #### `central_manage_roles`
 
@@ -1691,6 +1701,8 @@ Five asymmetric specs emit only one of the pair (GET-only or POST-only — `cust
 **Source for full per-tool docstrings**: each module's `.py` file in `src/hpe_networking_mcp/platforms/central/tools/`. The Aruba Central config-model OpenAPI spec is the canonical reference for payload schemas — `payload: dict` in each `central_manage_*` accepts arbitrary keys per the underlying YANG model.
 
 **Regenerating**: the import script lives at `scripts/import_central_config_tools.py`. Drop refreshed specs into `api-endpoints/central/config/` (gitignored) and run `uv run python scripts/import_central_config_tools.py` from the repo root. Re-running overwrites the generated modules, so hand-edits to them get clobbered on regen — treat them as one-shot output, not as living generator output.
+
+> **The importer does not emit query params.** It emits path params and request bodies only — which is why all 209 config-read tools shipped without the endpoint's `scope_id` / `effective` / `limit` / … parameters until they were added by hand in v3.6.1.0 (#623). Those additions live in the generated modules and **a naive re-run will silently delete them**, taking scoped and effective-config reads with it. Fix the importer to emit query params before regenerating, or re-apply the read-param block afterwards.
 
 **Sensitive payloads**: several types carry secrets (auth-server shared-secrets, internal-user passwords, certificate private keys, mpsk-local PSKs). PII tokenization rules in `src/hpe_networking_mcp/redaction/rules.py` cover Mist + Central WLAN/RADIUS but **do not** cover the full AOS-CX surface as of v3.1.1.0. Audit + extend rules before turning on `ENABLE_CENTRAL_WRITE_TOOLS=true` on tenants where AI clients are untrusted.
 

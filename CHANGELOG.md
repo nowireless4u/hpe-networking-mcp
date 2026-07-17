@@ -5,11 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.0] - 2026-07-17
+
+**Feature — Central config reads can finally target a scope.** Every `network-config/v1alpha1` GET endpoint documents eight query parameters, but the read tools exposed only their path param, so scoped reads, effective (inherited) config, and pagination were all unreachable from the MCP surface. Reported from an operator session where a model followed our own `get_schema` output, passed `object_type='LOCAL'`, and got `extra_forbidden` back (#623).
+
+### Fixed
+- **209 Central config-read tools now accept the endpoint's query parameters** — `view_type`, `object_type`, `scope_id`, `device_function`, `effective`, `detailed`, `limit`, `offset` — plumbed through the shared `_get_resource` helper and forwarded as the kebab-case query the API expects. Previously the helper built a bare URL with no query support at all, so a site-scoped object could be *written* (the write helper does send scope params) but never *read back*. Live-verified: at a SITE scope `view_type='LOCAL'` returns 0 committed roles while `effective=True` returns the 23 inherited from Global — neither number was previously reachable.
+- **`limit` without `offset` no longer silently returns everything.** The API honors `limit` only when `offset` accompanies it; on its own it is ignored and the full collection comes back. `_get_resource` now defaults `offset=0` when a `limit` is supplied without one, so a caller who asks for a page gets a page. (There is no silent truncation in the other direction — a read with no query params returns the full collection.)
+- **`view_type='LOCAL'` without `scope_id` is now rejected with a 400** instead of being passed upstream, where it returns a *different* scope's configuration rather than failing. The spec marks `scope-id` mandatory for that view.
+- **The v3.6.0.0 `get_schema` enrichment is no longer misleading for these tools.** It surfaced the *endpoint's* scope query params while the wrapper rejected them; the tools now accept the params it advertises.
+
+### Notes
+- Scope of this pass is the **209** read tools whose endpoints document the standard eight parameters. The **8** `cnac-*` / `device-collections` read tools document a different set (`search` / `sort` / `next`-cursor / `filter`) and are deliberately excluded — adding scope params there would advertise parameters those endpoints ignore, recreating the same class of defect. Tracked in #623.
+- The Central API **ignores unknown or incomplete query params rather than rejecting them** (a bogus param still returns `200`), so defects in this class fail silently. Behavior above was confirmed against a live tenant, and the two quirks are pinned by unit tests.
+- Write-side defects remain open in #623: `_manage_resource` hardcodes `object-type=LOCAL` (GLOBAL unreachable) and silently drops both scope params when only one is supplied.
+- Root cause: the one-shot `scripts/import_central_config_tools.py` import emitted path params and request bodies but never query params, and the files are hand-curated since. Fixed in place rather than by re-running the importer. Other platforms are not yet audited for the same gap.
+
 ## [3.6.0.1] - 2026-07-17
 
 ### Security
 - **Bump `mcp` 1.27.0 → 1.28.1** to clear three advisories published against the locked version: CVE-2026-52869 and CVE-2026-52870 (fixed in 1.27.2) and CVE-2026-59950 (fixed in 1.28.1). The dependency floor is raised from `>=1.20.0` to `>=1.28.1` so a future resolve can't fall back to a vulnerable release. `pip-audit` reports no known vulnerabilities; full suite green on 1.28.1 with no code changes required.
 - Refreshes the stale `hpe-networking-mcp` self-version in `uv.lock` (3.4.7.1 → 3.6.0.1) as a side effect of re-locking.
+
 
 ## [3.6.0.0] - 2026-07-16
 
