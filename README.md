@@ -56,7 +56,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Staged Writes + Commit Workflow** | — | — | — | — | ✅ | ✅ | — | — | — |
 | **Guided Prompts** | ✅ | ✅ | — | — | — | — | ✅ | — | — |
 | **Dynamic Tool Discovery** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Underlying tools** | **1037 + 2 prompts** | **669 + 12 prompts** | **10** | **142** | **19** | **25** | **48 + 9 prompts** | **21** | **1216** |
+| **Underlying tools** | **1050 + 2 prompts** | **669 + 12 prompts** | **10** | **142** | **19** | **25** | **48 + 9 prompts** | **21** | **1216** |
 | **Exposed meta-tools (dynamic mode)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — | — | — |
 
@@ -559,7 +559,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 │ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐│
 │ │  Mist  │ │Central │ │GreenLk │ │ClrPass │ │ Apstra │ │  Axis  │ │  AOS8  │ │  UXI   ││
 │ │ mist_* │ │centrl_*│ │grnlake │ │clrpass │ │apstra_*│ │ axis_* │ │ aos8_* │ │ uxi_*  ││
-│ │ 1037   │ │669tools│ │10 tools│ │142 tool│ │19 tools│ │25 tools│ │48 tools│ │21 tools││
+│ │ 1050   │ │669tools│ │10 tools│ │142 tool│ │19 tools│ │25 tools│ │48 tools│ │21 tools││
 │ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │ │        ││
 │                                                                                         │
 │  All 4149 underlying tools reachable via call_tool() in code mode or via                │
