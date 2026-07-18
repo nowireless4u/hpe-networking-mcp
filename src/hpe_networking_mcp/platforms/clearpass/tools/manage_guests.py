@@ -21,6 +21,13 @@ async def clearpass_manage_guest_user(
     payload: Annotated[dict, Field(description="Guest config payload. For delete: empty dict {}.")],
     guest_id: Annotated[str | None, Field(description="Guest ID (required for update/delete).")] = None,
     username: Annotated[str | None, Field(description="Guest username (alternative to ID).")] = None,
+    change_of_authorization: Annotated[
+        str | None,
+        Field(
+            description="'true' to push the network-state change via a RADIUS Disconnect/CoA request. "
+            "Honored on create and on the username-based update/delete (the ID-based endpoints don't support it)."
+        ),
+    ] = None,
     confirmed: Annotated[
         bool,
         Field(
@@ -50,8 +57,13 @@ async def clearpass_manage_guest_user(
     try:
         client = await get_clearpass_client()
 
+        # CoA is documented only on POST /guest and the username-based
+        # update/delete (it needs the username to locate the live session),
+        # not on the ID-based endpoints — so it's threaded only where accepted.
+        coa = {"change_of_authorization": change_of_authorization} if change_of_authorization else None
+
         if action_type == "create":
-            return await client.request("post", "/guest", json_body=payload)
+            return await client.request("post", "/guest", params=coa, json_body=payload)
         if not guest_id and not username:
             raise ToolError(
                 {"status_code": 400, "message": "Either guest_id or username is required for update/delete."}
@@ -59,11 +71,11 @@ async def clearpass_manage_guest_user(
         if action_type == "update":
             if guest_id:
                 return await client.request("patch", f"/guest/{path_seg(guest_id)}", json_body=payload)
-            return await client.request("patch", f"/guest/username/{path_seg(username)}", json_body=payload)
+            return await client.request("patch", f"/guest/username/{path_seg(username)}", params=coa, json_body=payload)
         # delete
         if guest_id:
             return await client.request("delete", f"/guest/{path_seg(guest_id)}")
-        return await client.request("delete", f"/guest/username/{path_seg(username)}")
+        return await client.request("delete", f"/guest/username/{path_seg(username)}", params=coa)
     except ToolError:
         raise
     except Exception as e:

@@ -17,6 +17,7 @@ async def uxi_list_wired_networks(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI wired (Ethernet) networks.
 
@@ -29,7 +30,9 @@ async def uxi_list_wired_networks(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/wired-networks", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/wired-networks", next_cursor=next_cursor, limit=page_size, extra_params={"id": id} if id else None
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -41,6 +44,7 @@ async def uxi_list_wireless_networks(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI wireless (Wi-Fi) networks.
 
@@ -53,7 +57,9 @@ async def uxi_list_wireless_networks(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/wireless-networks", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/wireless-networks", next_cursor=next_cursor, limit=page_size, extra_params={"id": id} if id else None
+        )
     except ToolError:
         raise
     except Exception as e:

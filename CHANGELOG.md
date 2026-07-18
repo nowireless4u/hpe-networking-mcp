@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.2] - 2026-07-17
+
+Cross-platform param-gap sweep (hand-curated platforms). A spec-vs-signature audit of every platform found that the generated surfaces (Mist/GreenLake/EdgeConnect) already emit all documented params; only a few hand-curated ClearPass and UXI tools dropped optional query params.
+
+### Fixed
+- **ClearPass** — `clearpass_get_session_action_status` gains `offset`/`limit` (pagination); `clearpass_get_reauth_profiles` gains `template_type`; `clearpass_manage_guest_user` and `clearpass_manage_device` gain `change_of_authorization` (push the network-state change via a RADIUS Disconnect/CoA). CoA is threaded only onto the endpoints that document it — create, and the username-/MAC-based update/delete — not the ID-based variants that don't support it.
+- **UXI** — the 10 list tools (`uxi_list_agents`, `uxi_list_sensors`, `uxi_list_groups`, the four `*_group_assignments`, `uxi_list_wired_networks`, `uxi_list_wireless_networks`, `uxi_list_service_tests`) gain the documented `id` filter via the client's `extra_params` hook.
+
 ## [3.6.1.1] - 2026-07-17
 
 Bug-fix roll-up on top of 3.6.1.0, shipping two PRs as one patch: closes the read-param gaps in the hand-curated readers the #624 sweep missed, fixes three PII-tokenization defects and one code-mode error-handling defect (#626), and remediates the config-write scope-parameter architecture so `SHARED` and scoped writes behave correctly while the spec index stops advertising parameters the wrapper doesn't accept (#627).

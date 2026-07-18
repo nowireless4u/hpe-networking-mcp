@@ -180,6 +180,13 @@ async def clearpass_manage_device(
     payload: Annotated[dict, Field(description="Device config payload. Empty dict {} for delete.")],
     device_id: Annotated[str | None, Field(description="Device ID (required for update/delete).")] = None,
     macaddr: Annotated[str | None, Field(description="MAC address (alternative to device_id).")] = None,
+    change_of_authorization: Annotated[
+        str | None,
+        Field(
+            description="'true' to push the network-state change via a RADIUS Disconnect/CoA request. "
+            "Honored on create and on the MAC-based update/delete (the ID-based endpoints don't support it)."
+        ),
+    ] = None,
     confirmed: Annotated[
         bool,
         Field(
@@ -195,6 +202,7 @@ async def clearpass_manage_device(
         payload: JSON config body. Required for create/update. Empty dict for delete.
         device_id: Numeric device ID. Required for update/delete (or use macaddr).
         macaddr: Device MAC address. Alternative to device_id.
+        change_of_authorization: 'true' to push the change via a RADIUS Disconnect/CoA.
         confirmed: Fallback confirmation flag — honored only when the client cannot show a
             confirmation prompt (the universal gate prompts otherwise).
     """
@@ -207,18 +215,22 @@ async def clearpass_manage_device(
         )
     try:
         client = await get_clearpass_client()
+        # CoA is documented only on POST /device and the MAC-based update/delete
+        # (it needs the MAC to locate the live session), not the ID-based ones.
+        coa = {"change_of_authorization": change_of_authorization} if change_of_authorization else None
         if action_type == "create":
-            return await client.request("post", "/device", json_body=payload)
+            return await client.request("post", "/device", params=coa, json_body=payload)
         if not device_id and not macaddr:
             raise ToolError(
                 {"status_code": 400, "message": "Either device_id or macaddr is required for update/delete."}
             )
         if action_type == "update":
-            path = f"/device/{path_seg(device_id)}" if device_id else f"/device/mac/{path_seg(macaddr)}"
-            return await client.request("patch", path, json_body=payload)
+            if device_id:
+                return await client.request("patch", f"/device/{path_seg(device_id)}", json_body=payload)
+            return await client.request("patch", f"/device/mac/{path_seg(macaddr)}", params=coa, json_body=payload)
         if device_id:
             return await client.request("delete", f"/device/{path_seg(device_id)}")
-        return await client.request("delete", f"/device/mac/{path_seg(macaddr)}")
+        return await client.request("delete", f"/device/mac/{path_seg(macaddr)}", params=coa)
     except ToolError:
         raise
     except Exception as e:

@@ -65,6 +65,8 @@ async def clearpass_get_sessions(
 async def clearpass_get_session_action_status(
     ctx: Context,
     action_id: str,
+    offset: int | None = None,
+    limit: int | None = None,
 ) -> dict | str:
     """Get the status of a ClearPass session action (e.g. disconnect or CoA).
 
@@ -73,10 +75,13 @@ async def clearpass_get_session_action_status(
 
     Args:
         action_id: The action ID returned from a session action request.
+        offset: Pagination offset into the action's result set.
+        limit: Max results per page.
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/session-action/{path_seg(action_id)}")
+        params = {k: v for k, v in {"offset": offset, "limit": limit}.items() if v is not None}
+        return await client.request("get", f"/session-action/{path_seg(action_id)}", params=params or None)
     except ToolError:
         raise
     except Exception as e:
@@ -87,6 +92,7 @@ async def clearpass_get_session_action_status(
 async def clearpass_get_reauth_profiles(
     ctx: Context,
     session_id: str,
+    template_type: str | None = None,
 ) -> dict | str:
     """Get available reauthorization profiles for a ClearPass session.
 
@@ -95,10 +101,12 @@ async def clearpass_get_reauth_profiles(
 
     Args:
         session_id: Session ID to retrieve reauthorization profiles for.
+        template_type: Reauthorize profile type to filter by (e.g. "Disconnect" or "CoA").
     """
     try:
         client = await get_clearpass_client()
-        return await client.request("get", f"/session/{path_seg(session_id)}/reauthorize")
+        params = {"template_type": template_type} if template_type else None
+        return await client.request("get", f"/session/{path_seg(session_id)}/reauthorize", params=params)
     except ToolError:
         raise
     except Exception as e:

@@ -17,6 +17,7 @@ async def uxi_list_agent_group_assignments(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI agent-to-group assignments.
 
@@ -28,7 +29,12 @@ async def uxi_list_agent_group_assignments(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/agent-group-assignments", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/agent-group-assignments",
+            next_cursor=next_cursor,
+            limit=page_size,
+            extra_params={"id": id} if id else None,
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -40,6 +46,7 @@ async def uxi_list_sensor_group_assignments(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI sensor-to-group assignments.
 
@@ -51,7 +58,12 @@ async def uxi_list_sensor_group_assignments(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/sensor-group-assignments", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/sensor-group-assignments",
+            next_cursor=next_cursor,
+            limit=page_size,
+            extra_params={"id": id} if id else None,
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -63,6 +75,7 @@ async def uxi_list_network_group_assignments(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI network-to-group assignments.
 
@@ -74,7 +87,12 @@ async def uxi_list_network_group_assignments(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/network-group-assignments", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/network-group-assignments",
+            next_cursor=next_cursor,
+            limit=page_size,
+            extra_params={"id": id} if id else None,
+        )
     except ToolError:
         raise
     except Exception as e:
@@ -86,6 +104,7 @@ async def uxi_list_service_test_group_assignments(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI service-test-to-group assignments.
 
@@ -97,7 +116,12 @@ async def uxi_list_service_test_group_assignments(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/service-test-group-assignments", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/service-test-group-assignments",
+            next_cursor=next_cursor,
+            limit=page_size,
+            extra_params={"id": id} if id else None,
+        )
     except ToolError:
         raise
     except Exception as e:

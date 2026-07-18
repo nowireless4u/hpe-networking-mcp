@@ -19,6 +19,7 @@ async def uxi_list_sensors(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI sensors with serial, name, model, MAC addresses, location coordinates, and type.
 
@@ -31,7 +32,9 @@ async def uxi_list_sensors(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/sensors", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/sensors", next_cursor=next_cursor, limit=page_size, extra_params={"id": id} if id else None
+        )
     except ToolError:
         raise
     except Exception as e:

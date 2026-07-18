@@ -17,6 +17,7 @@ async def uxi_list_agents(
     ctx: Context,
     next_cursor: str | None = None,
     page_size: int = 50,
+    id: str | None = None,
 ) -> dict[str, Any] | str:
     """List UXI agents with name, MAC addresses, model, serial, group assignment, and notes.
 
@@ -29,7 +30,9 @@ async def uxi_list_agents(
     """
     try:
         client = await get_uxi_client()
-        return await client.uxi_get("/agents", next_cursor=next_cursor, limit=page_size)
+        return await client.uxi_get(
+            "/agents", next_cursor=next_cursor, limit=page_size, extra_params={"id": id} if id else None
+        )
     except ToolError:
         raise
     except Exception as e:
