@@ -168,6 +168,10 @@ async def mist_get_org_inventory(
     vc: Annotated[bool, Field(description="To display Virtual Chassis members")] = False,
     unassigned: Annotated[bool, Field(description="To display Unassigned devices")] = True,
     modified_after: Annotated[int | None, Field(description="Filter on inventory last modified time, in epoch")] = None,
+    disconnected_before: Annotated[
+        int | None,
+        Field(description="Filter results to devices that were last disconnected before this time, in epoch seconds"),
+    ] = None,
     limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     page: Annotated[
         int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
@@ -188,6 +192,7 @@ async def mist_get_org_inventory(
             "vc": vc,
             "unassigned": unassigned,
             "modified_after": modified_after,
+            "disconnected_before": disconnected_before,
             "limit": limit,
             "page": page,
         },

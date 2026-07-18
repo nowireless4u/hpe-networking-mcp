@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.3] - 2026-07-17
+
+Mist tool surface resynced from the current vendored OpenAPI spec (regenerated via `scripts/internal/regenerate_mist_tools.py`), closing the drift the cross-platform audit surfaced. Net **+13 tools (1037 → 1050)**; nothing removed.
+
+### Added
+- **13 new Mist tools** for endpoints added to the upstream spec since the last generation — Marvis client stats/events/metrics (`mist_*_marvisclients_*`), org device claims (`mist_*_claims*`), and sitemap `marvis-configs`.
+
+### Fixed
+- **5 Mist read tools regained dropped query params** the spec documents: `map_id` on `sites/{}/stats/assets`, `mapstack_id` on `sites/{}/maps`, `disconnected_before` on `orgs/{}/inventory`, `end_of_sale_before`/`end_of_sale_after` on the JSI inventory search, and the SCEP client-cert filters (`cert_provider`, `common_name`, `limit`, `page`). These were stale-generation drift, not per-tool bugs.
+- Minor spec-driven description/param refreshes on a few existing tools. No tools removed — the audit confirmed every current Mist tool still maps to a live spec operation.
+
+> Note: the earlier "−6,700 line" regen diff was entirely formatting (the generator emits single-quotes/unwrapped code that `ruff format` normalizes); the real change is 15 files, +542/−235.
+
 ## [3.6.1.2] - 2026-07-17
 
 Cross-platform param-gap sweep (hand-curated platforms). A spec-vs-signature audit of every platform found that the generated surfaces (Mist/GreenLake/EdgeConnect) already emit all documented params; only a few hand-curated ClearPass and UXI tools dropped optional query params.

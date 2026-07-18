@@ -53,7 +53,7 @@ async def mist_count_org_jsi_assets_and_contracts(
     distinct: Annotated[
         Any | None,
         Field(
-            description="Field used to group this count response. enum: `account_id`, `claimed`, `has_support`, `eol_time`, `eos_time`, `version_time`, `model`, `sku`, `status`, `type`, `version`, `warranty_type`"
+            description="Field used to group this count response. enum: `account_id`, `claimed`, `has_support`, `end_of_sale_time`, `eos_time`, `version_time`, `model`, `sku`, `status`, `type`, `version`, `warranty_type`"
         ),
     ] = None,
     limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
@@ -242,9 +242,11 @@ async def mist_search_org_jsi_assets_and_contracts(
             description="Device warranty type used to filter Juniper Support Insight inventory. enum: `Standard Hardware Warranty`, `Enhanced Hardware Warranty`, `Dead On Arrival Warranty`, `Limited Lifetime Warranty`, `Software Warranty`, `Limited Lifetime Warr..."
         ),
     ] = None,
-    eol_after: Annotated[str | None, Field(description="Filter devices with End Of Life date after this date")] = None,
-    eol_before: Annotated[
-        str | None, Field(description="Filter devices with End Of Life date before this date")
+    end_of_sale_after: Annotated[
+        str | None, Field(description="Filter devices with End Of Sale date after this date")
+    ] = None,
+    end_of_sale_before: Annotated[
+        str | None, Field(description="Filter devices with End Of Sale date before this date")
     ] = None,
     eos_after: Annotated[
         str | None, Field(description="Filter devices with End Of Support date after this date")
@@ -294,8 +296,8 @@ async def mist_search_org_jsi_assets_and_contracts(
             "sku": sku,
             "status": status,
             "warranty_type": warranty_type,
-            "eol_after": eol_after,
-            "eol_before": eol_before,
+            "end_of_sale_after": end_of_sale_after,
+            "end_of_sale_before": end_of_sale_before,
             "eos_after": eos_after,
             "eos_before": eos_before,
             "version_eos_after": version_eos_after,

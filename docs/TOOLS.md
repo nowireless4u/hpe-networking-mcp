@@ -251,7 +251,7 @@ logged and skipped; the rest of the catalog still loads. See
 
 ---
 
-## Juniper Mist (1037 tools + 2 prompts)
+## Juniper Mist (1050 tools + 2 prompts)
 
 ### Account and Organization
 

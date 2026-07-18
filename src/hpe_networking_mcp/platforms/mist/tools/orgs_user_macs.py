@@ -140,7 +140,7 @@ async def mist_get_org_user_mac(
 
 @_mcp_tool(
     name="mist_import_org_user_macs",
-    description='POST /api/v1/orgs/{org_id}/usermacs/import\n\nimportOrgUserMacs\n\nImport Org User MACs\n\n### CSV Import example\n```csv \nmac,labels,vlan,notes,name,radius_group\n921b638445cd,"bldg1,flor1",vlan-100\n721b638445ef,"bldg2,flor2",vlan-101,Canon Printers\n721b638445ee,"bldg3,flor3",vlan-102,Printer2,VIP\n921b638445ce,"bldg4,flor4",vlan-103\n921b638445cf,"bldg5,flor5",vlan-104\n````',
+    description='POST /api/v1/orgs/{org_id}/usermacs/import\n\nimportOrgUserMacs\n\nImport Org User MACs. Accepts JSON or CSV upload.\n\n**JSON — Array form** (asynchronous by default):\n```json\n[\n  {"mac": "921b638445cd", "labels": ["label1"], "vlan": "vlan-1"},\n  {"mac": "721b638445ef", "labels": ["label2", "label3"], "notes": "mac address refers to Canon printers"}\n]\n```\n\n**CSV upload**: multipart/form-data with `file` field.\n\n### CSV file format\n```csv\nmac,labels,vlan,notes,name,radius_group\n921b638445cd,"bldg1,flor1",vlan-100\n721b638445ef,"bldg2,flor2",vlan-101,Canon Printers\n721b638445ee,"bldg3,flor3",vlan-1...',
     capability=Capability.WRITE,
 )
 async def mist_import_org_user_macs(
@@ -196,7 +196,7 @@ async def mist_search_org_user_macs(
 
 @_mcp_tool(
     name="mist_update_org_multiple_user_macs",
-    description="PUT /api/v1/orgs/{org_id}/usermacs\n\nupdateOrgMultipleUserMacs\n\nUpdate Multiple Org User MACs",
+    description="PUT /api/v1/orgs/{org_id}/usermacs\n\nupdateOrgMultipleUserMacs\n\nUpdate Multiple Org User MACs. Accepts a JSON array of user MAC objects where `id` is required for each entry.",
     capability=Capability.WRITE,
 )
 async def mist_update_org_multiple_user_macs(

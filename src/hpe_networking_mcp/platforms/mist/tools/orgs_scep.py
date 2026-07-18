@@ -63,26 +63,54 @@ async def mist_get_org_mist_scep(
 
 @_mcp_tool(
     name="mist_list_org_issued_client_certificates",
-    description="GET /api/v1/orgs/{org_id}/setting/mist_scep/client_certs\n\nlistOrgIssuedClientCertificates\n\nList Mist SCEP client certificates issued for the organization. Results can be filtered by SSO name ID, certificate serial number, or device ID; `serial_number` and `device_id` accept comma-separated values.",
+    description="GET /api/v1/orgs/{org_id}/setting/mist_scep/client_certs\n\nlistOrgIssuedClientCertificates\n\nList Mist SCEP client certificates issued for the organization. Results can be filtered by common name, certificate provider, serial number, device ID, or time range.",
     capability=Capability.READ,
 )
 async def mist_list_org_issued_client_certificates(
     ctx: Context,
     org_id: Annotated[str, Field(description="path parameter 'org_id'")],
-    sso_name_id: Annotated[str | None, Field(description="Filter results by sso name id")] = None,
+    common_name: Annotated[
+        str | None, Field(description="Filter by certificate common name (e.g. user UPN or device identifier)")
+    ] = None,
+    cert_provider: Annotated[
+        str | None,
+        Field(
+            description="Filter by MDM or certificate provider that issued the certificate. Accepts multiple comma-separated values."
+        ),
+    ] = None,
     serial_number: Annotated[
-        str | None, Field(description="Serial Number of the certificate. Accepts multiple comma-separated values.")
+        str | None, Field(description="Filter by certificate serial number. Accepts multiple comma-separated values.")
     ] = None,
     device_id: Annotated[
-        str | None, Field(description="Filter results by device id. Accepts multiple comma-separated values.")
+        str | None,
+        Field(
+            description="Filter by device identifier associated with the certificate. Accepts multiple comma-separated values."
+        ),
     ] = None,
+    expire_time: Annotated[int | None, Field(description="Filter by certificate expiry time, in epoch seconds")] = None,
+    created_time: Annotated[
+        int | None, Field(description="Filter by certificate issuance time, in epoch seconds")
+    ] = None,
+    limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
+    page: Annotated[
+        int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
+    ] = 1,
 ) -> Any:
     return await mist_request(
         ctx,
         "GET",
         "/api/v1/orgs/{org_id}/setting/mist_scep/client_certs",
         path_params={"org_id": org_id},
-        query_params={"sso_name_id": sso_name_id, "serial_number": serial_number, "device_id": device_id},
+        query_params={
+            "common_name": common_name,
+            "cert_provider": cert_provider,
+            "serial_number": serial_number,
+            "device_id": device_id,
+            "expire_time": expire_time,
+            "created_time": created_time,
+            "limit": limit,
+            "page": page,
+        },
         body=None,
     )
 

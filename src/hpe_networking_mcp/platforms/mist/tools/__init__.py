@@ -100,6 +100,7 @@ from . import (
     orgs_stats_assets,  # noqa: F401
     orgs_stats_bgp_peers,  # noqa: F401
     orgs_stats_devices,  # noqa: F401
+    orgs_stats_marvis_clients,  # noqa: F401
     orgs_stats_mxedges,  # noqa: F401
     orgs_stats_ospf,  # noqa: F401
     orgs_stats_other_devices,  # noqa: F401
@@ -159,6 +160,7 @@ from . import (
     sites_maps,  # noqa: F401
     sites_maps_auto_placement,  # noqa: F401
     sites_maps_auto_zone,  # noqa: F401
+    sites_marvis_configs,  # noqa: F401
     sites_mxedges,  # noqa: F401
     sites_nac_fingerprints,  # noqa: F401
     sites_network_templates,  # noqa: F401

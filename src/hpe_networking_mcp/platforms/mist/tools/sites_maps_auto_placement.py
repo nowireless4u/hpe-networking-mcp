@@ -6,7 +6,7 @@ This file was emitted by ``scripts/_mist_generator.py`` from
     uv run python scripts/regenerate_mist_tools.py
 
 Tag: ``Sites Maps - Auto-placement``
-Operations in this file: 9
+Operations in this file: 10
 """
 
 # ruff: noqa: E501
@@ -21,6 +21,27 @@ from pydantic import Field
 from hpe_networking_mcp.platforms._common.annotations import Capability
 from hpe_networking_mcp.platforms.mist._client import mist_request
 from hpe_networking_mcp.platforms.mist._registry import tool as _mcp_tool
+
+
+@_mcp_tool(
+    name="mist_accept_site_ap_localization_data",
+    description="POST /api/v1/sites/{site_id}/maps/{map_id}/apply_autoplacement\n\nacceptSiteApLocalizationData\n\nAccept the cached autoplacement and auto-orientation values of a map or subset of APs on a map. Any APs that have autoplacement values are stored in cache for up to 7 days while awaiting acceptance.\n\n\nAccepting the autoplacement values overwrites the existing X, Y, and orientation of the accepted APs with their cached autoplacement values.\n\nOnce a decision to accept is made, or the 7-day time-to-live (TTL) expires, the cached values are deleted.",
+    capability=Capability.WRITE,
+)
+async def mist_accept_site_ap_localization_data(
+    ctx: Context,
+    site_id: Annotated[str, Field(description="path parameter 'site_id'")],
+    map_id: Annotated[str, Field(description="path parameter 'map_id'")],
+    body: Annotated[dict[str, Any] | None, Field(default=None, description="Request Body")] = None,
+) -> Any:
+    return await mist_request(
+        ctx,
+        "POST",
+        "/api/v1/sites/{site_id}/maps/{map_id}/apply_autoplacement",
+        path_params={"site_id": site_id, "map_id": map_id},
+        query_params=None,
+        body=body,
+    )
 
 
 @_mcp_tool(
@@ -51,7 +72,7 @@ async def mist_clear_site_ap_auto_orient(
 
 @_mcp_tool(
     name="mist_clear_site_ap_autoplacement",
-    description="POST /api/v1/sites/{site_id}/maps/{map_id}/clear_autoplacement\n\nclearSiteApAutoplacement\n\nThis API is used to destroy the cached autoplacement locations of a map or subset of APs on a map.",
+    description="POST /api/v1/sites/{site_id}/maps/{map_id}/clear_autoplacement\n\nclearSiteApAutoplacement\n\nReject the cached autoplacement and auto-orientation values of a map or subset of APs on a map. Any APs that have autoplacement values are stored in cache for up to 7 days while awaiting rejection.\n\n\nRejecting the autoplacement values causes the APs to retain their current X, Y, and orientation.\n\nOnce a decision to reject is made, or the 7-day time-to-live (TTL) expires, the cached values are deleted.",
     capability=Capability.WRITE,
 )
 async def mist_clear_site_ap_autoplacement(
@@ -77,7 +98,7 @@ async def mist_clear_site_ap_autoplacement(
 
 @_mcp_tool(
     name="mist_confirm_site_ap_localization_data",
-    description="POST /api/v1/sites/{site_id}/maps/{map_id}/use_auto_ap_values\n\nconfirmSiteApLocalizationData\n\nThis API is used to accept or reject the cached autoplacement and auto-orientation values of a map or subset of APs on a map. Any APs that have autoplacement values are stored in cache for up to 7 days while awaiting acceptance or rejection.\n\n```\nAccepting the autoplacement values overwrites the existing X, Y, and orientation of the accepted APs with their cached autoplacement values.\nRejecting the autoplacement values causes the APs to retain their current X, Y, and orientation.\n```\n\nOnce a decisi...",
+    description="POST /api/v1/sites/{site_id}/maps/{map_id}/use_auto_ap_values\n\nconfirmSiteApLocalizationData\n\n**Deprecated** — use [Accept Site AP Autoplacement](/#operations/acceptSiteApLocalizationData) to accept cached values, or [Clear Site AP Autoplacement](/#operations/clearSiteApAutoplacement) to reject them.",
     capability=Capability.WRITE,
 )
 async def mist_confirm_site_ap_localization_data(

@@ -150,6 +150,7 @@ async def mist_get_site_discovered_asset_by_map(
 async def mist_list_site_assets_stats(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
+    map_id: Annotated[str | None, Field(description="Filter assets by map UUID")] = None,
     start: Annotated[
         str | None,
         Field(
@@ -175,7 +176,7 @@ async def mist_list_site_assets_stats(
         "GET",
         "/api/v1/sites/{site_id}/stats/assets",
         path_params={"site_id": site_id},
-        query_params={"start": start, "end": end, "duration": duration, "limit": limit, "page": page},
+        query_params={"map_id": map_id, "start": start, "end": end, "duration": duration, "limit": limit, "page": page},
         body=None,
     )
 

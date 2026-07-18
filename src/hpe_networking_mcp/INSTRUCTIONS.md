@@ -336,7 +336,7 @@ A literal `{"message": "Action declined by user."}` (without `confirmation_requi
 
 ## Tool Catalog (v3.1.0.0 spec-driven)
 
-**Mist tooling is now generated from the upstream Juniper Mist OpenAPI spec** (1037 tools, one per REST endpoint). Tools follow the `mist_<snake_case_operationId>` convention:
+**Mist tooling is now generated from the upstream Juniper Mist OpenAPI spec** (1050 tools, one per REST endpoint). Tools follow the `mist_<snake_case_operationId>` convention:
 
 - GET on a collection → `mist_list_<resource>` (e.g. `mist_list_org_sites`)
 - GET on an item → `mist_get_<resource>` (e.g. `mist_get_self`)

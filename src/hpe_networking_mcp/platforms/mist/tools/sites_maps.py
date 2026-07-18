@@ -200,6 +200,9 @@ async def mist_import_site_wayfindings(
 async def mist_list_site_maps(
     ctx: Context,
     site_id: Annotated[str, Field(description="path parameter 'site_id'")],
+    mapstack_id: Annotated[
+        str | None, Field(description="Filter maps by mapstack UUID; returns only maps belonging to that mapstack")
+    ] = None,
     limit: Annotated[int, Field(description="Maximum number of results to return per page")] = 100,
     page: Annotated[
         int, Field(description="Select the page number to return when using page-based pagination; starts at `1`")
@@ -210,7 +213,7 @@ async def mist_list_site_maps(
         "GET",
         "/api/v1/sites/{site_id}/maps",
         path_params={"site_id": site_id},
-        query_params={"limit": limit, "page": page},
+        query_params={"mapstack_id": mapstack_id, "limit": limit, "page": page},
         body=None,
     )
 
