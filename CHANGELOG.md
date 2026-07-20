@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.4] - 2026-07-20
+
+### Security
+- **Device serials no longer leak inside a stringified `@` annotation wrapper.** Central sometimes serializes an object's *entire* annotation set as one stringified value under `@` (observed on alias reads), rather than an expanded dict. The redaction walker saw `@` as one opaque string and never descended, so a DEVICE serial nested inside its `scope_device_function` shipped cleartext — even while the same serial was tokenized elsewhere in the response, so the mask was defeatable by correlation. This is the same class as the earlier `scope_device_function` fix, one level up at the wrapper. The walker now parses the `@` blob (JSON or Python-`repr`) and re-walks its contents, routing the nested `scope_device_function` back through the existing DEVICE-serial handler. The DEVICE-only rule is preserved (SITE / collection names stay cleartext); non-`@` JSON-looking strings are untouched; idempotent. Live-verified: 0 serials leaked across stringified blobs on a real tenant.
+
 ## [3.6.1.3] - 2026-07-17
 
 Mist tool surface resynced from the current vendored OpenAPI spec (regenerated via `scripts/internal/regenerate_mist_tools.py`), closing the drift the cross-platform audit surfaced. Net **+13 tools (1037 → 1050)**; nothing removed.
