@@ -60,7 +60,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Exposed meta-tools (dynamic mode)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — | — | — |
 
-> **Default tool surface (v3.0.0.0+)**: ships with `MCP_TOOL_MODE=code` by default. Code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 4149 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Smallest initial token cost (~minimal context); best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` to use the v2.x default behavior — each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) plus the 4 cross-platform static tools and 2 skills tools (24 total surface, ~3,700 tokens). The `static` mode was REMOVED in v3.0.0.0. Every tool's response is wrapped in a uniform envelope `{ok, status, data, message, tool, platform}`. v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (48 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. v3.2.0.0 adds **HPE UXI** (21 tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface (v3.0.0.0+)**: ships with `MCP_TOOL_MODE=code` by default. Code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 4109 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Smallest initial token cost (~minimal context); best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` to use the v2.x default behavior — each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) plus the 4 cross-platform static tools and 2 skills tools (24 total surface, ~3,700 tokens). The `static` mode was REMOVED in v3.0.0.0. Every tool's response is wrapped in a uniform envelope `{ok, status, data, message, tool, platform}`. v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (48 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. v3.2.0.0 adds **HPE UXI** (21 tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -201,7 +201,7 @@ docker compose up -d
 docker compose logs
 ```
 
-Look for lines like `Mist: 1050 underlying tools registered (code mode)`, `ClearPass: 142 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 48 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `EdgeConnect: registered 187 generated tool module(s) (code mode)`, `GreenLake: registered 959 tools across 169 tool module(s) (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 4149 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
+Look for lines like `Mist: 1050 underlying tools registered (code mode)`, `ClearPass: 142 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 48 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `EdgeConnect: registered 187 generated tool module(s) (code mode)`, `GreenLake: registered 919 tools across 163 tool module(s) (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 4109 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
 
 ### Health & readiness probes
 
@@ -562,7 +562,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 │ │ 1050   │ │669tools│ │10 tools│ │142 tool│ │19 tools│ │25 tools│ │48 tools│ │21 tools││
 │ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │ │        ││
 │                                                                                         │
-│  All 4149 underlying tools reachable via call_tool() in code mode or via                │
+│  All 4109 underlying tools reachable via call_tool() in code mode or via                │
 │  per-platform meta-tools (<platform>_list_tools / get_schema / invoke) in dynamic mode. │
 │ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘│
 │     │          │          │          │          │          │          │          │       │
@@ -579,7 +579,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
-- **Code tool mode by default (since v3.0.0.0)** — only `execute` + 5 discovery tools exposed; all 4149 underlying tools reachable via `await call_tool(name, params)` inside the sandbox. Smallest initial token cost; best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` for the v2.x meta-tool surface (24 tools, ~3,700 tokens).
+- **Code tool mode by default (since v3.0.0.0)** — only `execute` + 5 discovery tools exposed; all 4109 underlying tools reachable via `await call_tool(name, params)` inside the sandbox. Smallest initial token cost; best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` for the v2.x meta-tool surface (24 tools, ~3,700 tokens).
 - **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*`, `axis_*`, `aos8_*`, `uxi_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
@@ -603,7 +603,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis Atmos Cloud write/mutation tools (every write stages — call `axis_commit_changes` to apply) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (12 tools; every write returns `requires_write_memory_for` — call `aos8_write_memory` explicitly) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (10 tools: sensor/agent/group/assignment mutations) |
-| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (446 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
+| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (424 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
 | `MCP_APP_ENABLE` | `false` | Single switch for all MCP-Apps capabilities. Registers the FastMCP `FileUpload` provider (`file_manager` drag/pick upload UI + `list_files` for file metadata) **and** the `GenerativeUI` provider (`generate_prefab_ui` — the model writes a live Prefab dashboard from data it collected — + `search_prefab_components`). All UIs render only in MCP-Apps hosts (e.g. Claude Desktop / ChatGPT / claude.ai). Uploaded files are read **server-side only** — the content-returning `read_file` tool is deliberately removed so upload contents (device serials/MACs, AOS 8 PSKs / RADIUS secrets) never enter the model context; consuming tools (`greenlake_bulk_add_devices`, `aos8_parse_config`) read by name inside the server. |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
@@ -644,9 +644,9 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis write/mutation tools (staged; commit with `axis_commit_changes`) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (call `aos8_write_memory` after each change to persist) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (sensor/agent/group/assignment mutations) |
-| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (446 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
+| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (424 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
-| `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 4149 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
+| `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 4109 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
 | `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
 | `RETRY_INITIAL_DELAY` | `1.0` | Initial retry backoff seconds (exponential: 1s, 2s, 4s) |
 | `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep (also caps `Retry-After` header values) |
@@ -716,7 +716,7 @@ hpe-networking-mcp/
 │       ├── health.py            # Cross-platform health probe tool
 │       ├── mist/                # 1050 Mist tools (spec-driven) + 2 prompts + API client
 │       ├── central/             # 669 Central tools + 12 prompts + API client
-│       ├── greenlake/           # 959 GreenLake tools (spec-generated) + bulk_add + OAuth2 client
+│       ├── greenlake/           # 919 GreenLake tools (spec-generated) + bulk_add + OAuth2 client
 │       ├── clearpass/           # 142 ClearPass tools + async httpx client
 │       ├── apstra/              # 19 Apstra tools + async httpx client
 │       ├── axis/                # 25 Axis Atmos Cloud tools + httpx client (JWT bearer)
@@ -845,25 +845,25 @@ If tools time out after ~4 minutes, check that:
 - Node.js is installed: `npx --version`
 - The container didn't lose connectivity after sleep: `docker compose restart`
 
-### Tool Surface Looks Wrong (6 tools vs. 4149)
+### Tool Surface Looks Wrong (6 tools vs. 4109)
 
-Since v3.0.0.0, the server defaults to `MCP_TOOL_MODE=code`: only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4149 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. A correctly configured server with all 9 platforms enabled will advertise **6 tools** to the AI client.
+Since v3.0.0.0, the server defaults to `MCP_TOOL_MODE=code`: only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4109 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. A correctly configured server with all 9 platforms enabled will advertise **6 tools** to the AI client.
 
 Check the mode in the logs:
 
 ```bash
 docker compose logs | grep "Tool mode"
-# "Tool mode: code"      → default since v3.0.0.0 (6 exposed tools, 4149 underlying via call_tool)
+# "Tool mode: code"      → default since v3.0.0.0 (6 exposed tools, 4109 underlying via call_tool)
 # "Tool mode: dynamic"   → opt-in to v2.x meta-tool surface (24 exposed: 21 per-platform + 4 cross-platform + 2 skills)
 ```
 
 To use the v2.x meta-tool discovery surface (each platform exposes `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), set `MCP_TOOL_MODE=dynamic` in `docker-compose.yml` under `environment`:
 ```yaml
 - MCP_TOOL_MODE=dynamic   # 24 exposed; per-platform meta-tools + cross-platform + skills
-- MCP_TOOL_MODE=code      # 6 exposed; sandboxed call_tool() reaches all 4149 (default since v3.0.0.0)
+- MCP_TOOL_MODE=code      # 6 exposed; sandboxed call_tool() reaches all 4109 (default since v3.0.0.0)
 ```
 
-The `static` mode (every underlying tool visible up front) was REMOVED in v3.0.0.0 — at 4149 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` now raises an error at startup with a migration message.
+The `static` mode (every underlying tool visible up front) was REMOVED in v3.0.0.0 — at 4109 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` now raises an error at startup with a migration message.
 
 See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md) for the v1.x → v2.x meta-tool history.
 

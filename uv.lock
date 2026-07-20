@@ -674,7 +674,7 @@ wheels = [
 
 [[package]]
 name = "hpe-networking-mcp"
-version = "3.6.1.6"
+version = "3.6.1.7"
 source = { editable = "." }
 dependencies = [
     { name = "aiolimiter" },

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.7] - 2026-07-20
+
+### Fixed
+- **GreenLake audit-log tools now work — they were generated from the wrong (internal) spec.** `vendor/greenlake/sources.json` pinned the audit-logs spec to HPE's `v1/audit-trail.json`, which the portal serves as an **internal UI backend** (servers on `*.ccs.arubathena.com`, paths `/auditlogs/ui/v1/*`, plus a `/auditligs/` typo) despite the `/public/` URL. Those paths 404 on the public gateway, so every audit tool was dead. Re-pinned to the correct public `audit-logs-latest/@v2beta1/audit-trail-fetch-v2beta1.json` (server `global.api.greenlake.hpe.com`, paths `/audit-log/v2beta1/logs`), verified live. The audit module drops from 9 broken UI/config ops to 3 working reads (`getAuditLogs` / `getAuditLog` / `getAuditLogDetails`). Closes #636.
+
+### Changed
+- **Dropped the internal `service-catalog` "Service Registry" v1alpha1 spec.** It listed `http://localhost:5000` + `*.ccs.arubathena.com` servers and was write-heavy registry-admin (publish/hide/onboard/migrate/unredacted) — a service-provider internal API, not a customer northbound one. Its public read paths are already covered by the `service_catalog_v1beta1_nbapi` spec we keep. Removes ~22 non-functional tools.
+- **GreenLake tool surface resynced to current upstream: 959 → 919 tools** (READ 495 / WRITE 341 / WRITE_DELETE 83) across 163 modules. Beyond the two spec fixes above, the resync corrected pre-existing tool staleness (e.g. `compute-ops-mgmt` `activation-tokens` → `alerts`) and refreshed `device-management` error-detail schemas to match the portal.
+
+### Security
+- **Hardened the GreenLake OAS sync (`.github/scripts/fetch_greenlake_oas.py`) against internal-spec contamination.** It now (1) **hard-fails** when a downloaded spec has internal `/ui/` paths (the audit-logs failure mode — the spec is non-public and its tools would 404), (2) **normalizes** non-public server hosts (`*.arubathena.com`, `localhost`) to the gateway while leaving legit HPE hosts (`*.hpe.com`) untouched, and (3) **warns** (`::warning::`) when a pinned spec has a newer version published on the portal, so version drift becomes a weekly CI signal instead of silent rot. Turns the whole issue-#636 class into an automated guard.
 ## [3.6.1.6] - 2026-07-20
 
 ### Added

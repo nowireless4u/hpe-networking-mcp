@@ -1006,12 +1006,6 @@
       },
       "HpeGreenLakeBadRequestError": {
         "properties": {
-          "badRequestErrorDetails": {
-            "items": {
-              "$ref": "#/components/schemas/BadRequestErrorDetail"
-            },
-            "type": "array"
-          },
           "debugId": {
             "description": "Unique identifier for the instance of this error",
             "type": "string"
@@ -1019,6 +1013,12 @@
           "errorCode": {
             "description": "Unique machine-friendly identifier for the error",
             "type": "string"
+          },
+          "errorDetails": {
+            "items": {
+              "$ref": "#/components/schemas/BadRequestErrorDetail"
+            },
+            "type": "array"
           },
           "httpStatusCode": {
             "description": "HTTP equivalent status code",
@@ -1048,7 +1048,7 @@
             "description": "Unique machine-friendly identifier for the error",
             "type": "string"
           },
-          "generalErrorDetails": {
+          "errorDetails": {
             "items": {
               "$ref": "#/components/schemas/GeneralErrorDetail"
             },
@@ -1082,6 +1082,12 @@
             "description": "Unique machine-friendly identifier for the error",
             "type": "string"
           },
+          "errorDetails": {
+            "items": {
+              "$ref": "#/components/schemas/ServerErrorDetail"
+            },
+            "type": "array"
+          },
           "httpStatusCode": {
             "description": "HTTP equivalent status code",
             "format": "int32",
@@ -1090,12 +1096,6 @@
           "message": {
             "description": "A unique machine-friendly, but human-readable identifier for the error",
             "type": "string"
-          },
-          "serverErrorDetails": {
-            "items": {
-              "$ref": "#/components/schemas/ServerErrorDetail"
-            },
-            "type": "array"
           }
         },
         "required": [

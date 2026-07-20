@@ -1514,10 +1514,7 @@
   ],
   "servers": [
     {
-      "url": "https://polaris-default-user-api.ccs.arubathena.com"
-    },
-    {
-      "url": "https://hoku-default-user-api.ccs.arubathena.com"
+      "url": "https://global.api.greenlake.hpe.com"
     }
   ],
   "tags": [
