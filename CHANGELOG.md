@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.5] - 2026-07-20
+
+### Changed
+- **`central-scope-visualizer` skill reworked into a config-placement + classification view (Generative UI).** It now renders the scope hierarchy as a collapsible tree (profile count per node) plus a per-scope breakdown of the actual profile **names** (from `central_get_config_assignments`, not generic types), and classifies every committed profile five ways: **shared** (library), **local** (device-intrinsic type with no shared library, e.g. `system-info` — normal), **overridden** ⚠ (a LOCAL object whose name matches a SHARED profile assigned upstream — the local supersedes it), **orphaned-local** ⚠ (a LOCAL object of a type that has a shared library but no SHARED match upstream), and **orphaned-unnamed** ⚠ (an assignment with an empty `profile-instance`). Global-level alerts are ignored (config view, not health). The local/shared distinction reads the object's `object_type` annotation **quote-agnostically** (the annotation arrives both as a parsed dict and as a single-quoted stringified `@` blob). Replaces the prior Mermaid-first "build whatever diagram" runbook. Snippets are sandbox-compatible (sequential `await`, no `asyncio.gather`/`collections`) and the gather+classify logic is live-verified against a real tenant (found the 2 nameless `policy-groups` orphans).
+
 ## [3.6.1.4] - 2026-07-20
 
 ### Security

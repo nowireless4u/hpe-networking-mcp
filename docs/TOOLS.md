@@ -1396,7 +1396,7 @@ to translate between Central's named/aliased config and Mist's inline config.
 
 ### Scope & Configuration Hierarchy
 
-Six read-only tools for inspecting the Central scope hierarchy (Global → Site collections → Sites → Device collections → Devices) and the configuration committed at each level. The `central-scope-visualizer` skill orchestrates these into ready-to-render visualizations; the `central-scope-walker` skill resolves a scope name / path to its `scope_id` for downstream tool calls.
+Six read-only tools for inspecting the Central scope hierarchy (Global → Site collections → Sites → Device collections → Devices) and the configuration committed at each level. The `central-scope-visualizer` skill renders the hierarchy via Generative UI (collapsible tree + per-scope profile names) and classifies every committed profile as shared / local / overridden / orphaned — using `central_get_config_assignments` for the real names and the object `object_type` annotation for the local/shared distinction, surfacing stray (orphaned) and nameless configs. The `central-scope-walker` skill resolves a scope name / path to its `scope_id` for downstream tool calls.
 
 #### `central_get_scope_tree`
 
