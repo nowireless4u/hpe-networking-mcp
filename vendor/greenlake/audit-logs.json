@@ -13,6 +13,7 @@
           },
           "httpStatusCode": {
             "description": "HTTP status code for the error.",
+            "format": "int32",
             "type": "integer"
           },
           "message": {
@@ -567,14 +568,17 @@
         "properties": {
           "count_per_page": {
             "description": "Number of returned items",
+            "format": "int32",
             "type": "integer"
           },
           "offset": {
             "description": "Specifies the offset of the returned page. Only when offset based pagination is used.",
+            "format": "int32",
             "type": "integer"
           },
           "total_count": {
             "description": "Total number of items in the collection.",
+            "format": "int32",
             "type": "integer"
           }
         },
@@ -1157,6 +1161,7 @@
             "name": "start_time",
             "required": false,
             "schema": {
+              "format": "int32",
               "type": "integer"
             }
           },
@@ -1166,6 +1171,7 @@
             "name": "end_time",
             "required": false,
             "schema": {
+              "format": "int32",
               "type": "integer"
             }
           },
@@ -1229,6 +1235,10 @@
             "name": "offset",
             "required": false,
             "schema": {
+              "default": 0,
+              "format": "int32",
+              "maximum": 100000,
+              "minimum": 0,
               "type": "integer"
             }
           },
@@ -1238,6 +1248,10 @@
             "name": "limit",
             "required": false,
             "schema": {
+              "default": 50,
+              "format": "int32",
+              "maximum": 2000,
+              "minimum": 1,
               "type": "integer"
             }
           },
