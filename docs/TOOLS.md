@@ -10,7 +10,7 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 4149 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 4149 underlying tools, and `await report_progress(progress, total=None, message=None)` streams status to the client during long multi-call blocks
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
@@ -94,6 +94,8 @@ The `pydantic-monty` sandbox restricts duration (30s), memory (128 MB), and recu
 Inside `execute()`, `call_tool(name, params)` resolves any registered platform tool — every name starting with `mist_` / `central_` / `greenlake_` / `clearpass_` / `apstra_` / `axis_` / `aos8_` / `uxi_` / `edgeconnect_` (Mist included, since v3.4.5.6), plus cross-platform `health` and the `translate_*` tools, and each platform's `<platform>_list_tools` / `<platform>_get_tool_schema` / `<platform>_invoke_tool` meta-tools. A per-platform tool is callable either directly by name or via `<platform>_invoke_tool`. The TOP-LEVEL discovery tools (`tags` / `search` / `get_schema` / `skills_list` / `skills_load`) are NOT callable from inside `execute()` — they live at the outer MCP surface for planning; use them (or the in-sandbox `<platform>_list_tools`) BEFORE chaining platform tools.
 
 If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMiddleware` returns a string like `Sandbox error: Exception: Unknown tool: search` so you can fix the call on the next turn (rather than seeing a generic masked error). See v2.2.0.4 release notes / #208.
+
+Alongside `call_tool`, the sandbox exposes `await report_progress(progress: float, total: float | None = None, message: str | None = None)` (v3.6.1.6) — a second injected external function that streams a progress notification to the client. Call it as a long block advances (`await report_progress(i, n, f"classifying scope {i}/{n}")`) so the client shows a live status line instead of a silent spinner. It is a no-op when the client didn't send a `progressToken`, so it is always safe to include. Wired via the `_HpeCodeMode` subclass of FastMCP's `CodeMode` (see `server._hpe_code_mode_class`).
 
 ### When to use which mode
 

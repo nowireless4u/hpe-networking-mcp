@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.6] - 2026-07-20
+
+### Added
+- **Code-mode `execute()` sandbox can now stream progress to the client via `report_progress`.** Long-running skill blocks — the central-scope-visualizer per-scope classification sweep, the aos-migration multi-stage plan, any fan-out across many sites — previously ran as a single opaque `execute()` call, leaving the client on a silent spinner for the whole duration. The sandbox now injects a second external function alongside `call_tool`: `await report_progress(progress: float, total: float | None = None, message: str | None = None)`. Code blocks call it as they advance (`await report_progress(i, n, f"classifying scope {i}/{n}")`) and the client renders a live status line. Per the FastMCP progress contract it is a harmless no-op when the client didn't send a `progressToken`, so it is always safe to include and degrades gracefully on clients that don't render progress. Wired via a new `_HpeCodeMode` subclass of FastMCP's `CodeMode` (`server._hpe_code_mode_class`) that overrides `_make_execute_tool` to add the function bound to the live per-call `ctx`; a faithful copy of the upstream `call_tool` closure with the addition, pinned by `tests/unit/test_code_mode_progress.py` so a fastmcp upgrade that changes the copied internals fails loudly. The `execute` tool description and INSTRUCTIONS.md sandbox guidance (pattern 5) document the function for the model.
+
 ## [3.6.1.5] - 2026-07-20
 
 ### Changed

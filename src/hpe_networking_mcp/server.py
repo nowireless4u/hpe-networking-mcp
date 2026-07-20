@@ -912,6 +912,92 @@ def _make_spec_enriched_get_schema(tool: FunctionTool) -> _SpecEnrichedGetSchema
     return _SpecEnrichedGetSchemaTool(**{f: getattr(tool, f) for f in type(tool).model_fields})
 
 
+def _hpe_code_mode_class() -> type:
+    """Build and return the ``_HpeCodeMode`` subclass (lazy fastmcp import).
+
+    Defined as a module-level factory (rather than a local class inside
+    ``_register_code_mode``) so ``test_code_mode_progress`` can exercise the
+    REAL production class end-to-end. The import is lazy so non-code tool modes
+    don't require the ``fastmcp[code-mode]`` extra just to import this module.
+
+    ``_HpeCodeMode`` overrides the stock ``_make_execute_tool``: upstream builds
+    an ``execute(code, ctx)`` closure whose only sandbox-visible external function
+    is ``call_tool``. Long-running skills (central-scope-visualizer's per-scope
+    classification sweep, aos-migration's multi-stage plan) can take many seconds;
+    without a progress channel the client shows a silent spinner. The override is
+    a faithful copy of the upstream closure that additionally injects a
+    ``report_progress`` external function bound to the live per-call ``ctx``, so
+    code blocks can ``await report_progress(done, total, "message")`` to stream
+    status.
+
+    ``ctx.report_progress`` is a no-op unless the MCP client sent a
+    ``progressToken`` with the request (per the FastMCP progress contract), so
+    this is safe on clients that don't render progress — it simply does nothing.
+
+    Kept intentionally close to ``CodeMode._make_execute_tool``;
+    ``test_code_mode_progress`` pins the fastmcp internals this copy relies on
+    (``get_tool_catalog`` / ``_find_tool`` / ``sandbox_provider`` /
+    ``max_tool_calls`` / ``_unwrap_tool_result``) so a fastmcp upgrade that
+    changes them fails loudly instead of silently dropping either capability.
+    """
+    from fastmcp.exceptions import NotFoundError, ToolError
+    from fastmcp.experimental.transforms.code_mode import (
+        CodeMode,
+        _unwrap_tool_result,
+    )
+    from fastmcp.server.context import Context
+    from fastmcp.tools.base import Tool
+
+    class _HpeCodeMode(CodeMode):
+        def _make_execute_tool(self) -> Tool:
+            transform = self
+            max_tool_calls = self.max_tool_calls
+
+            async def execute(code: str, ctx: Context = None) -> Any:  # type: ignore[assignment]
+                call_count = 0
+
+                async def call_tool(tool_name: str, params: dict[str, Any]) -> Any:
+                    nonlocal call_count
+                    if max_tool_calls is not None:
+                        call_count += 1
+                        if call_count > max_tool_calls:
+                            raise ToolError(
+                                f"Tool call limit exceeded: at most {max_tool_calls} "
+                                "call_tool() invocations are allowed per execute()."
+                            )
+                    backend_tools = await transform.get_tool_catalog(ctx)
+                    tool = transform._find_tool(tool_name, backend_tools)
+                    if tool is None:
+                        raise NotFoundError(f"Unknown tool: {tool_name}")
+                    result = await ctx.fastmcp.call_tool(tool.name, params)
+                    return _unwrap_tool_result(result)
+
+                async def report_progress(
+                    progress: float,
+                    total: float | None = None,
+                    message: str | None = None,
+                ) -> None:
+                    """Stream a progress update to the client (no-op without a progressToken)."""
+                    if ctx is not None:
+                        await ctx.report_progress(progress=progress, total=total, message=message)
+
+                return await transform.sandbox_provider.run(
+                    code,
+                    external_functions={
+                        "call_tool": call_tool,
+                        "report_progress": report_progress,
+                    },
+                )
+
+            return Tool.from_function(
+                fn=execute,
+                name=self.execute_tool_name,
+                description=self._build_execute_description(),
+            )
+
+    return _HpeCodeMode
+
+
 def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     """Install the FastMCP CodeMode transform for ``MCP_TOOL_MODE=code``.
 
@@ -921,7 +1007,6 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
     """
     try:
         from fastmcp.experimental.transforms.code_mode import (
-            CodeMode,
             GetSchemas,
             GetTags,
             Search,
@@ -962,6 +1047,8 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
             tool.description = _GET_SCHEMA_DESCRIPTION
             return _make_spec_enriched_get_schema(tool)
 
+    hpe_code_mode_cls = _hpe_code_mode_class()
+
     limits = ResourceLimits(
         max_duration_secs=max_duration_secs,
         max_memory=128 * 1024 * 1024,
@@ -992,6 +1079,14 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
         "code block when `skills_list` returns no applicable skill "
         "(issue #338).\n\n"
         "In scope: `await call_tool(name: str, params: dict) -> Any`.\n\n"
+        "Also in scope: `await report_progress(progress: float, total: float | "
+        "None = None, message: str | None = None) -> None` — stream a status "
+        "update to the client during long multi-call work (e.g. a per-scope sweep "
+        "or a multi-stage migration). Call it as you go: "
+        "`await report_progress(i, n, f'classifying scope {i}/{n}')`. It is a "
+        "harmless no-op on clients that don't request progress, so it is always "
+        "safe to include; use it whenever a block makes many sequential "
+        "`call_tool` invocations.\n\n"
         "`call_tool` reaches:\n"
         "  - Any per-platform tool (mist / central / greenlake / clearpass / "
         "apstra / axis / aos8 / uxi / edgeconnect) — discover names with "
@@ -1095,7 +1190,7 @@ def _register_code_mode(mcp: FastMCP, max_duration_secs: float = 30.0) -> None:
                 logger.warning("MCP Apps: could not expose {} top-level: {}", app_tool_name, e)
 
     mcp.add_transform(
-        CodeMode(
+        hpe_code_mode_cls(
             # ClockEnabledMontySandboxProvider passes os=OSAccess() so sandbox
             # code can call datetime.now()/date.today() (the stock provider
             # blocks the clock); the FS/env stay fully sandboxed. See

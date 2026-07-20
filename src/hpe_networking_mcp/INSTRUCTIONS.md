@@ -270,6 +270,7 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 - `re` (verified — used by Stage 9b filtering helpers)
 - The clock: `datetime.now()`, `datetime.now(datetime.timezone.utc)`, `datetime.date.today()` (verified — the sandbox grants a read-only host clock; see the blocked table for the `utcnow()` / `time` gaps)
 - The injected `await call_tool(name, params)` for platform tool dispatch
+- The injected `await report_progress(progress, total=None, message=None)` for streaming status to the client during long multi-call blocks (harmless no-op when the client didn't request progress — always safe to call; see pattern 5)
 
 **Known-blocked** — using any of these returns a sandbox error:
 
@@ -302,7 +303,26 @@ The sandbox kills any `execute()` block that runs longer than the configured bud
 
 For these tools: **call them in their own `execute()` block — don't chain other calls after them** — and lower `max_attempts` / `poll_interval` when you need a tighter budget. A block that runs `central_cable_test` plus another Central read will routinely breach the default 30s with `TimeoutError: time limit exceeded`.
 
-### 5. Write confirmation is structural — a real prompt first, `confirmation_required` only as fallback
+### 5. Stream progress on long multi-call blocks with `report_progress`
+
+When a block makes many sequential `call_tool` invocations — a per-scope classification sweep, a multi-stage migration plan, a fan-out across sites — call `await report_progress(done, total, message)` as you go so the client can show a live status line instead of a silent spinner. It's a harmless no-op on clients that didn't request progress, so it is always safe to include.
+
+```python
+# ✅ Stream status across a per-scope sweep.
+scopes = (await call_tool("central_get_scope_tree", {}))["data"]["children"]
+total = len(scopes)
+results = []
+for i, s in enumerate(scopes):
+    await report_progress(i + 1, total, f"classifying {s['scope_name']} ({i + 1}/{total})")
+    cfg = await call_tool("central_get_config_assignments", {"scope_id": s["scope_id"]})
+    results.append(cfg["data"])
+result = {"scope_count": total, "results": results}
+result
+```
+
+Signature: `report_progress(progress: float, total: float | None = None, message: str | None = None)`. `total` lets the client render a percentage; `message` is a short human-readable status. Do NOT `report_progress` from a block that makes only one call — the overhead isn't worth it, and the sandbox already returns quickly.
+
+### 6. Write confirmation is structural — a real prompt first, `confirmation_required` only as fallback
 
 Destructive tools are confirmed by a universal gate at `<platform>_invoke_tool` dispatch: it shows a REAL confirmation prompt whenever your client supports MCP elicitation — including from inside code-mode `execute()` blocks, where the prompt round-trips transparently. Passing `confirmed=true` does NOT skip a working prompt; the human's answer always wins. Only when no prompt can be shown does the flow below apply.
 
