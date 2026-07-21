@@ -378,6 +378,9 @@ def create_server(config: ServerConfig) -> FastMCP:
     from hpe_networking_mcp.middleware.sandbox_error_catch import (
         SandboxErrorCatchMiddleware,
     )
+    from hpe_networking_mcp.middleware.tool_error_enrich import (
+        ToolErrorEnrichMiddleware,
+    )
     from hpe_networking_mcp.middleware.unknown_tool_suggest import (
         UnknownToolSuggestMiddleware,
     )
@@ -396,6 +399,7 @@ def create_server(config: ServerConfig) -> FastMCP:
     # Middleware order (outermost → innermost):
     #   NullStrip           — drop nulls before validation
     #   ValidationCatch     — Pydantic ValidationError → readable string return
+    #   ToolErrorEnrich     — raised ToolError → append spec-index status hint (#638)
     #   SandboxErrorCatch   — code-mode MontyRuntimeError on execute → string return
     #   UnknownToolSuggest  — top-level "Unknown tool" → structured "did you
     #                         mean" candidate list (#489)
@@ -418,6 +422,7 @@ def create_server(config: ServerConfig) -> FastMCP:
         middleware=[
             NullStripMiddleware(),
             ValidationCatchMiddleware(),
+            ToolErrorEnrichMiddleware(),
             SandboxErrorCatchMiddleware(),
             UnknownToolSuggestMiddleware(),
             PIITokenizationMiddleware(token_store, enabled=config.enable_pii_tokenization),

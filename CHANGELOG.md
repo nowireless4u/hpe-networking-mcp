@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.8] - 2026-07-21
+
+### Fixed
+- **Raised `ToolError`s now get the same spec-index error enrichment that returned-error envelopes already got.** Platform tools that follow the ToolError contract (Mist's `_client`, others) **raise** `ToolError` on a non-2xx upstream response — which bypassed the reactive spec-index enrichment entirely (it only fired on *returned* non-2xx envelopes via `ResponseEnvelopeMiddleware` and on 422 `ValidationError`s via `ValidationCatchMiddleware`). So a model that guessed and hit, say, a Mist 404 or 429 got only the bare error with no `[spec-index]` hint. New `ToolErrorEnrichMiddleware` catches raised `ToolError`s at `on_call_tool` and appends `reactive_hint(tool_name, status_code)` — the API's documented meaning of the code (e.g. Mist 429 → "5000 API Calls per hour threshold") plus the legal body fields for 400/422 — so the model self-corrects. Best-effort and non-destructive: the original status_code/message are preserved, the suffix is idempotent, and an enrichment failure never breaks dispatch. Reported by Zach (Mist SLE transcript). Closes #638.
+- **Mist SLE tools: guessed `metric` keys now return actionable guidance instead of a bare `404 "no such metric"`.** The SLE `metric` path key is not free-form — valid keys are per-scope and come from `mist_list_site_sles_metrics` (they are dynamic and not in the OpenAPI spec, so the spec-index cannot enumerate them). A model guessing a plausible-but-wrong name (e.g. `successful-connect`, which does not exist — the connection SLE is `time-to-connect`) hit a dead 404. `platforms/mist/_client.py` now enriches that specific 404 with the real common keys and a pointer to `mist_list_site_sles_metrics`.
+- **Corrected the Mist 403 hint, which named a non-existent tool.** The `_raise_for_status` 403 enrichment told the model to call `mist_get_self_account_info` — that tool does not exist (it returns `unknown_tool`); the real one is `mist_get_self`. Fixed the hint and the docstring.
+
 ## [3.6.1.7] - 2026-07-20
 
 ### Fixed
