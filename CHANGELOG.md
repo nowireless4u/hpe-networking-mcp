@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.9] - 2026-07-21
+
+### Fixed
+- **Calling a tool on an unconfigured platform now says "not configured" instead of a circular dispatch hint.** When a platform has no credentials (empty or absent secret files — `_read_secret` strips and returns `None`, so both are identical), it is correctly disabled and none of its tools register. But an AI that then called, say, `clearpass_invoke_tool` got `{"error":"unknown_tool","candidates":[],"dispatch":"clearpass_invoke_tool(name, params)"}` — the `dispatch` hint pointed back at the very tool that doesn't exist, with no signal that the platform simply isn't configured. `suggest_tools` now detects a known-platform prefix with **zero** registered tools and returns `{"error":"platform_not_configured","platform":<p>,"message":"…not configured on this deployment; skip it, do not retry","candidates":[]}` instead. Applies uniformly to all nine platforms (mist / central / greenlake / clearpass / apstra / axis / aos8 / uxi / edgeconnect) in both code-mode (`sandbox_error_catch`) and dynamic-mode (`meta_tools`) paths. Reported by Zach (ClearPass not configured). Closes #640.
+
 ## [3.6.1.8] - 2026-07-21
 
 ### Fixed

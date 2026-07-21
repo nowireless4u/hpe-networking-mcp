@@ -29,6 +29,16 @@ _UNKNOWN_TOOL_RE = re.compile(r"""Unknown tool:\s*['"]?([A-Za-z0-9_]+)""")
 
 _FUZZY_CUTOFF = 0.6
 
+# Every platform this server can host. Used to tell "the model guessed a bad
+# name on a configured platform" (suggest candidates) apart from "the platform
+# isn't configured on this deployment at all" (say so, don't dispatch). The
+# latter is what Zach hit: a `clearpass_*` call when ClearPass has no credentials
+# (empty/absent secret) — a `clearpass_invoke_tool` dispatch hint there points at
+# a tool that also doesn't exist (issue #640).
+_KNOWN_PLATFORMS = frozenset(
+    {"mist", "central", "greenlake", "clearpass", "apstra", "axis", "aos8", "uxi", "edgeconnect"}
+)
+
 
 def _name_to_platform() -> dict[str, str]:
     """Map every registered underlying tool name to its platform.
@@ -70,6 +80,26 @@ def suggest_tools(requested: str, *, platform: str | None = None, limit: int = 5
     """
     requested = (requested or "").strip()
     name_to_platform = _name_to_platform()
+
+    # A prefix that names a real platform which has ZERO registered tools means
+    # that platform isn't configured/enabled on this deployment (its secrets are
+    # absent or empty). Suggesting a `<plat>_invoke_tool` dispatch here points the
+    # model back at a tool that also doesn't exist — so say so plainly instead,
+    # and it can skip the platform rather than loop (issue #640).
+    prefix = requested.split("_", 1)[0].lower()
+    if prefix in _KNOWN_PLATFORMS and not any(p == prefix for p in name_to_platform.values()):
+        return {
+            "error": "platform_not_configured",
+            "requested": requested,
+            "platform": prefix,
+            "candidates": [],
+            "message": (
+                f"The '{prefix}' platform is not configured on this MCP deployment — no "
+                f"{prefix}_* tools are registered (its credentials are absent or empty). "
+                "Skip it; do not retry."
+            ),
+        }
+
     plat = platform or _platform_from_name(requested)
 
     # Prefer same-platform candidates; widen to the full corpus if the scoped
@@ -106,10 +136,11 @@ def unknown_tool_payload_from_text(text: str) -> dict | None:
         return None
     payload = suggest_tools(match.group(1))
     # Only surface the structured payload when it is actionable — a resolved
-    # platform dispatch hint or at least one real candidate name. A bare name
-    # with neither (e.g. a model calling the top-level `search` tool from
-    # inside execute, #208 — not a platform-tool typo) falls through to the
-    # caller's plain error text so that behavior is preserved.
-    if payload.get("dispatch") or payload.get("candidates"):
+    # platform dispatch hint, at least one real candidate name, or a definitive
+    # "platform not configured" verdict (#640). A bare name with none of these
+    # (e.g. a model calling the top-level `search` tool from inside execute,
+    # #208 — not a platform-tool typo) falls through to the caller's plain error
+    # text so that behavior is preserved.
+    if payload.get("dispatch") or payload.get("candidates") or payload.get("error") == "platform_not_configured":
         return payload
     return None
