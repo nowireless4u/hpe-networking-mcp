@@ -15,7 +15,6 @@ from hpe_networking_mcp.platforms.central.utils import get_central_conn, retry_c
 @tool(capability=Capability.READ)
 async def central_get_insights(
     ctx: Context,
-    filter: str | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> dict | str:
@@ -27,14 +26,11 @@ async def central_get_insights(
     recommendations.
 
     Parameters:
-        filter: Optional OData 4.0 filter on Insights fields.
         limit: Results per page (default 100).
         offset: Pagination offset (default 0).
     """
     conn = get_central_conn(ctx)
     api_params: dict = {"limit": limit, "offset": offset}
-    if filter:
-        api_params["filter"] = filter
     response = await retry_central_command(
         central_conn=conn,
         api_method="GET",

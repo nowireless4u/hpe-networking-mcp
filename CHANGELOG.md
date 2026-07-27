@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1.10] - 2026-07-27
+
+### Fixed
+- **Central: corrected/removed query-param names that the New Central API rejects with HTTP 400.** A runtime-capture audit of every Central tool's request was reconciled against the vendored New Central OAS and confirmed against a live tenant. Unlike the `network-config` API (which silently ignores unknown query params), `network-monitoring` / `network-notifications` / `network-services` **reject** them with `400 "Unknown query parameter"`, so the affected tools failed when the param was used. Two classes of fix:
+  - **Renamed to the documented names** (live-verified to return 200): `central_get_client_mobility_trail` and `central_get_location_analytics_trends` now send `start-at` / `end-at` instead of `start` / `end`; `central_get_alert_configs` sends `scope-id` / `scope-type` instead of camelCase `scopeId` / `scopeType`.
+  - **Removed dead params with no working alternative** (both the wrong and the "corrected" name 400; the endpoint accepts none): `start` / `end` dropped from the 13 AP/gateway/switch/cluster `*-trends` tools (`central_get_ap_trend`, `central_get_ap_radio_trend`, `central_get_ap_port_trend`, `central_get_ap_tunnel_trend`, `central_get_ap_wlan_throughput`, `central_get_gateway_trend`, `central_get_gateway_port_trend`, `central_get_gateway_tunnel_trend`, `central_get_gateway_uplink_trend`, `central_get_gateway_uplink_probe_performance`, `central_get_gateway_uplink_vpn_availability`, `central_get_cluster_capacity_trends`, `central_get_switch_interface_trends`); `filter` dropped from 9 tools that 400 on it (`central_get_client_onboarding_score` / `_stage_count` / `_stage_export` / `_stage_reasons`, `central_get_tenant_client_health`, `central_get_tenant_device_health`, `central_get_insights`, `central_get_event_extra_attributes`, `central_get_location_analytics_site_insights`).
+  Params confirmed accepted/ignored (e.g. `offset` on list endpoints; `filter` on `central_get_asset_tags` / `central_get_firewall_sessions` / `central_get_wlans_monitoring`) were left untouched. Regression tests pin the wire format and the removed params.
+
 ## [3.6.1.9] - 2026-07-21
 
 ### Fixed

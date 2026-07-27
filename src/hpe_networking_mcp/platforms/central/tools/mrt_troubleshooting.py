@@ -164,7 +164,6 @@ async def central_list_supported_show_commands(
 @tool(capability=Capability.READ)
 async def central_get_event_extra_attributes(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Get the catalogue of extra attributes available on events.
 
@@ -172,14 +171,10 @@ async def central_get_event_extra_attributes(
     — each entry describes the attribute name, type, and example values.
     """
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
     return await _call(
         conn,
         "GET",
         "network-troubleshooting/v1/event-extra-attributes",
-        params=params,
     )
 
 

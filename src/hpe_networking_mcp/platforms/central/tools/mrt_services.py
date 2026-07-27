@@ -401,11 +401,13 @@ async def central_get_location_analytics_trends(
     derived from WiFi client locations.
     """
     conn = get_central_conn(ctx)
+    # New Central names the time-window query params ``start-at`` / ``end-at``
+    # (kebab-case); ``start`` / ``end`` are rejected with HTTP 400.
     params: dict = {}
     if start:
-        params["start"] = start
+        params["start-at"] = start
     if end:
-        params["end"] = end
+        params["end-at"] = end
     if filter:
         params["filter"] = filter
     return await _get(conn, "network-services/v1/location-analytics/trends", params)
@@ -414,11 +416,7 @@ async def central_get_location_analytics_trends(
 @tool(capability=Capability.READ)
 async def central_get_location_analytics_site_insights(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict:
     """Get per-site location-analytics insights (summary KPIs)."""
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-services/v1/location-analytics/sites/insights", params)
+    return await _get(conn, "network-services/v1/location-analytics/sites/insights", {})

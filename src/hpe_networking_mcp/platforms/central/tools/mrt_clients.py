@@ -76,11 +76,14 @@ async def central_get_client_mobility_trail(
 ) -> dict | str:
     """Get a client's roaming / mobility history (AP-to-AP transitions)."""
     conn = get_central_conn(ctx)
+    # New Central names the time-window query params ``start-at`` / ``end-at``
+    # (kebab-case); ``start`` / ``end`` are rejected with HTTP 400
+    # "Unknown query parameter".
     params: dict = {}
     if start:
-        params["start"] = start
+        params["start-at"] = start
     if end:
-        params["end"] = end
+        params["end-at"] = end
     return await _get(conn, f"network-monitoring/v1/clients/{path_seg(mac_address)}/mobility-trail", params)
 
 
@@ -102,20 +105,15 @@ async def central_get_client_detail(
 @tool(capability=Capability.READ)
 async def central_get_client_onboarding_score(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Get the aggregate client-onboarding score (success-rate KPI)."""
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-monitoring/v1/client-onboarding-score", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-score", {})
 
 
 @tool(capability=Capability.READ)
 async def central_get_client_onboarding_stage_export(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Export per-client onboarding-stage records.
 
@@ -124,36 +122,25 @@ async def central_get_client_onboarding_stage_export(
     reasons endpoints for summary views.
     """
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/export", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/export", {})
 
 
 @tool(capability=Capability.READ)
 async def central_get_client_onboarding_stage_reasons(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Get aggregated reasons clients failed onboarding (top failure categories)."""
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/reasons", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/reasons", {})
 
 
 @tool(capability=Capability.READ)
 async def central_get_client_onboarding_stage_count(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Get the count of clients at each onboarding stage (funnel view)."""
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/count", params)
+    return await _get(conn, "network-monitoring/v1/client-onboarding-stage/count", {})
 
 
 # ---------------------------------------------------------------------------
