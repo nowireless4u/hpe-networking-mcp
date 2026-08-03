@@ -2051,7 +2051,7 @@
         "operationId": "getSubscriptionsV1",
         "parameters": [
           {
-            "description": "Filter expressions consisting of simple comparison operations joined \nby logical operators.<br>\n| CLASS                |   EXAMPLES                                         |\n|----------------------|----------------------------------------------------|\n| Types                | integer, decimal, timestamp, string, boolean, null |\n| Comparison           | eq, ne, gt, ge, lt, le, in                         |\n| Logical Expressions  | and, or, not                                       |\n\nSubscriptions can be filtered based on the following properties:\n- `id`\n- `subscriptionType`\n- `subscriptionStatus`\n- `key`\n- `quantity`\n- `availableQuantity`\n- `sku`\n- `skuDescription`\n- `contract`\n- `startTime`\n- `endTime`\n- `productType`\n- `tier`\n- `tierDescription`\n- `quote`\n- `po`\n- `resellerPo`\n- `createdAt`\n- `updatedAt`\n\nThe following is a non-exhaustive list of possible filtering options.\n",
+            "description": "Filter expressions consisting of simple comparison operations joined \nby logical operators.<br>\n| CLASS                |   EXAMPLES                                         |\n|----------------------|----------------------------------------------------|\n| Types                | integer, decimal, timestamp, string, boolean, null |\n| Comparison           | eq, ne, gt, ge, lt, le, in                         |\n| Logical Expressions  | and, or, not                                       |\n\nSubscriptions can be filtered based on the following properties:\n- `id`\n- `subscriptionType`\n- `subscriptionStatus`\n- `key`\n- `quantity`\n- `availableQuantity`\n- `isEval`\n- `sku`\n- `skuDescription`\n- `contract`\n- `startTime`\n- `endTime`\n- `productType`\n- `tier`\n- `tierDescription`\n- `quote`\n- `po`\n- `resellerPo`\n- `createdAt`\n- `updatedAt`\n\nThe following is a non-exhaustive list of possible filtering options.\n",
             "examples": {
               "alternatives": {
                 "description": "Return subscriptions where the property is one of multiple values. Example syntax, \n\\<property> in \\<value>,\\<value>.\n",
@@ -2072,6 +2072,11 @@
                 "description": "Return subscriptions where a property equals a value. Example syntax, \n\\<property> eq \\<value>.\n",
                 "summary": "Filter with equality check",
                 "value": "key eq 'STIAPL6404'"
+              },
+              "eval-subscriptions": {
+                "description": "Return subscriptions that are evaluation subscriptions. Example syntax:\nisEval eq <true|false>\n",
+                "summary": "Filter evaluation subscriptions",
+                "value": "isEval eq true"
               },
               "ge": {
                 "description": "Return subscriptions where a property is greater or equal to a value. Example syntax,\n\\<property> ge \\<value>.\n",
@@ -2171,7 +2176,7 @@
             "schema": {
               "default": 50,
               "format": "int64",
-              "maximum": 50,
+              "maximum": 200,
               "minimum": 1,
               "type": "integer"
             }
