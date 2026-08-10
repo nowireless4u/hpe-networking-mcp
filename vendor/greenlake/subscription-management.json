@@ -72,6 +72,33 @@
         }
       }
     },
+    "parameters": {
+      "Limit": {
+        "description": "Specifies the number of results to be returned.  The default value is 20.",
+        "in": "query",
+        "name": "limit",
+        "required": false,
+        "schema": {
+          "default": 20,
+          "format": "int64",
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "Offset": {
+        "description": "Specifies the zero-based resource offset to start the response from. The default value is 0.",
+        "in": "query",
+        "name": "offset",
+        "required": false,
+        "schema": {
+          "default": 0,
+          "format": "int64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      }
+    },
     "schemas": {
       "Appointment": {
         "properties": {
@@ -816,6 +843,183 @@
         ],
         "type": "object"
       },
+      "SubscriptionRecommendation": {
+        "properties": {
+          "createdAt": {
+            "description": "When the recommendation was generated (ISO-8601).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Human-readable detail text including unlicensed device count\nand available subscription count.\n",
+            "example": "12 unlicensed devices can use 3 available subscriptions",
+            "type": "string"
+          },
+          "deviceTypes": {
+            "description": "Sorted list of device type names in this group. These device types\nshare the same set of eligible subscription tiers.\n",
+            "example": [
+              "AP",
+              "IAP"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "groupId": {
+            "description": "Shared identifier across all recommendation items in the same\nAPI response.\n",
+            "example": "07fab58a-8c43-4a9a-9568-2481d6d7dc26",
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique recommendation identifier (one per device-type group).\n",
+            "example": "7aecd217-dab9-41a7-bbf1-acf0aa2f6f12",
+            "format": "uuid",
+            "type": "string"
+          },
+          "suggestionType": {
+            "description": "The category of suggestion. Currently always subscription.\n",
+            "example": "subscription",
+            "type": "string"
+          },
+          "suggestions": {
+            "description": "Scored list of suggested subscriptions, ordered by score descending.\nsuggestions[0] is the highest-confidence option. Capped at 20 per group.\n",
+            "items": {
+              "$ref": "#/components/schemas/SuggestionValue"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array"
+          },
+          "title": {
+            "description": "Human-readable recommendation title summarizing the device types.\n",
+            "example": "Assign subscription to AP, IAP devices",
+            "type": "string"
+          },
+          "type": {
+            "const": "subscription/suggestion",
+            "description": "Resource type discriminator. Always subscription/suggestion.",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "When the recommendation was last recomputed (ISO-8601).",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "suggestionType",
+          "groupId",
+          "title",
+          "description",
+          "deviceTypes",
+          "suggestions",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "SubscriptionRecommendationCollection": {
+        "properties": {
+          "count": {
+            "description": "Number of items in this page.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionRecommendation"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Current pagination offset.",
+            "example": 0,
+            "format": "int32",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of recommendation groups matching the query.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "SubscriptionSuggestionDetail": {
+        "properties": {
+          "availableQuantity": {
+            "description": "Currently unassigned (available) seats.",
+            "example": 45,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier for the subscription.\n",
+            "example": "1a63a0e0-c4bb-524a-8b25-3c2c1f69b5dc",
+            "format": "uuid",
+            "type": "string"
+          },
+          "subscriptionEndAt": {
+            "description": "Subscription expiry date in ISO-8601 format.\n",
+            "example": "2027-03-15T00:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "subscriptionKey": {
+            "description": "The subscription's business key.",
+            "example": "SUB-AP-ADV-001",
+            "type": "string"
+          },
+          "tags": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Optional key-value metadata tags from the subscription document.\nOmitted from response when null or empty.\n",
+            "example": {
+              "department": "Engineering",
+              "site": "San Jose DC"
+            },
+            "type": "object"
+          },
+          "tier": {
+            "description": "Subscription tier identifier,\nfor example, FOUNDATION_AP, ADVANCED_AP, ENHANCED_COMPUTE.\n",
+            "example": "ADVANCED_AP",
+            "type": "string"
+          },
+          "tierDescription": {
+            "description": "Human-readable tier description.\n",
+            "example": "Advanced Access Point",
+            "type": "string"
+          },
+          "totalQuantity": {
+            "description": "Total licensed seats for this subscription.",
+            "example": 100,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "subscriptionKey",
+          "tier",
+          "tierDescription",
+          "totalQuantity",
+          "availableQuantity",
+          "subscriptionEndAt"
+        ],
+        "type": "object"
+      },
       "SubscriptionsBulkUnclaimRequest": {
         "properties": {
           "items": {
@@ -913,6 +1117,30 @@
         },
         "required": [
           "subscriptions"
+        ],
+        "type": "object"
+      },
+      "SuggestionValue": {
+        "properties": {
+          "score": {
+            "description": "Composite confidence score (0.0-1.0). Higher is more confident.\nComputed from capacity fit (60% weight) and urgency/expiry\nproximity (40% weight). Suggestions are sorted in descending order by this value.\n",
+            "format": "float",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "subscriptionDetails": {
+            "description": "Subscription details for this suggestion.\n",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionSuggestionDetail"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "score",
+          "subscriptionDetails"
         ],
         "type": "object"
       },
@@ -5280,6 +5508,350 @@
         "summary": "Get information on a subscription",
         "tags": [
           "Subscriptions - v1beta1"
+        ]
+      }
+    },
+    "/subscriptions/v2alpha1/recommendations": {
+      "get": {
+        "description": "Returns a paginated list of per-device-type subscription suggestions.\nEach item represents one device-type group with a scored list of\nsuggested subscriptions ordered highest-confidence first.\n<br>\n**Suggestion cap:** Each recommendation group returns at most 20\nsuggestions.\n<br><br>**NOTE:** You must have read permission for the **Subscription service** to call this API.\n",
+        "operationId": "listSubscriptionRecommendationsV2alpha1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "emptyResult": {
+                    "summary": "No recommendations\u2014all devices licensed",
+                    "value": {
+                      "count": 0,
+                      "items": [],
+                      "offset": 0,
+                      "total": 0
+                    }
+                  },
+                  "multipleGroups": {
+                    "description": "Shows multiple recommendation groups across different device\ntypes (AP/IAP and COMPUTE) in a single paginated response.\n",
+                    "summary": "Multiple device-type groups",
+                    "value": {
+                      "count": 2,
+                      "items": [
+                        {
+                          "createdAt": "2026-06-18T10:00:00Z",
+                          "description": "12 unlicensed devices can use 1 available subscription",
+                          "deviceTypes": [
+                            "AP",
+                            "IAP"
+                          ],
+                          "groupId": "07fab58a-8c43-4a9a-9568-2481d6d7dc26",
+                          "id": "1a63a0e0-c4bb-524a-8b25-3c2c1f69b5df",
+                          "suggestionType": "subscription",
+                          "suggestions": [
+                            {
+                              "score": 0.85,
+                              "subscriptionDetails": [
+                                {
+                                  "availableQuantity": 45,
+                                  "id": "1a63a0e0-c4bb-524a-8b25-3c2c1f69b5dc",
+                                  "subscriptionEndAt": "2027-03-15T00:00:00Z",
+                                  "subscriptionKey": "SUB-AP-ADV-001",
+                                  "tier": "ADVANCED_AP",
+                                  "tierDescription": "Advanced Access Point",
+                                  "totalQuantity": 100
+                                }
+                              ]
+                            }
+                          ],
+                          "title": "Assign subscription to AP, IAP devices",
+                          "type": "subscription/suggestion",
+                          "updatedAt": "2026-06-18T10:00:00Z"
+                        },
+                        {
+                          "createdAt": "2026-06-18T10:00:00Z",
+                          "description": "8 unlicensed devices can use 1 available subscription",
+                          "deviceTypes": [
+                            "COMPUTE"
+                          ],
+                          "groupId": "07fab58a-8c43-4a9a-9568-2481d6d7dc26",
+                          "id": "e3dae9bc-b677-4264-b7bd-b0ebef20d9c2",
+                          "suggestionType": "subscription",
+                          "suggestions": [
+                            {
+                              "score": 0.78,
+                              "subscriptionDetails": [
+                                {
+                                  "availableQuantity": 30,
+                                  "id": "1d43bb7c-731b-580d-993a-e50f0920ae25",
+                                  "subscriptionEndAt": "2027-06-30T00:00:00Z",
+                                  "subscriptionKey": "SUB-CMP-ENH-001",
+                                  "tier": "ENHANCED_COMPUTE",
+                                  "tierDescription": "Enhanced Compute",
+                                  "totalQuantity": 200
+                                }
+                              ]
+                            }
+                          ],
+                          "title": "Assign subscription to COMPUTE devices",
+                          "type": "subscription/suggestion",
+                          "updatedAt": "2026-06-18T10:00:00Z"
+                        }
+                      ],
+                      "offset": 0,
+                      "total": 2
+                    }
+                  },
+                  "singleGroup": {
+                    "description": "Shows a single recommendation group for AP/IAP devices.\nTwo subscription suggestions are returned, each with full\nsubscription details including tier, capacity, and expiry.\n",
+                    "summary": "AP devices needing subscriptions",
+                    "value": {
+                      "count": 1,
+                      "items": [
+                        {
+                          "createdAt": "2026-06-18T10:00:00Z",
+                          "description": "12 unlicensed devices can use 2 available subscriptions",
+                          "deviceTypes": [
+                            "AP",
+                            "IAP"
+                          ],
+                          "groupId": "e3dae9bc-b677-4264-b7bd-b0ebef20d9c2",
+                          "id": "1a63a0e0-c4bb-524a-8b25-3c2c1f69b5dc",
+                          "suggestionType": "subscription",
+                          "suggestions": [
+                            {
+                              "score": 0.85,
+                              "subscriptionDetails": [
+                                {
+                                  "availableQuantity": 45,
+                                  "id": "1a63a0e0-c4bb-524a-8b25-3c2c1f69b5dd",
+                                  "subscriptionEndAt": "2027-03-15T00:00:00Z",
+                                  "subscriptionKey": "SUB-AP-ADV-001",
+                                  "tags": {
+                                    "department": "Engineering",
+                                    "site": "San Jose DC"
+                                  },
+                                  "tier": "ADVANCED_AP",
+                                  "tierDescription": "Advanced Access Point",
+                                  "totalQuantity": 100
+                                }
+                              ]
+                            },
+                            {
+                              "score": 0.62,
+                              "subscriptionDetails": [
+                                {
+                                  "availableQuantity": 20,
+                                  "id": "1a63a0e0-c4bb-524a-8b25-3c2c1f69b5de",
+                                  "subscriptionEndAt": "2026-12-01T00:00:00Z",
+                                  "subscriptionKey": "SUB-AP-FND-001",
+                                  "tier": "FOUNDATION_AP",
+                                  "tierDescription": "Foundation Access Point",
+                                  "totalQuantity": 50
+                                }
+                              ]
+                            }
+                          ],
+                          "title": "Assign subscription to AP, IAP devices",
+                          "type": "subscription/suggestion",
+                          "updatedAt": "2026-06-18T10:00:00Z"
+                        }
+                      ],
+                      "offset": 0,
+                      "total": 1
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionRecommendationCollection"
+                }
+              }
+            },
+            "description": "Successful response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_bad_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
+                      "errorDetails": [
+                        {
+                          "issues": [
+                            {
+                              "description": "Parameter key is empty.",
+                              "source": "field",
+                              "subject": "key"
+                            }
+                          ],
+                          "type": "hpe.greenlake.bad_request"
+                        }
+                      ],
+                      "httpStatusCode": 400,
+                      "message": "Bad Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeBadRequestError"
+                }
+              }
+            },
+            "description": "Bad request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unauthorized_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_UNAUTHORIZED",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Token provided is invalid"
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 401,
+                      "message": "Unauthorized Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_forbidden_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_FORBIDDEN",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "access_token": "Permission is denied to perform requested operation."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 403,
+                      "message": "Forbidden Request"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "The operation is forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_unprocessable_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_UNPROCESSABLE_CONTENT",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "content": "Could not process the content."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 422,
+                      "message": "Unprocessable Content"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_too_many_request": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_TOO_MANY_REQUESTS",
+                      "errorDetails": [
+                        {
+                          "metadata": {
+                            "apiRateLimit": "Too Many Requests. Rate limit has exceeded a predefined value."
+                          },
+                          "source": "hpe.greenlake.subscriptionmanagement",
+                          "type": "hpe.greenlake.metadata"
+                        }
+                      ],
+                      "httpStatusCode": 429,
+                      "message": "Too Many Requests"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeGeneralError"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "error_internal_server_error": {
+                    "value": {
+                      "debugId": "abbeeb59-12cb-49a3-9ce5-55edba12213f",
+                      "errorCode": "HPE_GL_ERROR_INTERNAL_SERVER_ERROR",
+                      "errorDetails": [
+                        {
+                          "retryAfterSeconds": 30,
+                          "type": "hpe.greenlake.retry_info"
+                        }
+                      ],
+                      "httpStatusCode": 500,
+                      "message": "Internal Server Error"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HpeGreenLakeServerError"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "List subscription recommendations",
+        "tags": [
+          "Subscription Recommendations - v2alpha1"
         ]
       }
     },
