@@ -625,6 +625,33 @@
           "type": "string"
         }
       },
+      "groupBy": {
+        "description": "Aggregation level for server hardware inventory report data.\n",
+        "example": "SERVER",
+        "in": "query",
+        "name": "group-by",
+        "required": true,
+        "schema": {
+          "enum": [
+            "SERVER",
+            "SERVER_MODEL",
+            "SERVER_GENERATION",
+            "SERVER_PROCESSOR",
+            "SERVER_MEMORY",
+            "SERVER_MANAGEMENT",
+            "DEVICES",
+            "DEVICE_DETAIL",
+            "DEVICE_AND_SERVER",
+            "DRIVES",
+            "DRIVE_DETAIL",
+            "DRIVE_AND_SERVER",
+            "DRIVE_LIFE_PERCENTAGE",
+            "DRIVE_LIFE_DETAIL",
+            "DRIVE_LIFE_AND_SERVER"
+          ],
+          "type": "string"
+        }
+      },
       "groupCompliance-filterParam-v1": {
         "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\nNOTE: The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.  \nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\nDevice IDs contain a `+`, which must be encoded as `%2B`.  \nFor example: the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n\nGroup compliance can be filtered by:\n  - bundleId\n  - complianceCategory\n  - complianceState\n  - createdAt\n  - generation\n  - productId\n  - remediation\n  - score\n  - updatedAt\n\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
         "examples": {
@@ -1231,6 +1258,75 @@
         },
         "in": "query",
         "name": "select",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "serverHardwareInventoryReport-queryParams-v1beta1_excludedServers": {
+        "description": "When set to `true`, the response contains details for servers that do not have inventory data available.\n\nWhen `excluded-servers=true`, `sort` and `filter` query parameters are not supported.\n",
+        "example": true,
+        "in": "query",
+        "name": "excluded-servers",
+        "schema": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "serverHardwareInventoryReport-queryParams-v1beta1_filter": {
+        "description": "Filter expression in the form `<attribute> eq '\\<value>'`.\n\nSupported attributes for each `group-by` type:\n- `SERVER`: `model`, `processor`, `management`, `serverGeneration`, `memoryGiB`\n- `DEVICES`, `DEVICE_DETAIL`, `DEVICE_AND_SERVER`: `deviceName`\n- `DRIVES`, `DRIVE_DETAIL`, `DRIVE_AND_SERVER`: `driveModel`\n- `DRIVE_LIFE_PERCENTAGE`, `DRIVE_LIFE_DETAIL`, `DRIVE_LIFE_AND_SERVER`: `remainingDriveLifeRange`\n",
+        "examples": {
+          "filterDriveLife": {
+            "summary": "Filter drive life groups by range",
+            "value": "remainingDriveLifeRange eq 'RANGE_50_100'"
+          },
+          "filterModel": {
+            "summary": "Filter server groups by model",
+            "value": "model eq 'ProLiant DL360 Gen10'"
+          }
+        },
+        "in": "query",
+        "name": "filter",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "serverHardwareInventoryReport-queryParams-v1beta1_resourceUri": {
+        "description": "URI of the resource for which server hardware inventory report data is to be retrieved.\nThis can be a server, filter or group URI.\n",
+        "examples": {
+          "filterUri": {
+            "summary": "Filter URI",
+            "value": "/compute-ops-mgmt/v1beta1/filters/f4a8b2c9-7d5e-4321-9876-1a2b3c4d5e6f"
+          },
+          "groupUri": {
+            "summary": "Group URI",
+            "value": "/compute-ops-mgmt/v1/groups/420372b6-af2e-464d-970d-e9339abfc74f"
+          },
+          "serverUri": {
+            "summary": "Server URI",
+            "value": "/compute-ops-mgmt/v1/servers/875765-S01+1M512501AB"
+          }
+        },
+        "in": "query",
+        "name": "resource-uri",
+        "schema": {
+          "default": "/compute-ops-mgmt/v1beta1/filters/e7cef8e6-a3f6-4490-b669-136e3ca40617",
+          "type": "string"
+        }
+      },
+      "serverHardwareInventoryReport-queryParams-v1beta1_sort": {
+        "description": "Sort expression in the form `<attribute> asc|desc`.\n\nSupported attributes for each `group-by` type:\n- `SERVER`: `name`, `id`, `model`, `processor`, `management`, `serverGeneration`, `memoryGiB`, `processorCount`, `deviceCount`, `powerSupplyCount`, `fanCount`, `driveCount`, `formFactor`\n- `SERVER_MODEL`: `model`, `count`\n- `SERVER_GENERATION`: `serverGeneration`, `count`\n- `SERVER_PROCESSOR`: `processor`, `count`\n- `SERVER_MEMORY`: `memoryGiB`, `count`\n- `SERVER_MANAGEMENT`: `management`, `count`\n- `DEVICES`: `deviceName`, `partNumber`, `assemblyNumber`, `technology`, `linkLanes`, `deviceCount`, `serverCount`\n- `DEVICE_DETAIL`: `deviceName`, `deviceSerialNumber`, `location`, `firmwareVersion`, `serverId`, `serverName`\n- `DEVICE_AND_SERVER`: `serverId`, `serverName`, `deviceName`, `deviceCount`\n- `DRIVES`: `driveModel`, `driveName`, `protocol`, `mediaType`, `capacityGB`, `speedGbps`, `driveCount`, `serverCount`\n- `DRIVE_DETAIL`: `serverId`, `serverName`, `driveModel`, `driveName`, `driveSerialNumber`, `location`, `driveEnclosure`, `firmware`, `failurePredicted`, `predictedMediaLifeLeftPercent`\n- `DRIVE_AND_SERVER`: `serverId`, `serverName`, `driveModel`, `driveName`, `driveCount`\n- `DRIVE_LIFE_PERCENTAGE`: `remainingDriveLifeRange`, `driveCount`, `serverCount`\n- `DRIVE_LIFE_DETAIL`: `serverId`, `serverName`, `driveSerialNumber`, `remainingDriveLifeRange`, `location`, `driveEnclosure`, `failurePredicted`, `predictedMediaLifeLeftPercent`\n- `DRIVE_LIFE_AND_SERVER`: `serverId`, `serverName`, `remainingDriveLifeRange`, `driveCount`\n",
+        "examples": {
+          "driveCountDesc": {
+            "summary": "Sort drive aggregate by drive count descending",
+            "value": "driveCount desc"
+          },
+          "serverNameAsc": {
+            "summary": "Sort server rows by name ascending",
+            "value": "name asc"
+          }
+        },
+        "in": "query",
+        "name": "sort",
         "schema": {
           "type": "string"
         }
@@ -3401,13 +3497,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "type",
-          "generation",
-          "createdAt",
-          "updatedAt"
-        ],
         "type": "object"
       },
       "alert-v1beta2": {
@@ -11980,6 +12069,538 @@
         "title": "IO Bus Utilization Metadata",
         "type": "object"
       },
+      "item-device-and-server": {
+        "description": "Item shape for `group-by=DEVICE_AND_SERVER`.",
+        "properties": {
+          "deviceCount": {
+            "description": "Number of matching devices on the server.",
+            "example": 1,
+            "type": "integer"
+          },
+          "deviceName": {
+            "description": "Name of the device.",
+            "example": "Embedded Video Controller",
+            "type": "string"
+          },
+          "serverId": {
+            "description": "Unique server identifier.",
+            "example": "004312-D72+8899004312907280",
+            "type": "string"
+          },
+          "serverName": {
+            "description": "Display name of the server.",
+            "example": 8899004312907280,
+            "type": "string"
+          }
+        },
+        "title": "group-by DEVICE_AND_SERVER item",
+        "type": "object"
+      },
+      "item-device-detail": {
+        "description": "Item shape for `group-by=DEVICE_DETAIL`.",
+        "properties": {
+          "deviceName": {
+            "description": "Name of the device.",
+            "example": "BaseT I340-T4 OCP3",
+            "type": "string"
+          },
+          "deviceSerialNumber": {
+            "description": "Serial number of the device.",
+            "example": "MAY4361919",
+            "type": "string"
+          },
+          "firmwareVersion": {
+            "description": "Firmware version running on the device.",
+            "example": "16.26.0112",
+            "type": "string"
+          },
+          "location": {
+            "description": "Physical location of the device in the server.",
+            "example": "OCP Slot 10",
+            "type": "string"
+          },
+          "serverId": {
+            "description": "Unique identifier of the server where the device is installed.",
+            "example": "626958-SIY+HLYVUKCBU1",
+            "type": "string"
+          },
+          "serverName": {
+            "description": "Display name of the server where the device is installed.",
+            "example": "HLYVUKCBU1",
+            "type": "string"
+          }
+        },
+        "title": "group-by DEVICE_DETAIL item",
+        "type": "object"
+      },
+      "item-devices": {
+        "description": "Item shape for `group-by=DEVICES`.",
+        "properties": {
+          "assemblyNumber": {
+            "description": "Device assembly number.",
+            "example": "P10112-B21",
+            "type": "string"
+          },
+          "deviceCount": {
+            "description": "Number of matching devices.",
+            "example": 3,
+            "type": "integer"
+          },
+          "deviceName": {
+            "description": "Name of the device.",
+            "example": "BaseT I340-T4 OCP3",
+            "type": "string"
+          },
+          "linkLanes": {
+            "description": "Link lane details for the device.",
+            "example": "x8",
+            "type": "string"
+          },
+          "partNumber": {
+            "description": "Device part number.",
+            "example": "P12619-001",
+            "type": "string"
+          },
+          "serverCount": {
+            "description": "Number of servers containing the matching devices.",
+            "example": 3,
+            "type": "integer"
+          },
+          "technology": {
+            "description": "Device technology details.",
+            "example": "PCIExpressGen3",
+            "type": "string"
+          }
+        },
+        "title": "group-by DEVICES item",
+        "type": "object"
+      },
+      "item-drive-and-server": {
+        "description": "Item shape for `group-by=DRIVE_AND_SERVER`.",
+        "properties": {
+          "driveCount": {
+            "description": "Number of matching drives on the server.",
+            "example": 6,
+            "type": "integer"
+          },
+          "driveModel": {
+            "description": "Drive model identifier.",
+            "example": "EH000300JWHPL",
+            "type": "string"
+          },
+          "driveName": {
+            "description": "Human-readable drive name.",
+            "example": "HPE 300GB 12G SAS HDD",
+            "type": "string"
+          },
+          "serverId": {
+            "description": "Unique server identifier.",
+            "example": "004312-D72+8899004312907280",
+            "type": "string"
+          },
+          "serverName": {
+            "description": "Display name of the server.",
+            "example": 8899004312907280,
+            "type": "string"
+          }
+        },
+        "title": "group-by DRIVE_AND_SERVER item",
+        "type": "object"
+      },
+      "item-drive-detail": {
+        "description": "Item shape for `group-by=DRIVE_DETAIL`.",
+        "properties": {
+          "driveEnclosure": {
+            "description": "Drive enclosure type or location class.",
+            "example": "INTERNAL",
+            "type": "string"
+          },
+          "driveModel": {
+            "description": "Drive model identifier.",
+            "example": "EH000300JWHPL",
+            "type": "string"
+          },
+          "driveName": {
+            "description": "Human-readable drive name.",
+            "example": "HPE 300GB 12G SAS HDD",
+            "type": "string"
+          },
+          "driveSerialNumber": {
+            "description": "Unique serial number of the drive.",
+            "example": "39A0A02VFA3G",
+            "type": "string"
+          },
+          "failurePredicted": {
+            "description": "Whether predictive failure has been reported for the drive.",
+            "example": false,
+            "type": "boolean"
+          },
+          "firmware": {
+            "description": "Current firmware revision of the drive.",
+            "example": "HPD7",
+            "type": "string"
+          },
+          "location": {
+            "description": "Physical location of the drive in the server.",
+            "example": "Slot=12:Port=1I:Box=3:Bay=2",
+            "type": "string"
+          },
+          "predictedMediaLifeLeftPercent": {
+            "description": "Predicted percentage of media life left for the drive.",
+            "example": null,
+            "type": "integer"
+          },
+          "serverId": {
+            "description": "Unique server identifier.",
+            "example": "004312-D72+8899004312907280",
+            "type": "string"
+          },
+          "serverName": {
+            "description": "Display name of the server.",
+            "example": 8899004312907280,
+            "type": "string"
+          }
+        },
+        "title": "group-by DRIVE_DETAIL item",
+        "type": "object"
+      },
+      "item-drive-life-and-server": {
+        "description": "Item shape for `group-by=DRIVE_LIFE_AND_SERVER`.",
+        "properties": {
+          "driveCount": {
+            "description": "Number of drives for the server in this life range.",
+            "example": 6,
+            "type": "integer"
+          },
+          "remainingDriveLifeRange": {
+            "description": "Bucketed range of remaining drive media life.",
+            "enum": [
+              "RANGE_0_15",
+              "RANGE_15_25",
+              "RANGE_25_50",
+              "RANGE_50_100",
+              "RANGE_NOT_SUPPORTED"
+            ],
+            "example": "RANGE_NOT_SUPPORTED",
+            "type": "string"
+          },
+          "serverId": {
+            "description": "Unique server identifier.",
+            "example": "004312-D72+8899004312907280",
+            "type": "string"
+          },
+          "serverName": {
+            "description": "Display name of the server.",
+            "example": 8899004312907280,
+            "type": "string"
+          }
+        },
+        "title": "group-by DRIVE_LIFE_AND_SERVER item",
+        "type": "object"
+      },
+      "item-drive-life-detail": {
+        "description": "Item shape for `group-by=DRIVE_LIFE_DETAIL`.",
+        "properties": {
+          "driveEnclosure": {
+            "description": "Drive enclosure type or location class.",
+            "example": "INTERNAL",
+            "type": "string"
+          },
+          "driveSerialNumber": {
+            "description": "Unique serial number of the drive.",
+            "example": "39A0A02VFA3G",
+            "type": "string"
+          },
+          "failurePredicted": {
+            "description": "Whether predictive failure has been reported for the drive.",
+            "example": false,
+            "type": "boolean"
+          },
+          "location": {
+            "description": "Physical location of the drive in the server.",
+            "example": "Slot=12:Port=1I:Box=3:Bay=2",
+            "type": "string"
+          },
+          "predictedMediaLifeLeftPercent": {
+            "description": "Predicted percentage of media life left for the drive.",
+            "example": null,
+            "type": "integer"
+          },
+          "remainingDriveLifeRange": {
+            "description": "Bucketed range of remaining drive media life.",
+            "enum": [
+              "RANGE_0_15",
+              "RANGE_15_25",
+              "RANGE_25_50",
+              "RANGE_50_100",
+              "RANGE_NOT_SUPPORTED"
+            ],
+            "example": "RANGE_NOT_SUPPORTED",
+            "type": "string"
+          },
+          "serverId": {
+            "description": "Unique server identifier.",
+            "example": "004312-D72+8899004312907280",
+            "type": "string"
+          },
+          "serverName": {
+            "description": "Display name of the server.",
+            "example": 8899004312907280,
+            "type": "string"
+          }
+        },
+        "title": "group-by DRIVE_LIFE_DETAIL item",
+        "type": "object"
+      },
+      "item-drive-life-percentage": {
+        "description": "Item shape for `group-by=DRIVE_LIFE_PERCENTAGE`.",
+        "properties": {
+          "driveCount": {
+            "description": "Number of drives in this life range.",
+            "example": 0,
+            "type": "integer"
+          },
+          "remainingDriveLifeRange": {
+            "description": "Bucketed range of remaining drive media life.",
+            "enum": [
+              "RANGE_0_15",
+              "RANGE_15_25",
+              "RANGE_25_50",
+              "RANGE_50_100",
+              "RANGE_NOT_SUPPORTED"
+            ],
+            "example": "RANGE_0_15",
+            "type": "string"
+          },
+          "serverCount": {
+            "description": "Number of servers represented in this life range.",
+            "example": 0,
+            "type": "integer"
+          }
+        },
+        "title": "group-by DRIVE_LIFE_PERCENTAGE item",
+        "type": "object"
+      },
+      "item-drives": {
+        "description": "Item shape for `group-by=DRIVES`.",
+        "properties": {
+          "capacityGB": {
+            "description": "Drive capacity in gigabytes.",
+            "example": 300,
+            "type": "number"
+          },
+          "driveCount": {
+            "description": "Number of matching drives.",
+            "example": 18,
+            "type": "integer"
+          },
+          "driveModel": {
+            "description": "Drive model identifier.",
+            "example": "EH000300JWHPL",
+            "type": "string"
+          },
+          "driveName": {
+            "description": "Human-readable drive name.",
+            "example": "HPE 300GB 12G SAS HDD",
+            "type": "string"
+          },
+          "mediaType": {
+            "description": "Drive media type.",
+            "example": "HDD",
+            "type": "string"
+          },
+          "protocol": {
+            "description": "Drive interface protocol.",
+            "example": "SAS",
+            "type": "string"
+          },
+          "serverCount": {
+            "description": "Number of servers containing the matching drives.",
+            "example": 3,
+            "type": "integer"
+          },
+          "speedGbps": {
+            "description": "Drive link speed in Gbps.",
+            "example": 12,
+            "type": "number"
+          }
+        },
+        "title": "group-by DRIVES item",
+        "type": "object"
+      },
+      "item-server": {
+        "description": "Item shape for `group-by=SERVER`.",
+        "properties": {
+          "dataUnavailableReason": {
+            "description": "Reason inventory details are unavailable when data is missing.",
+            "enum": [
+              "SUBSCRIPTION_REQUIRED",
+              "SUBSCRIPTION_EXPIRED",
+              "INVENTORY_DATA_NOT_COLLECTED",
+              "UNSUPPORTED_SERVER_MODEL"
+            ],
+            "example": null,
+            "type": "string"
+          },
+          "deviceCount": {
+            "description": "Number of devices(PCIe, controller etc.) detected for the server.",
+            "example": 6,
+            "type": "integer"
+          },
+          "driveCount": {
+            "description": "Number of drives detected for the server.",
+            "example": 6,
+            "type": "integer"
+          },
+          "fanCount": {
+            "description": "Number of fans detected for the server.",
+            "example": 6,
+            "type": "integer"
+          },
+          "formFactor": {
+            "description": "Physical form factor of the server.",
+            "example": "1U",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique server identifier.",
+            "example": "004312-D72+8899004312907280",
+            "type": "string"
+          },
+          "management": {
+            "description": "Management controller type/version.",
+            "example": "iLO 5",
+            "type": "string"
+          },
+          "memoryGiB": {
+            "description": "Total installed memory in GiB.",
+            "example": 64,
+            "type": "integer"
+          },
+          "model": {
+            "description": "Server model.",
+            "example": "ProLiant DL360 Gen10 Plus",
+            "type": "string"
+          },
+          "name": {
+            "description": "Display name of the server.",
+            "example": 8899004312907280,
+            "type": "string"
+          },
+          "powerSupplyCount": {
+            "description": "Number of power supply units detected for the server.",
+            "example": 2,
+            "type": "integer"
+          },
+          "processor": {
+            "description": "Processor model/vendor string for the server.",
+            "example": "Intel(R) Xeon(R) Platinum 8360Y CPU @ @",
+            "type": "string"
+          },
+          "processorCount": {
+            "description": "Number of processors installed on the server.",
+            "example": 1,
+            "type": "integer"
+          },
+          "serialNumber": {
+            "description": "Server serial number.",
+            "example": 8899004312907280,
+            "type": "string"
+          },
+          "serverGeneration": {
+            "description": "Hardware generation of the server.",
+            "example": "GEN_10",
+            "type": "string"
+          }
+        },
+        "title": "group-by SERVER item",
+        "type": "object"
+      },
+      "item-server-generation": {
+        "description": "Item shape for `group-by=SERVER_GENERATION`.",
+        "properties": {
+          "count": {
+            "description": "Number of servers in this generation.",
+            "example": 5,
+            "type": "integer"
+          },
+          "serverGeneration": {
+            "description": "Hardware generation of the server.",
+            "example": "GEN_10",
+            "type": "string"
+          }
+        },
+        "title": "group-by SERVER_GENERATION item",
+        "type": "object"
+      },
+      "item-server-management": {
+        "description": "Item shape for `group-by=SERVER_MANAGEMENT`.",
+        "properties": {
+          "count": {
+            "description": "Number of servers with this management type.",
+            "example": 3,
+            "type": "integer"
+          },
+          "management": {
+            "description": "Management controller type/version.",
+            "example": "iLO 5",
+            "type": "string"
+          }
+        },
+        "title": "group-by SERVER_MANAGEMENT item",
+        "type": "object"
+      },
+      "item-server-memory": {
+        "description": "Item shape for `group-by=SERVER_MEMORY`.",
+        "properties": {
+          "count": {
+            "description": "Number of servers with this memory size.",
+            "example": 3,
+            "type": "integer"
+          },
+          "memoryGiB": {
+            "description": "Installed memory value in GiB.",
+            "example": 16,
+            "type": "integer"
+          }
+        },
+        "title": "group-by SERVER_MEMORY item",
+        "type": "object"
+      },
+      "item-server-model": {
+        "description": "Item shape for `group-by=SERVER_MODEL`.",
+        "properties": {
+          "count": {
+            "description": "Number of servers for this model.",
+            "example": 1,
+            "type": "integer"
+          },
+          "model": {
+            "description": "Server model name.",
+            "example": "ProLiant DL110 Gen11",
+            "type": "string"
+          }
+        },
+        "title": "group-by SERVER_MODEL item",
+        "type": "object"
+      },
+      "item-server-processor": {
+        "description": "Item shape for `group-by=SERVER_PROCESSOR`.",
+        "properties": {
+          "count": {
+            "description": "Number of servers with this processor.",
+            "example": 1,
+            "type": "integer"
+          },
+          "processor": {
+            "description": "Processor model/vendor string.",
+            "example": "AMD EPYC 7251 8-Core Processor",
+            "type": "string"
+          }
+        },
+        "title": "group-by SERVER_PROCESSOR item",
+        "type": "object"
+      },
       "job-v1": {
         "description": "Job",
         "properties": {
@@ -16558,6 +17179,84 @@
           "UNSUPPORTED"
         ],
         "type": "string"
+      },
+      "server-hardware-inventory-report-v1beta1": {
+        "description": "Server hardware inventory report data.",
+        "properties": {
+          "count": {
+            "description": "Number of records returned in the current page.",
+            "example": 10,
+            "type": "integer"
+          },
+          "items": {
+            "description": "Data rows for the selected `group-by` value.\n",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/item-server"
+                },
+                {
+                  "$ref": "#/components/schemas/item-server-model"
+                },
+                {
+                  "$ref": "#/components/schemas/item-server-generation"
+                },
+                {
+                  "$ref": "#/components/schemas/item-server-processor"
+                },
+                {
+                  "$ref": "#/components/schemas/item-server-memory"
+                },
+                {
+                  "$ref": "#/components/schemas/item-server-management"
+                },
+                {
+                  "$ref": "#/components/schemas/item-devices"
+                },
+                {
+                  "$ref": "#/components/schemas/item-device-detail"
+                },
+                {
+                  "$ref": "#/components/schemas/item-device-and-server"
+                },
+                {
+                  "$ref": "#/components/schemas/item-drives"
+                },
+                {
+                  "$ref": "#/components/schemas/item-drive-detail"
+                },
+                {
+                  "$ref": "#/components/schemas/item-drive-and-server"
+                },
+                {
+                  "$ref": "#/components/schemas/item-drive-life-percentage"
+                },
+                {
+                  "$ref": "#/components/schemas/item-drive-life-detail"
+                },
+                {
+                  "$ref": "#/components/schemas/item-drive-life-and-server"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based page offset.",
+            "example": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of records matching the request.",
+            "example": 125,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object"
       },
       "server-v1": {
         "description": "Server",
@@ -28890,6 +29589,78 @@
         "summary": "List all OneView appliance settings",
         "tags": [
           "oneview-settings - v1beta1"
+        ]
+      }
+    },
+    "/compute-ops-mgmt/v1beta1/server-hardware-inventory-report": {
+      "get": {
+        "description": "Retrieve server hardware inventory report data for servers matched by the provided `resource-uri` or `filter-tags`.\n\nThe `items` response structure depends on the value of the `group-by` query parameter.\n",
+        "operationId": "get_server_hardware_inventory_report",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/groupBy"
+          },
+          {
+            "$ref": "#/components/parameters/serverHardwareInventoryReport-queryParams-v1beta1_sort"
+          },
+          {
+            "$ref": "#/components/parameters/serverHardwareInventoryReport-queryParams-v1beta1_filter"
+          },
+          {
+            "$ref": "#/components/parameters/filterTags"
+          },
+          {
+            "$ref": "#/components/parameters/serverHardwareInventoryReport-queryParams-v1beta1_resourceUri"
+          },
+          {
+            "$ref": "#/components/parameters/serverHardwareInventoryReport-queryParams-v1beta1_excludedServers"
+          },
+          {
+            "$ref": "#/components/parameters/offsetParam"
+          },
+          {
+            "$ref": "#/components/parameters/limitParam",
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/tenantAcidHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/server-hardware-inventory-report-v1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "406": {
+            "$ref": "#/components/responses/406-notAcceptableResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "Retrieve server hardware inventory report",
+        "tags": [
+          "server-hardware-inventory-report - v1beta1"
         ]
       }
     },

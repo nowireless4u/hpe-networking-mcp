@@ -576,7 +576,7 @@
             "type": "array"
           },
           "id": {
-            "description": "The Greenlake Global ID of the user. If provided, must match the userId in the URL path.",
+            "description": "The Greenlake Global ID of the user. If provided, must match the `userId` in the URL path.",
             "example": "448ebfdb-7bc9-402f-9eb0-f9a86c06ca5a",
             "type": "string"
           },
@@ -607,7 +607,7 @@
             "$ref": "#/components/schemas/PosixUserExtension"
           },
           "userName": {
-            "description": "Must be the same as the primary email address and must be a valid email address. This serves as the unique identifier for the user.",
+            "description": "Must match the existing user's `userName`. Must also match the primary email address and be a valid email address.",
             "example": "abc@xyz.com",
             "maxLength": 100,
             "minLength": 5,
@@ -2191,7 +2191,7 @@
         ]
       },
       "put": {
-        "description": "Replaces an existing user. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644)",
+        "description": "Replaces an existing user. Compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).\n",
         "operationId": "putUserSCIM",
         "parameters": [
           {
