@@ -3223,9 +3223,7 @@
                       "errorDetails": [
                         {
                           "metadata": {
-                            "id": {
-                              "message": "Resource with id [00000000-0000-0000-0000-000000000000] not found"
-                            }
+                            "id": "Subscription with id [00000000-0000-0000-0000-000000000000] was not found in this workspace"
                           },
                           "source": "hpe.greenlake.subscriptionmanagement",
                           "type": "hpe.greenlake.metadata"

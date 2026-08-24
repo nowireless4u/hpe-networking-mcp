@@ -2375,13 +2375,6 @@
             "type": "string"
           }
         },
-        "required": [
-          "id",
-          "type",
-          "generation",
-          "createdAt",
-          "updatedAt"
-        ],
         "type": "object"
       },
       "activityCollection-v1beta2": {
