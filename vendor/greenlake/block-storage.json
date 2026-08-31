@@ -288,6 +288,16 @@
           "type": "string"
         }
       },
+      "compareByVolumeSetPerf": {
+        "allowReserved": true,
+        "description": "compareBy will define top or bottom N count",
+        "example": "top eq 5",
+        "in": "query",
+        "name": "compare-by",
+        "schema": {
+          "type": "string"
+        }
+      },
       "component": {
         "allowReserved": true,
         "description": "component will give information about resource to be queried",
@@ -302,8 +312,16 @@
         }
       },
       "filterVolumeDT4": {
-        "allowReserved": true,
         "description": "filter will define objects to be filtered. Filterable columns are:\n* `hostIds` - id of the host\n* `appsetId` - id of the application set\n* `vvId` - id of the volume\n* `targetName` - name of the replication partner\n",
+        "in": "query",
+        "name": "filter",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "filterVolumeSetVolumePerf": {
+        "allowReserved": true,
+        "description": "filter will define objects to be filtered. Filterable columns are:\n* `vvId` - id of the volume\n",
         "example": "vvId in (5df1fc8108e1c74b7041625a2f94d098,cd6c28c563b60f391fcd6dee8b92360c)",
         "in": "query",
         "name": "filter",
@@ -490,6 +508,16 @@
           "type": "string"
         }
       },
+      "perfMetricTypeVolumeSetPerf": {
+        "allowReserved": true,
+        "description": "metricType will define comma separated metrics",
+        "example": "IOPS,LATENCY,THROUGHPUT",
+        "in": "query",
+        "name": "metric-type",
+        "schema": {
+          "type": "string"
+        }
+      },
       "poolFilter": {
         "allowReserved": true,
         "description": "oData query to filter pools by Key.",
@@ -597,6 +625,16 @@
           "type": "string"
         }
       },
+      "scheduleUid": {
+        "description": "Schedule ID of the volume",
+        "example": "2e2af4b093bee71e1e38549ca2aa5f9f",
+        "in": "path",
+        "name": "scheduleId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
       "select": {
         "allowReserved": true,
         "description": "Query to select only the required parameters, separated by . if nested",
@@ -669,6 +707,22 @@
         "allowReserved": true,
         "description": "It defines granularity in minutes.",
         "example": 60,
+        "in": "query",
+        "name": "time-interval-min",
+        "schema": {
+          "enum": [
+            5,
+            60,
+            1440,
+            10080
+          ],
+          "type": "integer"
+        }
+      },
+      "timeIntervalMinForVvCapacity": {
+        "allowReserved": true,
+        "description": "It defines granularity in minutes. Values 5 and 60 are deprecated; use 1440 or 10080.",
+        "example": 1440,
         "in": "query",
         "name": "time-interval-min",
         "schema": {
@@ -818,6 +872,233 @@
       }
     },
     "schemas": {
+      "ArcusScriptInfo": {
+        "description": "Script information for application consistency operations",
+        "properties": {
+          "params": {
+            "description": "Parameters to pass to the script",
+            "example": "--mode backup --timeout 300",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "Path to the script file",
+            "example": "/scripts/backup/pre-backup.sh",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timeoutSecs": {
+            "description": "Timeout in seconds for script execution",
+            "example": 300,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BulkMergeCandidates": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/BulkMergeCandidatesObjectHostGroup"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "BulkMergeCandidatesHosts": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/BulkMergeCandidatesObject"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "BulkMergeCandidatesObject": {
+        "properties": {
+          "duplicateIds": {
+            "description": "host ids of all avialable duplicates",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier for duplicate host.",
+            "example": "6848ef683c27403e96caa51816ddc72c",
+            "type": "string"
+          },
+          "members": {
+            "description": "initiator addresses of all initiaors",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Name of the host.",
+            "example": "host1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "systems": {
+            "description": "system IDs to which the host belongs to.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "type",
+            "example": "Type of the resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "BulkMergeCandidatesObjectHostGroup": {
+        "properties": {
+          "duplicateIds": {
+            "description": "host group ids of all avialable duplicates",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier for duplicate host group.",
+            "example": "6848ef683c27403e96caa51816ddc72c",
+            "type": "string"
+          },
+          "members": {
+            "description": "Host names of all hosts associated to the host group",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Name of the host group.",
+            "example": "host1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "systems": {
+            "description": "system IDs to which the host group belongs to.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "type",
+            "example": "Type of the resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "BulkMergeOutput": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BulkMergeOutputObject"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BulkMergeOutputObject": {
+        "properties": {
+          "duplicateIds": {
+            "description": "host/hostgroup ids of all merged duplicates",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Id of the created host/hostgroup",
+            "example": "3e1d2a03c7a8e5513b7dd6e03553b79f",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "CommonListResponse": {
         "properties": {
           "count": {
@@ -837,6 +1118,38 @@
           "count",
           "offset"
         ]
+      },
+      "CreateBulkMergeCandidates": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CreateBulkMergeCandidatesObject"
+            },
+            "type": "array"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "CreateBulkMergeCandidatesObject": {
+        "properties": {
+          "duplicateIds": {
+            "description": "host/hostgroup ids of all available duplicates",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "duplicateIds"
+        ],
+        "type": "object"
       },
       "CreateHostGroupInput": {
         "properties": {
@@ -1180,9 +1493,49 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "DeviceType4ApplicationConsistentSettings": {
+        "description": "Application-consistent snapshot settings. Applicable only for arrays running OS version 10.6.0 and above; null otherwise.",
+        "properties": {
+          "applicationServerUid": {
+            "description": "Unique identifier of the application server",
+            "example": "app-server-12345",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "postScriptInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArcusScriptInfo"
+              }
+            ],
+            "description": "Post-script information for application consistency",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "preScriptInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArcusScriptInfo"
+              }
+            ],
+            "description": "Pre-script information for application consistency",
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
         "type": [
           "object",
           "null"
@@ -2718,6 +3071,52 @@
         ],
         "type": "object"
       },
+      "DeviceType4CreateCpgInput": {
+        "description": "Request body for creating a storage pool for HPE Alletra Storage MP B10000.",
+        "properties": {
+          "domain": {
+            "description": "Name of the domain that the CPG will belong to.",
+            "example": "domainExchange",
+            "type": "string"
+          },
+          "growthLimitMiB": {
+            "description": "Limit size in MiB beyond which the admin/data space will not grow.",
+            "example": 1048576,
+            "format": "int64",
+            "type": "integer"
+          },
+          "growthSizeMiB": {
+            "description": "Amount of admin/data LD storage in MiB created on each auto-grow.",
+            "example": 157680000,
+            "format": "int64",
+            "type": "integer"
+          },
+          "growthWarnMiB": {
+            "description": "Size in MiB of the admin/data space at which a warning alert is generated.",
+            "example": 104856,
+            "format": "int64",
+            "type": "integer"
+          },
+          "ha": {
+            "description": "Requested High Availability setting. Allowed values cage and disk.",
+            "enum": [
+              "cage",
+              "disk"
+            ],
+            "example": "disk",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Common Provisioning Group. No more than 31 characters.",
+            "example": "CPG1",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
       "DeviceType4CreateProtectionPolicyInputSchema": {
         "description": "Request body to create protection policy",
         "properties": {
@@ -2888,6 +3287,44 @@
           "null"
         ]
       },
+      "DeviceType4EditCpgInput": {
+        "description": "Request body for editing a storage pool for HPE Alletra Storage MP B10000.",
+        "properties": {
+          "growthLimitMiB": {
+            "description": "Limit size in MiB beyond which the admin/data space will not grow.",
+            "example": 1048576,
+            "format": "int64",
+            "type": "integer"
+          },
+          "growthSizeMiB": {
+            "description": "Amount of admin/data LD storage in MiB created on each auto-grow.",
+            "example": 157680000,
+            "format": "int64",
+            "type": "integer"
+          },
+          "growthWarnMiB": {
+            "description": "Size in MiB of the admin/data space at which a warning alert is generated.",
+            "example": 104856,
+            "format": "int64",
+            "type": "integer"
+          },
+          "ha": {
+            "description": "Requested High Availability setting. Allowed values cage and disk.",
+            "enum": [
+              "cage",
+              "disk"
+            ],
+            "example": "disk",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Common Provisioning Group. No more than 31 characters.",
+            "example": "CPG1",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "DeviceType4EditProtectionPolicyInputSchema": {
         "description": "Request body for edit protection policy",
         "properties": {
@@ -2930,6 +3367,78 @@
         "required": [
           "protectionPolicyType"
         ],
+        "type": "object"
+      },
+      "DeviceType4EditVolumeSnapshotScheduleInput": {
+        "description": "Edit schedule of a volume Input",
+        "properties": {
+          "atTime": {
+            "description": "Time of the day when snapshot should be taken. Possible values: 0-23 If more than one snapshots in a day then untilTime specifies until what time snapshots should be taken.",
+            "example": 2,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "dayOfMonth": {
+            "description": "Day of month on which snapshot has to be taken for Monthly schedule. Possible values: 1-28",
+            "example": 10,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "days": {
+            "description": "Days on which snapshots should be taken. comma separated. Possible values: sunday,monday,tuesday,wednesday,thursday,friday,saturday",
+            "example": "sunday,monday",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Name of the Schedule",
+            "example": "Every_1_hour_on_sunday_monday",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "period": {
+            "description": "Time interval for snapshots. Possible values:\n  - hours: 1,2,3,4,6,8,12\n  - minutes: 15,20,30\n  - days & months: 1",
+            "example": 1,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "periodUnit": {
+            "description": "Unit of time for the interval specified in period.",
+            "enum": [
+              "minutes",
+              "hours",
+              "days",
+              "months"
+            ],
+            "example": "hours",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "untilTime": {
+            "description": "Time of the day to stop taking snapshots. Must be an incremental value by the factor specified in Period, starting from atTime. Applicable only when more than one snapshots should be taken in a day.",
+            "example": 7,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "DeviceType4ExportAppSetPost": {
@@ -4737,7 +5246,6 @@
         },
         "required": [
           "id",
-          "type",
           "name",
           "isRemote"
         ],
@@ -4933,8 +5441,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": [
           "object",
@@ -6495,8 +7002,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": [
           "object",
@@ -7251,6 +7757,18 @@
               "null"
             ]
           },
+          "applicationConsistentSettings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceType4ApplicationConsistentSettings"
+              }
+            ],
+            "description": "Application-consistent snapshot settings. Populated only for arrays running OS version 10.6.0 and above; null otherwise.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
           "atTime": {
             "description": "Time of the day when snapshot should be taken. If more than one snapshots in a day then untilTime specifies until what time snapshots should be taken",
             "example": 8,
@@ -7469,6 +7987,27 @@
           "expireSecs"
         ],
         "type": "object"
+      },
+      "DeviceType4ScheduleList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/DeviceType4Schedule"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
       },
       "DeviceType4SecondaryRemoteInfo": {
         "properties": {
@@ -11898,6 +12437,51 @@
           "null"
         ]
       },
+      "DeviceType4metricRdWrTotData": {
+        "description": "Timeseries data for particular metric type",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceType4metricSeriesRdWrTotData"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "total number of series data",
+            "example": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "DeviceType4metricRdWrTotHistoryData": {
+        "properties": {
+          "chartLegendId": {
+            "description": "Id to display chart legend, gives information about groupby and filtered objects",
+            "example": "VV_NAME-vvname1:HOST_NAME-host:LUN-lun",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timeseriesData": {
+            "$ref": "#/components/schemas/DeviceType4metricRdWrTotData"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "DeviceType4metricSeriesData": {
         "properties": {
           "readValue": {
@@ -12007,6 +12591,29 @@
           "writeValue": {
             "description": "average write metric value at particular timestamp",
             "example": 23.76,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "DeviceType4metricSeriesRdWrTotData": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/DeviceType4metricSeriesRdWrData"
+          }
+        ],
+        "description": "Timeseries data for particular metric type",
+        "properties": {
+          "totalValue": {
+            "description": "average total metric value at particular timestamp",
+            "example": 46,
             "format": "float64",
             "type": [
               "number",
@@ -14639,8 +15246,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": [
           "object",
@@ -15269,8 +15875,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": "object"
       },
@@ -15348,8 +15953,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": "object"
       },
@@ -15528,8 +16132,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": [
           "object",
@@ -15613,8 +16216,7 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": [
           "object",
@@ -16256,12 +16858,172 @@
           }
         },
         "required": [
-          "id",
-          "type"
+          "id"
         ],
         "type": [
           "object",
           "null"
+        ]
+      },
+      "InsightDetails": {
+        "properties": {
+          "additionalDetails": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endTime": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "startTime": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "InsightsData": {
+        "properties": {
+          "category": {
+            "description": "Category of the insight",
+            "enum": [
+              "CAPACITY",
+              "PERFORMANCE"
+            ],
+            "type": "string"
+          },
+          "cause": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createTime": {
+            "description": "Timestamp for the insight.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "customerId": {
+            "description": "Primary identifier for the customer (UUID) associated with the insight",
+            "type": "string"
+          },
+          "date": {
+            "description": "Date in string format corresponding to the timestamp field.",
+            "format": "date",
+            "type": "string"
+          },
+          "details": {
+            "$ref": "#/components/schemas/InsightDetails"
+          },
+          "id": {
+            "description": "Primary identifier for the insight.",
+            "type": "string"
+          },
+          "insightDetailsUri": {
+            "description": "URI of the insight details page",
+            "type": "string"
+          },
+          "insightUri": {
+            "description": "URI of the insight",
+            "type": "string"
+          },
+          "lastUpdatedTime": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "remediation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resourceDetails": {
+            "$ref": "#/components/schemas/ResourceDetail"
+          },
+          "score": {
+            "description": "Score of the insight - 0,1,2...10",
+            "format": "int64",
+            "type": "integer"
+          },
+          "severity": {
+            "description": "Severity of the insight - CRITICAL, INFO, WARNING",
+            "enum": [
+              "CRITICAL",
+              "INFO",
+              "WARNING"
+            ],
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "subType": {
+            "description": "Sub-type of the insight (eg. DISK/CPU)",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "symptom": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "systemDetails": {
+            "$ref": "#/components/schemas/SystemDetails"
+          },
+          "systemId": {
+            "description": "Identifier of the system",
+            "type": "string"
+          },
+          "title": {
+            "description": "One line description of the insight",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the insight",
+            "enum": [
+              "TIME_UNTIL_FULL",
+              "RESOURCE_CONTENTION",
+              "LATENCY_ANOMALIES",
+              "HEADROOM_UTILIZATION"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "description": "insight values - No. of annotations, saturation value",
+            "format": "float64",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "InsightsResponse": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/InsightsData"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
         ]
       },
       "MappedDevice": {
@@ -16348,6 +17110,36 @@
           }
         ]
       },
+      "MergeHostGroupsInput": {
+        "properties": {
+          "hostGroupIds": {
+            "description": "Array of host group ids         ",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Name of the host Group. The maximum supported length is 251 characters. Host Group name length greater than 27 characters is supported only for HPE Alletra Storage MP B10000 systems with OS version 10.4.2 and later.",
+            "example": "host1",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "hostGroupIds"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "RecommendationList": {
         "properties": {
           "capacityInfo": {
@@ -16395,6 +17187,36 @@
           "id",
           "type"
         ],
+        "type": "object"
+      },
+      "ResourceDetail": {
+        "description": "System and Resource Details",
+        "properties": {
+          "resourceType": {
+            "type": "string"
+          },
+          "resourceUid": {
+            "type": "string"
+          },
+          "resourceUri": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "SystemDetails": {
+        "description": "System and Resource Details",
+        "properties": {
+          "systemId": {
+            "type": "string"
+          },
+          "systemUri": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UpdateHostChapInput": {
@@ -16498,6 +17320,224 @@
         "type": [
           "object",
           "null"
+        ]
+      },
+      "ValidateMergeObject": {
+        "properties": {
+          "hostIds": {
+            "description": "host IDs of hosts which are needed to be merged.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "Name of the host being created.",
+            "example": "host1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operatingSystem": {
+            "description": "Host operating system. Possible Values are: - AIX - Apple - Citrix Hypervisor(XenServer) - HP-UX - IBM VIO Server - InForm - NetApp/ONTAP - OE Linux UEK - OpenVMS - Oracle VM x86 - RHE Linux - RHE Virtualization - Solaris - SuSE Linux - SuSE Virtualization - Ubuntu - VMware (ESXi) - Windows Server",
+            "example": "Windows Server",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "operatingSystem",
+          "hostIds"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "VolumeSetPerformanceHistoryData": {
+        "description": "performance trends for given granularity and time range for a component",
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/commonResourceAttributesPerf"
+          },
+          "customerId": {
+            "description": "customerId",
+            "example": "fc5f41652a53497e88cdcebc715cc1cf",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endTime": {
+            "description": "end time of history data",
+            "example": 162564271,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "historyData": {
+            "description": "performance history data",
+            "properties": {
+              "volume": {
+                "properties": {
+                  "iopsMetricsData": {
+                    "items": {
+                      "$ref": "#/components/schemas/DeviceType4metricRdWrTotHistoryData"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "latencyMetricsDataMs": {
+                    "items": {
+                      "$ref": "#/components/schemas/DeviceType4metricHistoryData"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  },
+                  "throughputMetricsDataKbps": {
+                    "items": {
+                      "$ref": "#/components/schemas/DeviceType4metricRdWrTotHistoryData"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  }
+                },
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "volumeSet": {
+                "properties": {
+                  "iopsMetricsData": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DeviceType4metricRdWrTotHistoryData"
+                      }
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
+                  "latencyMetricsDataMs": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DeviceType4metricHistoryData"
+                      }
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
+                  "qosMetricsData": {
+                    "description": "Timeseries data for QoS metric type",
+                    "properties": {
+                      "items": {
+                        "items": {
+                          "$ref": "#/components/schemas/qosMetricsSeriesData"
+                        },
+                        "type": [
+                          "array",
+                          "null"
+                        ]
+                      },
+                      "total": {
+                        "description": "total number of series data",
+                        "example": 1,
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      }
+                    },
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  },
+                  "throughputMetricsDataKbps": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/DeviceType4metricRdWrTotHistoryData"
+                      }
+                    ],
+                    "type": [
+                      "object",
+                      "null"
+                    ]
+                  }
+                },
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier for the resource.",
+            "example": "6848ef683c27403e96caa51816ddc72c",
+            "type": "string"
+          },
+          "startTime": {
+            "description": "start time of history data",
+            "example": 1625556314,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "type",
+            "example": "Type of the resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "VolumeSetPerformanceHistoryDataList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/VolumeSetPerformanceHistoryData"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
         ]
       },
       "aggregateData": {
@@ -17313,6 +18353,234 @@
               "null"
             ]
           },
+          "isRansomwareDegraded": {
+            "description": "A boolean value that specifies if the volume is in degraded state due to ransomware.",
+            "example": false,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "A user friendly name to identify the storage system volume (resourceName). `Filter, Sort`",
+            "example": "Finance",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "productFamily": {
+            "description": "Product Family",
+            "example": "deviceType1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provisionedSizeMiB": {
+            "description": "Provisioned Size in MiB",
+            "example": 2048,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "resourceUri": {
+            "description": "resourceUri for detailed volume object",
+            "example": "/block-storage/v1alpha1/storage-systems/volumes",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sizeMiB": {
+            "description": "Size in MiB `Filter, Sort`",
+            "example": 2048,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "spaceWarning": {
+            "$ref": "#/components/schemas/spaceWarning"
+          },
+          "subType": {
+            "description": "subType of the volume",
+            "example": "PROVTYPE_DDS",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "systemId": {
+            "description": "SystemUid/Serial Number  of the array. `Filter, Sort`",
+            "example": "7CE751P312",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "thinSavings": {
+            "description": "Thin savings",
+            "example": "1:1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "type",
+            "example": "volume",
+            "type": "string"
+          },
+          "usedCapacityPercent": {
+            "description": "Used capacity percentage of volume.",
+            "example": 1.2345,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "usedSizeMiB": {
+            "description": "Size in MiB",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "volumeSetId": {
+            "description": "SystemUid/serialNumber of the volumeSet.",
+            "example": "7CE751P312",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "volumeType": {
+            "description": "VV Type",
+            "example": "VVTYPE_BASE",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "wwn": {
+            "description": "Volume wwn.",
+            "example": "60002AC0000000000000006B0001FFEB",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "fleetVolumeDetailsListWithoutRansomware": {
+        "properties": {
+          "associatedLinks": {
+            "description": "Associated Links",
+            "example": [
+              {
+                "resourceUri": "/block-storage/v1alpha1/storage-systems/storage-pools/{uid}",
+                "type": "storage-pools"
+              },
+              {
+                "resourceUri": "/block-storage/v1alpha1/storage-systems/volume-sets/{uid}",
+                "type": "volume-sets"
+              },
+              {
+                "resourceUri": "/block-storage/v1alpha1/storage-systems/{uid}",
+                "type": "systems"
+              }
+            ],
+            "items": {
+              "properties": {
+                "resourceUri": {
+                  "description": "Resource URI",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": {
+                  "description": "Resource Name",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/commonResourceAttributesfleet"
+          },
+          "customerId": {
+            "description": "customerId",
+            "example": "fc5f41652a53497e88cdcebc715cc1cf",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "generation": {
+            "description": "generation",
+            "example": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "healthState": {
+            "description": "Health State of volume. `Filter, Sort`",
+            "example": "NORMAL",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostWrittenCapacityMiB": {
+            "description": "Host written data size in MiB. `Filter, Sort`",
+            "example": 0,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "UUID string uniquely identifying the storage system object. `Filter`",
+            "example": "e66ed5ce8d35961481a48b4f78bb06b4",
+            "type": "string"
+          },
+          "intrinsicResource": {
+            "description": "type of volume",
+            "example": "volume",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isInternal": {
+            "description": "boolean value which specifies if it is a systemVolume or not",
+            "example": false,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "name": {
             "description": "A user friendly name to identify the storage system volume (resourceName). `Filter, Sort`",
             "example": "Finance",
@@ -17730,6 +18998,27 @@
           }
         ]
       },
+      "fleetVolumeSetListWithoutRansomware": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/fleetVolumesetWithoutRansomware"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
       "fleetVolumesList": {
         "allOf": [
           {
@@ -17751,7 +19040,291 @@
           }
         ]
       },
+      "fleetVolumesListWithoutRansomware": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/fleetVolumeDetailsListWithoutRansomware"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
       "fleetVolumeset": {
+        "properties": {
+          "appType": {
+            "description": "Application name `Filter`",
+            "example": "Oracle Database",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "associatedLinks": {
+            "description": "Associated Links Details",
+            "items": {
+              "properties": {
+                "resourceUri": {
+                  "description": "Resource Uri",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": {
+                  "description": "Resource Name",
+                  "type": "string"
+                }
+              },
+              "type": [
+                "object",
+                "null"
+              ]
+            },
+            "type": "array"
+          },
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/commonResourceAttributesfleet"
+          },
+          "customerId": {
+            "description": "customerId",
+            "example": "string",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "generation": {
+            "description": "generation `Filter, Sort`",
+            "example": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "healthState": {
+            "description": "health state",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostWrittenCapacityMiB": {
+            "description": "Host written capacity in MiB",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "id of the volume set `Filter`",
+            "example": "4c74ec5c-ecec-4483-9506-3fb5dc45b5d0",
+            "type": "string"
+          },
+          "intrinsicResource": {
+            "description": "Intrinsic resource type",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "iops": {
+            "description": "IOPS",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "isInternal": {
+            "description": "Is an internal resource",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "isRansomwareDegraded": {
+            "description": "A boolean value that specifies if the volume is in degraded state due to ransomware.",
+            "example": false,
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "latency": {
+            "description": "Latency",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "location": {
+            "description": "location",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "name of volume-set `Filter, Sort`",
+            "example": "snap11",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "productFamily": {
+            "description": "Product Family",
+            "example": "deviceType1",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provisionedSizeMiB": {
+            "description": "Provisioned size in MiB",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "resourceUri": {
+            "description": "resourceUri for detailed volume object",
+            "example": "/block-storage/v1alpha1/storage-systems/volume-sets",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sizeMiB": {
+            "description": "Size in MiB",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "spaceWarning": {
+            "description": "Space warning set for the resource",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "subType": {
+            "description": "subType",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "systemId": {
+            "description": "system ID. `Filter, Sort`",
+            "example": "7CE751P312",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "thinSavings": {
+            "description": "ThinSavings",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "throughPut": {
+            "description": "ThroughPut for the resource",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "totalReservedMiB": {
+            "description": "Total reserved MiB for the resource",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "type",
+            "example": "string",
+            "type": "string"
+          },
+          "usedCapacityPercent": {
+            "description": "Used capacity percentage",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "usedSizeMiB": {
+            "description": "Used size in MiB",
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "volumeSetId": {
+            "description": "UID of the volume set Id",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "volumeType": {
+            "description": "Type of volume",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "volumesCount": {
+            "description": "The number of volumes in an application",
+            "example": 5,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "wwn": {
+            "description": "wwn of the volume",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "fleetVolumesetWithoutRansomware": {
         "properties": {
           "appType": {
             "description": "Application name `Filter`",
@@ -18765,8 +20338,44 @@
           "null"
         ]
       },
+      "qosMetricsSeriesData": {
+        "description": "QOS configuration time series data of volume set",
+        "properties": {
+          "bwLimitKbps": {
+            "description": "Time series data of QoS throughput threshold limit",
+            "example": 10,
+            "format": "int64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "iopsLimit": {
+            "description": "Time series data of QoS IOPS threshold limit",
+            "example": 1000,
+            "format": "int64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "timestampms": {
+            "description": "Epoch timestamp",
+            "example": 1605063600,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "recommendationInput": {
-        "description": "Request body for creating provisioning workflow",
+        "description": "Request body for creating provisioning Workflow",
         "properties": {
           "hostGroupId": {
             "description": "host group id",
@@ -19328,7 +20937,7 @@
       "url": "https://www.hpe.com/us/en/software/licensing.html"
     },
     "title": "HPE Greenlake For Block Storage REST APIs.",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -20856,6 +22465,124 @@
           }
         },
         "summary": "Get capacity details for an applicationset identified by appsetUid",
+        "tags": [
+          "volume-sets"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/devtype4-storage-systems/{systemId}/applicationsets/{id}/performance": {
+      "get": {
+        "description": "Get the performance history data for the HPE Alletra Storage MP B10000 volume set identified by {id}, including the QOS configuration history and the top/bottom 5-10 volumes based on a metric or up to 10 selected volume's performance history on a storage system identified by {systemid}.",
+        "operationId": "DeviceType4GetAppSetVolumesPerformanceHistory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/storageSystemUid"
+          },
+          {
+            "$ref": "#/components/parameters/idAppset"
+          },
+          {
+            "$ref": "#/components/parameters/reportType"
+          },
+          {
+            "$ref": "#/components/parameters/range"
+          },
+          {
+            "$ref": "#/components/parameters/timeIntervalMin"
+          },
+          {
+            "$ref": "#/components/parameters/compareByVolumeSetPerf"
+          },
+          {
+            "$ref": "#/components/parameters/filterVolumeSetVolumePerf"
+          },
+          {
+            "$ref": "#/components/parameters/perfMetricTypeVolumeSetPerf"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolumeSetPerformanceHistoryDataList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get the performance history data for the HPE Alletra Storage MP B10000 volume set identified by {id}, including the QOS configuration history and the top/bottom 5-10 volumes based on a metric or up to 10 selected volume's performance history on a storage system identified by {systemid}.",
         "tags": [
           "volume-sets"
         ]
@@ -24269,9 +25996,141 @@
         "tags": [
           "storage-pools"
         ]
+      },
+      "post": {
+        "operationId": "DeviceType4CreateStoragePool",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "systemId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceType4CreateCpgInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          }
+        },
+        "summary": "Create a storage pool for an HPE Alletra Storage MP B10000 storage system",
+        "tags": [
+          "storage-pools"
+        ]
       }
     },
     "/block-storage/v1alpha1/devtype4-storage-systems/{systemId}/storage-pools/{id}": {
+      "delete": {
+        "operationId": "DeviceType4DeleteStoragePool",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "systemId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage pool not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          }
+        },
+        "summary": "Delete a storage pool from an HPE Alletra Storage MP B10000 storage system",
+        "tags": [
+          "storage-pools"
+        ]
+      },
       "get": {
         "description": "Get details of HPE Alletra Storage MP B10000 storage-pool identified by {id}",
         "operationId": "DeviceType4StoragePoolGetById",
@@ -24369,6 +26228,86 @@
           }
         },
         "summary": "Get details of HPE Alletra Storage MP B10000 storage-pool identified by {id}",
+        "tags": [
+          "storage-pools"
+        ]
+      },
+      "patch": {
+        "operationId": "DeviceType4EditStoragePool",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "systemId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceType4EditCpgInput"
+              }
+            },
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceType4EditCpgInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          }
+        },
+        "summary": "Edit a storage pool for an HPE Alletra Storage MP B10000 storage system",
         "tags": [
           "storage-pools"
         ]
@@ -25180,7 +27119,7 @@
             "$ref": "#/components/parameters/range"
           },
           {
-            "$ref": "#/components/parameters/timeIntervalMin"
+            "$ref": "#/components/parameters/timeIntervalMinForVvCapacity"
           }
         ],
         "responses": {
@@ -26858,6 +28797,577 @@
         ]
       }
     },
+    "/block-storage/v1alpha1/devtype4-storage-systems/{systemId}/volumes/{volumeId}/schedules": {
+      "get": {
+        "description": "Get snapshot schedules of a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "operationId": "DeviceType4VolumeSnapshotSchedulesList",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/storageSystemUid"
+          },
+          {
+            "$ref": "#/components/parameters/volumeUid"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/volumeFilterParam"
+          },
+          {
+            "$ref": "#/components/parameters/volumeSortParam"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceType4ScheduleList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get snapshot schedules of a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "tags": [
+          "volumes"
+        ]
+      },
+      "post": {
+        "description": "Create snapshot schedule for a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "operationId": "DeviceType4VolumeSnapshotScheduleCreate",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/storageSystemUid"
+          },
+          {
+            "$ref": "#/components/parameters/volumeUid"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceType4ScheduleInputSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Create snapshot schedule for a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "tags": [
+          "volumes"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/devtype4-storage-systems/{systemId}/volumes/{volumeId}/schedules/{scheduleId}": {
+      "delete": {
+        "description": "Delete snapshot Schedule identified by {scheduleId} of a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "operationId": "DeviceType4VolumeSnapshotScheduleDelete",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/storageSystemUid"
+          },
+          {
+            "$ref": "#/components/parameters/volumeUid"
+          },
+          {
+            "$ref": "#/components/parameters/scheduleUid"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Delete snapshot Schedule identified by {scheduleId} of a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "tags": [
+          "volumes"
+        ]
+      },
+      "get": {
+        "description": "Get details of snapshot schedule identified by {scheduleId} for a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "operationId": "DeviceType4VolumeSnapshotScheduleGetById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/storageSystemUid"
+          },
+          {
+            "$ref": "#/components/parameters/volumeUid"
+          },
+          {
+            "$ref": "#/components/parameters/scheduleUid"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceType4Schedule"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get details of snapshot schedule identified by {scheduleId} for a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "tags": [
+          "volumes"
+        ]
+      },
+      "put": {
+        "description": "Edit Snapshot Schedule identified by {scheduleId} of a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "operationId": "arcusEditVolumeSnapshotSchedule",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/storageSystemUid"
+          },
+          {
+            "$ref": "#/components/parameters/volumeUid"
+          },
+          {
+            "$ref": "#/components/parameters/scheduleUid"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceType4EditVolumeSnapshotScheduleInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Edit Snapshot Schedule identified by {scheduleId} of a volume identified by {volumeId} on HPE Alletra Storage MP B10000 storage system identified by {systemId}",
+        "tags": [
+          "volumes"
+        ]
+      }
+    },
     "/block-storage/v1alpha1/devtype4-storage-systems/{systemId}/volumes/{volumeId}/snapshots/{snapshotId}": {
       "delete": {
         "description": "Remove HPE Alletra Storage MP B10000 snapshot in system identified by {snapshotId}",
@@ -27416,6 +29926,202 @@
         ]
       }
     },
+    "/block-storage/v1alpha1/devtype4-system-insights": {
+      "get": {
+        "description": "List all insights.",
+        "operationId": "DeviceType4Insights",
+        "parameters": [
+          {
+            "allowReserved": true,
+            "description": "GET /block-storage/v1alpha1/devtype4-system-insights?filter=type eq 'TIME_UNTIL_FULL':\nGET /block-storage/v1alpha1/devtype4-system-insights?filter=score lt 3:\nGET /block-storage/v1alpha1/devtype4-system-insights?filter=value gt 60:\nGET /block-storage/v1alpha1/devtype4-system-insights?filter=date eq '2024-05-12':\n",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsResponse"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get all insights.",
+        "tags": [
+          "storage-systems"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/host-initiator-group-merge-candidates": {
+      "get": {
+        "description": "Get the list of host groups which have identical duplicates or are unique across different systems.",
+        "operationId": "findBulkMergeCandidatesForHostGroups",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkMergeCandidates"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get the list of host groups which have duplicates",
+        "tags": [
+          "host-initiator-groups"
+        ]
+      }
+    },
     "/block-storage/v1alpha1/host-initiator-groups": {
       "get": {
         "description": "Get the list of host groups",
@@ -27628,6 +30334,218 @@
           }
         },
         "summary": "Create a host group",
+        "tags": [
+          "host-initiator-groups"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/host-initiator-groups/bulkmerge": {
+      "post": {
+        "description": "Bulk Merge hosts into user created host",
+        "operationId": "BulkMergeHostGroup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkMergeCandidates"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkMergeOutput"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Bulk merge hosts into user created host",
+        "tags": [
+          "host-initiator-groups"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/host-initiator-groups/merge": {
+      "post": {
+        "description": "Merge a host group",
+        "operationId": "HostGroupMerge",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeHostGroupsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Merge a host group",
         "tags": [
           "host-initiator-groups"
         ]
@@ -28034,6 +30952,98 @@
         ]
       }
     },
+    "/block-storage/v1alpha1/host-initiator-merge-candidates": {
+      "get": {
+        "description": "Get the list of hosts which have identical duplicates or are unique across different systems.",
+        "operationId": "findBulkMergeCandidatesForHosts",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkMergeCandidatesHosts"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get the list of hosts which have duplicates",
+        "tags": [
+          "host-initiators"
+        ]
+      }
+    },
     "/block-storage/v1alpha1/host-initiators": {
       "get": {
         "description": "Get the list of hosts",
@@ -28246,6 +31256,218 @@
           }
         },
         "summary": "Create a host",
+        "tags": [
+          "host-initiators"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/host-initiators/bulkmerge": {
+      "post": {
+        "description": "Bulk Merge hosts into user created host",
+        "operationId": "BulkMergeHost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBulkMergeCandidates"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkMergeOutput"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Bulk merge hosts into user created host",
+        "tags": [
+          "host-initiators"
+        ]
+      }
+    },
+    "/block-storage/v1alpha1/host-initiators/merge": {
+      "post": {
+        "description": "Merge hosts into user created host",
+        "operationId": "MergeHost",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateMergeObject"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Storage system object not found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Merge hosts into user created host",
         "tags": [
           "host-initiators"
         ]
@@ -29922,7 +33144,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/fleetVolumesList"
+                  "$ref": "#/components/schemas/fleetVolumesListWithoutRansomware"
                 }
               }
             },
@@ -30034,7 +33256,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/fleetVolumeSetList"
+                  "$ref": "#/components/schemas/fleetVolumeSetListWithoutRansomware"
                 }
               }
             },
@@ -30361,7 +33583,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/fleetVolumeSetList"
+                  "$ref": "#/components/schemas/fleetVolumeSetListWithoutRansomware"
                 }
               }
             },
@@ -30682,7 +33904,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/fleetVolumesList"
+                  "$ref": "#/components/schemas/fleetVolumesListWithoutRansomware"
                 }
               }
             },

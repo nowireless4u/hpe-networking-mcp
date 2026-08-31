@@ -87,6 +87,26 @@
           "type": "integer"
         }
       },
+      "policyId": {
+        "description": "ID unique to every protection policy created in the objectstore",
+        "example": "d9e985f9-380b-4aed-81d8-c3f981e62375-100365",
+        "in": "path",
+        "name": "policyId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "protectionPolicyId": {
+        "description": "ID unique to every Protection Policy created in objectstore",
+        "example": "policy1",
+        "in": "path",
+        "name": "policyId",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
       "range": {
         "allowReserved": true,
         "description": "The range specifies the start and end time for executing the query.",
@@ -280,6 +300,111 @@
               "items": {
                 "items": {
                   "$ref": "#/components/schemas/BucketCapacityHistory"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "BucketPerformanceHistory": {
+        "description": "bucket performance trends for given granularity and time range",
+        "properties": {
+          "bucketId": {
+            "description": "Identifier of the Storage system Bucket.",
+            "example": "0000-0000-0001",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "customerId": {
+            "description": "customerId",
+            "example": "fc5f41652a53497e88cdcebc715cc1cf",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endTime": {
+            "description": "end time of history data",
+            "example": null,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "historyData": {
+            "description": "performance history data",
+            "properties": {
+              "bandwidth": {
+                "$ref": "#/components/schemas/BucketshistoricalMetricRWData"
+              },
+              "s3Requests": {
+                "$ref": "#/components/schemas/BucketshistoricalMetricData"
+              },
+              "serviceTime": {
+                "$ref": "#/components/schemas/BucketshistoricalMetricData"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier of the bucket resource",
+            "example": "bucket1",
+            "type": "string"
+          },
+          "startTime": {
+            "description": "start time of history data",
+            "example": 1625556314,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "systemUid": {
+            "description": "Identifier of the Storage system to which the Bucket belongs.",
+            "example": "1AB234CDEF",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "Type of the resource",
+            "example": "bucket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketPerformanceHistoryList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/BucketPerformanceHistory"
                 },
                 "type": "array"
               }
@@ -486,6 +611,182 @@
           }
         ]
       },
+      "BucketshistoricalMetricData": {
+        "description": "Timeseries data for particular metric type",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BucketsmetricSeriesData"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "count of series data",
+            "example": 1162564271,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketshistoricalMetricRWData": {
+        "description": "Timeseries data for particular metric type",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BucketsmetricSeriesRWData"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "count of series data",
+            "example": 1162564271,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketsmetricSeriesData": {
+        "properties": {
+          "copyValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 40,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "deleteValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 40,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "getValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 10,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "headValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 40,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "listValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 40,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "putValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 20,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "timestampms": {
+            "description": "epoch timestamp",
+            "example": 1605063600,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "uploadPartCopyValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 40,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "uploadPartValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 40,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "BucketsmetricSeriesRWData": {
+        "properties": {
+          "readValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 10,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "timestampms": {
+            "description": "epoch timestamp",
+            "example": 1605063600,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "writeValue": {
+            "description": "average metric value at particular timestamp",
+            "example": 20,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "CommonListResponse": {
         "properties": {
           "count": {
@@ -525,7 +826,7 @@
             ]
           },
           "errMessage": {
-            "description": "Reason of the blocked status of the system where the resource belongs",
+            "description": "Reason why the system associated with the resource is blocked",
             "example": "This storage system is not actively monitored in the cloud portal. Data Services Cloud Console proactively disabled monitoring and management of storage system with serial number {systemId} for sending excessive cloud events or for not responding to requests.",
             "type": [
               "string",
@@ -613,6 +914,50 @@
           "name"
         ],
         "type": "object"
+      },
+      "CreateProtectionPolicy": {
+        "description": "Protection Policy creation request body",
+        "properties": {
+          "destinationBucket": {
+            "description": "Destination bucket name",
+            "example": "mybuck1",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Protection Policy to be created",
+            "example": "mypolicy1",
+            "type": "string"
+          },
+          "partner": {
+            "description": "Name of the Partner system to which the destination bucket belongs",
+            "example": "hf-system1",
+            "type": "string"
+          },
+          "s3Configuration": {
+            "$ref": "#/components/schemas/s3ConfigStatusInput"
+          },
+          "sourceBucket": {
+            "description": "Source bucket name for which the protection policy needs to be created",
+            "example": "mybuck",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the protection policy. 'Possible values: s3'",
+            "example": "s3",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "sourceBucket",
+          "destinationBucket",
+          "partner",
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
       },
       "DefaultRetention": {
         "description": "Default retention period applied to new objects under the bucket\u2019s object lock.",
@@ -713,6 +1058,20 @@
           },
           "objectLockConfiguration": {
             "$ref": "#/components/schemas/ObjectLockConfigurationInput"
+          }
+        },
+        "type": "object"
+      },
+      "EditProtectionPolicy": {
+        "description": "Edit protection policy request body",
+        "properties": {
+          "s3Configuration": {
+            "$ref": "#/components/schemas/s3ConfigStatusInput"
+          },
+          "type": {
+            "description": "Type of the protection policy. 'Possible values: s3'",
+            "example": "s3",
+            "type": "string"
           }
         },
         "type": "object"
@@ -969,6 +1328,102 @@
           "null"
         ]
       },
+      "ObjectReplicationLatencyMs": {
+        "description": "Average latency of operations on objects over time",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ObjectReplicationLatencyMsMetric"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "Total number of records of objects replicated",
+            "example": 2,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": [
+          "object"
+        ]
+      },
+      "ObjectReplicationLatencyMsMetric": {
+        "properties": {
+          "objectReplicationDeleteLatency": {
+            "description": "Average latency of objects deleted over time",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "objectReplicationMpuPartWriteLatency": {
+            "description": "Average latency of multipart-uploads (all parts except final part) over time",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "objectReplicationMpuWriteLatency": {
+            "description": "Average latency of multipart-upload (final part) operations over time",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "objectReplicationUpdateRetentionLatency": {
+            "description": "Average latency of update retention of objects over time",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "objectReplicationUpdateTagLatency": {
+            "description": "Average latency of update tags of objects over time",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "objectReplicationWriteLatency": {
+            "description": "Average latency of objects written over time",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "timestampMs": {
+            "description": "Epoch timestamp",
+            "example": 1724550000000,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "ObjectUpdateGroupBody": {
         "description": "Group update request body",
         "properties": {
@@ -1089,6 +1544,426 @@
         ],
         "type": "object"
       },
+      "ProtectionPolicies": {
+        "description": "Response body for get Protection Policy call",
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "creationTimeMs": {
+            "type": "string"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": "string"
+          },
+          "destinationBucket": {
+            "description": "Destination bucket name. `Filter, Sort`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "destinationBucketUuid": {
+            "description": "Destination bucket UUID. `Filter`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "generation": {
+            "description": "A number that changes every time the resource is modified. This can be used to determine if the local representation of a resource is more up to date. `Filter, Sort`",
+            "format": "Uint64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Id of the Protection policy. `Filter, Sort`",
+            "example": "id1",
+            "type": "string"
+          },
+          "modificationTimeMs": {
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Protection policy. `Filter, Sort`",
+            "example": "myPolicyName",
+            "type": "string"
+          },
+          "partner": {
+            "description": "Partner system name to which the destination bucket belongs. `Filter, Sort`",
+            "example": "sys1",
+            "type": "string"
+          },
+          "protectionConfigType": {
+            "description": "Type of protection configuration",
+            "example": "s3",
+            "type": "string"
+          },
+          "s3Configuration": {
+            "$ref": "#/components/schemas/s3ConfigStatus"
+          },
+          "sourceBucket": {
+            "description": "Source bucket name for which the protection policy is created. `Filter, Sort`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "sourceBucketUuid": {
+            "description": "Source bucket UUID for which the protection policy is created. `Filter`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "systemUid": {
+            "description": "systemUid where the protection policy is created",
+            "example": "system1",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ProtectionPoliciesWithoutFilter": {
+        "description": "Response body for get Protection Policy call",
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "creationTimeMs": {
+            "type": "string"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "example": "fc5f41652a53497e88cdcebc715cc1sd",
+            "type": "string"
+          },
+          "destinationBucket": {
+            "description": "Destination bucket name. `Filter, Sort`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "destinationBucketUuid": {
+            "description": "Destination bucket UUID. `Filter`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "generation": {
+            "description": "A number that changes every time the resource is modified. This can be used to determine if the local representation of a resource is more up to date. `Filter, Sort`",
+            "format": "Uint64",
+            "type": "integer"
+          },
+          "id": {
+            "description": "id of the Protection policy. `Filter, Sort`",
+            "example": "id1",
+            "type": "string"
+          },
+          "modificationTimeMs": {
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Protection policy. `Filter, Sort`",
+            "example": "myPolicyName",
+            "type": "string"
+          },
+          "partner": {
+            "description": "Partner system name to which the destination bucket belongs. `Filter, Sort`",
+            "example": "sys1",
+            "type": "string"
+          },
+          "protectionConfigType": {
+            "description": "Type of protection configuration",
+            "example": "s3",
+            "type": "string"
+          },
+          "s3Configuration": {
+            "$ref": "#/components/schemas/s3ConfigStatus"
+          },
+          "sourceBucket": {
+            "description": "Source bucket name for which the protection policy is created. `Filter, Sort`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "sourceBucketUuid": {
+            "description": "Source bucket UUID for which the protection policy is created. `Filter`",
+            "example": "buck1",
+            "type": "string"
+          },
+          "systemUid": {
+            "description": "systemUid where the protection policy is created",
+            "example": "system1",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of resource",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ProtectionPolicyList": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/ProtectionPolicies"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ReplicationDataTransferKiB": {
+        "description": "Time series data for replication data transfer count in KiB",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReplicationDataTransferKiBMetric"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "count of timeseries data",
+            "example": 2,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": [
+          "object"
+        ]
+      },
+      "ReplicationDataTransferKiBMetric": {
+        "properties": {
+          "completedData": {
+            "description": "Time series data for completed replication data transfer count in KiB",
+            "example": 200,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "pendingData": {
+            "description": "Time series data for pending replication data transfer in KiB",
+            "example": 8388608,
+            "format": "float64",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "timestampMs": {
+            "description": "Epoch timestamp",
+            "example": 1724550000000,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "ReplicationObjectTransferCount": {
+        "description": "Time series data for replication object transfer count",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReplicationObjectTransferCountMetric"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "Total number of object transfer records",
+            "example": 2,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": [
+          "object"
+        ]
+      },
+      "ReplicationObjectTransferCountMetric": {
+        "properties": {
+          "completedObjects": {
+            "description": "Time series data for completed replication object transfer count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "pendingObjects": {
+            "description": "Time series data for pending replication object transfer count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "timestampMs": {
+            "description": "Epoch timestamp",
+            "example": 1724550000000,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "ReplicationPerformanceHistory": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonListResponse"
+          },
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/ReplicationPerformanceHistoryItems"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ReplicationPerformanceHistoryItems": {
+        "properties": {
+          "commonResourceAttributes": {
+            "$ref": "#/components/schemas/CommonResourceAttributes"
+          },
+          "customerId": {
+            "description": "Customer ID",
+            "example": "77c8366891c611ef840cae7554edf084",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endTime": {
+            "description": "End time of the history data",
+            "example": 1756193142,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "historyData": {
+            "description": "Replication performance history metrics",
+            "properties": {
+              "objectReplicationLatencyMs": {
+                "$ref": "#/components/schemas/ObjectReplicationLatencyMs"
+              },
+              "replicationDataTransferKiB": {
+                "$ref": "#/components/schemas/ReplicationDataTransferKiB"
+              },
+              "replicationObjectTransferCount": {
+                "$ref": "#/components/schemas/ReplicationObjectTransferCount"
+              },
+              "s3RequestsCount": {
+                "$ref": "#/components/schemas/S3RequestsCount"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Identifier for the replication policy resource",
+            "example": "d9e985f9-380b-4aed-81d8-c3f981e62375-100365",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "resource Uri of the replication policy",
+            "example": "/object-storage/v1alpha1/devtype7-storage-systems/4UW0004736/protection-policies/d9e985f9-380b-4aed-81d8-c3f981e62375-100365",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "startTime": {
+            "description": "Start time of the history data",
+            "example": 1756192100,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "systemUid": {
+            "description": "Identifier of the storage system",
+            "example": "4UW0004736",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timeIntervalMin": {
+            "description": "granularity in minutes.",
+            "example": 5,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "Type of the resource",
+            "example": "protection-policy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "Rule": {
         "description": "Rule for the object lock",
         "properties": {
@@ -1106,6 +1981,102 @@
         "properties": {
           "defaultRetention": {
             "$ref": "#/components/schemas/DefaultRetentionInput"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "S3RequestsCount": {
+        "description": "Time series count of operations on objects",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/S3RequestsCountMetric"
+            },
+            "type": "array"
+          },
+          "total": {
+            "description": "Total number of records of objects replicated",
+            "example": 2,
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": [
+          "object"
+        ]
+      },
+      "S3RequestsCountMetric": {
+        "properties": {
+          "objectReplicationDeleteCount": {
+            "description": "Object replication delete operations count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "objectReplicationMpuPartCount": {
+            "description": "Object replication MPU write operations count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "objectReplicationMpuWriteCount": {
+            "description": "Object replication multipart-upload operations count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "objectReplicationUpdateRetentionCount": {
+            "description": "Object replication retention update operations count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "objectReplicationUpdateTagCount": {
+            "description": "Object replication tag update operations count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "objectReplicationWriteCount": {
+            "description": "Object replication write operations count",
+            "example": 200,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "timestampMs": {
+            "description": "Epoch timestamp",
+            "example": 1724550000000,
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
           }
         },
         "type": [
@@ -1217,6 +2188,42 @@
         },
         "type": "object"
       },
+      "s3ConfigStatus": {
+        "properties": {
+          "deleteMarkerReplication": {
+            "description": "Controls whether delete markers created in the source bucket will be replicated or not. `Filter, Sort`",
+            "example": false,
+            "type": "boolean"
+          },
+          "deleteReplication": {
+            "description": "Controls whether delete operations in the source bucket will be replicated or not. `Filter, Sort`",
+            "example": false,
+            "type": "boolean"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "s3ConfigStatusInput": {
+        "properties": {
+          "deleteMarkerReplication": {
+            "description": "Controls whether delete markers created in the source bucket will be replicated or not.",
+            "example": false,
+            "type": "boolean"
+          },
+          "deleteReplication": {
+            "description": "Controls whether delete operations in the source bucket will be replicated or not.",
+            "example": false,
+            "type": "boolean"
+          }
+        },
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "taskResponse": {
         "properties": {
           "message": {
@@ -1257,7 +2264,7 @@
       "url": "https://www.hpe.com/us/en/software/licensing.html"
     },
     "title": "HPE Greenlake For Object Storage REST APIs.",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2489,6 +3496,102 @@
         ]
       }
     },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/buckets/{bucketId}/performance-history": {
+      "get": {
+        "description": "Get all Performance charts for HPE Alletra Storage X10000 system bucket",
+        "operationId": "DeviceType7GetBucketPerformance",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/bucketId"
+          },
+          {
+            "$ref": "#/components/parameters/range"
+          },
+          {
+            "$ref": "#/components/parameters/timeIntervalInMinParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketPerformanceHistoryList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get all Performance charts for HPE Alletra Storage X10000 system bucket",
+        "tags": [
+          "bucket-performance"
+        ]
+      }
+    },
     "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/groups": {
       "get": {
         "description": "Get all groups for HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
@@ -2993,6 +4096,609 @@
         "summary": "Update group details in HPE Alletra Storage MP X10000 ObjectStore",
         "tags": [
           "groups"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/protection-policies": {
+      "get": {
+        "description": "Get all protection policy for HPE Alletra Storage MP X10000 ObjectStore",
+        "operationId": "DeviceType7ListProtectionPolicies",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/objFilterParams"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/offset"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          },
+          {
+            "allowReserved": true,
+            "description": "A list of properties defining the sort order. This takes a single property name followed\nby the direction to sort in, separated by a space.\nThe supported properties are `systemUid`, `id` and `generation`. If not specified,\nthe default behaviour is to sort by `generation`. The supported directions are\n`asc` and `desc` for ascending and descending respectively.\n",
+            "example": "id desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "default": "generation desc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtectionPolicyList"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get all protection policy for HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "protectionPolicy"
+        ]
+      },
+      "post": {
+        "description": "Create new protection policies in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId}",
+        "operationId": "DeviceType7CreateProtectionPolicy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProtectionPolicy"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Create new protection policies in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "protectionPolicy"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/protection-policies/{policyId}": {
+      "delete": {
+        "description": "Delete protection policy from HPE Alletra Storage MP X10000 ObjectStore identified by {protectionPolicyId}",
+        "operationId": "DeviceType7DeleteProtectionPolicyById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/protectionPolicyId"
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Delete protection policy from HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "protectionPolicy"
+        ]
+      },
+      "get": {
+        "description": "Get HPE Alletra Storage MP X10000 ObjectStore protection policy identified by {protectionPolicyId}",
+        "operationId": "DeviceType7SingleProtectionPolicy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/protectionPolicyId"
+          },
+          {
+            "$ref": "#/components/parameters/select"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtectionPoliciesWithoutFilter"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get single HPE Alletra Storage MP X10000 ObjectStore protection policy",
+        "tags": [
+          "protectionPolicy"
+        ]
+      },
+      "put": {
+        "description": "Edit protection policy properties in HPE Alletra Storage MP X10000 ObjectStore identified by {systemId} and {protectionPolicyId}",
+        "operationId": "DeviceType7EditProtectionPolicy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/protectionPolicyId"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditProtectionPolicy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/taskResponse"
+                }
+              }
+            },
+            "description": "Accepted",
+            "headers": {
+              "Location": {
+                "description": "This contains the URI of the task used to monitor the request",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Edit the properties of an existing protection policy in HPE Alletra Storage MP X10000 ObjectStore",
+        "tags": [
+          "protectionPolicy"
+        ]
+      }
+    },
+    "/object-storage/v1alpha1/devtype7-storage-systems/{systemId}/protection-policies/{policyId}/object-replication-performance-history": {
+      "get": {
+        "description": "Retrieve time-series replication performance metrics for a protection policy on an HPE Alletra Storage MP X10000 ObjectStore system identified by `{systemId}` and `{policyId}`.\n",
+        "operationId": "DeviceType7GetReplicationPerformanceHistory",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/objSystemId"
+          },
+          {
+            "$ref": "#/components/parameters/policyId"
+          },
+          {
+            "$ref": "#/components/parameters/range"
+          },
+          {
+            "$ref": "#/components/parameters/timeIntervalInMinParam"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplicationPerformanceHistory"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal / unexpected error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unexpected error"
+          }
+        },
+        "summary": "Get replication performance history for a protection policy",
+        "tags": [
+          "objectstore-identities"
         ]
       }
     },
