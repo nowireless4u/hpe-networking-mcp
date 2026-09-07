@@ -20931,7 +20931,7 @@
     }
   },
   "info": {
-    "description": "HPE Greenlake For Block Storage REST APIs.",
+    "description": "HPE Greenlake For Block Storage REST APIs",
     "license": {
       "name": "HPE End User License Agreement",
       "url": "https://www.hpe.com/us/en/software/licensing.html"
