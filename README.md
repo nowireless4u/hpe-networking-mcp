@@ -3,6 +3,28 @@
 [![CI](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml)
 [![Security](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml)
 
+> ### ⚠️ Active development — releases are paused
+>
+> This server is undergoing extensive changes. The gap since the last release is
+> **because of that work, not because the project is inactive** — development is
+> ongoing and moving quickly. Releases will resume once the current round of
+> changes settles.
+>
+> If you are running an existing release it keeps working; just expect the next
+> release to carry a larger-than-usual set of changes.
+>
+> ### 📛 This repository is being renamed
+>
+> The repository will be renamed. **The existing URL will continue to work** —
+> GitHub redirects the old address for both web links and `git` operations, so
+> existing clones, remotes, bookmarks, and `docker`/CI references keep functioning
+> after the rename. No action is required on your part. Updating your remote to
+> the new address afterwards is good hygiene but not necessary:
+>
+> ```bash
+> git remote set-url origin <new-url>
+> ```
+
 > **Unofficial / community project.** This repository is an independent, community-driven project. It is not affiliated with, endorsed by, sponsored by, or supported by Hewlett Packard Enterprise, Aruba Networks, or Juniper Networks. "HPE", "Aruba", "Aruba Central", "Aruba ClearPass", "HPE GreenLake", "Juniper", and "Juniper Mist" are trademarks of their respective owners and are used here only to describe what this software interoperates with. Please direct support and licensing questions about those products to the respective vendors.
 
 A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, **Aruba ClearPass**, **Juniper Apstra**, **Axis Atmos Cloud**, **Aruba OS 8**, **HPE UXI**, and **Aruba EdgeConnect** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
