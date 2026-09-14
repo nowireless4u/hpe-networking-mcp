@@ -23295,6 +23295,49 @@
         ],
         "type": "object"
       },
+      "utilization-averages-v1beta1": {
+        "description": "Average utilization value for the specified metric types.",
+        "properties": {
+          "averages": {
+            "description": "Average utilization value for each metric type.",
+            "items": {
+              "properties": {
+                "averages": {
+                  "description": "Average utilization value for the metric type.",
+                  "properties": {
+                    "collected": {
+                      "description": "Collected average utilization value.",
+                      "example": 75.5,
+                      "format": "float",
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "metricType": {
+                  "description": "The metric type for which the average utilization is calculated.",
+                  "enum": [
+                    "CPU_UTILIZATION",
+                    "MEMORY_BUS_UTILIZATION",
+                    "IO_BUS_UTILIZATION",
+                    "CPU_INTERCONNECT_UTILIZATION"
+                  ],
+                  "example": "CPU_UTILIZATION",
+                  "type": "string"
+                },
+                "metricUnit": {
+                  "description": "The unit of the average utilization value.",
+                  "example": "Percentage",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "utilization-by-entity-v1beta1": {
         "description": "CPU, memory bus, I/O bus or CPU interconnect utilization data per server.",
         "properties": {
@@ -23329,6 +23372,32 @@
                       "description": "Minimum daily average utilization value for the entity.",
                       "example": 10,
                       "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "entityDetails": {
+                  "description": "Details about the server.",
+                  "properties": {
+                    "generation": {
+                      "description": "Generation of the server",
+                      "example": "GEN_11",
+                      "type": "string"
+                    },
+                    "location": {
+                      "description": "Location of the server",
+                      "example": "Houston, Texas, United States",
+                      "type": "string"
+                    },
+                    "model": {
+                      "description": "Model of the server",
+                      "example": "ProLiant DL380 Gen11",
+                      "type": "string"
+                    },
+                    "processor": {
+                      "description": "Processor of the server",
+                      "example": "Intel Xeon Processor E5-2673",
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -23442,7 +23511,7 @@
                     "properties": {
                       "time": {
                         "description": "Timestamp of the data point.",
-                        "example": "2025-02-01T00:00:00",
+                        "example": "2025-02-01T00:00:00Z",
                         "format": "date-time",
                         "type": "string"
                       },
@@ -30318,6 +30387,66 @@
         ]
       }
     },
+    "/compute-ops-mgmt/v1beta1/utilization-averages": {
+      "get": {
+        "description": "Retrieve average CPU, Memory bus, I/O bus or CPU interconnect utilization data. Accepts multiple metric types.",
+        "operationId": "get_utilization_averages",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/utilizationData-queryParams_startDate"
+          },
+          {
+            "$ref": "#/components/parameters/utilizationData-queryParams_endDate"
+          },
+          {
+            "$ref": "#/components/parameters/metricType"
+          },
+          {
+            "$ref": "#/components/parameters/filterTags"
+          },
+          {
+            "$ref": "#/components/parameters/utilizationData-queryParams_resourceUri"
+          },
+          {
+            "$ref": "#/components/parameters/filter"
+          },
+          {
+            "$ref": "#/components/parameters/tenantAcidHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/utilization-averages-v1beta1"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "$ref": "#/components/responses/400-badRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/401-unauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/403-forbiddenResponse"
+          },
+          "406": {
+            "$ref": "#/components/responses/406-notAcceptableResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/500-internalServerErrorResponse"
+          }
+        },
+        "summary": "Retrieve utilization averages data",
+        "tags": [
+          "utilization-averages - v1beta1"
+        ]
+      }
+    },
     "/compute-ops-mgmt/v1beta1/utilization-by-entity": {
       "get": {
         "description": "Retrieve CPU, memory bus, I/O bus or CPU interconnect utilization data per entity.",
@@ -30343,6 +30472,9 @@
           },
           {
             "$ref": "#/components/parameters/utilizationData-queryParams_sort"
+          },
+          {
+            "$ref": "#/components/parameters/filter"
           },
           {
             "$ref": "#/components/parameters/offsetParam"
