@@ -47,7 +47,7 @@
           "examples": [
             "/service-catalog/v1/service-manager-provisions/2fa85f64-5717-4562-b3fc-2c963f66afa1"
           ],
-          "format": "url",
+          "format": "uri-reference",
           "type": "string"
         }
       }
@@ -123,6 +123,7 @@
             "examples": [
               401
             ],
+            "format": "int32",
             "type": "integer"
           },
           "message": {
@@ -258,6 +259,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "generation",
             "type": "integer"
           },
@@ -280,6 +282,7 @@
             "examples": [
               "/service-catalog/v1/service-manager-provisions/2fa85f64571745627b3fc2c963f66afa1"
             ],
+            "format": "uri-reference",
             "title": "Resource URI",
             "type": "string"
           },
@@ -311,10 +314,11 @@
         "description": "Service manager provisioned details",
         "properties": {
           "createdAt": {
-            "description": "Date and time the service offer was created or upgraded.",
+            "description": "Date and time the service offer was created.",
             "examples": [
               "2021-04-23T07:50:30.400Z"
             ],
+            "format": "date-time",
             "title": "createdAt",
             "type": "string"
           },
@@ -331,6 +335,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "generation",
             "type": "integer"
           },
@@ -348,6 +353,14 @@
               }
             ]
           },
+          "reason": {
+            "description": "The reason for the current provision status, if applicable.",
+            "examples": [
+              "Insufficient permissions"
+            ],
+            "title": "reason",
+            "type": "string"
+          },
           "region": {
             "examples": [
               "us-west"
@@ -360,6 +373,7 @@
             "examples": [
               "/service-catalog/v1/service-manager-provisions/2fa85f6457174562b3fc2c963f66afa1"
             ],
+            "format": "uri-reference",
             "title": "Resource URI",
             "type": "string"
           },
@@ -379,6 +393,7 @@
             "examples": [
               "2021-04-29T07:50:30.400Z"
             ],
+            "format": "date-time",
             "title": "updatedAt",
             "type": "string"
           }
@@ -393,7 +408,8 @@
           "createdAt",
           "updatedAt",
           "generation",
-          "type"
+          "type",
+          "reason"
         ],
         "title": "ServiceManagerProvisionRead",
         "type": "object"
@@ -406,6 +422,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "Count per page",
             "type": "integer"
           },
@@ -421,6 +438,7 @@
             "examples": [
               0
             ],
+            "format": "int32",
             "title": "Offset",
             "type": "integer"
           },
@@ -429,6 +447,7 @@
             "examples": [
               10
             ],
+            "format": "int32",
             "title": "Total count",
             "type": "integer"
           }
@@ -467,6 +486,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "generation",
             "type": "integer"
           },
@@ -517,6 +537,7 @@
             "examples": [
               "/service-catalog/v1/service-managers/3fa85f64-5717-4562-b3fc-2c963f66afa6"
             ],
+            "format": "uri-reference",
             "title": "Resource URI",
             "type": "string"
           },
@@ -594,6 +615,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "Count per page",
             "type": "integer"
           },
@@ -609,6 +631,7 @@
             "examples": [
               0
             ],
+            "format": "int32",
             "title": "Offset",
             "type": "integer"
           },
@@ -617,6 +640,7 @@
             "examples": [
               10
             ],
+            "format": "int32",
             "title": "Total count",
             "type": "integer"
           }
@@ -645,6 +669,7 @@
             "examples": [
               "/service-catalog/v1/service-managers/3fa85f64-5717-4562-b3fc-2c963f66afa6"
             ],
+            "format": "uri-reference",
             "title": "Resource URI",
             "type": "string"
           }
@@ -660,6 +685,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "generation",
             "type": "integer"
           },
@@ -713,6 +739,7 @@
             "examples": [
               1
             ],
+            "format": "int32",
             "title": "Count per page",
             "type": "integer"
           },
@@ -728,6 +755,7 @@
             "examples": [
               0
             ],
+            "format": "int32",
             "title": "Offset",
             "type": "integer"
           },
@@ -736,6 +764,7 @@
             "examples": [
               10
             ],
+            "format": "int32",
             "title": "Total count",
             "type": "integer"
           }
@@ -796,6 +825,7 @@
             "schema": {
               "default": 0,
               "description": "Zero-based resource offset to start the response from.",
+              "format": "int32",
               "minimum": 0,
               "title": "offset",
               "type": "integer"
@@ -1185,6 +1215,7 @@
             "schema": {
               "default": 0,
               "description": "Zero-based resource offset to start the response from.",
+              "format": "int32",
               "minimum": 0,
               "title": "offset",
               "type": "integer"
@@ -1808,6 +1839,7 @@
             "schema": {
               "default": 0,
               "description": "Zero-based resource offset to start the response from.",
+              "format": "int32",
               "minimum": 0,
               "title": "offset",
               "type": "integer"

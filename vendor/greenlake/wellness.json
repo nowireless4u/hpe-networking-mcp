@@ -2216,6 +2216,23 @@
             }
           },
           {
+            "description": "Searches for support cases that contain the given search string. A search string can include alphanumeric characters and a space character (Unicode `U+0020`). No other special characters are supported. Including an unsupported character might cause inaccurate results. The maximum length of a search string is 100 characters. When performing a search, it's important to use specific terms. A generic search term may cause the search to timeout.\n* `caseNumber`\n* `title`\n* `severity`\n<br><br>__Note:__ You can use both the `filter` and `text-search` parameters in the same query. If both are provided, the filter is applied first, and then text-search is performed on the filtered results.",
+            "examples": {
+              "temperature": {
+                "summary": "Search for support cases that contain the string `temperature`",
+                "value": "temperature"
+              }
+            },
+            "in": "query",
+            "name": "text-search",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
             "description": "The `select` query parameter is used to limit the properties returned for support cases. The value of the `select` query parameter is a comma separated list of properties. All properties are returned if the select parameter is omitted.<br><br> __Note:__ Only the `total` property is supported.",
             "examples": {
               "total": {
@@ -2402,6 +2419,27 @@
               }
             },
             "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "search-timed-out": {
+                    "summary": "Search timed out",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASES_SEARCH_TIMED_OUT",
+                      "httpStatusCode": 422,
+                      "message": "The specified search is too wide. Try using more specific terms to narrow it down."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Search Timeout - Search too wide causing timeout"
           },
           "429": {
             "content": {

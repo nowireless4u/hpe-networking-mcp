@@ -2734,7 +2734,9 @@
           "RBAC",
           "UI_DISABLE_PROVISIONING",
           "HONOR_UNPROVISION_RESPONSE",
-          "ORG_PARENT_SUPPORTED"
+          "ORG_PARENT_SUPPORTED",
+          "PARTNER_SUPPORTED",
+          "PARTNER_ONLY_SUPPORTED"
         ],
         "example": "DEEP_LINKING",
         "title": "SupportedFeature",
