@@ -1646,7 +1646,7 @@ Diagnostics for the New Central Configuration API config-health surface (`/netwo
 
 ### WIDS (Wireless Intrusion Detection) (v3.1.1.1)
 
-Wraps the `network-services/v1alpha1/wids-monitored-aps` endpoint — undocumented in the public Central API reference but tenant-scoped (no cross-tenant exposure) and in-policy under the `network-*/v1alpha1` rule. Returns the caller's APs' reports of neighbor / rogue / suspect / interfering APs they've detected.
+Wraps the `network-services/v1/wids-monitored-aps` endpoint — tenant-scoped (no cross-tenant exposure) and publicly documented at developer.arubanetworks.com (`listMonitoredApsV1`, updated 2026-07-14). The route moved from `v1alpha1` to `v1`; the old path 404s. Returns the caller's APs' reports of neighbor / rogue / suspect / interfering APs they've detected.
 
 #### `central_get_wids_monitored_aps`
 

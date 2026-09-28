@@ -1,11 +1,17 @@
 """Aruba Central WIDS (Wireless Intrusion Detection) tools.
 
-Wraps the ``network-services/v1alpha1/wids-monitored-aps`` endpoint. The
-endpoint is undocumented in the public Central API reference but tenant-
-scoped (no cross-tenant exposure) and lives under the in-policy
-``network-*/v1alpha1`` path family, so building it as a tool is allowed
-per the 2026-05-15 build-policy guidance recorded in
-``docs/central-undocumented-endpoints.md``.
+Wraps the ``network-services/v1/wids-monitored-aps`` endpoint. The
+endpoint is tenant-scoped (no cross-tenant exposure) and is now publicly
+documented at
+https://developer.arubanetworks.com/new-central/reference/listmonitoredapsv1.md
+(updated 2026-07-14), which supersedes the 2026-05-15 undocumented-endpoint
+build-policy note in ``docs/central-undocumented-endpoints.md``.
+
+NOTE 2026-08-30: the route moved ``v1alpha1`` -> ``v1``. The old path 404s,
+and 404 is not a documented response for this endpoint, so a 404 here means
+the caller is on a stale version rather than the feature being absent. The
+``network-config/*`` tools remain correctly on ``v1alpha1``; only
+``network-services`` moved.
 
 Returns the caller's APs' reports of nearby APs they've detected,
 classified as one of:
@@ -94,7 +100,7 @@ async def central_get_wids_monitored_aps(
 ) -> dict | str:
     """Get WIDS monitored-AP records from Central.
 
-    Reads the ``network-services/v1alpha1/wids-monitored-aps`` endpoint
+    Reads the ``network-services/v1/wids-monitored-aps`` endpoint
     which lists neighbor / rogue / suspect / interfering APs detected by
     the caller's APs. Tenant-scoped.
 
@@ -157,7 +163,7 @@ async def central_get_wids_monitored_aps(
     response = await retry_central_command(
         central_conn=conn,
         api_method="GET",
-        api_path="network-services/v1alpha1/wids-monitored-aps",
+        api_path="network-services/v1/wids-monitored-aps",
         api_params=api_params,
     )
 

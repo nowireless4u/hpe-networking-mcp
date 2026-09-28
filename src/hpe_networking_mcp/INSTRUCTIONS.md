@@ -531,7 +531,7 @@ When asked to create a new site based on an existing site:
   - **Shared helpers**: `central_get_troubleshooting_task_status` polls any async action (every troubleshooting POST returns a `task_id`). `central_list_troubleshooting_tasks` lists queued / running / completed tasks. `central_list_supported_show_commands` lists which show commands a device accepts.
   - **Events**: `central_get_event_extra_attributes` documents the attribute catalogue driving `central_get_events` filters.
 - **WIDS (Wireless Intrusion Detection)**: central_get_wids_monitored_aps
-  - Reads neighbor / rogue / suspect / interfering APs detected by the caller's APs at `network-services/v1alpha1/wids-monitored-aps`. Tenant-scoped.
+  - Reads neighbor / rogue / suspect / interfering APs detected by the caller's APs at `network-services/v1/wids-monitored-aps`. Tenant-scoped.
   - Use `classification="ROGUE" | "SUSPECT_ROGUE" | "INTERFERING" | "VALID"` to narrow; `contained_only=True` for APs the fabric is actively de-authing; `site_id` to scope by site.
   - For filters not covered by the structured args, pass `odata_filter` (raw OData 4.0). Mutually exclusive with the structured args — pick one or the other.
   - Page through via `limit` + `offset`; envelope returns `total` for pagination accounting.
