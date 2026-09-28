@@ -1079,7 +1079,7 @@
             }
           },
           {
-            "description": "Supports Odata format. <br> **Supported Fields:** id, ServiceOfferId, workspaceId, serviceManagerProvisionId, serviceManagerId, serviceManagerInstanceId, status, organizationId, slug. <br> **Supported operand:** _eq_ <br> **Supported operations:** _and_",
+            "description": "Supports Odata format. <br> **Supported Fields:** id, ServiceOfferId, workspaceId, serviceManagerProvisionId, serviceManagerId, serviceManagerInstanceId, status, organizationId, slug, region, generation, workspaceTransferStatus. <br> **Supported operand:** _eq_ <br> **Supported operations:** _and_",
             "examples": {
               "filter-example1": {
                 "$ref": "#/components/examples/filter-example1"
@@ -1372,6 +1372,18 @@
               "title": "Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Generation version match",
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "description": "Generation version match",
+              "example": 1,
+              "title": "If-Match",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -1422,6 +1434,18 @@
               "title": "Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Generation version match",
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "description": "Generation version match",
+              "example": 1,
+              "title": "If-Match",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -1471,6 +1495,18 @@
               "format": "uuid",
               "title": "Id",
               "type": "string"
+            }
+          },
+          {
+            "description": "Generation version match",
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "description": "Generation version match",
+              "example": 1,
+              "title": "If-Match",
+              "type": "integer"
             }
           }
         ],

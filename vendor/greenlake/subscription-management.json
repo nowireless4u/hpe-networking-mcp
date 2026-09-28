@@ -288,16 +288,8 @@
               "SWITCH",
               "GATEWAY",
               "STORAGE",
-              "DHCI_STORAGE",
               "COMPUTE",
-              "DHCI_COMPUTE",
-              "NW_THIRD_PARTY",
-              "PCE",
-              "SD_WAN_GW",
-              "OPSRAMP_SAAS",
-              "SD_SAAS",
               "SENSOR",
-              "BRIDGES",
               "BRIDGE"
             ],
             "type": "string"
@@ -311,12 +303,10 @@
               "FOUNDATION_GW",
               "ADVANCED_GW",
               "STANDARD_COMPUTE",
-              "FOUNDATION_NW_THIRD_PARTY",
-              "ADVANCED_NW_THIRD_PARTY",
+              "ADVANCED_COMPUTE",
               "ENHANCED_COMPUTE",
               "FOUNDATION_SENSOR",
-              "FOUNDATION_SD_WAN",
-              "ADVANCED_SD_WAN"
+              "FOUNDATION_BRIDGE"
             ],
             "type": "string"
           }
@@ -337,7 +327,7 @@
           }
         },
         "required": [
-          "autoSubscriptions"
+          "autoSubscriptionSettings"
         ],
         "type": "object"
       },
@@ -663,21 +653,14 @@
       "RequestPostAutoSubscription": {
         "properties": {
           "deviceType": {
+            "description": "| DEVICE TYPE                 |   SUBSCRIPTION TIER                                 |\n|-----------------------------|-----------------------------------------------------|\n|  AP\t                      | FOUNDATION_AP, ADVANCED_AP                          |\n|  SWITCH\t                  | FOUNDATION_SWITCH, ADVANCED_SWITCH                  |\n|  GATEWAY\t                  | FOUNDATION_GW, ADVANCED_GW                          |\n|  COMPUTE\t                  | STANDARD_COMPUTE, ADVANCED_COMPUTE, ENHANCED_COMPUTE|\n|  SENSOR\t                  | FOUNDATION_SENSOR                                   |\n|  BRIDGE\t                  | FOUNDATION_BRIDGE                                   |\n",
             "enum": [
               "AP",
               "SWITCH",
               "GATEWAY",
-              "STORAGE",
-              "DHCI_STORAGE",
               "COMPUTE",
-              "DHCI_COMPUTE",
-              "NW_THIRD_PARTY",
-              "PCE",
-              "SD_WAN_GW",
-              "OPSRAMP_SAAS",
-              "SD_SAAS",
               "SENSOR",
-              "BRIDGES"
+              "BRIDGE"
             ],
             "type": "string"
           },
@@ -690,12 +673,10 @@
               "FOUNDATION_GW",
               "ADVANCED_GW",
               "STANDARD_COMPUTE",
-              "FOUNDATION_NW_THIRD_PARTY",
-              "ADVANCED_NW_THIRD_PARTY",
+              "ADVANCED_COMPUTE",
               "ENHANCED_COMPUTE",
               "FOUNDATION_SENSOR",
-              "FOUNDATION_SD_WAN",
-              "ADVANCED_SD_WAN"
+              "FOUNDATION_BRIDGE"
             ],
             "type": "string"
           }
