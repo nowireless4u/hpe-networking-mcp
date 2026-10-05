@@ -1852,7 +1852,9 @@
             "example": [
               "DEEP_LINKING",
               "SERVICE_PROVISIONING",
-              "HONOR_UNPROVISION_RESPONSE"
+              "HONOR_UNPROVISION_RESPONSE",
+              "MOI_TO_COI_CONVERSION",
+              "COI_TO_MOI_CONVERSION"
             ],
             "items": {
               "$ref": "#/components/schemas/SupportedFeature"
@@ -2127,7 +2129,9 @@
             "example": [
               "DEEP_LINKING",
               "SERVICE_PROVISIONING",
-              "HONOR_UNPROVISION_RESPONSE"
+              "HONOR_UNPROVISION_RESPONSE",
+              "MOI_TO_COI_CONVERSION",
+              "COI_TO_MOI_CONVERSION"
             ],
             "items": {
               "$ref": "#/components/schemas/SupportedFeature"
@@ -2734,6 +2738,8 @@
           "RBAC",
           "UI_DISABLE_PROVISIONING",
           "HONOR_UNPROVISION_RESPONSE",
+          "MOI_TO_COI_CONVERSION",
+          "COI_TO_MOI_CONVERSION",
           "ORG_PARENT_SUPPORTED",
           "PARTNER_SUPPORTED",
           "PARTNER_ONLY_SUPPORTED"
