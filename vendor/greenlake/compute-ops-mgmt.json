@@ -158,6 +158,71 @@
           "type": "string"
         }
       },
+      "alerts-filterParam-v1": {
+        "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\nNOTE: The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.\nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\nServer IDs contain a `+`, which must be encoded as `%2B`.\nFor example: the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n",
+        "examples": {
+          "alternatives": {
+            "description": "Return alerts where a property is one of multiple values.\n\\<property> in (\\<value1>,\\<value2>)\n",
+            "summary": "Filter for a value to have one of multiple possibilities",
+            "value": "severity in ('Warning','Critical')"
+          },
+          "and": {
+            "description": "Return alerts where one property equals a value and another contains a value.\n\\<property1> eq \\<value1> and contains(\\<property2>, \\<value2>)\n",
+            "summary": "Filter on multiple conditions",
+            "value": "severity eq 'Warning' and contains(message,'power')"
+          },
+          "equals": {
+            "description": "Return alerts where a property equals a value.\n\\<property> eq \\<value>\n",
+            "summary": "Filter with equality check",
+            "value": "severity eq 'Warning'"
+          },
+          "url-encoded": {
+            "description": "Return alerts where a property equals a value, using URL encoding.\n\\<property>%20eq%20%27\\<value>%27\n",
+            "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
+            "value": "severity%20eq%20%27Warning%27"
+          }
+        },
+        "in": "query",
+        "name": "filter",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "alerts-selectParam-v1": {
+        "description": "Limit the properties of the resource returned in a successful response.  When applied to\nwrite operations, `select` controls only the properties that are returned, not which\nproperties are operated on. All properties are returned if the `select` parameter is omitted.\n\nThe value of the `select` query parameter is a comma separated list of properties to include\nin the response. Nested properties use `/` as a separator, e.g. `select=device/id`\nselects the `id` property within a `device` object.\n\nFor operations that return paginated collections, `select` operates on the resources in\nthe collection. The pagination properties like `count` and `items` are always included even\nwhen `select` is specified.\n",
+        "examples": {
+          "id-severity": {
+            "description": "Select only the `id` and `severity` properties of the resource\n",
+            "summary": "Return only `id` and `severity` properties",
+            "value": "id,severity"
+          }
+        },
+        "in": "query",
+        "name": "select",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "alerts-sortParam-v1": {
+        "description": "The order in which to return the resources in the collection.\n\nThe value of the sort query parameter is a comma separated list of sort expressions.\nEach sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc\n(descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order,\nand so on. If a direction indicator is omitted the default direction is ascending.",
+        "examples": {
+          "created-at-asc": {
+            "description": "Order resources by creation time ascending",
+            "summary": "ascending by creation time",
+            "value": "createdAt asc"
+          },
+          "severity-created-at-desc": {
+            "description": "Order resources by severity ascending, then by creation time descending",
+            "summary": "ascending by severity and then descending by creation time",
+            "value": "severity,createdAt desc"
+          }
+        },
+        "in": "query",
+        "name": "sort",
+        "schema": {
+          "type": "string"
+        }
+      },
       "applianceFirmwareUpdate-filterParam-v1": {
         "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\nNOTE: The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.  \nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\nServer IDs contain a `+`, which must be encoded as `%2B`.  \nFor example: the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n\nAppliance firmware can be filtered by:\n  - applianceVersion \n  - applianceType\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
         "examples": {
@@ -227,7 +292,7 @@
             "value": "not contains(name, 'Test policy')"
           },
           "url-encoded": {
-            "description": "Return approval policies where a property is greater than a value, using url encoding.\n\\<property>%20gt%20%27\\<value>\n",
+            "description": "Return approval policies where a property is greater than a value, using url encoding.\n\\<property>%20gt%20\\<value>\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
             "value": "createdAt%20gt%202025-09-01T17%3A44%3A30Z"
           }
@@ -244,7 +309,7 @@
           "and": {
             "description": "Return approval requests where multiple properties can be matched with values\n\\<property> eq \\<value1> and \\<property> eq \\<value2>\n",
             "summary": "Filter on multiple conditionals",
-            "value": "operation/id eq 'compute-ops-mgmt/job' and approvalableResource/type eq 'compute-ops-mgmt/server'"
+            "value": "operation/id eq 'compute-ops-mgmt/job' and approvableResource/type eq 'compute-ops-mgmt/server'"
           },
           "contains": {
             "description": "Return approval requests where property contains a value.\ncontains(\\<property>, \\<value>)\n",
@@ -267,7 +332,7 @@
             "value": "not operation/type eq 'compute-ops-mgmt/job'"
           },
           "url-encoded": {
-            "description": "Return approval requests where a property is greater than a value, using url encoding.\n\\<property>%20gt%20%27\\<value>\n",
+            "description": "Return approval requests where a property is greater than a value, using url encoding.\n\\<property>%20gt%20\\<value>\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
             "value": "createdAt%20gt%202025-09-01T17%3A44%3A30Z"
           }
@@ -614,9 +679,9 @@
             "value": "not filterResourceType eq null"
           },
           "url-encoded": {
-            "description": "Return filters where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>\n",
+            "description": "Return filters where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>%27\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
-            "value": "id%20eq%20%27b870f080-6448-48c5-b23a-d04f2d489174"
+            "value": "id%20eq%20%27b870f080-6448-48c5-b23a-d04f2d489174%27"
           }
         },
         "in": "query",
@@ -992,14 +1057,19 @@
             "value": "state in ('running','pending','stalled')"
           },
           "and": {
-            "description": "Return jobs where property is populated and property contains value.\nnot \\<property> eq null and contains(\\<property>, \\<value>). This is for non-cancelable jobs created in 2022.\n",
+            "description": "Return non-cancelable jobs created in 2022.\n<booleanProperty> eq false and <timestampProperty> ge <startTimestamp> and <timestampProperty> lt <endTimestamp>\n",
             "summary": "Filter on multiple conditionals",
-            "value": "not cancellable eq false and contains(createdAt,'2022')"
+            "value": "cancellable eq false and createdAt ge 2022-01-01T00:00:00Z and createdAt lt 2023-01-01T00:00:00Z"
           },
           "contains": {
-            "description": "Return jobs where property contains a value. This is for jobs created in 2022.\ncontains(\\<property>, \\<value>)\n",
+            "description": "Return jobs where a string property contains a value.\ncontains(\\<property>, \\<value>)\n",
             "summary": "Filter that field value contains a specific substring",
-            "value": "contains(createdAt,'2022')"
+            "value": "contains(name,'Power')"
+          },
+          "created-at-range": {
+            "description": "Return jobs created in 2022.\n\\<property> ge <startTimestamp> and \\<property> lt <endTimestamp>\n",
+            "summary": "Filter for a timestamp within a range",
+            "value": "createdAt ge 2022-01-01T00:00:00Z and createdAt lt 2023-01-01T00:00:00Z"
           },
           "equals": {
             "description": "Return jobs for a specific template. PowerOn in this case.\nnot \\<property> eq null\n",
@@ -1019,12 +1089,12 @@
           "populated": {
             "description": "Return jobs with a value populated. This returns jobs that apply to a resource (some don't).\nnot \\<property> eq null\n",
             "summary": "Filter that a property contains a value",
-            "value": "not resource/id eq none"
+            "value": "not resource/id eq null"
           },
           "url-encoded": {
-            "description": "Return jobs where a property equals a value, Looking for a specific server. Server IDs contain a `+`, which must be encoded as `%2B`. This returns jobs on a specific server.\n\\<property>%20eq%20%27\\<value>\n",
+            "description": "Return jobs where a property equals a value, Looking for a specific server. Server IDs contain a `+`, which must be encoded as `%2B`. This returns jobs on a specific server.\n\\<property>%20eq%20%27\\<value>%27\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
-            "value": "resource/id eq '252500-842%2B8899252500842931'"
+            "value": "resource%2Fid%20eq%20%27252500-842%2B8899252500842931%27"
           }
         },
         "in": "query",
@@ -1122,19 +1192,19 @@
         "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\nNOTE: The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.  \nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\nServer IDs contain a `+`, which must be encoded as `%2B`.  \nFor example: the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n\nReports can be filtered by:\n- createdAt\n- generation\n- id\n- reportDataEndAt\n- reportDataStartAt\n- reportType\n- resourceUri\n- type\n- updatedAt\n- status\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
         "examples": {
           "and": {
-            "description": "Return reports where property is populated and property contains value.\nnot \\<property> eq null and contains(\\<property>, \\<value>)\n",
+            "description": "Return reports with an ID that were created in 2022.\nnot \\<property> eq null and <timestampProperty> ge <startTimestamp> and <timestampProperty> lt <endTimestamp>\n",
             "summary": "Filter on multiple conditionals",
-            "value": "not id eq null and contains(createdAt,'2022')"
+            "value": "not id eq null and createdAt ge 2022-01-01T00:00:00Z and createdAt lt 2023-01-01T00:00:00Z"
           },
-          "contains": {
-            "description": "Return reports where property contains a value.\ncontains(\\<property>, \\<value>)\n",
-            "summary": "Filter that field value contains a specific substring",
-            "value": "contains(createdAt,'2022')"
+          "created-at-range": {
+            "description": "Return reports created in 2022.\n\\<property> ge <startTimestamp> and \\<property> lt <endTimestamp>\n",
+            "summary": "Filter for a timestamp within a range",
+            "value": "createdAt ge 2022-01-01T00:00:00Z and createdAt lt 2023-01-01T00:00:00Z"
           },
           "equals": {
             "description": "Return reports where a property equals a value.\n\\<property> eq \\<value>\n",
             "summary": "Filter with equality check",
-            "value": "name eq 'Carbon Footprint Report (All Servers)'"
+            "value": "status eq 'COMPLETED'"
           },
           "not": {
             "description": "Return reports where a property does not equal a value\nnot \\<property> eq \\<value>\n",
@@ -1144,12 +1214,12 @@
           "populated": {
             "description": "Return reports with populated property.\nnot \\<property> eq null\n",
             "summary": "Filter that a property contains a value",
-            "value": "not name eq null"
+            "value": "not id eq null"
           },
           "url-encoded": {
-            "description": "Return reports where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>\n",
+            "description": "Return reports where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>%27\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
-            "value": "id%20eq%20%27843023bd-9412-46c2-8ac2-a3691f657fdb"
+            "value": "id%20eq%20%27843023bd-9412-46c2-8ac2-a3691f657fdb%27"
           }
         },
         "in": "query",
@@ -1206,14 +1276,19 @@
             "value": "operation/method in ('POST','GET')"
           },
           "and": {
-            "description": "Return schedules where property is populated and property contains value.\nnot \\<property> eq null and contains(\\<property>, \\<value>)\n",
+            "description": "Return schedules with a start time that were created in 2022.\nnot \\<property> eq null and <timestampProperty> ge <startTimestamp> and <timestampProperty> lt <endTimestamp>\n",
             "summary": "Filter on multiple conditionals",
-            "value": "not schedule eq null and contains(createdAt,'2022')"
+            "value": "not schedule/startAt eq null and createdAt ge 2022-01-01T00:00:00Z and createdAt lt 2023-01-01T00:00:00Z"
           },
           "contains": {
             "description": "Return schedules where property contains a value.\ncontains(\\<property>, \\<value>)\n",
             "summary": "Filter that field value contains a specific substring",
-            "value": "contains(createdAt,'2022')"
+            "value": "contains(operation/uri,'/servers')"
+          },
+          "created-at-range": {
+            "description": "Return schedules created in 2022.\n\\<property> ge <startTimestamp> and \\<property> lt <endTimestamp>\n",
+            "summary": "Filter for a timestamp within a range",
+            "value": "createdAt ge 2022-01-01T00:00:00Z and createdAt lt 2023-01-01T00:00:00Z"
           },
           "equals": {
             "description": "Return schedules where a property equals a value.\n\\<property> eq \\<value>\n",
@@ -1233,12 +1308,12 @@
           "populated": {
             "description": "Return schedules with populated property.\nnot \\<property> eq null\n",
             "summary": "Filter that a property contains a value",
-            "value": "not schedule eq null"
+            "value": "not schedule/startAt eq null"
           },
           "url-encoded": {
-            "description": "Return schedules where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>\n",
+            "description": "Return schedules where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>%27\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
-            "value": "id%20eq%20%2737f66ae4-20a1-48f1-b552-b515457639ca"
+            "value": "id%20eq%20%2737f66ae4-20a1-48f1-b552-b515457639ca%27"
           }
         },
         "in": "query",
@@ -1254,6 +1329,51 @@
             "description": "Select only the `id` and `name` properties of the resource\n",
             "summary": "Return only `id` and `name` properties",
             "value": "id,name"
+          }
+        },
+        "in": "query",
+        "name": "select",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "serverAlerts-filterParam-v1": {
+        "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\nNOTE: The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.\nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\nServer IDs contain a `+`, which must be encoded as `%2B`.\nFor example: the value `P06760-B21+2M212504P8` must be encoded as `P06760-B21%2B2M212504P8` when it is used in a query parameter.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n",
+        "examples": {
+          "alternatives": {
+            "description": "Return alerts where a property is one of multiple values.\n\\<property> in (\\<value1>,\\<value2>)\n",
+            "summary": "Filter for a value to have one of multiple possibilities",
+            "value": "severity in ('Warning','Critical')"
+          },
+          "and": {
+            "description": "Return alerts where one property equals a value and another contains a value.\n\\<property1> eq \\<value1> and contains(\\<property2>, \\<value2>)\n",
+            "summary": "Filter on multiple conditions",
+            "value": "severity eq 'Warning' and contains(message,'power')"
+          },
+          "equals": {
+            "description": "Return alerts where a property equals a value.\n\\<property> eq \\<value>\n",
+            "summary": "Filter with equality check",
+            "value": "severity eq 'Warning'"
+          },
+          "url-encoded": {
+            "description": "Return alerts where a property equals a value, using URL encoding.\n\\<property>%20eq%20%27\\<value>%27\n",
+            "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
+            "value": "severity%20eq%20%27Warning%27"
+          }
+        },
+        "in": "query",
+        "name": "filter",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "serverAlerts-selectParam-v1": {
+        "description": "Limit the properties of the resource returned in a successful response.  When applied to\nwrite operations, `select` controls only the properties that are returned, not which\nproperties are operated on. All properties are returned if the `select` parameter is omitted.\n\nThe value of the `select` query parameter is a comma separated list of properties to include\nin the response. Nested properties use `/` as a separator, e.g. `select=serviceNowIncident/id`\nselects the `id` property within a `serviceNowIncident` object.\n\nFor operations that return paginated collections, `select` operates on the resources in\nthe collection. The pagination properties like `count` and `items` are always included even\nwhen `select` is specified.\n",
+        "examples": {
+          "id-severity": {
+            "description": "Select only the `id` and `severity` properties of the resource\n",
+            "summary": "Return only `id` and `severity` properties",
+            "value": "id,severity"
           }
         },
         "in": "query",
@@ -1422,17 +1542,22 @@
           "alternatives": {
             "description": "Return servers where property is one of multiple values.\n\\<property>/\\<nestedProperty> in (\\<value>,\\<value>)\n",
             "summary": "Filter for a value to have one of multiple possibilities",
-            "value": "state/managed in ('true','false')"
+            "value": "state/managed in (true,false)"
           },
           "and": {
-            "description": "Return servers where property is populated and property contains value.\nnot \\<property> eq null and contains(\\<property>, \\<value>)\n",
+            "description": "Return servers where one property is populated and another contains a value.\nnot <firstProperty> eq null and contains(<secondProperty>, \\<value>)\n",
             "summary": "Filter on multiple conditionals",
-            "value": "not name eq null and contains(createdAt,'2019')"
+            "value": "not name eq null and contains(hardware/model,'DL385')"
           },
           "contains": {
             "description": "Return servers where property contains a value.\ncontains(\\<property>, \\<value>)\n",
             "summary": "Filter that field value contains a specific substring",
-            "value": "contains(createdAt,'2019')"
+            "value": "contains(hardware/model,'DL385')"
+          },
+          "created-at-range": {
+            "description": "Return servers created in 2026.\n\\<property> ge <startTimestamp> and \\<property> lt <endTimestamp>\n",
+            "summary": "Filter for a timestamp within a range",
+            "value": "createdAt ge 2026-01-01T00:00:00Z and createdAt lt 2027-01-01T00:00:00Z"
           },
           "equals": {
             "description": "Return servers where a property equals a value.\n\\<property> eq \\<value>\n",
@@ -1442,7 +1567,7 @@
           "nested-fields": {
             "description": "Return servers where a nested property equals a value.\n\\<property>/\\<nestedProperty> eq \\<value>\n",
             "summary": "Filter with equality check on a nested attribute",
-            "value": "state/managed eq 'true'"
+            "value": "state/managed eq true"
           },
           "not": {
             "description": "Return servers where a property does not equal a value\nnot \\<property> eq \\<value>\n",
@@ -1455,9 +1580,9 @@
             "value": "not name eq null"
           },
           "url-encoded": {
-            "description": "Return servers where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>\n",
+            "description": "Return servers where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>%27\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
-            "value": "id%20eq%20%27497f6eca-6276-4993-bfeb-53cbbbba6f08"
+            "value": "id%20eq%20%27P06760-B21%2B2M212504P8%27"
           }
         },
         "in": "query",
@@ -1472,17 +1597,22 @@
           "alternatives": {
             "description": "Return servers where property is one of multiple values.\n\\<property>/\\<nestedProperty> in (\\<value>,\\<value>)\n",
             "summary": "Filter for a value to have one of multiple possibilities",
-            "value": "state/managed in ('true','false')"
+            "value": "state/managed in (true,false)"
           },
           "and": {
-            "description": "Return servers where property is populated and property contains value.\nnot \\<property> eq null and contains(\\<property>, \\<value>)\n",
+            "description": "Return servers where one property is populated and another contains a value.\nnot <firstProperty> eq null and contains(<secondProperty>, \\<value>)\n",
             "summary": "Filter on multiple conditionals",
-            "value": "not name eq null and contains(createdAt,'2019')"
+            "value": "not name eq null and contains(hardware/model,'DL385')"
           },
           "contains": {
             "description": "Return servers where property contains a value.\ncontains(\\<property>, \\<value>)\n",
             "summary": "Filter that field value contains a specific substring",
-            "value": "contains(createdAt,'2019')"
+            "value": "contains(hardware/model,'DL385')"
+          },
+          "created-at-range": {
+            "description": "Return servers created in 2026.\n\\<property> ge <startTimestamp> and \\<property> lt <endTimestamp>\n",
+            "summary": "Filter for a timestamp within a range",
+            "value": "createdAt ge 2026-01-01T00:00:00Z and createdAt lt 2027-01-01T00:00:00Z"
           },
           "equals": {
             "description": "Return servers where a property equals a value.\n\\<property> eq \\<value>\n",
@@ -1492,7 +1622,7 @@
           "nested-fields": {
             "description": "Return servers where a nested property equals a value.\n\\<property>/\\<nestedProperty> eq \\<value>\n",
             "summary": "Filter with equality check on a nested attribute",
-            "value": "state/managed eq 'true'"
+            "value": "state/managed eq true"
           },
           "not": {
             "description": "Return servers where a property does not equal a value\nnot \\<property> eq \\<value>\n",
@@ -1505,9 +1635,9 @@
             "value": "not name eq null"
           },
           "url-encoded": {
-            "description": "Return servers where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>\n",
+            "description": "Return servers where a property equals a value, using a url.\n\\<property>%20eq%20%27\\<value>%27\n",
             "summary": "Filter with url encoding applied to all reserved characters (example is fully URL encoded)",
-            "value": "id%20eq%20%27497f6eca-6276-4993-bfeb-53cbbbba6f08"
+            "value": "id%20eq%20%27P06760-B21%2B2M212504P8%27"
           }
         },
         "in": "query",
@@ -23912,7 +24042,7 @@
   "paths": {
     "/compute-ops-mgmt/v1/alerts": {
       "get": {
-        "description": "Retrieve alert data for all Servers.\n\nOnly active alerts and cleared alerts within the last 180 days are returned.\nCleared alerts older than 180 days are excluded and cannot be retrieved via filter.\n\n**Filterable and sortable fields:**\n\n| Field | Type | Notes |\n|---|---|---|\n| `id` | string (UUID) | Alert UUID |\n| `device/id` | string | Server / appliance ID |\n| `severity` | string | `Critical`, `Warning`, `OK`, `Unknown` \u2014 case-insensitive |\n| `category` | string | e.g. `fans`, `security`, `power` \u2014 case-insensitive |\n| `alertType` | string | `hardware`, `software` \u2014 case-insensitive |\n| `messageKey` | string | e.g. `FanFailed`, `MinPasswordLengthAtRisk` |\n| `messageId` | string | Full versioned message ID (`bundle.major.minor.key`) |\n| `clearedAt` | datetime (ISO 8601) | `null` for active alerts |\n| `createdAt` | datetime (ISO 8601) | Alert creation timestamp |\n| `updatedAt` | datetime (ISO 8601) | Last modification timestamp |\n| `serviceEvent` | boolean | `true` / `false` |\n| `originOfCondition` | string | URI identifying the originating component |\n\n**Supported OData filter operators:** `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `and`, `or`, `not`, `in`, `contains`",
+        "description": "Retrieve alert data for all Servers.\n\nOnly active alerts and cleared alerts within the last 180 days are returned.\nCleared alerts older than 180 days are excluded and cannot be retrieved via filter.\n\n**Filterable and sortable fields:**\n\n| Field | Type | Notes |\n|---|---|---|\n| `id` | string (UUID) | Alert UUID |\n| `device/id` | string | Server / appliance ID |\n| `severity` | string | `Critical`, `Warning`, `OK`, `Unknown` \u2014 case-sensitive |\n| `category` | string | e.g. `fans`, `security`, `power` \u2014 case-sensitive |\n| `alertType` | string | `hardware`, `software` \u2014 case-insensitive |\n| `messageKey` | string | e.g. `FanFailed`, `MinPasswordLengthAtRisk` |\n| `messageId` | string | Full versioned message ID (`bundle.major.minor.key`) |\n| `clearedAt` | datetime (ISO 8601) | `null` for active alerts |\n| `createdAt` | datetime (ISO 8601) | Alert creation timestamp |\n| `updatedAt` | datetime (ISO 8601) | Last modification timestamp |\n| `serviceEvent` | boolean | `true` / `false` |\n| `originOfCondition` | string | URI identifying the originating component |\n\n**Supported OData filter operators:** `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `and`, `or`, `not`, `in`, `contains`",
         "operationId": "get_v1_alerts",
         "parameters": [
           {
@@ -23922,13 +24052,13 @@
             "$ref": "#/components/parameters/limitParam"
           },
           {
-            "$ref": "#/components/parameters/filterParam"
+            "$ref": "#/components/parameters/alerts-filterParam-v1"
           },
           {
-            "$ref": "#/components/parameters/sortParam"
+            "$ref": "#/components/parameters/alerts-sortParam-v1"
           },
           {
-            "$ref": "#/components/parameters/selectParam"
+            "$ref": "#/components/parameters/alerts-selectParam-v1"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
@@ -25964,13 +26094,13 @@
             "$ref": "#/components/parameters/limitParam"
           },
           {
-            "$ref": "#/components/parameters/servers-filterParam-v1"
+            "$ref": "#/components/parameters/serverAlerts-filterParam-v1"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
           },
           {
-            "$ref": "#/components/parameters/selectParam"
+            "$ref": "#/components/parameters/serverAlerts-selectParam-v1"
           }
         ],
         "responses": {
@@ -33416,7 +33546,7 @@
             "$ref": "#/components/parameters/limitParam"
           },
           {
-            "$ref": "#/components/parameters/servers-filterParam-v1beta2"
+            "$ref": "#/components/parameters/serverAlerts-filterParam-v1"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
