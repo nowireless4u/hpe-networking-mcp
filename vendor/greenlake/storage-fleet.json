@@ -1,5 +1,13 @@
 {
   "components": {
+    "headers": {
+      "LocationCreate": {
+        "description": "The uri of the created resource",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
     "parameters": {
       "DeviceType4CertificateFilterParam": {
         "allowReserved": true,
@@ -741,6 +749,17 @@
         "name": "id",
         "required": true,
         "schema": {
+          "type": "string"
+        }
+      },
+      "idUuid": {
+        "description": "The UUID of the object",
+        "example": "c1a0eb78-41a0-4151-93b2-f057ffeca3f3",
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "format": "uuid",
           "type": "string"
         }
       },
@@ -2098,6 +2117,16 @@
           "null"
         ]
       },
+      "AssociatedResourceProperties": {
+        "properties": {
+          "id": {
+            "description": "UUID of the resource associated with the device",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "AttachDetachInput": {
         "properties": {
           "action": {
@@ -2171,6 +2200,78 @@
           "null"
         ]
       },
+      "AutoSupport": {
+        "properties": {
+          "fromAddress": {
+            "description": "Email address from which the email is sent.",
+            "format": "email",
+            "type": "string"
+          },
+          "infosightToken": {
+            "description": "Infosight claim token for you organization. Applies only to Alletra 9000.",
+            "type": "string"
+          },
+          "recipientAddresses": {
+            "description": "The email addresses to use for the recipients of SMTP messages from the system. Applies only to HPE Alletra Storage MP X10000.",
+            "items": {
+              "example": "user@example.company.com",
+              "format": "email",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "smtpCredentialId": {
+            "description": "The credential ID to use for this SMTP server. Applies only to HPE Alletra Storage MP X10000.",
+            "type": "string"
+          },
+          "smtpEncryption": {
+            "description": "The encryption to use for sending mail to the SMTP server. Applies only to HPE Alletra Storage MP X10000.",
+            "enum": [
+              "NONE",
+              "START_TLS",
+              "SSL_TLS"
+            ],
+            "type": "string"
+          },
+          "smtpPort": {
+            "description": "The port to which SMTP messages should be sent on the server. Applies only to Alletra 9000, Alletra Storage MP B10000, PC3000 with HPE Alletra Storage MP B10000 systems and HPE Alletra Storage MP X10000. For Alletra 9000, Alletra Storage MP B10000 and PC3000 with HPE Alletra Storage MP B10000 systems, the valid ports are 25, 587, 465 and 2525. For HPE Alletra Storage MP X10000, valid ports are 1-65535.",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "smtpServer": {
+            "description": "SMTP server IP or hostname.",
+            "example": "smtp@acmeco.com",
+            "type": "string"
+          },
+          "smtpUsername": {
+            "description": "The username to use for this SMTP server. Applies only to HPE Alletra Storage MP X10000.",
+            "type": "string"
+          }
+        }
+      },
+      "BPS3FrontEndConfiguration": {
+        "properties": {
+          "s3DataNetworkConfiguration": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/S3DataNetworkConfiguration"
+              }
+            ],
+            "description": "The network settings and addresses to use for the front-end S3 data network. Applies only to HPE Alletra Storage MP X10000.",
+            "maxItems": 1,
+            "minItems": 1,
+            "type": "array"
+          },
+          "s3DataNetworkDnsSubdomains": {
+            "description": "DNS sub-domain name associated with the HPE Alletra Storage MP X10000 cluster. Applies only to HPE Alletra Storage MP X10000.",
+            "items": {
+              "example": "example.company.com",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        }
+      },
       "BackendAndFrontendNICDetails": {
         "description": "Details of the Nic",
         "properties": {
@@ -2206,6 +2307,278 @@
         "type": [
           "object",
           "null"
+        ]
+      },
+      "Blueprint": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonResourceProperties"
+          },
+          {
+            "$ref": "#/components/schemas/BlueprintProperties"
+          }
+        ]
+      },
+      "BlueprintImmutableProperties": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BlueprintPatchableButNotOverridableProperties"
+          }
+        ],
+        "properties": {
+          "createdAt": {
+            "description": "The time this blueprint was created",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "schemaVersion": {
+            "description": "Internal attribute that is not be exposed to the user. This is used to maintain backward compatibility. When the blueprint schema changes, the schema version will be bumped up",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The time this blueprint was last updated",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "schemaVersion",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "BlueprintList": {
+        "properties": {
+          "count": {
+            "description": "Number of blueprints in this response",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Blueprint"
+            },
+            "type": "array"
+          },
+          "pageLimit": {
+            "default": 20,
+            "description": "The limit query parameter specified in the request.",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "pageOffset": {
+            "default": 0,
+            "description": "The offset query parameter specified in the request.",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of blueprints in the collection",
+            "readOnly": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "pageOffset",
+          "pageLimit",
+          "total",
+          "count"
+        ]
+      },
+      "BlueprintOverridableProperties": {
+        "properties": {
+          "autoSupport": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutoSupport"
+              }
+            ],
+            "description": "Email notifications to the customer and obtain consent for diagnostic information collection"
+          },
+          "autoUpdateOs": {
+            "default": true,
+            "description": "Auto-update OS based on the current OS version. Applies only to Alletra Storage MP B10000 and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "type": "boolean"
+          },
+          "cluster": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClusterProperties"
+              }
+            ],
+            "description": "Information on PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems cluster. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only."
+          },
+          "dataNetwork": {
+            "description": "List of network interface settings",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DataNetwork"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "dateTime": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DateTime"
+              }
+            ],
+            "description": "Date and time services"
+          },
+          "dnsConfig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Dns"
+              }
+            ],
+            "description": "DNS server"
+          },
+          "isHpeEulaAccepted": {
+            "description": "If true, user has accepted HPE EULA. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only.",
+            "type": "boolean"
+          },
+          "isVmwareEulaAccepted": {
+            "description": "If true, user has accepted VMWare EULA. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only.",
+            "type": "boolean"
+          },
+          "mgmtNetwork": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MgmtNetConfig"
+              }
+            ],
+            "description": "Management network"
+          },
+          "proxyConfig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Proxy"
+              }
+            ],
+            "description": "Proxy server"
+          },
+          "s3FrontEndConfiguration": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BPS3FrontEndConfiguration"
+              }
+            ],
+            "description": "The configuration settings for front-end networking of the S3 protocol. Applies to Alletra Storage MP X10000 only."
+          },
+          "serverSetups": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ServerSetupConfig"
+              }
+            ],
+            "description": "Server network setup. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only."
+          },
+          "supportContact": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SupportContact"
+              }
+            ],
+            "description": "Primary support contact for the customer. Applies to Alletra 9000 only."
+          },
+          "systemIdentity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SystemIdentity"
+              }
+            ],
+            "description": "Device identity"
+          },
+          "userCreds": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            ],
+            "description": "Credentials for admin user, ESXi and PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems iLO"
+          },
+          "vcenter": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Vcenter"
+              }
+            ],
+            "description": "Information on vCenter. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only."
+          },
+          "vdsManagementOnly": {
+            "description": "If true, create management port groups in VDS while keeping data port groups in VSS. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "type": "boolean"
+          },
+          "vdsSelected": {
+            "description": "If true, vSphere Distributed Switch (VDS) will be created on the vCenter server and applied to all ESXi host(s). VDS needs Enterprise Plus License. If false, vSphere Standard Switch (VSS) will be created on ESXi host. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only.",
+            "type": "boolean"
+          }
+        }
+      },
+      "BlueprintPatchRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BlueprintPatchableButNotOverridableProperties"
+          },
+          {
+            "$ref": "#/components/schemas/BlueprintOverridableProperties"
+          }
+        ]
+      },
+      "BlueprintPatchableButNotOverridableProperties": {
+        "properties": {
+          "description": {
+            "description": "Description of the blueprint",
+            "type": "string"
+          },
+          "deviceTypes": {
+            "description": "The types of device that the blueprint will be targeted for. Only pages applicable to the selections will be shown on the Setup Service UI Blueprint wizard.",
+            "items": {
+              "enum": [
+                "ALLETRA_5000",
+                "ALLETRA_6000",
+                "ALLETRA_9000",
+                "ALLETRA_DHCI",
+                "GREENLAKE_FOR_BLOCK_STORAGE",
+                "ALLETRA_STORAGE_MP_X10000",
+                "DHCI_STORAGE",
+                "NO_DEVICES"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "User provided name for the blueprint",
+            "type": "string"
+          }
+        }
+      },
+      "BlueprintPostRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BlueprintPatchableButNotOverridableProperties"
+          },
+          {
+            "$ref": "#/components/schemas/BlueprintOverridableProperties"
+          }
+        ]
+      },
+      "BlueprintProperties": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BlueprintImmutableProperties"
+          },
+          {
+            "$ref": "#/components/schemas/BlueprintOverridableProperties"
+          }
         ]
       },
       "ChassisSensor": {
@@ -2274,6 +2647,82 @@
           "null"
         ]
       },
+      "ChildDevicesProperties": {
+        "example": {
+          "childDevices": [
+            {
+              "deviceModel": "ALLETRA STORAGE MP MODULE",
+              "deviceType": "STORAGE",
+              "partNumber": "S0R21-63003",
+              "productPartNumber": "S0S38A",
+              "productSerialNumber": "CZIOM5678",
+              "serialNumber": "IOM1SN999"
+            },
+            {
+              "deviceModel": "ALLETRA STORAGE MP MODULE",
+              "deviceType": "STORAGE",
+              "partNumber": "S0R21-63003",
+              "productPartNumber": "S0S38A",
+              "productSerialNumber": "CZIOM5679",
+              "serialNumber": "IOM2SN999"
+            },
+            {
+              "deviceModel": "ALLETRA STORAGE MP CDM",
+              "deviceType": "STORAGE",
+              "partNumber": "P51267-001",
+              "serialNumber": "CDMSN999"
+            }
+          ],
+          "deviceModel": "ALLETRA STORAGE MP ENCLOSURE",
+          "deviceType": "STORAGE",
+          "partNumber": "R7C75-63003",
+          "serialNumber": "CSN00009"
+        },
+        "properties": {
+          "childDevices": {
+            "description": "Child device information",
+            "items": {
+              "$ref": "#/components/schemas/GrandChildDevicesProperties"
+            },
+            "readOnly": true,
+            "type": "array"
+          },
+          "deviceModel": {
+            "description": "Child device model",
+            "readOnly": true,
+            "type": "string"
+          },
+          "deviceType": {
+            "description": "Child device type",
+            "readOnly": true,
+            "type": "string"
+          },
+          "partNumber": {
+            "description": "Child device assembly part number",
+            "readOnly": true,
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "Child device assembly serial number",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
+      "ClusterProperties": {
+        "properties": {
+          "clusterName": {
+            "description": "Name of the new PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems cluster to be created or the name of the existing Brownfield cluster to be setup as PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "LABCLUSTER",
+            "type": "string"
+          },
+          "datacenterName": {
+            "description": "The vSphere Datacenter in which to create the new cluster. If datacenter already exists then it gets used, otherwise a new datacenter with that name would be created. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "AcmeCoDataCenter",
+            "type": "string"
+          }
+        }
+      },
       "CommonListResponse": {
         "properties": {
           "count": {
@@ -2293,6 +2742,60 @@
           "count",
           "offset"
         ]
+      },
+      "CommonResourceProperties": {
+        "description": "Common properties included in all resource models.",
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "customerId": {
+            "description": "The customer application identifier",
+            "readOnly": true,
+            "type": "string"
+          },
+          "generation": {
+            "description": "A monotonically increasing value. This value updates when the resource is updated and can be used as a short way to determine if a resource has changed or which of two different copies of a resource is more up to date.",
+            "format": "int64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "id": {
+            "description": "An identifier for the resource, usually a UUID.",
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "A system specified name for the resource.",
+            "type": "string"
+          },
+          "resourceUri": {
+            "description": "The self reference for this resource.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of resource.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt",
+          "resourceUri",
+          "customerId"
+        ],
+        "type": "object"
       },
       "CpuUsageDataPoint": {
         "description": "CPU usage percentage at a specific timestamp.",
@@ -2520,6 +3023,15 @@
         ],
         "type": "object"
       },
+      "Credentials": {
+        "properties": {
+          "adminCredentialId": {
+            "description": "ID corresponding to the admin username and password",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          }
+        }
+      },
       "CredentialsDetails": {
         "properties": {
           "password": {
@@ -2561,6 +3073,861 @@
         "type": [
           "object",
           "null"
+        ]
+      },
+      "DataNetwork": {
+        "properties": {
+          "discoveryIp": {
+            "description": "discovery IP address. Applies only to Alletra 6000",
+            "example": "192.1.1.50",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "interface": {
+            "description": "network interface or port, e.g., 'eth0'. Applies only to Alletra 6000",
+            "type": "string"
+          },
+          "ipAddrZone": {
+            "description": "IP address zone. Applies only to Alletra 6000",
+            "enum": [
+              "SINGLE",
+              "BISECT",
+              "EVEN_ODD"
+            ],
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP address",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "label": {
+            "description": "Label for network",
+            "example": "Data Network 1",
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "subnetMask": {
+            "description": "subNet mask",
+            "example": "255.255.255.0",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "trafficType": {
+            "description": "network traffic type. Applies only to Alletra 6000 (optional)",
+            "enum": [
+              "DATA"
+            ],
+            "type": "string"
+          },
+          "vlanId": {
+            "description": "vlan ID",
+            "format": "Uint32",
+            "type": "integer"
+          }
+        }
+      },
+      "DateTime": {
+        "properties": {
+          "country": {
+            "description": "Country where the device is located.",
+            "example": "Unites States",
+            "type": "string"
+          },
+          "ntpServers": {
+            "description": "Server(s) for time synchronization using NTP. Max 3.",
+            "items": {
+              "example": "ntp.acmeco.com",
+              "type": "string"
+            },
+            "maxItems": 3
+          },
+          "timeZone": {
+            "description": "Timezone to set for the device.",
+            "example": "America/Denver",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceAutoSupport": {
+        "properties": {
+          "fromAddress": {
+            "description": "Email address from which the email is sent.",
+            "format": "email",
+            "type": "string"
+          },
+          "infosightToken": {
+            "description": "Infosight claim token for you organization. Applies only to Alletra 9000.",
+            "type": "string"
+          },
+          "recipientAddresses": {
+            "description": "The email addresses to use for the recipients of SMTP messages from the system. Applies only to HPE Alletra Storage MP X10000.",
+            "items": {
+              "example": "user@example.company.com",
+              "format": "email",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "smtpCredentialId": {
+            "description": "The credential ID to use for this SMTP server. Applies only to HPE Alletra Storage MP X10000.",
+            "type": "string"
+          },
+          "smtpEncryption": {
+            "description": "The encryption to use for sending mail to the SMTP server. Applies only to HPE Alletra Storage MP X10000.",
+            "enum": [
+              "NONE",
+              "START_TLS",
+              "SSL_TLS"
+            ],
+            "type": "string"
+          },
+          "smtpPort": {
+            "description": "The port to which SMTP messages should be sent on the server. Applies only to Alletra 9000, Alletra Storage MP B10000, PC3000 with HPE Alletra Storage MP B10000 systems and HPE Alletra Storage MP X10000. For Alletra 9000, Alletra Storage MP B10000 and PC3000 with HPE Alletra Storage MP B10000 systems, the valid ports are 25, 587, 465 and 2525. For HPE Alletra Storage MP X10000, valid ports are 1-65535.",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "smtpServer": {
+            "description": "SMTP server IP or hostname.",
+            "example": "smtp@acmeco.com",
+            "type": "string"
+          },
+          "smtpUsername": {
+            "description": "The username to use for this SMTP server. Applies only to HPE Alletra Storage MP X10000.",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceBlueprintOverridableProperties": {
+        "properties": {
+          "autoSupport": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceAutoSupport"
+              }
+            ],
+            "description": "Email notifications to the customer and obtain consent for diagnostic information collection"
+          },
+          "autoUpdateOs": {
+            "default": true,
+            "description": "Auto-update OS based on the current OS version. Applies only to Alletra Storage MP B10000 and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "type": "boolean"
+          },
+          "cluster": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceClusterProperties"
+              }
+            ],
+            "description": "Information on PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems cluster. Required for PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only."
+          },
+          "dataNetwork": {
+            "description": "List of network interface settings. At least 1 dataNetwork must be configured. Applies only to Alletra 6000.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeviceDataNetwork"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "dateTime": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceDateTime"
+              }
+            ],
+            "description": "Date and time services"
+          },
+          "dnsConfig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceDns"
+              }
+            ],
+            "description": "DNS server"
+          },
+          "forceRollback": {
+            "description": "Forces rollback of the completed chains of PCBE cloud-driven workflow. Applicable only to PC3000 with HPE Alletra Storage MP B10000 systems.",
+            "type": "boolean"
+          },
+          "isHpeEulaAccepted": {
+            "description": "If true, user has accepted HPE EULA. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "type": "boolean"
+          },
+          "isVmwareEulaAccepted": {
+            "description": "If true, user has accepted VMWare EULA. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "type": "boolean"
+          },
+          "mgmtNetwork": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceMgmtNetConfig"
+              }
+            ],
+            "description": "Management network"
+          },
+          "proxyConfig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceProxy"
+              }
+            ],
+            "description": "Proxy server"
+          },
+          "s3FrontEndConfiguration": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceS3FrontEndConfiguration"
+              }
+            ],
+            "description": "The configuration settings for front-end networking of the S3 protocol. Applies to Alletra Storage MP X10000 only."
+          },
+          "serverSetups": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceServerSetupConfig"
+              }
+            ],
+            "description": "Server network setup. Required for PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only."
+          },
+          "supportContact": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceSupportContact"
+              }
+            ],
+            "description": "Primary support contact for the customer. Applies to Alletra 9000 only."
+          },
+          "switchAdminCredentialId": {
+            "description": "ID corresponding to the switch admin credential",
+            "type": "string"
+          },
+          "systemIdentity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceSystemIdentity"
+              }
+            ],
+            "description": "Device identity"
+          },
+          "userCreds": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceCredentials"
+              }
+            ],
+            "description": "Credentials for admin user, ESXi and PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems iLO"
+          },
+          "vcenter": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceVcenter"
+              }
+            ],
+            "description": "Information on vCenter. Required for PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only."
+          },
+          "vdsManagementOnly": {
+            "description": "If true, create management port groups in VDS while keeping data port groups in VSS. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "type": "boolean"
+          },
+          "vdsSelected": {
+            "description": "If true, vSphere Distributed Switch (VDS) will be created on the vCenter server and applied to all ESXi host(s). VDS needs Enterprise Plus License. If false, vSphere Standard Switch (VSS) will be created on ESXi host. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems only.",
+            "type": "boolean"
+          },
+          "virtualization": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceVirtualization"
+              }
+            ],
+            "description": "HPE Virtualization Settings for the High Voltage Cluster. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only."
+          }
+        }
+      },
+      "DeviceClusterProperties": {
+        "properties": {
+          "clusterName": {
+            "description": "Name of the new PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems cluster to be created or the name of the existing Brownfield cluster to be setup as PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "LABCLUSTER",
+            "type": "string"
+          },
+          "datacenterName": {
+            "description": "The vSphere Datacenter in which to create the new cluster. If datacenter already exists then it gets used, otherwise a new datacenter with that name would be created. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "AcmeCoDataCenter",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceCredentials": {
+        "properties": {
+          "adminCredentialId": {
+            "description": "ID corresponding to the admin username and password",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "adminCredentialId"
+        ]
+      },
+      "DeviceDataNetwork": {
+        "properties": {
+          "discoveryIp": {
+            "description": "discovery IP address. Applies only to and is required for Alletra 6000.",
+            "example": "192.1.1.50",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "interface": {
+            "description": "network interface or port, e.g., 'eth0'. Applies only to and is required for Alletra 6000.",
+            "type": "string"
+          },
+          "ipAddrZone": {
+            "description": "IP address zone. Applies only to and is required for Alletra 6000.",
+            "enum": [
+              "SINGLE",
+              "BISECT",
+              "EVEN_ODD"
+            ],
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP address. Applies only to and is required for Alletra 6000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "label": {
+            "description": "Label for network. Applies only to and is required for Alletra 6000.",
+            "example": "Data Network 1",
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU. Applies only to and is required for Alletra 6000.",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "subnetMask": {
+            "description": "subNet mask. Applies only to and is required for Alletra 6000.",
+            "example": "255.255.255.0",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "trafficType": {
+            "description": "network traffic type. Applies only to Alletra 6000.",
+            "enum": [
+              "DATA"
+            ],
+            "type": "string"
+          },
+          "vlanId": {
+            "description": "vlan ID",
+            "format": "Uint32",
+            "type": "integer"
+          }
+        }
+      },
+      "DeviceDateTime": {
+        "properties": {
+          "country": {
+            "description": "Country where the device is located. Applies only to and is required for Alletra 9000.",
+            "example": "US",
+            "type": "string"
+          },
+          "ntpServers": {
+            "description": "Server(s) for time synchronization using NTP. Max 3.",
+            "items": {
+              "example": "ntp.acmeco.com",
+              "type": "string"
+            },
+            "maxItems": 3
+          },
+          "timeZone": {
+            "description": "Timezone to set for the device.",
+            "example": "America/Denver",
+            "type": "string"
+          }
+        },
+        "required": [
+          "timeZone",
+          "ntpServers"
+        ]
+      },
+      "DeviceDns": {
+        "properties": {
+          "dnsServers": {
+            "description": "List of DNS servers for hostname resolution. Max 3.",
+            "items": {
+              "format": "ipv4",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          },
+          "domainName": {
+            "description": "DNS domain name",
+            "example": "acmeco.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dnsServers"
+        ]
+      },
+      "DeviceIPConfig": {
+        "properties": {
+          "gateway": {
+            "description": "Gateway. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP Address. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "Int64",
+            "type": "integer"
+          },
+          "network": {
+            "description": "Network Address. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "subnetMask": {
+            "description": "Subnet mask. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "vlanId": {
+            "description": "vlan ID. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "Int64",
+            "type": "integer"
+          }
+        }
+      },
+      "DeviceMgmtNetConfig": {
+        "properties": {
+          "gateway": {
+            "description": "Default IPv4 gateway for management network",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "Management IPv4 Address",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "ipv6Address": {
+            "description": "Management IPv6 Address. Applies only to Alletra 9000.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "ipv6Gateway": {
+            "description": "Default IPv6 gateway for management network.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "ipv6PrefixLen": {
+            "description": "IPv6 subnet prefix length.",
+            "example": "64",
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU. Applies only to Alletra 6000.",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "secondaryInterface": {
+            "description": "Additional interface for management network. Applies only to Alletra 6000.",
+            "type": "string"
+          },
+          "secondaryIp": {
+            "description": "Secondary IP address. This is used for peer persistence. Applies only to Alletra 6000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "secondaryIpV6": {
+            "description": "Secondary IPv6 address. This is used for peer persistence. Applies only to Alletra 6000.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "subnetMask": {
+            "description": "IPv4 subnet mask",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "supportIps": {
+            "description": "List of support IP addresses. First element is for controller A, second element is for controller B. Applies only to and is required for Alletra 6000. Max 2.",
+            "items": {
+              "format": "ipv4",
+              "type": "string"
+            },
+            "maxItems": 2,
+            "type": "array"
+          },
+          "supportIpsV6": {
+            "description": "List of support IPv6 addresses. First element is for controller A, second element is for controller B. Applies only to Alletra 6000. Max 2.",
+            "items": {
+              "format": "ipv6",
+              "type": "string"
+            },
+            "maxItems": 2,
+            "type": "array"
+          },
+          "vlanId": {
+            "description": "vlan ID. Applies only to Alletra 6000.",
+            "format": "Uint32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ipAddress",
+          "subnetMask",
+          "gateway"
+        ]
+      },
+      "DeviceMorpheusApplianceInfo": {
+        "properties": {
+          "gateway": {
+            "description": "Gateway for the morpheus VM.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "hostName": {
+            "description": "Hostname for the morpheus instance.",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP Address for the morpheus VM.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "netmask": {
+            "description": "Netmask for the Morpheus VM.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "qCowUrl": {
+            "description": "URI to the Morpheus qcow image",
+            "type": "string"
+          },
+          "size": {
+            "description": "The size of the Morpheus appliance VM to install. Defaults to S. S = 12GB mem, 2 vcpus; M = 16GB mem, 4 vcpus; L = 32GB mem, 4 vcpus",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "DeviceMorpheusApplianceSetupRequest": {
+        "properties": {
+          "morpheusApplianceInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceMorpheusApplianceInfo"
+              }
+            ],
+            "description": "Details on morpheus appliance. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only."
+          },
+          "morpheusInitialSetupInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceMorpheusInitialSetupInfo"
+              }
+            ],
+            "description": "Morpheus initial setup information. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only."
+          },
+          "morpheusUserInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceMorpheusUserInfo"
+              }
+            ],
+            "description": "Morpheus user information. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only."
+          }
+        }
+      },
+      "DeviceMorpheusInitialSetupInfo": {
+        "properties": {
+          "cloudName": {
+            "description": "Cloud name.",
+            "type": "string"
+          },
+          "groupName": {
+            "description": "Name of the group.",
+            "type": "string"
+          },
+          "licenseKey": {
+            "description": "License key.",
+            "type": "string"
+          },
+          "masterTenantName": {
+            "description": "Name of the master tenant.",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceMorpheusUserInfo": {
+        "properties": {
+          "applicationCredentialId": {
+            "description": "credential ID of Morpheus application.",
+            "type": "string"
+          },
+          "systemCredentialId": {
+            "description": "credential ID of Morpheus system.",
+            "type": "string"
+          },
+          "userEmail": {
+            "description": "email address of the Morpheus user.",
+            "format": "email",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceProxy": {
+        "properties": {
+          "credentialId": {
+            "description": "ID corresponding to the username and password for this proxy server. This is optional if type is HTTP but required if NTLM.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "domain": {
+            "description": "Domain for NTLM proxy server. Applies only to NTLM type and is optional.",
+            "example": "domain.com",
+            "type": "string"
+          },
+          "port": {
+            "description": "Proxy server port",
+            "example": 8080,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "server": {
+            "description": "Proxy server hostname",
+            "example": "proxy.acmeco.com",
+            "type": "string"
+          },
+          "type": {
+            "description": "Proxy protocol to use. Supported protocols are HTTP and NTLM. For NTLM, credentialId is required and domain is optional.",
+            "enum": [
+              "HTTP",
+              "NTLM"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "DeviceS3DataNetworkConfiguration": {
+        "properties": {
+          "dataSubnetGateway": {
+            "description": "The gateway for the s3 data network. Applies only to HPE Alletra Storage MP X10000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "dataSubnetMask": {
+            "description": "DNS sub-domain name associated with the HPE Alletra Storage MP X10000 cluster. Applies only to HPE Alletra Storage MP X10000.",
+            "type": "boolean"
+          },
+          "s3IpRanges": {
+            "description": "Range of IP addresses for use by S3 on the front-end data ports. Applies only to HPE Alletra Storage MP X10000.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeviceS3IpRange"
+                }
+              ]
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      },
+      "DeviceS3FrontEndConfiguration": {
+        "properties": {
+          "s3DataNetworkConfiguration": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceS3DataNetworkConfiguration"
+              }
+            ],
+            "description": "The network settings and addresses to use for the front-end S3 data network. Applies only to HPE Alletra Storage MP X10000.",
+            "maxItems": 1,
+            "minItems": 1,
+            "type": "array"
+          },
+          "s3DataNetworkDnsSubdomains": {
+            "description": "DNS sub-domain name associated with the HPE Alletra Storage MP X10000 cluster. Applies only to HPE Alletra Storage MP X10000.",
+            "items": {
+              "example": "example.company.com",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "DeviceS3IpRange": {
+        "properties": {
+          "endingAddress": {
+            "description": "Ending IP address for use by S3 on the front-end data ports. Applies only to HPE Alletra Storage MP X10000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "startingAddress": {
+            "description": "Starting IP address for use by S3 on the front-end data ports. Applies only to HPE Alletra Storage MP X10000.",
+            "format": "ipv4",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceServerNetworkConfig": {
+        "properties": {
+          "currentEsxiCredentialId": {
+            "description": "ID corresponding to the Current ESXi password. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "currentHypervisorIp": {
+            "description": "Current temporary IP of the server to be set up. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "currentHypervisorIpv6": {
+            "description": "Current temporary IPv6 IP address of the server to be set up. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "dataIpInfos": {
+            "description": "Management IP's for the server data network. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeviceIPConfig"
+                }
+              ]
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "esxMgmtIpInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceIPConfig"
+              }
+            ],
+            "description": "Management IP for the ESXi server. This is required if serverNetworks is specified. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems."
+          },
+          "iloMgmtIpInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceIPConfig"
+              }
+            ],
+            "description": "Management IP for the server iLO. This is optional if serverNetworks is specified. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems."
+          },
+          "isSetupRequired": {
+            "description": "Whether setup is required for this server. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "type": "boolean"
+          },
+          "serialNumber": {
+            "description": "Serial number of the server. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceServerSetupConfig": {
+        "properties": {
+          "esxRootCredentialId": {
+            "description": "ID corresponding to the ESXi password. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "iloAdminCredentialId": {
+            "description": "ID corresponding to the password for the server iLO account. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "serverNetworks": {
+            "description": "Server networks. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/DeviceServerNetworkConfig"
+                }
+              ]
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      },
+      "DeviceSupportContact": {
+        "properties": {
+          "company": {
+            "description": "Company name of the support contact. Applies only to and is required for Alletra 9000.",
+            "example": "Acme Co",
+            "type": "string"
+          },
+          "country": {
+            "description": "Country where the support contact resides. Applies only to and is required for Alletra 9000.",
+            "example": "United States",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name of the support contact. Applies only to and is required for Alletra 9000.",
+            "example": "Jane",
+            "type": "string"
+          },
+          "language": {
+            "description": "Language. Applies only to and is required for Alletra 9000.",
+            "example": "en",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name of the support contact. Applies only to and is required for Alletra 9000.",
+            "example": "Doe",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "description": "Phone number of the support contact. Applies only to and is required for Alletra 9000.",
+            "example": "+1 916 123 456",
+            "type": "string"
+          },
+          "primaryEmail": {
+            "description": "Primary email of the support contact. This is required for Alletra 9000 but is optional for Alletra 6000.",
+            "example": "jane.doe@acmeco.com",
+            "format": "email",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceSystemIdentity": {
+        "properties": {
+          "domainName": {
+            "description": "DNS Domain name, which when appended to the NOS group name, would be the fully qualified domain name for the group. Applies only to and is required for Alletra 6000.",
+            "example": "home-depot-lab.com",
+            "type": "string"
+          },
+          "storageSystemName": {
+            "description": "User provided name to identify the Device",
+            "example": "sjc-array2065",
+            "type": "string"
+          }
+        },
+        "required": [
+          "storageSystemName"
         ]
       },
       "DeviceType44CpumetricSeriesDataValue": {
@@ -24046,7 +25413,7 @@
         ]
       },
       "DeviceType4friendlyCertificate": {
-        "description": "Friendly info of the SMTP/mail server certificate",
+        "description": "Friendly info of the mail server certificate",
         "properties": {
           "issuedTo": {
             "description": "Certificate issued to",
@@ -29571,6 +30938,52 @@
           "null"
         ]
       },
+      "DeviceVcenter": {
+        "properties": {
+          "deployVcenter": {
+            "description": "Whether a new vCenter needs to be deployed or use an existing one. With the hub and spoke architecture, most likely an existing vCenter in the core would be selected for EdgeStack devices",
+            "type": "boolean"
+          },
+          "hostname": {
+            "description": "Fully qualified domain name of the vCenter server",
+            "example": "test1-vc.lab.acmeco.com",
+            "format": "hostname",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP address of the vCenter server",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "rootCredentialId": {
+            "description": "ID corresponding to the root password",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "ssoAdminCredentialId": {
+            "description": "ID corresponding to the administrator username and password",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          }
+        }
+      },
+      "DeviceVirtualization": {
+        "properties": {
+          "imageRepoSizeMib": {
+            "description": "volume size in MiB for the image repository to be created in the storage system. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "morpheusApplianceSetupRequest": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceMorpheusApplianceSetupRequest"
+              }
+            ],
+            "description": "Morpheus appliance setup request parameters. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only."
+          }
+        }
+      },
       "Devicetype4ecpAssociatedLinks": {
         "description": "Associated Links Details",
         "example": [
@@ -29683,6 +31096,24 @@
           "object",
           "null"
         ]
+      },
+      "Dns": {
+        "properties": {
+          "dnsServers": {
+            "description": "List of DNS servers for hostname resolution. Max 3.",
+            "items": {
+              "format": "ipv4",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          },
+          "domainName": {
+            "description": "DNS domain name",
+            "example": "acmeco.com",
+            "type": "string"
+          }
+        }
       },
       "EditBrokerDetailsInput": {
         "properties": {
@@ -30118,6 +31549,44 @@
         },
         "type": "object"
       },
+      "Enclosure": {
+        "properties": {
+          "cdm": {
+            "description": "Hardware inventory of CDMs. Applies only to Alletra Storage MP B10000",
+            "items": {
+              "$ref": "#/components/schemas/HardwareComponents"
+            },
+            "type": "array"
+          },
+          "component": {
+            "description": "Description of the components.",
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Hardware inventory mismatch error message.",
+            "type": "string"
+          },
+          "foundSerialNumber": {
+            "description": "Serial number of the enclosure reported by the device.",
+            "type": "string"
+          },
+          "ioms": {
+            "description": "Hardware inventory of IOMs.",
+            "items": {
+              "$ref": "#/components/schemas/HardwareComponents"
+            },
+            "type": "array"
+          },
+          "serialNumber": {
+            "description": "Assembly serial number of the hardware component.",
+            "type": "string"
+          },
+          "warnMessage": {
+            "description": "Hardware inventory mismatch warning message.",
+            "type": "string"
+          }
+        }
+      },
       "ErrorResponse": {
         "properties": {
           "debugId": {
@@ -30145,6 +31614,58 @@
           "errorCode",
           "debugId"
         ]
+      },
+      "FcPort": {
+        "properties": {
+          "busLocation": {
+            "description": "PCI bus location of the HBA.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "controllerName": {
+            "description": "Name (A or B) of the controller where the port is hosted",
+            "readOnly": true,
+            "type": "string"
+          },
+          "linkSpeed": {
+            "description": "Speed of the link. Possible values: 'plat_fc_link_speed_unknown', 'plat_fc_link_speed_2G', 'plat_fc_link_speed_4G', 'plat_fc_link_speed_8G', 'plat_fc_link_speed_16G', 'plat_fc_link_speed_32G', 'plat_fc_link_speed_10G', 'plat_fc_link_speed_40G'.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "linkStatus": {
+            "description": "Status of the link. Possible values: 'plat_fc_link_status_unknown', 'plat_fc_link_status_down', 'plat_fc_link_status_up', 'plat_fc_link_status_not_connected', 'plat_fc_link_status_error', 'plat_fc_link_status_reset'.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the FC port",
+            "readOnly": true,
+            "type": "string"
+          },
+          "node": {
+            "description": "Node number for this port",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "operationalStatus": {
+            "description": "Operational status of the link. Possible values: 'plat_fc_operational_status_unknown', 'plat_fc_operational_status_unconfigured', 'plat_fc_operational_status_configured', 'plat_fc_operational_status_operational', 'plat_fc_operational_status_direct', 'plat_fc_operational_status_fault', 'plat_fc_operational_status_admin_offline', plat_fc_operational_status_initializing.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "port": {
+            "description": "Port on the HBA (Host Bus Adapter).",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "slot": {
+            "description": "Slot that is mapped on the PCIe bus.",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          }
+        }
       },
       "FleetCommonResourceAttributes": {
         "description": "Common resource attributes for a system.",
@@ -30394,6 +31915,41 @@
           "object",
           "null"
         ]
+      },
+      "GrandChildDevicesProperties": {
+        "properties": {
+          "deviceModel": {
+            "description": "Child device model",
+            "readOnly": true,
+            "type": "string"
+          },
+          "deviceType": {
+            "description": "Child device type",
+            "example": "STORAGE",
+            "readOnly": true,
+            "type": "string"
+          },
+          "partNumber": {
+            "description": "Child device assembly part number",
+            "readOnly": true,
+            "type": "string"
+          },
+          "productPartNumber": {
+            "description": "Child device product part number",
+            "readOnly": true,
+            "type": "string"
+          },
+          "productSerialNumber": {
+            "description": "Child device product serial number",
+            "readOnly": true,
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "Child device assembly serial number",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
       },
       "HFEnclosureCondition": {
         "description": "Enclosure condition.",
@@ -30674,6 +32230,91 @@
           "object",
           "null"
         ]
+      },
+      "HardwareComponents": {
+        "properties": {
+          "component": {
+            "description": "Description of the component.",
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Hardware inventory mismatch error message.",
+            "type": "string"
+          },
+          "foundProductSerialNumber": {
+            "description": "Product serial number of the IOM reported by the device.",
+            "type": "string"
+          },
+          "foundSerialNumber": {
+            "description": "Serial number of the IOM reported by the device.",
+            "type": "string"
+          },
+          "productSerialNumber": {
+            "description": "Product serial number of the hardware components.",
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "Assembly serial number of the hardware components.",
+            "type": "string"
+          },
+          "warnMessage": {
+            "description": "Hardware inventory mismatch warning message.",
+            "type": "string"
+          }
+        }
+      },
+      "HardwareInfo": {
+        "properties": {
+          "components": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataMfgData"
+              }
+            ],
+            "description": "List of hardware components reported by the device. Applies only to Alletra Storage MP B10000 and Alletra Storage MP X10000."
+          },
+          "dscId": {
+            "description": "DSC ID",
+            "type": "string"
+          },
+          "fcPorts": {
+            "description": "List of available FC ports. Applies only to Alletra 5000 and 6000 and Alletra MP B10000.",
+            "items": {
+              "$ref": "#/components/schemas/FcPort"
+            },
+            "type": "array"
+          },
+          "inventory": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InventoryCheckReport"
+              }
+            ],
+            "description": "Report of inventory check between that reported by GLP and that by the device. Applies only to Alletra Storage MP B10000 and Alletra Storage MP X10000."
+          },
+          "iscsiPorts": {
+            "description": "List of available iSCSI ports. Applies only to Alletra MP B10000.",
+            "items": {
+              "$ref": "#/components/schemas/ISCSIPort"
+            },
+            "type": "array"
+          },
+          "networkInterfaces": {
+            "description": "List of available network interfaces. Applies only to Alletra 5000 and 6000 and Alletra MP B10000.",
+            "items": {
+              "$ref": "#/components/schemas/NicPort"
+            },
+            "type": "array"
+          },
+          "personaInfo": {
+            "description": "Persona info for the device. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems.",
+            "enum": [
+              "kvm-alletramp-dhci",
+              "alletramp-dhci"
+            ],
+            "type": "string"
+          }
+        }
       },
       "HfBucketsCapacitySummary": {
         "properties": {
@@ -34153,6 +35794,72 @@
           "null"
         ]
       },
+      "IPConfig": {
+        "properties": {
+          "gateway": {
+            "description": "Gateway. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP Address. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "Int64",
+            "type": "integer"
+          },
+          "network": {
+            "description": "Network Address. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "subnetMask": {
+            "description": "Subnet mask. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "vlanId": {
+            "description": "vlan ID. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "format": "Int64",
+            "type": "integer"
+          }
+        }
+      },
+      "ISCSIPort": {
+        "properties": {
+          "controllerName": {
+            "description": "Name of the node where the port is hosted",
+            "readOnly": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the iSCSI port",
+            "readOnly": true,
+            "type": "string"
+          },
+          "node": {
+            "description": "Node number for this port",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "port": {
+            "description": "Port number in the slot.",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "slot": {
+            "description": "Slot number in the node.",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          }
+        }
+      },
       "ImportHomefleetCustomCertificateInput": {
         "description": "Import Certificates for Storage Cluster.",
         "properties": {
@@ -34173,6 +35880,130 @@
         },
         "type": "object"
       },
+      "InitializationStepProperties": {
+        "example": {
+          "percentComplete": 5,
+          "state": "RUNNING",
+          "stepId": "NIMBLE_SETUP",
+          "stepName": "Setting up Nimble",
+          "subSteps": [
+            {
+              "percentComplete": 10,
+              "state": "RUNNING",
+              "stepId": "INITIAL_SETUP",
+              "stepName": "Setting up management interface and administrator credentials..."
+            },
+            {
+              "percentComplete": 5,
+              "state": "PENDING",
+              "stepId": "CHECK_INITIAL_SETUP",
+              "stepName": "Running sanity checks before continuing..."
+            }
+          ]
+        },
+        "properties": {
+          "detailedMessage": {
+            "description": "The detail message for an initialization step",
+            "readOnly": true,
+            "type": "string"
+          },
+          "details": {
+            "description": "Additional information for HCI server validations. Applicable only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "The error message for an initialization step",
+            "readOnly": true,
+            "type": "string"
+          },
+          "percentComplete": {
+            "description": "Percent completion of this step.",
+            "format": "Uint32",
+            "maximum": 100,
+            "minimum": 0,
+            "readOnly": true,
+            "type": "integer"
+          },
+          "state": {
+            "description": "The state of this initialization step",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "stepId": {
+            "description": "The ID of an initialization step",
+            "readOnly": true,
+            "type": "string"
+          },
+          "stepName": {
+            "description": "The name of an initialization step",
+            "readOnly": true,
+            "type": "string"
+          },
+          "subSteps": {
+            "description": "The substeps of this device initialization step",
+            "items": {
+              "$ref": "#/components/schemas/InitializationSubStepProperties"
+            },
+            "readOnly": true,
+            "type": "array"
+          }
+        }
+      },
+      "InitializationSubStepProperties": {
+        "properties": {
+          "detailedMessage": {
+            "description": "The detail message for an initialization substep",
+            "readOnly": true,
+            "type": "string"
+          },
+          "details": {
+            "description": "Additional information for HCI server validations. Applicable only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "The error message for an initialization substep",
+            "readOnly": true,
+            "type": "string"
+          },
+          "percentComplete": {
+            "description": "Percent completion of this substep.",
+            "format": "Uint32",
+            "maximum": 100,
+            "minimum": 0,
+            "readOnly": true,
+            "type": "integer"
+          },
+          "state": {
+            "description": "The state of this initialization substep",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "stepId": {
+            "description": "The ID of an initialization substep",
+            "readOnly": true,
+            "type": "string"
+          },
+          "stepName": {
+            "description": "The name of an initialization substep",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "InputScheduleType": {
         "description": "Unit for schedule type:BACKUP,LOCAL",
         "enum": [
@@ -34184,6 +36015,49 @@
           "string",
           "null"
         ]
+      },
+      "InventoryCheckReport": {
+        "properties": {
+          "cablingStatus": {
+            "description": "Report of cabling status.",
+            "items": {
+              "$ref": "#/components/schemas/Enclosure"
+            },
+            "type": "array"
+          },
+          "iomEnclosures": {
+            "description": "Report of the node enclosure IOMs.",
+            "items": {
+              "$ref": "#/components/schemas/Enclosure"
+            },
+            "type": "array"
+          },
+          "jbofEnclosures": {
+            "description": "Report of the JBOF enclosures IOMs.",
+            "items": {
+              "$ref": "#/components/schemas/Enclosure"
+            },
+            "type": "array"
+          },
+          "pass": {
+            "description": "True if the hardware inventory reported by GLP matches that reported by the device. Applies only to Alletra Storage MP B10000 and Alletra Storage MP X10000.",
+            "type": "boolean"
+          },
+          "s3RdmaStatus": {
+            "description": "Report of Alletra Storage MP X10000 front-end port RDMA capabilities. Applies only to Alletra Storage MP X10000",
+            "items": {
+              "$ref": "#/components/schemas/Enclosure"
+            },
+            "type": "array"
+          },
+          "switches": {
+            "description": "Report of Alletra Storage MP X10000. Applies only to Alletra Storage MP X10000",
+            "items": {
+              "$ref": "#/components/schemas/Enclosure"
+            },
+            "type": "array"
+          }
+        }
       },
       "JbofConnectivity": {
         "description": "Details of the Jbof connectivity",
@@ -34543,6 +36417,82 @@
           "object",
           "null"
         ]
+      },
+      "MgmtNetConfig": {
+        "properties": {
+          "gateway": {
+            "description": "Default IPv4 gateway for management network",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "Management IPv4 Address",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "ipv6Address": {
+            "description": "Management IPv6 Address. Applies only to Alletra 9000.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "ipv6Gateway": {
+            "description": "Default IPv6 gateway for management network.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "ipv6PrefixLen": {
+            "description": "IPv6 subnet prefix length.",
+            "example": "64",
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU. Applies only to Alletra 6000.",
+            "format": "Uint32",
+            "type": "integer"
+          },
+          "secondaryInterface": {
+            "description": "Additional interface for management network. Applies only to Alletra 6000.",
+            "type": "string"
+          },
+          "secondaryIp": {
+            "description": "Secondary IP address. This is used for peer persistence. Applies only to Alletra 6000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "secondaryIpV6": {
+            "description": "Secondary IPv6 address. This is used for peer persistence. Applies only to Alletra 6000.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "subnetMask": {
+            "description": "IPv4 subnet mask",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "supportIps": {
+            "description": "List of support IP addresses. First element is for controller A, second element is for controller B. Applies only to Alletra 6000. Max 2.",
+            "items": {
+              "format": "ipv4",
+              "type": "string"
+            },
+            "maxItems": 2,
+            "type": "array"
+          },
+          "supportIpsV6": {
+            "description": "List of support IPv6 addresses. First element is for controller A, second element is for controller B. Applies only to Alletra 6000. Max 2.",
+            "items": {
+              "format": "ipv6",
+              "type": "string"
+            },
+            "maxItems": 2,
+            "type": "array"
+          },
+          "vlanId": {
+            "description": "vlan ID. Applies only to Alletra 6000.",
+            "format": "Uint32",
+            "type": "integer"
+          }
+        }
       },
       "MigrationSourceHostPaginated": {
         "description": "The cached hosts of the migration source system",
@@ -36086,6 +38036,69 @@
           "null"
         ]
       },
+      "NicPort": {
+        "properties": {
+          "controllerName": {
+            "description": "Name (A or B) of the controller where the interface is hosted",
+            "readOnly": true,
+            "type": "string"
+          },
+          "linkSpeed": {
+            "description": "Speed of the link. Possible values: 'link_speed_unknown','link_speed_10M', 'link_speed_100M', 'link_speed_1000M', 'link_speed_10000M', 'link_speed_25000M', 'link_speed_40000M', 'link_speed_50000M', 'link_speed_100000M'.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "linkStatus": {
+            "description": "Status of the link. Possible values: 'link_status_unknown', 'link_status_down', 'link_status_up'.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "macAddress": {
+            "description": "MAC address of the interface",
+            "readOnly": true,
+            "type": "string"
+          },
+          "maxLinkSpeed": {
+            "description": "Maximum speed of the link. Possible values: 'link_speed_unknown', 'link_speed_10M', 'link_speed_100M', 'link_speed_1000M', 'link_speed_10000M', 'link_speed_25000M', 'link_speed_40000M', 'link_speed_50000M', 'link_speed_100000M'.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "mtu": {
+            "description": "MTU on the link",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "name": {
+            "description": "Name of the interface",
+            "readOnly": true,
+            "type": "string"
+          },
+          "nicType": {
+            "description": "Interface type. Possible values: 'nic_type_unknown', 'nic_type_tp', 'nic_type_sfp'.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "node": {
+            "description": "Node number for this interface",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "port": {
+            "description": "Port number for this interface",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "slot": {
+            "description": "Slot number for this interface",
+            "format": "Uint64",
+            "readOnly": true,
+            "type": "integer"
+          }
+        }
+      },
       "NimbleArraySummary": {
         "properties": {
           "model": {
@@ -36863,6 +38876,257 @@
           "null"
         ]
       },
+      "PreConfiguredData": {
+        "properties": {
+          "dateTime": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataDateTime"
+              }
+            ],
+            "description": "Pre-configured date and time parameters"
+          },
+          "dnsConfig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataDnsConfig"
+              }
+            ],
+            "description": "Pre-configured DNS parameters"
+          },
+          "manufacturingData": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataMfgData"
+              }
+            ],
+            "description": "Manufacturing order data entered in the HPE Common Cloud Services database for the device"
+          },
+          "mgmtNetwork": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataMgmtNetwork"
+              }
+            ],
+            "description": "Pre-configured management network parameters"
+          },
+          "proxyConfig": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataProxyConfig"
+              }
+            ],
+            "description": "Pre-configured proxy parameters"
+          },
+          "serverSetups": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataServerSetups"
+              }
+            ],
+            "description": "Pre-configured server setup parameters"
+          },
+          "systemIdentity": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredDataSystemIdentity"
+              }
+            ],
+            "description": "Pre-configured system identity parameters"
+          }
+        }
+      },
+      "PreConfiguredDataDateTime": {
+        "properties": {
+          "country": {
+            "description": "Country where the device is located.",
+            "example": "Unites States",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ntpServers": {
+            "description": "Server(s) for time synchronization using NTP. Max 3.",
+            "items": {
+              "example": "ntp.acmeco.com",
+              "readOnly": true,
+              "type": "string"
+            },
+            "maxItems": 3
+          },
+          "timeZone": {
+            "description": "Timezone of  the device.",
+            "example": "America/Denver",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
+      "PreConfiguredDataDeviceServerNetworkConfig": {
+        "properties": {
+          "serialNumber": {
+            "description": "Serial number of the server. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "type": "string"
+          }
+        }
+      },
+      "PreConfiguredDataDnsConfig": {
+        "properties": {
+          "dnsServers": {
+            "description": "List of DNS servers for hostname resolution. Max 3.",
+            "items": {
+              "format": "ipv4",
+              "readOnly": true,
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          }
+        }
+      },
+      "PreConfiguredDataMfgData": {
+        "properties": {
+          "childDevices": {
+            "description": "Child device information",
+            "items": {
+              "$ref": "#/components/schemas/ChildDevicesProperties"
+            },
+            "readOnly": true,
+            "type": "array"
+          },
+          "deviceModel": {
+            "description": "Child device model",
+            "example": "HPE ALLETRA STORAGE MP",
+            "readOnly": true,
+            "type": "string"
+          },
+          "deviceType": {
+            "description": "Child device type",
+            "example": "STORAGE",
+            "readOnly": true,
+            "type": "string"
+          },
+          "partNumber": {
+            "description": "Child device aseembly part number",
+            "example": "S0B84A",
+            "readOnly": true,
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "Child device assembly serial number",
+            "example": "4UW0009999",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
+      "PreConfiguredDataMgmtNetwork": {
+        "properties": {
+          "gateway": {
+            "description": "Default IPv4 gateway for management network",
+            "format": "ipv4",
+            "readOnly": true,
+            "type": "string"
+          },
+          "interface": {
+            "description": "Management network interface. Applies only to Alletra 6000.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "Management IPv4 Address",
+            "format": "ipv4",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ipv6Address": {
+            "description": "Management IPv6 Address. Applies only to Alletra 9000.",
+            "format": "ipv6",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ipv6Gateway": {
+            "description": "Default IPv6 gateway for management network.",
+            "format": "ipv6",
+            "readOnly": true,
+            "type": "string"
+          },
+          "ipv6PrefixLen": {
+            "description": "IPv6 subnet prefix length.",
+            "example": "64",
+            "readOnly": true,
+            "type": "string"
+          },
+          "subnetMask": {
+            "description": "IPv4 subnet mask",
+            "format": "ipv4",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
+      "PreConfiguredDataProxyConfig": {
+        "properties": {
+          "domain": {
+            "description": "Domain for NTLM proxy server. Applies only to NTLM type and is optional.",
+            "example": "domain.com",
+            "readOnly": true,
+            "type": "string"
+          },
+          "port": {
+            "description": "Proxy server port",
+            "example": 8080,
+            "minimum": 1,
+            "readOnly": true,
+            "type": "integer"
+          },
+          "server": {
+            "description": "Proxy server hostname",
+            "example": "proxy.acmeco.com",
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "description": "Proxy protocol to use. Supported protocols are HTTP and NTLM. For NTLM, credentialId is required and domain is optional.",
+            "enum": [
+              "HTTP",
+              "NTLM"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for this proxy server",
+            "example": "proxyuser",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
+      "PreConfiguredDataServerSetups": {
+        "properties": {
+          "serverNetworks": {
+            "description": "Server networks. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/PreConfiguredDataDeviceServerNetworkConfig"
+                }
+              ]
+            },
+            "type": "array"
+          }
+        }
+      },
+      "PreConfiguredDataSystemIdentity": {
+        "properties": {
+          "storageSystemName": {
+            "description": "User provided name to identify the Device",
+            "example": "sjc-array2065",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "ProtectionAttributesEditInput": {
         "properties": {
           "addedSchedules": {
@@ -36923,6 +39187,39 @@
           "object",
           "null"
         ]
+      },
+      "Proxy": {
+        "properties": {
+          "credentialId": {
+            "description": "ID corresponding to the username and password for this proxy server. This is optional if type is HTTP but required if NTLM.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "domain": {
+            "description": "Domain for NTLM proxy server. Applies only to NTLM type and is optional.",
+            "example": "domain.com",
+            "type": "string"
+          },
+          "port": {
+            "description": "Proxy server port",
+            "example": 8080,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "server": {
+            "description": "Proxy server hostname",
+            "example": "proxy.acmeco.com",
+            "type": "string"
+          },
+          "type": {
+            "description": "Proxy protocol to use. Supported protocols are HTTP and NTLM. For NTLM, credentialId is required and domain is optional.",
+            "enum": [
+              "HTTP",
+              "NTLM"
+            ],
+            "type": "string"
+          }
+        }
       },
       "RPOUnits": {
         "description": "Unit for remoteRPO:MIN,HOUR,DAY,WEEK, MONTH",
@@ -37341,6 +39638,53 @@
         },
         "type": "object"
       },
+      "ResourceReference": {
+        "description": "References to other resources include the name, type and URI of the other resource.",
+        "properties": {
+          "name": {
+            "readOnly": true,
+            "type": "string"
+          },
+          "resourceUri": {
+            "readOnly": true,
+            "type": "string"
+          },
+          "type": {
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "resourceUri"
+        ],
+        "type": "object"
+      },
+      "S3DataNetworkConfiguration": {
+        "properties": {
+          "dataSubnetGateway": {
+            "description": "The gateway for the s3 data network. Applies only to HPE Alletra Storage MP X10000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "dataSubnetMask": {
+            "description": "DNS sub-domain name associated with the HPE Alletra Storage MP X10000 cluster. Applies only to HPE Alletra Storage MP X10000.",
+            "type": "boolean"
+          },
+          "s3IpRanges": {
+            "description": "Range of IP addresses for use by S3 on the front-end data ports. Applies only to HPE Alletra Storage MP X10000.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/S3IpRange"
+                }
+              ]
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      },
       "S3DataNetworkConfigurations": {
         "items": {
           "properties": {
@@ -37420,6 +39764,20 @@
           "object",
           "null"
         ]
+      },
+      "S3IpRange": {
+        "properties": {
+          "endingAddress": {
+            "description": "Ending IP address for use by S3 on the front-end data ports. Applies only to HPE Alletra Storage MP X10000.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "startingAddress": {
+            "description": "Starting IP address for use by S3 on the front-end data ports. Applies only to HPE Alletra Storage MP X10000.",
+            "format": "ipv4",
+            "type": "string"
+          }
+        }
       },
       "SMTPCredentials": {
         "properties": {
@@ -37987,6 +40345,123 @@
         ],
         "type": "object"
       },
+      "ServerNetworkConfig": {
+        "properties": {
+          "currentEsxiCredentialId": {
+            "description": "ID corresponding to the Current ESXi password. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "currentHypervisorIp": {
+            "description": "Current temporary IP of the server to be set up. Applies to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems and PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "currentHypervisorIpv6": {
+            "description": "Current temporary IPv6 IP address of the server to be set up. Applies to PC3000 with HPE Alletra Storage MP B10000 systems only.",
+            "format": "ipv6",
+            "type": "string"
+          },
+          "dataIpInfos": {
+            "description": "Management IP's for the server data network. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/IPConfig"
+                }
+              ]
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "esxMgmtIpInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IPConfig"
+              }
+            ],
+            "description": "Management IP for the ESXi server. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems."
+          },
+          "iloMgmtIpInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IPConfig"
+              }
+            ],
+            "description": "Management IP for the server iLO. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems."
+          }
+        }
+      },
+      "ServerSetupConfig": {
+        "properties": {
+          "esxRootCredentialId": {
+            "description": "ID corresponding to the ESXi password. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "iloAdminCredentialId": {
+            "description": "ID corresponding to the password for the server iLO account. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "serverNetworks": {
+            "description": "Server networks. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ServerNetworkConfig"
+                }
+              ]
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "type": "array"
+          }
+        }
+      },
+      "SetupProgress": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonResourceProperties"
+          },
+          {
+            "$ref": "#/components/schemas/SetupProgressProperties"
+          }
+        ]
+      },
+      "SetupProgressProperties": {
+        "properties": {
+          "initializationSteps": {
+            "description": "The steps of the device initialization process",
+            "items": {
+              "$ref": "#/components/schemas/InitializationStepProperties"
+            },
+            "readOnly": true,
+            "type": "array"
+          },
+          "setupProgressPercent": {
+            "description": "Overall percent completion of the device initialization.",
+            "example": 1,
+            "format": "Uint32",
+            "maximum": 100,
+            "minimum": 0,
+            "readOnly": true,
+            "type": "integer"
+          },
+          "state": {
+            "description": "The overall state of the system initialization process",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED"
+            ],
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "SoftwareUpdatePolicyAttributes": {
         "properties": {
           "autoStage": {
@@ -38098,6 +40573,18 @@
           "object",
           "null"
         ]
+      },
+      "StatusType": {
+        "description": "Status of the device",
+        "enum": [
+          "ONBOARDED",
+          "UNINITIALIZED",
+          "INITIALIZING",
+          "INITIALIZED",
+          "INITIALIZATION_FAILED"
+        ],
+        "readOnly": true,
+        "type": "string"
       },
       "StorageCluster": {
         "properties": {
@@ -38563,6 +41050,46 @@
           "null"
         ]
       },
+      "SupportContact": {
+        "properties": {
+          "company": {
+            "description": "Company name",
+            "example": "Acme Co",
+            "type": "string"
+          },
+          "country": {
+            "description": "Country",
+            "example": "United States",
+            "type": "string"
+          },
+          "firstName": {
+            "description": "First name of the support contact",
+            "example": "Jane",
+            "type": "string"
+          },
+          "language": {
+            "description": "Language",
+            "example": "en",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name of the support contact",
+            "example": "Doe",
+            "type": "string"
+          },
+          "phoneNumber": {
+            "description": "Phone number of the support contact",
+            "example": "+1 916 123 456",
+            "type": "string"
+          },
+          "primaryEmail": {
+            "description": "Primary email of the support contact",
+            "example": "jane.doe@acmeco.com",
+            "format": "email",
+            "type": "string"
+          }
+        }
+      },
       "SupportDetails": {
         "properties": {
           "company": {
@@ -38984,6 +41511,16 @@
           "null"
         ]
       },
+      "System": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommonResourceProperties"
+          },
+          {
+            "$ref": "#/components/schemas/SystemProperties"
+          }
+        ]
+      },
       "SystemCpuPerformanceItem": {
         "description": "CPU performance metrics for a single system.",
         "properties": {
@@ -39080,6 +41617,233 @@
         ],
         "type": "object"
       },
+      "SystemIdentity": {
+        "properties": {
+          "domainName": {
+            "description": "DNS Domain name, which when appended to the NOS group name, would be the fully qualified domain name for the group. Applies only to Alletra 6000.",
+            "example": "home-depot-lab.com",
+            "type": "string"
+          },
+          "storageSystemName": {
+            "description": "User provided name to identify the Device",
+            "example": "sjc-array2065",
+            "type": "string"
+          }
+        }
+      },
+      "SystemList": {
+        "properties": {
+          "count": {
+            "description": "Number of devices in this response",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/System"
+            },
+            "type": "array"
+          },
+          "pageLimit": {
+            "default": 20,
+            "description": "The limit query parameter specified in the request.",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "pageOffset": {
+            "default": 0,
+            "description": "The offset query parameter specified in the request.",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of devices in the collection",
+            "readOnly": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "pageOffset",
+          "pageLimit",
+          "total",
+          "count"
+        ]
+      },
+      "SystemPatchRequest": {
+        "properties": {
+          "autoSetup": {
+            "default": false,
+            "description": "If true, then once a device connects to the Data Services Cloud Console, it will be initialized automatically with the associated blueprint. If false, then user will have to manually initiate the device initialization at some point after the device has connected to the Cloud Console. Default is false.",
+            "type": "boolean"
+          },
+          "blueprintId": {
+            "description": "uuid of the blueprint to change to. Set this to empty string to remove the blueprint.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "contact": {
+            "description": "Contact information for this device",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of the device",
+            "type": "string"
+          },
+          "generation": {
+            "description": "The current generation number of the device",
+            "format": "int64",
+            "type": "integer"
+          },
+          "override": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceBlueprintOverridableProperties"
+              }
+            ],
+            "description": "Overrides properties from the blueprint"
+          }
+        }
+      },
+      "SystemProperties": {
+        "properties": {
+          "associatedBlueprint": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "$ref": "#/components/schemas/AssociatedResourceProperties"
+              }
+            ],
+            "description": "blueprint associated with the device"
+          },
+          "associatedSetupTask": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResourceReference"
+              },
+              {
+                "$ref": "#/components/schemas/AssociatedResourceProperties"
+              }
+            ],
+            "description": "the associated setup task"
+          },
+          "autoSetup": {
+            "default": false,
+            "description": "If true, then once a device connects to the Data Services Cloud Console, it will be initialized automatically with the associated blueprint. If false, then user will have to manually initiate the device initialization at some point after the device has connected to the Cloud Console. Default is false.",
+            "type": "boolean"
+          },
+          "blueprintId": {
+            "description": "uuid of the blueprint associated with this device. If empty, then there is no blueprint associated with this device.",
+            "type": "string"
+          },
+          "connectionStatus": {
+            "description": "Whether the device is connected to the Data Services Cloud Console",
+            "enum": [
+              "CONNECTED",
+              "NOT_CONNECTED"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "contact": {
+            "description": "Contact information for this device",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "The time this device was registered",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of the device",
+            "type": "string"
+          },
+          "hardwareInformation": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HardwareInfo"
+              }
+            ],
+            "description": "Hardware-related information for the connected device",
+            "readOnly": true
+          },
+          "initCompleteTime": {
+            "description": "The time this device completed initialization either successfully or unsuccessfully.",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "model": {
+            "description": "Model family of the device",
+            "enum": [
+              "ALLETRA_5000",
+              "ALLETRA_6000",
+              "ALLETRA_9000",
+              "ALLETRA_DHCI",
+              "GREENLAKE_FOR_BLOCK_STORAGE",
+              "ALLETRA_STORAGE_MP_X10000",
+              "DHCI_STORAGE"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "modelNumber": {
+            "description": "Model number of the device, for example \"6030\"",
+            "example": "6030",
+            "readOnly": true,
+            "type": "string"
+          },
+          "numberOfAttempts": {
+            "description": "Number of setup attempts.",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "osVersion": {
+            "description": "Software version running on the device.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "override": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceBlueprintOverridableProperties"
+              }
+            ],
+            "description": "Properties from the blueprint to override"
+          },
+          "preConfiguredData": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PreConfiguredData"
+              }
+            ],
+            "description": "Properties that are pre-configured on the device when it connects to Data Services Cloud Console"
+          },
+          "serialNumber": {
+            "description": "Serial number of the device",
+            "readOnly": true,
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusType"
+          },
+          "tunnelSetupUserAgent": {
+            "description": "Name of the on-premise agent that was used by the user when establishing tunnel from the device to Data Services Cloud Console.",
+            "example": "Mozilla/5.0",
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "The time this device was last updated",
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        }
+      },
       "UpdateReplicationPartnerInput": {
         "properties": {
           "s3Endpoint": {
@@ -39087,6 +41851,35 @@
           }
         },
         "type": "object"
+      },
+      "Vcenter": {
+        "properties": {
+          "deployVcenter": {
+            "description": "Whether a new vCenter needs to be deployed or use an existing one. With the hub and spoke architecture, most likely an existing vCenter in the core would be selected for EdgeStack devices",
+            "type": "boolean"
+          },
+          "hostname": {
+            "description": "Fully qualified domain name of the vCenter server",
+            "example": "test1-vc.lab.acmeco.com",
+            "format": "hostname",
+            "type": "string"
+          },
+          "ipAddress": {
+            "description": "IP address of the vCenter server",
+            "format": "ipv4",
+            "type": "string"
+          },
+          "rootCredentialId": {
+            "description": "ID corresponding to the root password",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          },
+          "ssoAdminCredentialId": {
+            "description": "ID corresponding to the administrator username and password",
+            "example": "78f30b2a-d6ee-11ec-9a0e-01004a28369d",
+            "type": "string"
+          }
+        }
       },
       "associatedBuckets": {
         "properties": {
@@ -41425,7 +44218,7 @@
             "$ref": "#/components/schemas/lastConnectedTime"
           },
           "maxVolumeDecoSizeMib": {
-            "description": "Maximum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9K 9.6.0 and later system OS versions.",
+            "description": "Maximum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9000 storage systems 9.6.0 and later system OS versions.",
             "example": "67108864",
             "type": [
               "string",
@@ -41436,7 +44229,7 @@
             "$ref": "#/components/schemas/ips"
           },
           "minVolumeDecoSizeMib": {
-            "description": "Minimum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9K 9.6.0 and later system OS versions.",
+            "description": "Minimum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9000 storage systems 9.6.0 and later system OS versions.",
             "example": "256",
             "type": [
               "string",
@@ -41625,7 +44418,7 @@
             "$ref": "#/components/schemas/lastConnectedTime"
           },
           "maxVolumeDecoSizeMib": {
-            "description": "Maximum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9K 9.6.0 and later system OS versions.",
+            "description": "Maximum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9000 storage systems 9.6.0 and later system OS versions.",
             "example": "67108864",
             "type": [
               "string",
@@ -41636,7 +44429,7 @@
             "$ref": "#/components/schemas/ips"
           },
           "minVolumeDecoSizeMib": {
-            "description": "Minimum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9K 9.6.0 and later system OS versions.",
+            "description": "Minimum supported size for a DECO volume. This is applicable for HPE Alletra Storage MP 10.4.0, HPE Primera 4.6.0 and HPE Alletra 9000 storage systems 9.6.0 and later system OS versions.",
             "example": "256",
             "type": [
               "string",
@@ -41944,7 +44737,7 @@
       "url": "https://www.hpe.com/us/en/software/licensing.html"
     },
     "title": "HPE Greenlake For Storage Fleet REST APIs",
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -43839,7 +46632,7 @@
     },
     "/storage-fleet/v1alpha1/devtype4-storage-systems/{systemId}/component-performance-statistics": {
       "get": {
-        "description": "Get component performance statistics details for an HPE Alletra Storage MP B10000 storage system idenfified by {systemId}",
+        "description": "Get component performance statistics details for an HPE Alletra Storage MP B10000 storage system identified by {systemId}",
         "operationId": "DeviceType4SystemComponentPerformanceStatisticsGet",
         "parameters": [
           {
@@ -43921,7 +46714,7 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Get component performance statistics details for an HPE Alletra Storage MP B10000 storage system idenfified by {systemId}",
+        "summary": "Get component performance statistics details for an HPE Alletra Storage MP B10000 storage system identified by {systemId}",
         "tags": [
           "storage-systems"
         ]
@@ -47755,7 +50548,7 @@
     },
     "/storage-fleet/v1alpha1/devtype4-storage-systems/{systemId}/mail-settings": {
       "delete": {
-        "description": "Delete SMTP/mail server settings",
+        "description": "Delete mail server settings",
         "operationId": "DeviceType4MailSettingsDelete",
         "parameters": [
           {
@@ -47852,13 +50645,13 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Delete SMTP/mail server settings",
+        "summary": "Delete mail server settings",
         "tags": [
           "system-settings"
         ]
       },
       "get": {
-        "description": "Get the system's SMTP/Mail server settigs",
+        "description": "Get the system's mail server settings",
         "operationId": "DeviceType4MailSettingsGet",
         "parameters": [
           {
@@ -47958,13 +50751,13 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Get the system's SMTP/Mail server settigs",
+        "summary": "Get the system's mail server settings",
         "tags": [
           "system-settings"
         ]
       },
       "post": {
-        "description": "Add SMTP/Mail server settigs",
+        "description": "Add mail server settings",
         "operationId": "DeviceType4MailSettingsAssociate",
         "parameters": [
           {
@@ -48071,13 +50864,13 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Add SMTP/Mail server settigs",
+        "summary": "Add mail server settings",
         "tags": [
           "system-settings"
         ]
       },
       "put": {
-        "description": "Edit SMTP/Mail server settigs",
+        "description": "Edit mail server settings",
         "operationId": "DeviceType4MailSettingsUpdate",
         "parameters": [
           {
@@ -48184,7 +50977,7 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Edit SMTP/Mail server settigs",
+        "summary": "Edit mail server settings",
         "tags": [
           "system-settings"
         ]
@@ -50324,7 +53117,7 @@
     },
     "/storage-fleet/v1alpha1/devtype4-storage-systems/{systemId}/network-settings": {
       "get": {
-        "description": "Get Network-Settings details for an HPE Alletra Storage MP B10000 storage system",
+        "description": "Get network settings details for an HPE Alletra Storage MP B10000 storage system",
         "operationId": "DeviceType4NetworkSettingsGet",
         "parameters": [
           {
@@ -50406,13 +53199,13 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Get Network-Settings details for an HPE Alletra Storage MP B10000 storage system",
+        "summary": "Get network settings details for an HPE Alletra Storage MP B10000 storage system",
         "tags": [
           "system-settings"
         ]
       },
       "post": {
-        "description": "Post Network-Settings details for an HPE Alletra Storage MP B10000 storage system",
+        "description": "Post network settings details for an HPE Alletra Storage MP B10000 storage system",
         "operationId": "DeviceType4NetworkSettingsAssociate",
         "parameters": [
           {
@@ -50509,7 +53302,7 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Post Network-Settings details for an HPE Alletra Storage MP B10000 storage system",
+        "summary": "Post network settings details for an HPE Alletra Storage MP B10000 storage system",
         "tags": [
           "system-settings"
         ]
@@ -50841,7 +53634,7 @@
     },
     "/storage-fleet/v1alpha1/devtype4-storage-systems/{systemId}/nodes/{nodeId}/component-performance-statistics": {
       "get": {
-        "description": "Get component performance statistics details of HPE Alletra Storage MP B10000 node idenfified by {nodeId}",
+        "description": "Get component performance statistics details of HPE Alletra Storage MP B10000 node identified by {nodeId}",
         "operationId": "DeviceType4NodeComponentPerformanceStatisticsGet",
         "parameters": [
           {
@@ -50926,7 +53719,7 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Get component performance statistics details of HPE Alletra Storage MP B10000 node idenfified by {nodeId}",
+        "summary": "Get component performance statistics details of HPE Alletra Storage MP B10000 node identified by {nodeId}",
         "tags": [
           "controllers"
         ]
@@ -56828,7 +59621,7 @@
             "description": "Success",
             "headers": {
               "ETag": {
-                "description": "System settings configuration information",
+                "description": "system settings configuration information",
                 "schema": {
                   "type": "string"
                 }
@@ -57650,7 +60443,7 @@
     },
     "/storage-fleet/v1alpha1/devtype4-storage-systems/{systemId}/vasa": {
       "get": {
-        "description": "Get VASA Network-Service details for a storage system Primera / Alletra 9K",
+        "description": "Get VASA Network-Service details for a an HPE Primera or HPE Alletra 9000 storage system",
         "operationId": "DeviceType4NetworkServiceVasaGet",
         "parameters": [
           {
@@ -57732,7 +60525,7 @@
             "description": "unexpected error"
           }
         },
-        "summary": "Get VASA Network-Service details for a storage system Primera / Alletra 9K",
+        "summary": "Get VASA Network-Service details for a an HPE Primera or HPE Alletra 9000 storage system",
         "tags": [
           "system-settings"
         ]
@@ -65612,6 +68405,1072 @@
         ]
       }
     },
+    "/storage-fleet/v1alpha1/setup-blueprints": {
+      "get": {
+        "description": "Returns list of blueprints\n",
+        "operationId": "BlueprintsList",
+        "parameters": [
+          {
+            "description": "The number of items to skip before starting to collect the result set. Default is 20.",
+            "example": 30,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The numbers of items to return. Default is 0 which means no limit.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "maximum": 100,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The filter query parameter is used to filter the set of resources returned in the response. \nThe returned set of resources must match the criteria in the filter query parameter.\nA comparision compares a property name to a literal. \nThe comparisons supported are the following:\n- \"eq\" : Is a property equal to value. Valid for number, boolean and string properties.\n- \"gt\" : Is a property greater than a value. Valid for number or string timestamp properties.\n- \"lt\" : Is a property less than a value. Valid for number or string timestamp properties.\n- \"in\" : Is a value in a property (that is an array of strings).\n- GET /storage-fleet/v1alpha1/setup-blueprints?filter=name eq 'blueprint_device1'\n",
+            "example": "name eq 'blueprint_device1'",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A list of properties to include in the response.",
+            "example": "select=id,type",
+            "in": "query",
+            "name": "select",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Instruct the server to sort the resources returned with a collection-level GET. They provide sorting by one or more properties in ascending or descending order. Each item in the \u201csort\u201d query parameter is a property name optionally followed by a direction indicator. The direction indicator may only be either \u201casc\u201d (ascending) or \u201cdesc\u201d (descending). If no direction indicator is specified, the default order is ascending. The first item in the \u201csort\u201d query parameter defines the primary sort order, the second defines the secondary sort order, the third defines the tertiary sort order, etc.",
+            "example": "?sort=createdAt desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlueprintList"
+                }
+              }
+            },
+            "description": "Blueprint list"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The filter attribute's value does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Not Available"
+          }
+        },
+        "summary": "Returns a list of blueprints associated with the customer",
+        "tags": [
+          "setup-blueprints"
+        ]
+      },
+      "post": {
+        "description": "Create/Add a Specific Blueprint.",
+        "operationId": "BlueprintsCreate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlueprintPostRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blueprint"
+                }
+              }
+            },
+            "description": "Successfully created Blueprint.",
+            "headers": {
+              "Location": {
+                "$ref": "#/components/headers/LocationCreate"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Create a blueprint associated with the customer",
+        "tags": [
+          "setup-blueprints"
+        ]
+      }
+    },
+    "/storage-fleet/v1alpha1/setup-blueprints/{id}": {
+      "delete": {
+        "description": "Delete a specific Blueprint",
+        "operationId": "BlueprintsDelete",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed Blueprint Successfully."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Blueprint with the given Id does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Method not supported"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Delete a specific blueprint",
+        "tags": [
+          "setup-blueprints"
+        ]
+      },
+      "get": {
+        "description": "Get a Specific Blueprint",
+        "operationId": "BlueprintsGet",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          },
+          {
+            "description": "A list of properties to include in the response.",
+            "example": "select=id,type",
+            "in": "query",
+            "name": "select",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blueprint"
+                }
+              }
+            },
+            "description": "Single blueprint"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Configuration with the given Id does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Returns a specific blueprint associated with the customer",
+        "tags": [
+          "setup-blueprints"
+        ]
+      },
+      "patch": {
+        "description": "Update a Specific Blueprint",
+        "operationId": "BlueprintsUpdate",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlueprintPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Blueprint"
+                }
+              }
+            },
+            "description": "Updated blueprint"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Configuration with the given Id does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Update a specific blueprint",
+        "tags": [
+          "setup-blueprints"
+        ]
+      }
+    },
+    "/storage-fleet/v1alpha1/setup-devices": {
+      "get": {
+        "description": "Returns a list of devices associated with the customer that have yet to be or have just been initialized.\nThis includes devices that are:\n - onboarded\n - uninitialized\n - initializing\n - initialized (Note that such devices will only be shown for a short period of time)\n - initialization_failed\n",
+        "operationId": "DevicesList",
+        "parameters": [
+          {
+            "description": "The number of items to skip before starting to collect the result set. Default is 20.",
+            "example": 30,
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The numbers of items to return. Default is 0 which means no limit.",
+            "example": 10,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "maximum": 100,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The filter query parameter is used to filter the set of resources returned in the response. \nThe returned set of resources must match the criteria in the filter query parameter.\nA comparision compares a property name to a literal. \nThe comparisons supported are the following:\n- \"eq\" : Is a property equal to value. Valid for number, boolean and string properties.\n- \"ne\" : Is a property not equal to value. Valid for number, boolean and string properties.\n- \"gt\" : Is a property greater than a value. Valid for number or string timestamp properties.\n- \"lt\" : Is a property less than a value. Valid for number or string timestamp properties.\n\nProperties that can be filtered are:\n- name\n- blueprintId\n- description\n- model\n- associatedBlueprint.name\n- autoSetup\n- connectionStatus\n- status\n- type\n- createdAt\n- updatedAt\n- generation\n\nExamples are:\n- GET /storage-fleet/v1alpha1/setup-devices?filter=status eq 'ONBOARDED'\n- GET /storage-fleet/v1alpha1/setup-devices?filter=updatedAt lt 2021-04-08T16:51:33Z\n- GET /storage-fleet/v1alpha1/setup-devices?filter=status eq 'ONBOARDED' and createdAt lt 2021-04-08T16:51:33Z\n- GET /storage-fleet/v1alpha1/setup-devices?filter=status ne 'UNINITIALIZED'\n",
+            "example": "?filter=status eq 'ONBOARDED'",
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A list of properties to include in the response.",
+            "example": "?select=id,status",
+            "in": "query",
+            "name": "select",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Instruct the server to sort the resources returned with a collection-level GET. They provide sorting by one or more properties in ascending or descending order.\nEach item in the \u201csort\u201d query parameter is a property name optionally followed by a direction indicator. The direction indicator may only be either \u201casc\u201d (ascending) or \n\u201cdesc\u201d (descending). If no direction indicator is specified, the default order is ascending.\nThe first item in the \u201csort\u201d query parameter defines the primary sort order, the second defines the secondary sort order, the third defines the tertiary sort order, etc. \n\nProperties that can be sorted are:\n- name\n- blueprintId\n- id\n- serialNumber\n- name\n- description\n- model\n- type\n- connectionStatus\n- associatedBlueprint.name\n- status\n- autoSetup\n- createdAt\n- updatedAt\n- generation\n",
+            "example": "?sort=createdAt desc",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemList"
+                }
+              }
+            },
+            "description": "Devices list"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The filter attribute's value does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Not Available"
+          }
+        },
+        "summary": "Returns a list of devices associated with the customer that have yet to be or have just been initialized",
+        "tags": [
+          "setup-devices"
+        ]
+      }
+    },
+    "/storage-fleet/v1alpha1/setup-devices/{id}": {
+      "get": {
+        "description": "Get a specific device",
+        "operationId": "DevicesGet",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          },
+          {
+            "description": "A list of properties to include in the response.",
+            "example": "select=id,status",
+            "in": "query",
+            "name": "select",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/System"
+                }
+              }
+            },
+            "description": "Single device"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Configuration with the given Id does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Returns a specific device associated with the customer that have yet to be or have just been initialized",
+        "tags": [
+          "setup-devices"
+        ]
+      },
+      "patch": {
+        "description": "Update override properties of a device",
+        "operationId": "DevicesUpdate",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/merge-patch+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/System"
+                }
+              }
+            },
+            "description": "Updated device",
+            "headers": {
+              "Location": {
+                "$ref": "#/components/headers/LocationCreate"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Configuration with the given Id does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Update override properties of a device, including kickstarting a setup",
+        "tags": [
+          "setup-devices"
+        ]
+      }
+    },
+    "/storage-fleet/v1alpha1/setup-devices/{id}/retry-setup": {
+      "post": {
+        "description": "Retry setup on a device. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+        "operationId": "DevicesRetrySetup",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ResourceReference"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "List of affected devices",
+            "headers": {
+              "Location": {
+                "$ref": "#/components/headers/LocationCreate"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Retry setup on a device. Applies only to PC3000 with HPE Alletra 5000 and HPE Alletra 6000 systems.",
+        "tags": [
+          "setup-devices"
+        ]
+      }
+    },
+    "/storage-fleet/v1alpha1/setup-progress/{id}": {
+      "get": {
+        "description": "Get the specific setup progress for a device",
+        "operationId": "DevicesSetupProgressGet",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/idUuid"
+          },
+          {
+            "description": "A list of properties to include in the response.",
+            "example": "select=id,status",
+            "in": "query",
+            "name": "select",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupProgress"
+                }
+              }
+            },
+            "description": "Single device"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad/Malformed request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unauthorized request"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Configuration with the given Id does not exist"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Too many requests"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service not available"
+          }
+        },
+        "summary": "Get the specific setup progress for a device",
+        "tags": [
+          "setup-devices"
+        ]
+      }
+    },
     "/storage-fleet/v1alpha1/storage-systems": {
       "get": {
         "description": "Get all storage systems",
@@ -66250,6 +70109,14 @@
       "name": "protection-software-update-policies"
     },
     {
+      "description": "Blueprint Service API",
+      "name": "setup-blueprints"
+    },
+    {
+      "description": "Setup Orchestrator API",
+      "name": "setup-devices"
+    },
+    {
       "description": "The shelves API allows the management of shelves.",
       "name": "shelves"
     },
@@ -66258,7 +70125,7 @@
       "name": "storage-nodes"
     },
     {
-      "description": "The storage-systems API allows the management of storage device.",
+      "description": "The storage-systems API allows management of storage devices.",
       "name": "storage-systems"
     },
     {
@@ -66266,7 +70133,7 @@
       "name": "switches"
     },
     {
-      "description": "The System Settings API allows the monitoring of System settings for the device.",
+      "description": "The system settings API allows the monitoring of system settings for the device.",
       "name": "system-settings"
     }
   ]

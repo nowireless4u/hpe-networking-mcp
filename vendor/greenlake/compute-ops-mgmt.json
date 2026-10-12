@@ -690,6 +690,36 @@
           "type": "string"
         }
       },
+      "firmwareBundles-filterParam-v1": {
+        "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint,\nreturn only the subset of resources that match the filter. The filter grammar is a subset\nof OData 4.0.\n\nNOTE: The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding).\nMost clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL.  \nThe reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents.\n\n| CLASS     |  EXAMPLES                                          |\n|-----------|----------------------------------------------------|\n| Types     | integer, decimal, timestamp, string, boolean, null |\n| Operations| eq, ne, gt, ge, lt, le, in                         |\n| Logic     | and, or, not                                       |\n\nFirmware bundles can be filtered by:\n  - bundleGeneration\n  - generation\n  - id\n  - isActive\n  - name\n  - releaseDate\n\nThe following properties are not filterable and return a `400 Bad Request` if used in a filter:\n`baseBundleUri`, `bundleType`, `displayName`, `platformFamily`, `resourceUri`, `type` and `vmwareAddonInfo`.\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
+        "examples": {
+          "bundle-generation": {
+            "description": "Return firmware bundles built for a given server generation.\n\\<property> eq \\<value>\n",
+            "summary": "Filter for a specific bundle generation",
+            "value": "bundleGeneration eq 'BUNDLE_GEN_10'"
+          },
+          "contains": {
+            "description": "Return firmware bundles where property contains a value.\ncontains(\\<property>, \\<value>)\n",
+            "summary": "Filter that field value contains a specific substring",
+            "value": "contains(name,'ProLiant')"
+          },
+          "equals": {
+            "description": "Return firmware bundles where a property equals a value.\n\\<property> eq \\<value>\n",
+            "summary": "Filter with equality check",
+            "value": "isActive eq true"
+          },
+          "release-date-range": {
+            "description": "Return firmware bundles released in 2023.\n\\<property> ge <startTimestamp> and \\<property> lt <endTimestamp>\n",
+            "summary": "Filter for a timestamp within a range",
+            "value": "releaseDate ge 2023-01-01T00:00:00Z and releaseDate lt 2024-01-01T00:00:00Z"
+          }
+        },
+        "in": "query",
+        "name": "filter",
+        "schema": {
+          "type": "string"
+        }
+      },
       "groupBy": {
         "description": "Aggregation level for server hardware inventory report data.\n",
         "example": "SERVER",
@@ -1859,7 +1889,7 @@
             "value": "2025-01-15"
           },
           "datetimeValue": {
-            "summary": "The value can be a UTC timestamp when sample-size is 1_HOUR.",
+            "summary": "The value can be a UTC timestamp when sample-size is 1_HOUR or 5_MINS.",
             "value": "2025-04-01T06:00:00Z"
           }
         },
@@ -1939,7 +1969,7 @@
             "value": "2025-01-15"
           },
           "datetimeValue": {
-            "summary": "The value can be a UTC timestamp when sample-size is 1_HOUR.",
+            "summary": "The value can be a UTC timestamp when sample-size is 1_HOUR or 5_MINS.",
             "value": "2025-04-01T06:00:00Z"
           }
         },
@@ -5019,6 +5049,7 @@
           "UNKNOWN",
           "INTERNAL_ASYNC_OPERATION",
           "SUSTAINABILITY_METRICS_COLLECTION",
+          "SERVER_UTILIZATION_METRICS_COLLECTION",
           "ADD_DEVICE_TO_GROUP",
           "REMOVE_DEVICE_FROM_GROUP"
         ],
@@ -13503,7 +13534,8 @@
           "requestType": {
             "description": "The type of metrics collection request.",
             "enum": [
-              "SUSTAINABILITY_METRICS_COLLECTION"
+              "SUSTAINABILITY_METRICS_COLLECTION",
+              "SERVER_UTILIZATION_METRICS_COLLECTION"
             ],
             "type": "string"
           }
@@ -17465,6 +17497,14 @@
               "UNKNOWN": "The claim method is not known.",
               "ZTP": "Zero-touch provisioning \u2014 the server was automatically claimed via the GreenLake device onboarding process."
             }
+          },
+          "firmwareBundleId": {
+            "description": "Primary identifier of the firmware bundle associated with the server",
+            "example": "70f2ede0fe1940f7977dbf829b109f15",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "firmwareBundleUri": {
             "type": [
@@ -24309,7 +24349,7 @@
     },
     "/compute-ops-mgmt/v1/async-operations/{id}/cancel": {
       "post": {
-        "description": "Cancel a specific async operation by ID. Only async operations of following operation types can be cancelled.\n- SUSTAINABILITY_METRICS_COLLECTION\n",
+        "description": "Cancel a specific async operation by ID. Only async operations of following operation types can be cancelled.\n- SUSTAINABILITY_METRICS_COLLECTION\n- SERVER_UTILIZATION_METRICS_COLLECTION\n",
         "operationId": "cancel_v1_async_operation_by_id",
         "parameters": [
           {
@@ -24377,6 +24417,9 @@
           },
           {
             "$ref": "#/components/parameters/customLimitParam"
+          },
+          {
+            "$ref": "#/components/parameters/firmwareBundles-filterParam-v1"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
@@ -28302,6 +28345,9 @@
             }
           },
           {
+            "$ref": "#/components/parameters/selectParam"
+          },
+          {
             "$ref": "#/components/parameters/tenantAcidHeader"
           }
         ],
@@ -28357,6 +28403,9 @@
           },
           {
             "$ref": "#/components/parameters/resourceUri"
+          },
+          {
+            "$ref": "#/components/parameters/selectParam"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
@@ -30529,6 +30578,9 @@
             "$ref": "#/components/parameters/utilizationData-queryParams_endDate"
           },
           {
+            "$ref": "#/components/parameters/sampleSize"
+          },
+          {
             "$ref": "#/components/parameters/metricType"
           },
           {
@@ -30539,6 +30591,9 @@
           },
           {
             "$ref": "#/components/parameters/filter"
+          },
+          {
+            "$ref": "#/components/parameters/selectParam"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
@@ -30589,6 +30644,9 @@
             "$ref": "#/components/parameters/utilizationData-queryParams_endDate"
           },
           {
+            "$ref": "#/components/parameters/sampleSize"
+          },
+          {
             "$ref": "#/components/parameters/utilizationData-queryParams_excludedServers"
           },
           {
@@ -30617,6 +30675,9 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "$ref": "#/components/parameters/selectParam"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
@@ -30667,6 +30728,9 @@
             "$ref": "#/components/parameters/utilizationData-queryParams_endDate"
           },
           {
+            "$ref": "#/components/parameters/sampleSize"
+          },
+          {
             "$ref": "#/components/parameters/utilizationData-queryParams_resourceUri"
           },
           {
@@ -30674,6 +30738,9 @@
           },
           {
             "$ref": "#/components/parameters/filterTags"
+          },
+          {
+            "$ref": "#/components/parameters/selectParam"
           },
           {
             "$ref": "#/components/parameters/tenantAcidHeader"
