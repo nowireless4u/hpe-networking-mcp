@@ -329,8 +329,14 @@
             "maxLength": 100,
             "type": "string"
           },
+          "phoneExtension": {
+            "description": "The phone extension of the contact. Required only when the Phone Number is provided.",
+            "maxLength": 4,
+            "type": "string"
+          },
           "phoneNumber": {
-            "description": "The phone number associated with the contact.",
+            "description": "The phone number of the contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "maxLength": 20,
             "type": "string"
           },
           "type": {
@@ -548,8 +554,15 @@
             "description": "The name of the contact.",
             "type": "string"
           },
+          "phoneExtension": {
+            "description": "The phone extension of the contact. Required only when the Phone Number is provided.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "phoneNumber": {
-            "description": "The phone number associated with the contact.",
+            "description": "The phone number of the contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
             "type": [
               "string",
               "null"
@@ -1010,8 +1023,14 @@
             "maxLength": 100,
             "type": "string"
           },
+          "phoneExtension": {
+            "description": "The phone extension of the contact. Required only when the Phone Number is provided.",
+            "maxLength": 4,
+            "type": "string"
+          },
           "phoneNumber": {
-            "description": "The phone number associated with the contact.",
+            "description": "The phone number of the contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "maxLength": 20,
             "type": "string"
           },
           "type": {
@@ -1317,6 +1336,14 @@
             "description": "The name of the location to be created.",
             "type": "string"
           },
+          "Phone Extension(Optional)": {
+            "description": "The phone extension of the primary contact, 1 to 4 digits (0-9). Required only when the Phone Number is provided.",
+            "type": "string"
+          },
+          "Phone Number(Optional)": {
+            "description": "The phone number of the primary contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "type": "string"
+          },
           "Primary Contact Email(Required)": {
             "description": "The email of the primary contact.",
             "type": "string"
@@ -1402,6 +1429,20 @@
               "minimum": 1,
               "type": "integer"
             }
+          },
+          {
+            "description": "Optional. Comma-separated workspace ids to restrict the consolidated list to, for an MSP or organization parent workspace. Ids outside the caller's scope are ignored; an empty intersection returns no items. For a non-parent workspace only its own id matches. Ignored unless the consolidated view is enabled for the caller.",
+            "explode": false,
+            "in": "query",
+            "name": "workspaceIds",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
           },
           {
             "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint, return only the subset of resources that match the filter. The filter grammar is a subset of OData 4.0. <br><br>Supported properties and operators: <ul><li>`name` with `contains`, for example `contains(name, 'test')`. The match is not case-sensitive.</li><li>`city` and `country` with `eq`, for example `city eq 'Austin'`. The match is not case-sensitive, and a location matches when any of its addresses matches.</li><li>`validated` and `validationExpired` with `eq true` or `eq false`.</li></ul>Only these combinations are supported, using `and`: `city` with `country` (for example `country eq 'United States' and city eq 'Austin'`, which returns locations with an address that matches both), and `validated` with `validationExpired` (for example `validated eq false and validationExpired eq false` returns locations that were never validated). `or`, `not`, other operators, other combinations and a property given more than once return 400. <br><br>**NOTE:** The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL. The reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents. <br><br>\n",
@@ -1795,16 +1836,18 @@
         "operationId": "listAllTags",
         "parameters": [
           {
-            "description": "The zero-based resource offset to start the response from.",
+            "description": "The zero-based resource offset to start the response from. A negative or non-integer value returns 400.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
+              "default": 0,
+              "minimum": 0,
               "type": "integer"
             }
           },
           {
-            "description": "The maximum number of results to be returned.",
+            "description": "The maximum number of results to be returned. A value below 1, above 2000 or that is not an integer returns 400.",
             "in": "query",
             "name": "limit",
             "required": true,
