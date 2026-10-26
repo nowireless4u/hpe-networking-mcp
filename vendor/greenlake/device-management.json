@@ -6031,7 +6031,7 @@
         ]
       },
       "post": {
-        "description": "Add one or more devices to a workspace. This API endpoint provides an asynchronous response and returns `202 Accepted` if basic input validations are successful. The  location header in the response provides the URI to invoke to  fetch the progress of the device addition task. For details about the  status fetch URL, refer to the API endpoint [Get progress or status of async operations in devices](#operation/getDevicesAsyncOperationResourceV1). <p><b>NOTE</b>: You need edit permissions for the Devices and Subscription service to call this API endpoint.</p> Rate limits are enforced, and 50 requests per minute are supported per workspace. The API endpoint returns `429` if this threshold is breached.",
+        "description": "Add one or more devices to a workspace. This API endpoint provides an asynchronous response and returns `202 Accepted` if basic input validations are successful. The  location header in the response provides the URI to invoke to  fetch the progress of the device addition task. For details about the  status fetch URL, refer to the API endpoint [Get progress or status of async operations in devices](#operation/getDevicesAsyncOperationResourceV1). <p><b>NOTE</b>: You need create permissions for the Devices and Subscription service to call this API endpoint.</p> Rate limits are enforced, and 50 requests per minute are supported per workspace. The API endpoint returns `429` if this threshold is breached.",
         "operationId": "postDevicesV2beta1",
         "parameters": [
           {

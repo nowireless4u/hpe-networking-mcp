@@ -20,12 +20,17 @@
             "type": "string"
           },
           "endedAt": {
-            "description": "The date and time the operation completed. `null` while the operation has not yet reached the report-delivery stage.",
+            "description": "The date and time the operation finished: delivered or failed. `null` while it is still in progress.",
             "format": "date-time",
             "type": [
               "string",
               "null"
             ]
+          },
+          "enrolmentId": {
+            "description": "The enrolment id the run belongs to.",
+            "format": "uuid",
+            "type": "string"
           },
           "error": {
             "properties": {
@@ -46,11 +51,11 @@
             "type": "object"
           },
           "generation": {
-            "description": "The revision number of the operation, incremented on each update.",
+            "description": "The revision number of the operation.",
             "type": "integer"
           },
           "id": {
-            "description": "The primary identifier for the resource.",
+            "description": "The identifier of this report run: the instance id of a scheduled run, or the enrolment id of an immediate report.",
             "format": "uuid",
             "type": "string"
           },
@@ -76,6 +81,11 @@
             "description": "Percent progress of the operation as an integer value of 0 to 100.",
             "format": "int64",
             "type": "integer"
+          },
+          "reportId": {
+            "description": "The id of the report the run belongs to.",
+            "format": "uuid",
+            "type": "string"
           },
           "result": {
             "description": "List of references to resources (other than the source resource) which were created, updated, or deleted during the operation.",
@@ -114,6 +124,8 @@
         },
         "required": [
           "id",
+          "enrolmentId",
+          "reportId",
           "type",
           "state",
           "createdAt",
@@ -128,11 +140,6 @@
       },
       "asyncOperationResponse": {
         "properties": {
-          "createdAt": {
-            "description": "The date and time the operation was created.",
-            "format": "date-time",
-            "type": "string"
-          },
           "endedAt": {
             "description": "The date and time the operation completed. `null` while the operation has not yet reached the report-delivery stage.",
             "format": "date-time",
@@ -158,10 +165,6 @@
               }
             },
             "type": "object"
-          },
-          "generation": {
-            "description": "The revision number of the operation, incremented on each update.",
-            "type": "integer"
           },
           "id": {
             "description": "The primary identifier for the resource.",
@@ -191,7 +194,7 @@
             "format": "int64",
             "type": "integer"
           },
-          "results": {
+          "result": {
             "description": "List of references to resources (other than the source resource) which were created, updated, or deleted during the operation.",
             "items": {
               "properties": {
@@ -212,6 +215,11 @@
             "description": "The URI reference to the resource or resource collection that initiated the operation",
             "type": "string"
           },
+          "startedAt": {
+            "description": "The date and time the operation started.",
+            "format": "date-time",
+            "type": "string"
+          },
           "state": {
             "description": "The state of the operation.",
             "type": "string"
@@ -219,20 +227,13 @@
           "type": {
             "description": "The type of the resource.",
             "type": "string"
-          },
-          "updatedAt": {
-            "description": "The date and time the operation was last updated.",
-            "format": "date-time",
-            "type": "string"
           }
         },
         "required": [
           "id",
           "type",
           "state",
-          "createdAt",
-          "updatedAt",
-          "generation",
+          "startedAt",
           "endedAt",
           "logMessages",
           "progressPercent",
@@ -556,7 +557,8 @@
   "paths": {
     "/reporting/v1/async-operations": {
       "get": {
-        "description": "Retrieves the async-operation status of all report generation jobs for the caller's workspace, in the same per-item shape the single-item `GET /reporting/v1/async-operations/{id}` endpoint returns. Excludes scheduled-report jobs.\n",
+        "description": "Retrieves the async-operation status of the report runs the caller created or receives, for immediate and scheduled reports. Each item is one run of a report, so every run of a scheduled report is a separate item. An item has the shape of the single-item `GET /reporting/v1/async-operations/{id}` response, except that it reports `createdAt`, `updatedAt` and `generation` in place of `startedAt`, and adds `enrolmentId` and `reportId`. Only runs with activity in the last 7 days are returned, newest activity first. `id` is the run id (the instance id of a scheduled run, or the enrolment id of an immediate report), `enrolmentId` is the enrolment id, `reportId` is the report the run belongs to, and `result[].resourceUri` points to the run's `/reporting/v2beta1/reports/{reportId}/instances/{id}` resource. <br><br>This API may not be available for all workspaces; unavailable workspaces receive a 404.\n",
+        "operationId": "getAllAsyncOperations",
         "parameters": [
           {
             "description": "The maximum number of async operations to return.",
@@ -599,36 +601,26 @@
             "content": {
               "application/json": {
                 "example": {
-                  "detail": {
-                    "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                    "errorCode": "HPE_GL_ERROR_BAD_REQUEST",
-                    "httpStatusCode": 400,
-                    "message": "Invalid 'limit' or 'offset' values. Both must be integers within the specified limits."
-                  }
+                  "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errorCode": "HPE_GL_REPORTING_INVALID_ATTRIBUTE_ERROR",
+                  "httpStatusCode": 400,
+                  "message": "Invalid 'limit' or 'offset' values. Both must be integers within the specified limits."
                 },
                 "schema": {
-                  "properties": {
-                    "detail": {
-                      "$ref": "#/components/schemas/error"
-                    }
-                  },
-                  "required": [
-                    "detail"
-                  ],
-                  "type": "object"
+                  "$ref": "#/components/schemas/error"
                 }
               }
             },
-            "description": "Bad Request. limit/offset are validated by dependency callables that raise their error before this endpoint's own handler runs, so the error body is wrapped under a `detail` key here, unlike this API's other error responses."
+            "description": "Bad Request. `limit` must be an integer from 1 to 100 and `offset` an integer of 0 or more."
           },
           "401": {
             "content": {
               "application/json": {
                 "example": {
                   "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                  "errorCode": "HPE_GL_REPORTING_AUTHORIZATION_ERROR",
+                  "errorCode": "HPE_GL_REPORTING_UNAUTHORIZED_REQUEST_ERROR",
                   "httpStatusCode": 401,
-                  "message": "Not authorized to get async operations"
+                  "message": "Missing or invalid authentication token"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/error"
@@ -637,6 +629,38 @@
             },
             "description": "Unauthorized"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errorCode": "HPE_GL_REPORTING_UNAUTHORIZED_REQUEST_ERROR",
+                  "httpStatusCode": 403,
+                  "message": "Unauthorized"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            },
+            "description": "Returned only if the underlying authorization-service check itself fails, e.g. the caller lacks the base reporting-view permission."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "errorCode": "HPE_GL_REPORTING_RESOURCE_NOT_FOUND_ERROR",
+                  "httpStatusCode": 404,
+                  "message": "Unsupported resource"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            },
+            "description": "Returned only when this API is unavailable for the caller's workspace (the feature flag is disabled) - not for an empty result set, which returns 200 with an empty `items` array."
+          },
           "500": {
             "content": {
               "application/json": {
@@ -644,7 +668,7 @@
                   "debugId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                   "errorCode": "HPE_GL_REPORTING_INTERNAL_SERVER_ERROR",
                   "httpStatusCode": 500,
-                  "message": "Failed to fetch status"
+                  "message": "Internal Server Error"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/error"
@@ -662,7 +686,8 @@
     },
     "/reporting/v1/async-operations/{id}": {
       "get": {
-        "description": "\nRetrieve information about asynchronous operations within the reporting service. Provide the unique identifier of the operation in the parameter to monitor the progress of asynchronous tasks.  This API returns the following attributes:\n\n  - `status`\u2014Indicates the current status of the asynchronous task.\n  - `createdAt`\u2014Specifies the timestamp when the operation was created.\n  - `updatedAt`\u2014Specifies the timestamp when the operation was last updated.\n  - `generation`\u2014The revision number of the operation, incremented on each update.\n  - `endedAt`\u2014Indicates the timestamp when the operation was completed.\n  - `logMessages`\u2014Provides a list of progress updates for the asynchronous operation.\n  - `progressPercent`\u2014Represents the progress of the operation as a percentage value ranging from 0 to 100.\n  - `sourceResourceUri`\u2014References the source URI that triggered the asynchronous task.\n  - `results`\u2014The results array provides a link to /reporting/v1/statuses/{id} to get the complete details of the report status.\n",
+        "description": "\nRetrieve information about asynchronous operations within the reporting service. Provide the unique identifier of the operation in the parameter to monitor the progress of asynchronous tasks.  This API returns the following attributes:\n\n  - `status`\u2014Indicates the current status of the asynchronous task.\n  - `startedAt`\u2014Specifies the timestamp when the operation started.\n  - `endedAt`\u2014Indicates the timestamp when the operation was completed.\n  - `logMessages`\u2014Provides a list of progress updates for the asynchronous operation.\n  - `progressPercent`\u2014Represents the progress of the operation as a percentage value ranging from 0 to 100.\n  - `sourceResourceUri`\u2014References the source URI that triggered the asynchronous task.\n  - `result`\u2014The result array provides a link to /reporting/v1/statuses/{id} to get the complete details of the report status.\n",
+        "operationId": "getAsyncOperationById",
         "parameters": [
           {
             "description": "The unique identifier returned by an asynchronous API call.",
