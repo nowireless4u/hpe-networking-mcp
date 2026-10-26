@@ -31,15 +31,6 @@ async def _get(conn, path: str, params: dict | None = None) -> dict | str:
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-def _time_params(start: str | None, end: str | None) -> dict:
-    params: dict = {}
-    if start:
-        params["start"] = start
-    if end:
-        params["end"] = end
-    return params
-
-
 # ---------------------------------------------------------------------------
 # Gateways list + top-level trends
 # ---------------------------------------------------------------------------
@@ -77,8 +68,6 @@ async def central_get_gateway_trend(
             ),
         ),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of a gateway's top-level time-series trends."""
     suffix_map = {
@@ -92,7 +81,7 @@ async def central_get_gateway_trend(
     return await _get(
         conn,
         f"network-monitoring/v1/gateways/{path_seg(serial_number)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -136,8 +125,6 @@ async def central_get_gateway_port_trend(
             description="Per-port dimension: ``'throughput'``, ``'frames'``, ``'frames-errors'``, ``'frames-packets'``."
         ),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of a gateway-port's time-series trends."""
     suffix_map = {
@@ -151,7 +138,7 @@ async def central_get_gateway_port_trend(
         conn,
         f"network-monitoring/v1/gateways/{path_seg(serial_number)}/ports/"
         f"{path_seg(port_number)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -193,8 +180,6 @@ async def central_get_gateway_tunnel_trend(
         _GwTunnelTrendDimension,
         Field(description="Per-tunnel dimension: ``'throughput'``, ``'status'``, or ``'dropped-packet'``."),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of a gateway-tunnel's time-series trends."""
     suffix_map = {
@@ -207,7 +192,7 @@ async def central_get_gateway_tunnel_trend(
         conn,
         f"network-monitoring/v1/gateways/{path_seg(serial_number)}/tunnels/"
         f"{path_seg(tunnel_name)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -295,8 +280,6 @@ async def central_get_gateway_uplink_trend(
         _UplinkTrendDimension,
         Field(description="Per-uplink dimension: ``'throughput'``, ``'wan-compression'``, or ``'wan-availability'``."),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of a gateway-uplink's time-series trends."""
     suffix_map = {
@@ -309,7 +292,7 @@ async def central_get_gateway_uplink_trend(
         conn,
         f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/"
         f"{path_seg(link_tag)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -333,8 +316,6 @@ async def central_get_gateway_uplink_probe_performance(
     serial_number: Annotated[str, Field(description="Gateway serial number.")],
     link_tag: Annotated[str, Field(description="Uplink tag identifier.")],
     probe: Annotated[str, Field(description="Probe identifier.")],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get performance trend for one specific uplink probe."""
     conn = get_central_conn(ctx)
@@ -342,7 +323,7 @@ async def central_get_gateway_uplink_probe_performance(
         conn,
         f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/"
         f"{path_seg(link_tag)}/probes/{path_seg(probe)}/performance-trends",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -353,8 +334,6 @@ async def central_get_gateway_uplink_vpn_availability(
     vlan_id: Annotated[
         str, Field(description="VLAN ID (note: this uplink-vpn-availability variant indexes by VLAN, not link-tag).")
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get VPN-availability trend for an uplink, indexed by VLAN (per Central's MRT shape).
 
@@ -366,7 +345,7 @@ async def central_get_gateway_uplink_vpn_availability(
     return await _get(
         conn,
         f"network-monitoring/v1/gateways/{path_seg(serial_number)}/uplinks/{path_seg(vlan_id)}/vpn-availability-trends",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -473,11 +452,9 @@ async def central_get_cluster_capacity_trends(
             ),
         ),
     ] = None,
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get cluster capacity trends (cluster-wide or per-member)."""
     conn = get_central_conn(ctx)
     base = f"network-monitoring/v1/clusters/{path_seg(cluster_name)}/capacity-trends"
     path = f"{base}/{path_seg(serial_number)}" if serial_number else base
-    return await _get(conn, path, _time_params(start, end))
+    return await _get(conn, path, {})

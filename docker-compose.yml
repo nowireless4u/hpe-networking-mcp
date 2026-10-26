@@ -5,11 +5,63 @@ services:
     # To build from source instead, comment out 'image' and uncomment 'build':
     # build: .
     ports:
-      - "127.0.0.1:${MCP_PORT:-8000}:8000"
+      # HOST_PORT controls which host port Docker publishes (default 8000).
+      # Change it per-instance when running multiple deployments side-by-side.
+      # The container app port is always 8000; MCP_PORT is not user-configurable.
+      # To expose beyond localhost (only behind an authenticating reverse proxy
+      # or firewall), change the host IP from 127.0.0.1 to 0.0.0.0.
+      - "127.0.0.1:${HOST_PORT:-8000}:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
       - MCP_PORT=8000
       - MCP_HOST=0.0.0.0
+      - CUSTOMER_NAME=${CUSTOMER_NAME:-}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      # --- Platform credentials (set in .env or shell) ---
+      # Mist
+      - MIST_API_TOKEN=${MIST_API_TOKEN:-}
+      - MIST_HOST=${MIST_HOST:-}
+      # Aruba Central
+      - CENTRAL_BASE_URL=${CENTRAL_BASE_URL:-}
+      - CENTRAL_CLIENT_ID=${CENTRAL_CLIENT_ID:-}
+      - CENTRAL_CLIENT_SECRET=${CENTRAL_CLIENT_SECRET:-}
+      # HPE GreenLake
+      - GREENLAKE_API_BASE_URL=${GREENLAKE_API_BASE_URL:-}
+      - GREENLAKE_CLIENT_ID=${GREENLAKE_CLIENT_ID:-}
+      - GREENLAKE_CLIENT_SECRET=${GREENLAKE_CLIENT_SECRET:-}
+      - GREENLAKE_WORKSPACE_ID=${GREENLAKE_WORKSPACE_ID:-}
+      # ClearPass
+      - CLEARPASS_SERVER=${CLEARPASS_SERVER:-}
+      - CLEARPASS_CLIENT_ID=${CLEARPASS_CLIENT_ID:-}
+      - CLEARPASS_CLIENT_SECRET=${CLEARPASS_CLIENT_SECRET:-}
+      - CLEARPASS_VERIFY_SSL=${CLEARPASS_VERIFY_SSL:-}
+      # Juniper Apstra
+      - APSTRA_SERVER=${APSTRA_SERVER:-}
+      - APSTRA_PORT=${APSTRA_PORT:-}
+      - APSTRA_USERNAME=${APSTRA_USERNAME:-}
+      - APSTRA_PASSWORD=${APSTRA_PASSWORD:-}
+      - APSTRA_VERIFY_SSL=${APSTRA_VERIFY_SSL:-}
+      # Axis Atmos Cloud
+      - AXIS_API_TOKEN=${AXIS_API_TOKEN:-}
+      # Aruba OS 8 / Mobility Conductor
+      - AOS8_HOST=${AOS8_HOST:-}
+      - AOS8_USERNAME=${AOS8_USERNAME:-}
+      - AOS8_PASSWORD=${AOS8_PASSWORD:-}
+      - AOS8_PORT=${AOS8_PORT:-}
+      - AOS8_VERIFY_SSL=${AOS8_VERIFY_SSL:-}
+      # HPE UXI
+      - UXI_CLIENT_ID=${UXI_CLIENT_ID:-}
+      - UXI_CLIENT_SECRET=${UXI_CLIENT_SECRET:-}
+      # Aruba EdgeConnect / Silver Peak Orchestrator (host + EITHER api_key OR user+password)
+      - EDGECONNECT_HOST=${EDGECONNECT_HOST:-}
+      - EDGECONNECT_API_KEY=${EDGECONNECT_API_KEY:-}
+      - EDGECONNECT_USER=${EDGECONNECT_USER:-}
+      - EDGECONNECT_PASSWORD=${EDGECONNECT_PASSWORD:-}
+      - EDGECONNECT_LOGIN_TYPE=${EDGECONNECT_LOGIN_TYPE:-}
+      - EDGECONNECT_VERIFY_SSL=${EDGECONNECT_VERIFY_SSL:-}
+      # --- Behavioral settings ---
       - ENABLE_MIST_WRITE_TOOLS=${ENABLE_MIST_WRITE_TOOLS:-false}
       - ENABLE_CENTRAL_WRITE_TOOLS=${ENABLE_CENTRAL_WRITE_TOOLS:-false}
       - ENABLE_CLEARPASS_WRITE_TOOLS=${ENABLE_CLEARPASS_WRITE_TOOLS:-false}
@@ -20,6 +72,11 @@ services:
       - ENABLE_GREENLAKE_WRITE_TOOLS=${ENABLE_GREENLAKE_WRITE_TOOLS:-false}
       - ENABLE_EDGECONNECT_WRITE_TOOLS=${ENABLE_EDGECONNECT_WRITE_TOOLS:-false}
       - DISABLE_ELICITATION=${DISABLE_ELICITATION:-false}
+      # Origin validation allowlist. Comma-separated origins, or "*" to
+      # disable the check (useful behind a reverse proxy or when binding
+      # to 0.0.0.0 for non-localhost access). Defaults to the HOST_PORT
+      # value so multi-instance deployments get the right origin automatically.
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:${HOST_PORT:-8000},http://127.0.0.1:${HOST_PORT:-8000}}
       # PII tokenization (opt-in). When true, sensitive fields (PSKs, RADIUS
       # secrets, hostnames, emails, usernames, serials) are replaced with
       # session-stable [[KIND:uuid]] tokens before responses reach the AI.
@@ -30,59 +87,58 @@ services:
       # Uncomment + set to "dynamic" to opt back into the per-platform meta-tool
       # surface (the v2.x default). The "static" value was REMOVED in v3.0.0.0.
       # - MCP_TOOL_MODE=${MCP_TOOL_MODE:-code}
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/livez', timeout=5); assert r.status_code == 200" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Docker-secret files (mounted at /run/secrets/) take priority over the env
+    # vars above; a credential in a file wins, otherwise the matching env var is
+    # used. Comment out the platforms you don't use to avoid "file not found".
     secrets:
-      # Mist (remove lines for platforms you don't use)
+      # Mist
       - mist_api_token
       - mist_host
-      # Aruba Central (remove lines for platforms you don't use)
+      # Aruba Central
       - central_base_url
       - central_client_id
       - central_client_secret
-      # HPE GreenLake (remove lines for platforms you don't use)
+      # HPE GreenLake
       - greenlake_api_base_url
       - greenlake_client_id
       - greenlake_client_secret
       - greenlake_workspace_id
-      # ClearPass (remove lines for platforms you don't use)
+      # ClearPass
       - clearpass_server
       - clearpass_client_id
       - clearpass_client_secret
       - clearpass_verify_ssl
-      # Juniper Apstra (remove lines for platforms you don't use)
+      # Juniper Apstra
       - apstra_server
       - apstra_port
       - apstra_username
       - apstra_password
       - apstra_verify_ssl
-      # Axis Atmos Cloud (remove lines for platforms you don't use)
+      # Axis Atmos Cloud
       - axis_api_token
-      # Aruba OS 8 / Mobility Conductor (remove lines for platforms you don't use)
+      # Aruba OS 8 / Mobility Conductor
       - aos8_host
       - aos8_username
       - aos8_password
       - aos8_port
       - aos8_verify_ssl
-      # Aruba UXI (remove lines for platforms you don't use)
+      # HPE UXI
       - uxi_client_id
       - uxi_client_secret
-      # Aruba EdgeConnect / Silver Peak Orchestrator (remove lines for platforms you don't use)
-      # Provide edgeconnect_api_key OR edgeconnect_user + edgeconnect_password.
+      # Aruba EdgeConnect / Silver Peak Orchestrator
       - edgeconnect_host
       - edgeconnect_api_key
       - edgeconnect_user
       - edgeconnect_password
       - edgeconnect_login_type
       - edgeconnect_verify_ssl
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "uv", "run", "--no-sync", "python", "-c", "import httpx; r = httpx.get('http://localhost:8000/livez', timeout=5); assert r.status_code == 200"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-# Each secret is a separate file — create them from the .example templates:
-#   cp secrets/mist_api_token.example secrets/mist_api_token
-#   # edit with your real credentials
 secrets:
   # Mist
   mist_api_token:
@@ -139,7 +195,7 @@ secrets:
     file: ./secrets/aos8_port
   aos8_verify_ssl:
     file: ./secrets/aos8_verify_ssl
-  # Aruba UXI
+  # HPE UXI
   uxi_client_id:
     file: ./secrets/uxi_client_id
   uxi_client_secret:

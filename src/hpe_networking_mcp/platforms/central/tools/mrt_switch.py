@@ -86,18 +86,12 @@ async def central_get_switch_interface_trends(
     interface_name: Annotated[
         str | None, Field(description="Specific interface name to scope the trend; omit for all interfaces.")
     ] = None,
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get per-interface throughput / utilization trends for a switch."""
     conn = get_central_conn(ctx)
     params: dict = {}
     if interface_name:
         params["interfaceName"] = interface_name
-    if start:
-        params["start"] = start
-    if end:
-        params["end"] = end
     return await _get(conn, f"network-monitoring/v1/switches/{path_seg(serial_number)}/interface-trends", params)
 
 

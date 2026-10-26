@@ -10,18 +10,18 @@ Tools are namespaced by platform: `mist_*` (Juniper Mist), `central_*` (Aruba Ce
 
 The server ships with `MCP_TOOL_MODE=code` by default since v3.0.0.0. At session start the AI sees **6 tools**:
 
-- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 4149 underlying tools
+- **`execute(code)`** — run async Python in a sandbox; `await call_tool(name, params)` is available in scope and dispatches to any of the 4109 underlying tools, and `await report_progress(progress, total=None, message=None)` streams status to the client during long multi-call blocks
 - **`tags(detail="brief")`** — browse the catalog by platform / module
 - **`search(query, tags=[...], detail)`** — BM25 search the catalog
 - **`get_schema(tools=[...], detail)`** — fetch parameter shape for named tools
 - **`skills_list(filter=...)`** — list bundled multi-step runbooks (since v2.3.0.0)
 - **`skills_load(name=...)`** — load a runbook to execute
 
-All 4149 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
+All 4109 per-platform tools documented below still exist and are reachable via `await call_tool(name, params)` inside `execute()`. The per-platform sections below serve as the **full tool index** — humans read them directly; the AI discovers them via the discovery tools (`tags`, `search`, `get_schema`).
 
 **Why code mode is the default since v3.0.0.0**: smallest initial token cost, single-round-trip multi-step orchestration, and validated against small local LLMs (Qwen3 4B Q4_K_M; see [#246](https://github.com/nowireless4u/hpe-networking-mcp/issues/246) reassessment).
 
-Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 4149 tools / ~64K tokens it was no longer practical.
+Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface (per-platform discovery — see next section). The `static` mode was REMOVED in v3.0.0.0 — at 4109 tools / ~64K tokens it was no longer practical.
 
 ## Dynamic mode (opt-in since v3.0.0.0; was the v2.x default)
 
@@ -43,7 +43,7 @@ With `MCP_TOOL_MODE=dynamic` the AI sees **24 tools**:
   - `skills_list(filter=...)` — list bundled multi-step runbooks
   - `skills_load(name=...)` — load a runbook to execute
 
-The 4149 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
+The 4109 per-platform tools are reachable via `<platform>_invoke_tool(name=..., arguments={...})`. Best when an orchestrator wants explicit per-tool dispatch rather than the sandboxed Python composition that code mode provides.
 
 ## Code mode details (the default — see above for surface summary)
 
@@ -95,12 +95,14 @@ Inside `execute()`, `call_tool(name, params)` resolves any registered platform t
 
 If you do try to dispatch to a discovery tool by mistake, `SandboxErrorCatchMiddleware` returns a string like `Sandbox error: Exception: Unknown tool: search` so you can fix the call on the next turn (rather than seeing a generic masked error). See v2.2.0.4 release notes / #208.
 
+Alongside `call_tool`, the sandbox exposes `await report_progress(progress: float, total: float | None = None, message: str | None = None)` (v3.6.1.6) — a second injected external function that streams a progress notification to the client. Call it as a long block advances (`await report_progress(i, n, f"classifying scope {i}/{n}")`) so the client shows a live status line instead of a silent spinner. It is a no-op when the client didn't send a `progressToken`, so it is always safe to include. Wired via the `_HpeCodeMode` subclass of FastMCP's `CodeMode` (see `server._hpe_code_mode_class`).
+
 ### When to use which mode
 
 - **`code` (default since v3.0.0.0)** — best for orchestrators driving small / local LLMs, multi-step aggregations, cross-platform joins, filter/map/reduce workflows. Smallest initial token cost. Validated against Qwen3 4B Q4_K_M via OpenClaw (see #246 reassessment).
 - **`dynamic` (opt-in since v3.0.0.0; was the v2.x default)** — best when the orchestrator wants explicit per-tool dispatch via `<platform>_invoke_tool` rather than sandboxed Python composition. Stable, production-tested for lookup-style questions.
 
-The `static` mode was REMOVED in v3.0.0.0 — at 4149 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
+The `static` mode was REMOVED in v3.0.0.0 — at 4109 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` raises ValueError at startup.
 
 ## Overview
 
@@ -110,7 +112,7 @@ The `static` mode was REMOVED in v3.0.0.0 — at 4149 tools / ~64K tokens it was
 | Aruba Central | 63 | 20 | 12 | 95 |
 | Aruba ClearPass | 67 | 75 | -- | 142 |
 | Juniper Apstra | 12 | 7 | -- | 19 |
-| HPE GreenLake | 513 | 446 | -- | 959 |
+| HPE GreenLake | 495 | 424 | -- | 919 |
 | Axis Atmos Cloud | 12 | 13 | -- | 25 |
 | Aruba OS 8 | 26 | 12 | 9 | 47 |
 | HPE UXI | 11 | 10 | -- | 21 |
@@ -1396,7 +1398,7 @@ to translate between Central's named/aliased config and Mist's inline config.
 
 ### Scope & Configuration Hierarchy
 
-Six read-only tools for inspecting the Central scope hierarchy (Global → Site collections → Sites → Device collections → Devices) and the configuration committed at each level. The `central-scope-visualizer` skill orchestrates these into ready-to-render visualizations; the `central-scope-walker` skill resolves a scope name / path to its `scope_id` for downstream tool calls.
+Six read-only tools for inspecting the Central scope hierarchy (Global → Site collections → Sites → Device collections → Devices) and the configuration committed at each level. The `central-scope-visualizer` skill renders the hierarchy via Generative UI (collapsible tree + per-scope profile names) and classifies every committed profile as shared / local / overridden / orphaned — using `central_get_config_assignments` for the real names and the object `object_type` annotation for the local/shared distinction, surfacing stray (orphaned) and nameless configs. The `central-scope-walker` skill resolves a scope name / path to its `scope_id` for downstream tool calls.
 
 #### `central_get_scope_tree`
 
@@ -1775,7 +1777,7 @@ Tools that span multiple platforms. Each replaces several individual tool calls 
 
 ---
 
-## HPE GreenLake (959 tools — spec-generated)
+## HPE GreenLake (919 tools — spec-generated)
 
 GreenLake is **spec-generated** (same pipeline as Mist and EdgeConnect): tool
 modules are emitted from the vendored OpenAPI specs under `vendor/greenlake/`

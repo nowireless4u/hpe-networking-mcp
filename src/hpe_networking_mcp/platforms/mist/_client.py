@@ -139,8 +139,9 @@ def _raise_for_status(response: httpx.Response) -> None:
     """Convert non-2xx responses to ``ToolError`` with structured details.
 
     Mist returns useful error bodies on 4xx/5xx; surface them to the AI.
-    For 403, include the standard hint about `mist_get_self_account_info`
-    being the canonical org_id source.
+    For 403, include the standard hint about `mist_get_self` being the
+    canonical org_id source; for a 404 "no such metric" (guessed SLE metric
+    key) point to `mist_list_site_sles_metrics` with the valid keys (#638).
     """
     if response.status_code < 400:
         return
@@ -161,8 +162,29 @@ def _raise_for_status(response: httpx.Response) -> None:
                     "Permission Denied. This usually means you are using a "
                     "tool with an invalid id (e.g. org_id, site_id). Make "
                     "sure to retrieve them from another tool (e.g. use "
-                    "`mist_get_self_account_info` to retrieve the correct "
-                    "org_id)."
+                    "`mist_get_self` to retrieve the correct org_id)."
+                ),
+            }
+        )
+
+    # SLE endpoints take a `metric` path key that is NOT free-form — valid keys
+    # are per-scope and come from `mist_list_site_sles_metrics`. Guessed names
+    # (a common one: "successful-connect", which does not exist) return a bare
+    # 404 `{"detail": "no such metric"}`; enrich it so the AI self-corrects
+    # instead of guessing again (issue #638).
+    if response.status_code == 404 and "no such metric" in _json.dumps(detail).lower():
+        raise ToolError(
+            {
+                "status_code": 404,
+                "message": (
+                    "No such SLE metric. The `metric` must be an exact key from "
+                    "`mist_list_site_sles_metrics` for this site/scope — do not "
+                    "guess. Common wireless keys: coverage, capacity, "
+                    "time-to-connect, failed-to-connect, roaming, throughput, "
+                    "ap-availability, ap-health. There is NO 'successful-connect' "
+                    "/ 'successful-connects' — use 'time-to-connect' (or "
+                    "'failed-to-connect'). Call `mist_list_site_sles_metrics` "
+                    "first to get the valid keys for this scope."
                 ),
             }
         )

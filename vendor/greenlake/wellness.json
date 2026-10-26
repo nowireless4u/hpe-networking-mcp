@@ -42,9 +42,12 @@
             "type": "string"
           },
           "endedAt": {
-            "description": "Time at which the operation completed (entered a `SUCCEEDED`, `FAILED`, or `CANCELLED` state).",
+            "description": "Time at which the operation entered the `SUCCEEDED` or `FAILED` state. `null` while the operation is in progress.",
             "format": "date-time",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "error": {
             "oneOf": [
@@ -221,8 +224,11 @@
             ]
           },
           "next": {
-            "description": "The asynchronous operation ID acts as the pagination cursor for the next page of resources. Empty string when no more pages exist.",
-            "type": "string"
+            "description": "The asynchronous operation ID acts as the pagination cursor for the next page of resources. `null` when no more pages exist.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "total": {
             "description": "Total number of items (asynchronous operation) for the current filter criteria.",
@@ -260,8 +266,11 @@
             ]
           },
           "next": {
-            "description": "The event ID acts as the pagination cursor for the next page of resources. Empty string when no more pages exist.",
-            "type": "string"
+            "description": "The event ID acts as the pagination cursor for the next page of resources. `null` when no more pages exist.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "total": {
             "description": "Total number of items (wellness events) for the current filter criteria.",
@@ -298,8 +307,11 @@
             ]
           },
           "next": {
-            "description": "Support case ID, which acts as the pagination cursor for the next page of support cases. Empty string when no more pages exist.",
-            "type": "string"
+            "description": "The event ID acts as the pagination cursor for the next page of support cases. `null` when no more pages exist.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "total": {
             "description": "Total number of items (support cases) for the current filter criteria.",
@@ -584,7 +596,8 @@
             "$ref": "#/components/schemas/status"
           },
           "supportCase": {
-            "$ref": "#/components/schemas/supportCase"
+            "$ref": "#/components/schemas/supportCase",
+            "description": "The support case associated with this wellness event. Omitted when no support case exists for the event."
           },
           "supportCaseCreationOpUri": {
             "description": "URI to get details of the support case creation operation.",
@@ -762,14 +775,29 @@
             "enum": [
               "open",
               "resolved",
+              "closed",
               "timeoutCaseCreation",
               "pendingCaseCreation",
               "pendingEscalation",
+              "pendingConfirmation",
               "escalated",
               "correlated",
               "acknowledged",
+              "snoozed",
               "expired",
               "error"
+            ],
+            "type": "string"
+          },
+          "request": {
+            "description": "The most recent action requested for the wellness event.",
+            "enum": [
+              "new",
+              "acknowledge",
+              "close",
+              "reopen",
+              "escalate",
+              "resolve"
             ],
             "type": "string"
           }
@@ -820,6 +848,20 @@
             "format": "uri-reference",
             "type": "string"
           },
+          "severity": {
+            "description": "The severity of the condition on the wellness event linked to this support case.",
+            "enum": [
+              "critical",
+              "warning",
+              "notice"
+            ],
+            "type": "string"
+          },
+          "shortDescription": {
+            "description": "A short summary of the case description.",
+            "maxLength": 80,
+            "type": "string"
+          },
           "source": {
             "description": "Indicates how the support case was created.",
             "enum": [
@@ -841,6 +883,11 @@
               "expired",
               "error"
             ],
+            "type": "string"
+          },
+          "subject": {
+            "description": "A short subject line for the support case.",
+            "example": "Drive failure predicted on HPE Alletra 9000",
             "type": "string"
           },
           "type": {
@@ -891,7 +938,7 @@
   "paths": {
     "/wellness/v2/async-operations": {
       "get": {
-        "description": "Retrieves a list of all asynchronous operations organized in descending order based on their creation time. This ensures the most recent asynchronous operations are presented first.<br><br>\n__Pagination__&#58; This endpoint exclusively supports cursor-based pagination.<br><br> __Filtering__&#58; The following are the supported filter parameters&#58;\n* `state`&mdash; The `state` filter parameter only supports the `eq` operator and its value should be a valid string.\n* `createdAt`\n* `updatedAt`\n* `endedAt`\n* `startedAt`",
+        "description": "Retrieves a list of all asynchronous operations organized in descending order based on their creation time. This ensures the most recent asynchronous operations are presented first.<br><br>\n__Pagination__&#58; This endpoint exclusively supports cursor-based pagination.<br><br>\n__Filtering__&#58; The following are the supported filter parameters&#58;\n\n| Property | Type | Supported operators |\n|---|---|---|\n| `state` | string | `eq` |\n| `createdAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` |\n| `updatedAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` |\n| `endedAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` |\n| `startedAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` |\n",
         "operationId": "getAllAsyncOperations",
         "parameters": [
           {
@@ -915,7 +962,7 @@
               },
               "state": {
                 "summary": "Retrieve a list of asynchronous operations that are in the given `state`",
-                "value": "state eq SUCCEEDED"
+                "value": "state eq 'SUCCEEDED'"
               }
             },
             "in": "query",
@@ -987,7 +1034,7 @@
                         },
                         {
                           "createdAt": "2024-02-01T12:00:00Z",
-                          "endedAt": "",
+                          "endedAt": null,
                           "error": null,
                           "generation": 1,
                           "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb25",
@@ -1307,7 +1354,7 @@
     },
     "/wellness/v2/events": {
       "get": {
-        "description": "Retrieves a list of wellness events, in descending order of creation time so that the most recent events are listed first.<br><br>\n__Pagination__&mdash; This endpoint exclusively supports cursor-based pagination, using the `next` query parameter.<br><br> __Filtering__&mdash; The following are the supported filter parameters&#58;\n* `condition/severity`\n* `status/currentState`\n* `supportCase/caseNumber`\n* `asset/serialNumber`\n* `productName`\n* `serviceName`\n* `region`\n* `serviceManager/id `\n* `source`\n* `isFlex`\n* `flag`\n* `archive`\n* `read`\n* `createdAt`\n* `updatedAt`",
+        "description": "Retrieves a list of wellness events, in descending order of creation time so that the most recent events are listed first.<br><br>\n__Pagination__&mdash; This endpoint exclusively supports cursor-based pagination, using the `next` query parameter.<br><br>\n__Filtering__&mdash; The following are the supported filter parameters&#58;\n\n| Property | Type | Supported operators |\n|---|---|---|\n| `condition/severity` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `status/currentState` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `supportCase/caseNumber` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `asset/serialNumber` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `productName` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `serviceName` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `region` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `serviceManager/id` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |\n| `source` | string | `eq` |\n| `isFlex` | boolean | `eq`, `ne` |\n| `flag` | boolean | `eq`, `ne` |\n| `archive` | boolean | `eq`, `ne` |\n| `read` | boolean | `eq`, `ne` |\n| `createdAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` |\n| `updatedAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` |\n",
         "operationId": "getAllEvents",
         "parameters": [
           {
@@ -1341,7 +1388,7 @@
               "isFlex-false": {
                 "description": "Retrieve events that do not belong to Flex devices.",
                 "summary": "Filter for non-Flex devices",
-                "value": "isFlex eq false"
+                "value": "isFlex ne true"
               },
               "lt-time-range": {
                 "description": "Retrieve events created before the given timestamp.",
@@ -1499,7 +1546,6 @@
                           },
                           "generation": 2,
                           "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
-                          "isFlex": false,
                           "region": "us-east",
                           "resourceUri": "/wellness/v2/events/0001b67f-9518-4d0f-9b17-70cec7763632",
                           "serviceManager": {
@@ -1770,7 +1816,6 @@
                       "flag": true,
                       "generation": 0,
                       "id": "0001b67f-9518-4d0f-9b17-70cec7763632",
-                      "isFlex": false,
                       "read": true,
                       "region": "us-east",
                       "resourceUri": "/wellness/v2/events/0001b67f-9518-4d0f-9b17-70cec7763632",
@@ -2143,11 +2188,11 @@
     },
     "/wellness/v2/support-cases": {
       "get": {
-        "description": "Retrieves a list of support cases associated with wellness events. The results are in descending order of creation time, so that the most recent support cases are listed first.<br><br>\n__Pagination__&#58; This endpoint exclusively supports cursor-based pagination, using the `next` query parameter.<br><br> __Filtering__&#58; The following are the supported filter parameters&#58;\n**Note&#58;** Using any `details/*` filter implicitly limits results to manual cases (`source` = `manual`).\n* `event/id` &mdash; The `event/id` filter parameter only supports the `eq` operator and its value should be a valid wellness event ID.\n* `caseNumber`\n* `status`\n* `createdAt` &mdash; Timestamp when the support case was created.\n* `updatedAt` &mdash; Timestamp when the support case was last updated.\n* `source` &mdash; How the case was created. Only supports the `eq` operator. Values&#58; `manual`, `auto`.\n* `details/category` &mdash; Primary help category assigned to the case. Only applicable to manual cases.\n* `details/serialNumber` &mdash; Serial number of the device associated with the case. Only applicable to manual cases.\n* `details/subscriptionKey` &mdash; License key for the subscription associated with the case. Only applicable to manual cases.\n* `details/primaryContact/email` &mdash; Email address of the primary contact for the case. Only applicable to manual cases.\n* `details/alternateContact/email` &mdash; Email address of an alternate contact for the case. Only applicable to manual cases.\n* `event/condition/severity`\n* `event/status/currentState`\n* `event/productName`\n* `event/serviceName`\n* `event/createdAt` &mdash; Timestamp when the underlying wellness event was created.\n* `event/updatedAt` &mdash; Timestamp when the underlying wellness event was last updated.\n* `event/isFlex` &mdash; Whether the device associated with the event is a Flex device. Only supports the `eq` operator. Values&#58; `true`, `false`.",
+        "description": "Retrieves a list of support cases associated with wellness events. The results are in descending order of creation time, so that the most recent support cases are listed first.<br><br>\n__Pagination__&#58; This endpoint exclusively supports cursor-based pagination, using the `next` query parameter.<br><br>\n__Filtering__&#58; The following are the supported filter parameters&#58;\n\n**Note&#58;** Using any `details/*` filter implicitly limits results to manual cases (`source` = `manual`).\n\n| Property | Type | Supported operators | Description |\n|---|---|---|---|\n| `event/id` | guid | `eq` | The value should be a valid wellness event ID. |\n| `caseNumber` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |  |\n| `status` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |  |\n| `severity` | string | `eq` |  |\n| `createdAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` | Timestamp when the support case was created. |\n| `updatedAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` | Timestamp when the support case was last updated. |\n| `source` | string | `eq` | How the case was created. Values&#58; `manual`, `auto`. |\n| `details/category` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` | Primary help category assigned to the case. Only applicable to manual cases. |\n| `details/serialNumber` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` | Serial number of the device associated with the case. Only applicable to manual cases. |\n| `details/subscriptionKey` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` | License key for the subscription associated with the case. Only applicable to manual cases. |\n| `details/primaryContact/email` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` | Email address of the primary contact for the case. Only applicable to manual cases. |\n| `details/alternateContact/email` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` | Email address of an alternate contact for the case. Only applicable to manual cases. |\n| `event/condition/severity` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |  |\n| `event/status/currentState` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |  |\n| `event/productName` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |  |\n| `event/serviceName` | string | `eq`, `ne`, `in`, `contains()`, `startswith()`, `endswith()` |  |\n| `event/createdAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` | Timestamp when the underlying wellness event was created. |\n| `event/updatedAt` | timestamp | `eq`, `ne`, `gt`, `ge`, `lt`, `le` | Timestamp when the underlying wellness event was last updated. |\n| `event/isFlex` | boolean | `eq`, `ne` | Whether the device associated with the event is a Flex device. Values&#58; `true`, `false`. |\n",
         "operationId": "getSupportCases",
         "parameters": [
           {
-            "description": "The `filter` query parameter is used to filter a set of resources. The returned set of resources matches the criteria in the filter query parameter. The value of the filter query parameter is a subset of [OData V4](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.\n\n| Class | Supported |\n|---|---|\n| Types | string, timestamp, guid |\n| Comparison | `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in` |\n| Logical Expressions | `and` |\n| Functions | `contains()`, `startswith()`, `endswith()` |\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
+            "description": "The `filter` query parameter is used to filter a set of resources. The returned set of resources matches the criteria in the filter query parameter. The value of the filter query parameter is a subset of [OData V4](https://www.odata.org/documentation/) filter expressions consisting of simple comparison operations joined by logical operators.\n\n| Class | Supported |\n|---|---|\n| Types | string, boolean, timestamp, guid |\n| Comparison | `eq`, `ne`, `gt`, `ge`, `lt`, `le`, `in` |\n| Logical Expressions | `and` |\n| Functions | `contains()`, `startswith()`, `endswith()` |\n\nThe following examples are not an exhaustive list of all possible filtering options.\n",
             "examples": {
               "btw-time-range": {
                 "summary": "Retrieve a list of support cases created between given timestamps",
@@ -2171,7 +2216,7 @@
               },
               "details-subscription-key": {
                 "summary": "Retrieve manual cases for a specific subscription key",
-                "value": "details/subscriptionKey eq 'SUB-2026-RAVE-TEST'"
+                "value": "details/subscriptionKey eq 'SUB-0000-EXAMPLE'"
               },
               "event-id": {
                 "summary": "Retrieve the support case details associated with the given wellness event",
@@ -2185,7 +2230,7 @@
               "event-isFlex-false": {
                 "description": "Retrieve support cases associated with non-Flex device events.",
                 "summary": "Retrieve support cases for non-Flex devices",
-                "value": "event/isFlex eq false"
+                "value": "event/isFlex ne true"
               },
               "event-timestamp-gt": {
                 "summary": "Retrieve a list of support cases for wellness events created after the given timestamp",
@@ -2198,6 +2243,10 @@
               "lt-time-range": {
                 "summary": "Retrieve a list of support cases created before the given timestamp",
                 "value": "createdAt lt 2021-05-12T07:20:00.00Z"
+              },
+              "severity": {
+                "summary": "Retrieve support cases whose linked wellness event has the given severity",
+                "value": "severity eq 'critical'"
               },
               "source-auto": {
                 "summary": "Retrieve only auto-created support cases",
@@ -2212,6 +2261,23 @@
             "name": "filter",
             "required": false,
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Searches for support cases that contain the given search string. A search string can include alphanumeric characters and a space character (Unicode `U+0020`). No other special characters are supported. Including an unsupported character might cause inaccurate results. The maximum length of a search string is 100 characters. When performing a search, it's important to use specific terms. A generic search term may cause the search to timeout.\n* `caseNumber`\n* `title`\n<br><br>__Note:__ You can use both the `filter` and `text-search` parameters in the same query. If both are provided, the filter is applied first, and then text-search is performed on the filtered results.",
+            "examples": {
+              "temperature": {
+                "summary": "Search for support cases that contain the string `temperature`",
+                "value": "temperature"
+              }
+            },
+            "in": "query",
+            "name": "text-search",
+            "required": false,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
               "type": "string"
             }
           },
@@ -2327,7 +2393,7 @@
                             },
                             "serialNumber": "AF-123456",
                             "subcategory": "Disaster Recovery > Data Protection",
-                            "subscriptionKey": "SUB-2026-RAVE-TEST"
+                            "subscriptionKey": "SUB-0000-EXAMPLE"
                           },
                           "event": {
                             "id": "00006e2e-e02c-4cb3-ba40-d9d8ae2fdb24",
@@ -2402,6 +2468,27 @@
               }
             },
             "description": "Unauthorized - Invalid JWT token in Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "search-timed-out": {
+                    "summary": "Search timed out",
+                    "value": {
+                      "debugId": "75d40213-6776-40ff-a959-89a7514ef7fc",
+                      "errorCode": "HPE_GL_WELLNESS_GET_SUPPORT_CASES_SEARCH_TIMED_OUT",
+                      "httpStatusCode": 422,
+                      "message": "The specified search is too wide. Try using more specific terms to narrow it down."
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Search Timeout - Search too wide causing timeout"
           },
           "429": {
             "content": {

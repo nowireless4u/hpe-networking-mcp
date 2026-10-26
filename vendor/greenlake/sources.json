@@ -3,10 +3,10 @@
   "specs": [
     {
       "service": "audit-logs",
-      "title": "GLCP Audit Logs API",
-      "paths": 8,
+      "title": "Audit Logs API - Fetch Audit Logs",
+      "paths": 3,
       "file": "audit-logs.json",
-      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/audit-logs/public/openapi/audit-logs/v1/audit-trail.json?download"
+      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/audit-logs/public/openapi/audit-logs-latest/@v2beta1/audit-trail-fetch-v2beta1.json?download"
     },
     {
       "service": "authorization",
@@ -133,13 +133,6 @@
       "paths": 6,
       "file": "scim.json",
       "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/scim/public/openapi/user-group-management-public/openapiBeta.json?download"
-    },
-    {
-      "service": "service-catalog",
-      "title": "Service Registry",
-      "paths": 22,
-      "file": "service-catalog__service-registry-v1beta1-service-catalog-v1alpha1.json",
-      "url": "https://developer.greenlake.hpe.com/_bundle/docs/greenlake/services/service-catalog/public/openapi/service-registry-v1beta1/service_catalog_v1alpha1.json?download"
     },
     {
       "service": "service-catalog",

@@ -1,409 +1,339 @@
 ---
 name: central-scope-visualizer
-title: Aruba Central scope hierarchy visualizer — fetch the data, build whatever diagram you want
+title: Aruba Central scope hierarchy visualizer — where config is committed, with shared/local/overridden/orphaned classification, rendered live
 description: |
-  TRIGGERS — call this when the operator asks to visualize, render,
-  diagram, draw, walk, map, or otherwise SEE the Aruba Central scope
-  hierarchy (Global → site-collections → sites → device-collections →
-  devices) and the configuration assignments at each level.
+  PRIMARY TRIGGER — invoke whenever the operator asks to visualize, render,
+  diagram, draw, walk, or map the Aruba Central scope hierarchy (Global →
+  site-collections → sites → device-collections → devices) AND see WHERE
+  configuration profiles are committed at each level — by their real names, and
+  classified as shared / local / overridden / orphaned.
 
   Match phrases include:
 
-  - "visualize the Central scope hierarchy", "draw the scope tree",
-    "render the Central scope diagram", "show me the scope map"
-  - "show me the committed config across scopes", "what's the
-    effective config at site HQ", "where does this resource come from"
-  - "map of all my sites and device groups", "Central scope diagram",
-    "draw the Central hierarchy"
-  - "how is config inherited across my scopes"
+  - "visualize the Central scope hierarchy", "draw / render the scope tree",
+    "map where config is committed", "show the scope map with profiles"
+  - "which profiles are assigned at each scope", "show me the committed config
+    across scopes by name"
+  - "find orphaned configurations", "which profiles are local vs shared",
+    "which profiles are overridden", "audit for local overrides / orphans"
 
-  This skill is the **data-fetch + presentation runbook** for the scope
-  hierarchy. It does NOT prescribe a single visualization format — it
-  pulls everything the operator might want (tree shape, per-scope
-  resource counts, committed vs effective config, device inventory by
-  type) and lets you choose the diagram that fits the question and the
-  client's rendering ability.
+  What it produces: the scope hierarchy as a collapsible tree with a profile
+  count on every node, plus a per-scope breakdown of the actual profile NAMES
+  grouped by type, each labeled with its class:
 
-  Two reasons it exists:
+  - **shared** — a library object (inherits down)
+  - **local** — a standalone object at that scope, of a type that has no shared
+    library at all (device-intrinsic, e.g. system-info); this is normal
+  - **overridden** ⚠ — a LOCAL object whose name matches a SHARED profile
+    assigned upstream; the local copy supersedes the shared one and will NOT
+    receive library edits
+  - **orphaned (local)** ⚠ — a LOCAL object of a type that DOES have a shared
+    library, but whose name has no SHARED match upstream (stray local, shared
+    source gone)
+  - **orphaned (unnamed)** ⚠ — a config-assignment with an empty
+    profile-instance (assigned but nameless); a safe cleanup candidate
 
-  1. The legacy `central_get_scope_diagram` tool emits one giant
-     Mermaid string that, on real tenants with many sites + device
-     groups, sprawls horizontally into an unreadable mess. The
-     **structured tree data** from `central_get_scope_tree` is what
-     skilled visualizations actually use — aggregating siblings,
-     showing counts on each node, grouping devices by type. That data
-     is what this skill surfaces.
-  2. In code mode there's no other entry point that says
-     "scope-visualization is a thing" — operators have no
-     discoverable runbook. This skill fills that gap (parallel to
-     `clearpass-policy-walker` for ClearPass policy).
+  Rendered through the `generate_prefab_ui` Generative-UI tool (collapsible
+  Accordion tree + color-coded Badge chips). NOT a Mermaid diagram. Global-level
+  alerts are ignored — this is a config-placement view, not a health view.
+
+  For single-site health/devices/clients use central-site-dashboard; for
+  compliance drift use central-scope-audit; to resolve a name → scope_id use
+  central-scope-walker.
 
   **Read-only.** Does not mutate any Central config.
 platforms: [central]
-tags: [central, scope, hierarchy, visualization, audit, diagram]
-tools: [central_get_scope_tree, central_get_scope_resources, central_get_committed_config, central_get_effective_config, central_get_devices_in_scope, central_get_scope_diagram]
+tags: [central, scope, hierarchy, visualization, config, assignments, shared, local, overridden, orphaned, audit, generative-ui]
+tools: [central_get_scope_tree, central_get_config_assignments, central_get_aliases, central_invoke_tool, generate_prefab_ui, search_prefab_components]
 ---
 
 # Aruba Central scope hierarchy visualizer
 
 ## Objective
 
-Render the Central scope hierarchy — Global → site-collections → sites
-→ device-collections → devices — at whatever zoom level fits the
-operator's question. The output can be:
+Show, in one interactive view, WHERE every configuration profile is committed
+across the Central scope hierarchy — by its **real name**, grouped by type, and
+classified **shared / local / overridden / orphaned**. Two layers:
 
-- A **top-level overview** with resource counts at each scope (the
-  most common request).
-- A **drilled-in subtree** focused on one site or one site-collection.
-- A **per-scope inspector** showing exactly what config is committed
-  there + what's inherited from parents.
-- A **device-type rollup** for one site (8 switches, 4 gateways, etc.).
-- A **committed-vs-effective diff** for one scope showing the
-  inheritance contribution.
+1. **Hierarchy** — Global → site-collections → sites → device-collections →
+   devices, as a collapsible tree with a profile count on each node.
+2. **Per-scope profiles** — the actual profile names committed at each scope,
+   as color-coded chips, with overrides and orphans flagged.
 
-**Read-only.** Does not mutate any Central config.
+This is the tool for "map my config placement and find orphans/overrides", not a
+health board and not a name→id lookup.
 
-## Operator-output rules (read first)
+## The classification model (read first — this is the whole point)
 
-These constrain every response you produce inside this skill:
+`local` vs `shared` is a property of the **object**, not where it is assigned.
+It is the object's own `aruba-annotation:object_type` (`SHARED` | `LOCAL`) on a
+`detailed=True` read. It is NOT `scope-type` (that's only *where* an assignment
+sits) and NOT `profile-type` (that's the object *kind*).
 
-1. **Aggregate by default, enumerate on demand.** When a scope has 4+
-   sibling site-collections, show them as one aggregated node
-   ("4 Site Collections — Region-A · Region-B · Region-C · Region-D")
-   with an affordance to expand. When a site has 17 devices spanning
-   5 models, show them grouped by type ("Switches — 8 (CX-8360×2,
-   CX-6300×2, CX-6200×2)") not as 17 individual rectangles.
-   Enumerated walls of nodes are unreadable; the operator can ask to
-   drill in.
-2. **Resource counts on every node.** Each scope's most useful single
-   number is "how much config lives here?" Always include resource
-   count (from `tree_to_dict`'s `resource_count`) and device count
-   (`device_count`) on every visible node.
-3. **NEVER expose raw numeric scope IDs to the user.** Values like
-   `"1234567890"` or `"9876543210"` are internal identifiers —
-   operators don't recognize them. Use scope NAMES (`"HQ"`,
-   `"East Region Sites"`, `"Global"`) in user-facing output. When a
-   scope has no friendly name (some intermediate site-collection
-   nodes), show its TYPE plus child counts instead (e.g.
-   "Site collection · 3 sites · 12 devices") rather than the ID.
-4. **Color-code by node type** in the legend: Global (gray/neutral),
-   Site collection (orange/green), Site (blue), Device collection
-   (yellow/purple), Device (white/gray-outline). Match the legend
-   labels to the type values returned by the tree:
-   `GLOBAL` / `SITE_COLLECTION` / `SITE` / `DEVICE_COLLECTION` /
-   `DEVICE`.
-5. **Don't blindly call `central_get_scope_diagram`.** It returns a
-   single Mermaid string that doesn't aggregate and produces an
-   unreadable wall on real tenants. Use it only as a last-resort
-   text-mode fallback when the client truly cannot render anything
-   else.
+**Detection gotcha (do not skip):** the annotation lives in the object's `@`
+field, which Central serializes two ways — a parsed dict, or a **single-quoted
+stringified blob**. Match it **quote-agnostically** or you will falsely report
+everything as SHARED:
 
-## Prerequisites
+```python
+import re
+_OT = re.compile(r"""['"]aruba-annotation:object_type['"]\s*:\s*['"](\w+)['"]""")
+def object_type(obj):        # obj is one config object from a detailed read
+    m = _OT.findall(str(obj))
+    return m[0] if m else None
+```
 
-- The operator has indicated what they want to see (full tree / one
-  site / committed vs effective / etc.). When the request is
-  ambiguous, default to the top-level overview (Step 1) and offer to
-  drill in.
+Classify each committed profile named `X` of type `T`:
 
-## Response shapes
+| Class | Condition |
+|---|---|
+| **shared** | `X` exists as a SHARED object of type `T` (in the library) and no LOCAL `X` overrides it here |
+| **overridden** ⚠ | a LOCAL `X` exists at this scope AND a SHARED `X` of type `T` exists upstream (the local supersedes the shared) |
+| **orphaned (local)** ⚠ | a LOCAL `X` exists AND type `T` has a shared library, but no SHARED `X` upstream |
+| **local** | a LOCAL `X` exists AND type `T` has NO shared library at all (device-intrinsic, e.g. `system-info`) — normal, not an orphan |
+| **orphaned (unnamed)** ⚠ | a `config-assignments` record with empty `profile-instance` |
 
-| Tool | `data` shape | Iterate via |
-|---|---|---|
-| `central_get_scope_tree(view="committed"\|"effective")` | dict with `scope_id, scope_name, type, persona_count, resource_count, child_scope_count, device_count, personas: [...], children: [...]` recursively | `node["children"]` for recursion; `node["resource_count"]` / `node["device_count"]` for per-scope counts; `node["personas"][*]["categories"]` for resource-category breakdown |
-| `central_get_scope_resources(scope_id, persona?, include_details?)` | dict with `scope_id, scope_name, type, personas: [{name, resources: [{name, has_details, details?}]}]` | committed-only view of ONE scope; use the `personas[*].resources` lists |
-| `central_get_committed_config(scope_id, persona?, include_details=True)` | dict with `scope_id, scope_name, type, scope_path, committed_resources: [{persona, name, has_details, details?}]` | **flat** committed list; ideal for side-by-side diff against `effective_resources` (same per-resource shape) |
-| `central_get_effective_config(scope_id, persona?, include_details?)` | dict with `scope_id, scope_name, type, inheritance_path, effective_resources: [{name, instances: [{origin_scope_id, origin_scope_name, persona, has_details, details?}]}]` | each resource has an `instances` list — multiple instances mean the same resource is committed at multiple ancestor scopes |
-| `central_get_devices_in_scope(scope_id, device_type?)` | dict with `scope_id, devices: [{scope_id, scope_name, category, persona, device_type, device_model, serial_number, mac_address, part_number}]` | flat device list; aggregate by `device_type` + `device_model` for the "Switches — 8 (8360×2, 6300×2)" rollup |
-| `central_get_scope_diagram(scope_id?, include_resources?, include_devices?)` | bare string — Mermaid `flowchart TD` source | Avoid by default (see Output rule 5). Use only as text-mode fallback. |
+The single discriminator between **overridden** and **orphaned-local** is
+whether a same-named SHARED profile exists upstream: match → overridden, no
+match (but the type has a library) → orphaned.
+
+## Prerequisites & rules
+
+- Central configured and reachable (`health(platform="central")` if unsure).
+- **Ignore Global-level alerts.** A tenant often has 250+ alerts sitting at
+  Global; they are noise for a config-placement view. Never fetch or surface
+  alerts in this skill.
+- **PII:** device names/serials are tokenized when `ENABLE_PII_TOKENIZATION` is
+  on; render whatever the reads return. The skill only surfaces profile
+  **names + object_type + scope** (metadata), not config bodies — so it is safe
+  under a "no payload" instruction. Read config bodies only if the operator
+  explicitly asks to inspect values.
+- **Generative UI renders only in an MCP-Apps host** (Claude Desktop /
+  claude.ai / ChatGPT). In a non-apps client (e.g. Claude Code) `generate_prefab_ui`
+  is a no-op visual — the Step 4 text summary is then the deliverable, so ALWAYS
+  emit it.
+
+## Response-shape contract (unwrap these)
+
+Every `central_*` read returns the standard `{ok, status, data, ...}` envelope;
+read the inner `data`. Inside `execute()`, `await call_tool(name, params)`
+returns the already-unwrapped value for most reads, but be defensive:
+
+```python
+def unwrap(resp):
+    d = resp.get("data", resp) if isinstance(resp, dict) else resp
+    return d.get("result", d) if isinstance(d, dict) and "result" in d else d
+
+def rows(m, *keys):
+    """Rows for a config read — first list value found (Central nests under a
+    kind-keyed dict like {"config-assignment":[...]} / {"role":[...]})."""
+    if isinstance(m, dict):
+        for k in keys:
+            if isinstance(m.get(k), list):
+                return m[k]
+        for v in m.values():
+            if isinstance(v, list):
+                return v
+    return m if isinstance(m, list) else []
+```
+
+Key shapes:
+
+```text
+central_get_scope_tree           -> dict: scope_id, scope_name, type, resource_count, device_count, personas:[{name, resources:[{name}]}], children:[...] (recursive)
+central_get_config_assignments   -> {"config-assignment": [ {scope-id, device-function, profile-type, profile-instance, scope-name, scope-type} ]}
+central_get_<type>(detailed=True)-> {"<kind>": [ {name, "@": <annotations, may be stringified>, ...} ]}  # object_type lives in "@"
+```
+
+`central_get_config_assignments` is the **name backbone**: `profile-instance` is
+the real profile name (e.g. `WLAN-TWDC`), `profile-type` is the kind, and an
+empty `profile-instance` is an unnamed orphan.
 
 ## Procedure
 
-### Step 0 — Pick the zoom level from the operator's request
-
-| User request | Zoom level | Primary tool |
-|---|---|---|
-| "visualize the scope hierarchy" / "show me the scope tree" / "draw the Central scope" | **Top-level overview** | `central_get_scope_tree(view="committed")` |
-| "show me what's at site HQ" / "what does BRANCH-1 look like" | **Drilled-in subtree** for one site | `central_get_scope_tree` + `central_get_devices_in_scope(scope_id=<site>)` |
-| "what config is at <scope>" / "what's directly assigned here" | **Committed config at one scope** | `central_get_committed_config(scope_id=<scope>)` |
-| "what's the effective config at <scope>" / "where does <resource> come from at <scope>" | **Effective config at one scope** | `central_get_effective_config(scope_id=<scope>)` |
-| "what did the parent contribute vs what was added at <scope>" / "committed vs effective at <scope>" | **Both views — diff** | `central_get_committed_config` + `central_get_effective_config` side-by-side |
-
-Default when the request is ambiguous: top-level overview with an offer to drill in.
-
-### Step 1 — Fetch the structured tree (always)
-
-**Tool:** `central_get_scope_tree(view="committed")`
-**Why:** This is the foundation. It returns the **whole hierarchy** with per-scope `resource_count`, `device_count`, `persona_count`, `child_scope_count`, and per-persona `categories` breakdown. One call gives you everything needed for the top-level overview AND the data for any drilled-in view.
-**Expected:** A dict with `scope_id="Global"` (or numeric tenant root) and recursive `children`. Resource counts are populated at every level.
-
-**View choice:**
-
-- `view="committed"` (default) — what's directly assigned at each scope. Use this for the structural overview.
-- `view="effective"` — adds inherited resources at every descendant scope. Use this when the operator's question is about what's actually applied at the leaves (a SITE scope's `resources` includes everything that flows down from Global + its site-collection ancestors).
-
-### Step 2 — Render the requested zoom level
-
-Pick the template that matches Step 0's zoom level.
-
-#### 3a — Top-level overview (most common)
-
-Goal: a card-style tree showing Global → site-collections → sites with
-resource counts on each node. Aggregate sibling collapses when there
-are 4+ same-type siblings.
-
-Pattern for each visible node:
-
-```
-+----------------------------+
-|  <scope_name>              |   ← bold, no scope_id
-|  <count> resources         |   ← from resource_count
-|  · <count> devs (optional) |   ← from device_count when > 0
-+----------------------------+
-```
-
-When you have 4+ sibling site-collections under Global, fold them into one node:
-
-```
-+-------------------------------------+
-|  4 Site Collections                 |
-|  Region-A · Region-B · Region-C ... |   ← first ~3 names, then "..."
-+-------------------------------------+
-```
-
-The legend goes at the **top** of the response (above the tree), not the bottom:
-
-```
-[Global] [Site collection] [Site] [Device collection] [Device]
-```
-
-Color-code each node by `type`. Use rendering that fits the client:
-
-- **Rich-client (web widget, React Flow, vis-network)**: build a card tree from the structured `central_get_scope_tree` output.
-- **Mermaid-only**: emit a `flowchart TD` with rectangular nodes (`A[<name><br/>X resources]`), one per visible scope. Always use rectangles `[...]`, never circles `((...))` — circles truncate labels at scale.
-- **Plain text fallback**: bullet tree with counts.
-
-End the overview with a one-line offer: *"Want to drill into a specific site or see committed-vs-effective config for one scope?"*
-
-#### 3b — Drilled-in subtree for one site
-
-Goal: show one site (HQ, BRANCH-1, etc.) with its device-type rollups underneath.
+### Step 1 — Structure + name backbone (2 calls, always)
 
 ```python
-# Step 2b — find the site_id then get device inventory
-tree_resp = await call_tool("central_get_scope_tree", {"view": "committed"})
-# walk the tree to find the named site → grab its scope_id
-# ... (paste central-scope-walker snippet to do the name-to-id resolution)
+# scope tree = hierarchy + per-scope resource/device counts + resource names
+tree = unwrap(await call_tool("central_get_scope_tree", {"view": "committed"}))
+# config-assignments = real profile names + where committed + UNNAMED orphans
+A = rows(unwrap(await call_tool("central_get_config_assignments", {})),
+         "config-assignment", "config-assignments")
 
-dev_resp = await call_tool("central_get_devices_in_scope", {"scope_id": site_id})
-devices = dev_resp["data"]["devices"]
-# Aggregate: group by device_type, then sub-group by device_model
-from collections import Counter
-type_counts = Counter(d["device_type"] for d in devices)
-by_type_then_model = {}
-for d in devices:
-    by_type_then_model.setdefault(d["device_type"], Counter())[d["device_model"]] += 1
+unnamed_orphans = [a for a in A if not a.get("profile-instance")]
+# assignments keyed by scope for the per-scope view. NOTE: the sandbox has no
+# `collections` module — use plain dict + setdefault (not defaultdict/Counter).
+by_scope = {}
+for a in A:
+    by_scope.setdefault(str(a.get("scope-id")), []).append(a)
 ```
 
-Render the site as the root, with one child per device TYPE (not per device):
+This alone renders the hierarchy + per-scope profile names + the unnamed
+orphans. It is cheap (2 calls) and is the minimum viable view.
 
-```
-+----------------------+
-|  HQ                  |
-|  17 devices · 3 personas |
-+----------------------+
-        |
-   +-----+------+-----+--------+
-   |     |      |     |        |
-+----+ +----+ +----+ +-------+
-| APs| | SW | | GW | | Bridge|
-| 4  | | 8  | | 4  | | 1     |
-| (model-A,| | (model-B×2,| | (model-D ×4) | | (model-E ×1)|
-| model-C×3)| model-B×2, |
-+----+ | model-B×2)|
-       +-------+
-```
+### Step 2 — Classify shared / local / overridden / orphaned
 
-In Mermaid:
-
-```mermaid
-flowchart TD
-    SITE["HQ<br/>17 devices · 3 personas"]
-    APS["Access Points<br/>4 (model-A, model-C ×3)"]
-    SW["Switches<br/>8 (model-B×2, model-B×2, model-B×2)"]
-    GW["Gateways<br/>4 × model-D"]
-    BR["Bridge<br/>1 × model-E"]
-    SITE --> APS
-    SITE --> SW
-    SITE --> GW
-    SITE --> BR
-```
-
-#### 3c — Per-scope config (committed)
-
-Goal: chip-list of all resources directly assigned at one scope,
-grouped by persona, with category sub-grouping (Policies, Roles,
-Aliases, etc.).
+Classification needs the object's `object_type`, which lives on the object, not
+the assignment — so read the objects. **Reads are SEQUENTIAL** — the sandbox does
+NOT allow `asyncio.gather` (or `async def` helpers); use plain `await` in a loop.
+The sandbox also caps `call_tool` at **50 per `execute()` block**, so a full
+classification spans multiple `execute()` blocks: do the shared-library reads in
+one block, then the per-scope LOCAL reads ~40 at a time in following blocks.
+Because this is sequential, **scope to the subtree the operator named** when the
+hierarchy is large rather than classifying every scope — the whole-tenant scan is
+~1 read per (scope × type) committed and can run into the low hundreds.
 
 ```python
-# Step 2c — committed config at one scope
-cfg = await call_tool("central_get_committed_config", {"scope_id": scope_id})
-# Group by persona → category → resource name for chip rendering
-# Personas: CAMPUS_AP, ACCESS_SWITCH, BRANCH_GW, MOBILITY_GW, etc.
-# Categories inferred from resource name prefix: "policies/X" → Policies,
-# "roles/X" → Roles, "aliases/X" → Aliases, etc.
+# profile-type -> read tool. Almost all are central_get_<type-with-underscores>;
+# the only exception is wlan-ssids (the tool is central_get_wlan_profiles).
+_TOOL_OVERRIDE = {"wlan-ssids": "central_get_wlan_profiles"}
+def config_tool(pt):
+    return _TOOL_OVERRIDE.get(pt, "central_get_" + pt.replace("-", "_"))
+
+ptypes = sorted({a["profile-type"] for a in A if a.get("profile-instance")})
+
+# (block A) shared library names per type — SHARED objects at Global. Sequential.
+shared = {}
+for pt in ptypes:                              # ~20 reads → fits one execute() block
+    m = unwrap(await call_tool(config_tool(pt), {"detailed": True}))
+    shared[pt] = {o.get("name") for o in rows(m)
+                  if isinstance(o, dict) and object_type(o) == "SHARED"}
 ```
-
-Render as labelled groups of chips per persona, with category headers
-inside each persona block. Example (one persona block):
-
-```
-Global › East Region Sites  [CAMPUS_AP]
-51 resources committed at this scope — these are inherited by HQ and BRANCH-1
-
-POLICIES (17)
-[policy-A] [policy-B] [policy-C] [policy-D] ...
-
-ROLES (13)
-[role-A] [role-B] [role-C] ...
-
-ALIASES (7)
-[CORP-LAB] [user-alias] [user-vlan] ...
-```
-
-Always include the **inheritance flow statement** at the top: *"These N resources flow down to all sites in <site-collection>. The <site> site adds M more on top: …"* — operators need to know what's reused vs site-specific.
-
-#### 3d — Per-scope config (effective)
-
-Goal: same as 3c but showing inheritance origin. Each resource has an
-`origin_scope_name` indicating where it was committed (could be the
-current scope, its parent collection, Global, etc.).
 
 ```python
-eff = await call_tool("central_get_effective_config", {"scope_id": scope_id})
-# eff["data"]["effective_resources"] is a list of {name, instances: [{origin_scope_name, persona, ...}]}
+# (block B+) LOCAL names per (scope, type, device-function) — one read per distinct
+# triple in the assignments. Sequential; ≤40 per execute() block (repeat in more
+# blocks for the rest, or restrict `triples` to the operator's subtree).
+triples = sorted({(a["scope-id"], a["profile-type"], a["device-function"])
+                  for a in A if a.get("profile-instance")})
+local_at = {}
+for sid, pt, df in triples[:40]:               # then triples[40:80], … in later blocks
+    m = unwrap(await call_tool(config_tool(pt),
+                               {"view_type": "LOCAL", "scope_id": sid,
+                                "device_function": df, "detailed": True}))
+    local_at[(sid, pt, df)] = {o.get("name") for o in rows(m)
+                               if isinstance(o, dict) and object_type(o) == "LOCAL"}
 ```
-
-Render as chip-list with the origin scope visible per chip — color-code or label by origin. Example chip:
-
-```
-[policy-A ← Global]   [policy-B ← East Region Sites]   [policy-C ← HQ]
-```
-
-#### 3e — Committed vs effective diff for one scope
-
-Goal: side-by-side comparison so the operator can see what each scope contributes.
-
-Call both `central_get_committed_config(scope_id)` AND `central_get_effective_config(scope_id)` with the same `scope_id`. Compute:
-
-- **Inherited only**: in `effective_resources` but NOT in `committed_resources`.
-- **Committed here**: in both lists (and `origin_scope_name == current scope` in the effective view).
-- **Total effective**: `inherited + committed_here`.
-
-Render two columns or stacked sections:
-
-```
-Committed at <scope> (M resources)
-  POLICIES (...) [chip] [chip] [chip]
-  ROLES (...) [chip] [chip]
-
-Inherited from ancestors (N resources)
-  From Global: [chip ← Global] [chip ← Global]
-  From EST Sites: [chip ← EST Sites] [chip ← EST Sites]
-```
-
-### Step 3 — Walkthrough beneath the diagram
-
-Below every visualization, add a short (3-6 sentence) walkthrough in plain English:
-
-- For top-level overview: which scope carries the most config, where the device weight lives, what the inheritance shape implies ("Global owns N library resources; the lion's share of device config lives at <site-collection>; site-level customization is light").
-- For drilled-in site: device-mix breakdown, anything notable (single STACK, mixed-vendor uplinks, etc.).
-- For per-scope inspector: what's reused vs what's site-specific.
-
-Reference scope names (not IDs). Operators will use the walkthrough to know what to ask next.
-
-### Step 4 — Always offer the next zoom level
-
-End every response with a one-line affordance:
-
-- Top-level overview → "Want to drill into a site, or see what's committed/effective at a specific scope?"
-- Drilled-in site → "Want the committed config for this site, or the effective view showing what's inherited?"
-- Per-scope inspector → "Want to see the committed config at the parent scope to understand what's inherited?"
-
-## Worked example — top-level overview request
-
-Operator: *"Visualize the Central scope hierarchy."*
 
 ```python
-# Step 1
-tree_resp = await call_tool("central_get_scope_tree", {"view": "committed"})
-tree = tree_resp.get("data", {})
-
-# Step 2a — top-level overview
-# Walk the tree's root + direct children. Aggregate device groups.
-root = tree
-collections = []
-device_groups = []
-for child in root.get("children", []):
-    if child.get("type") == "SITE_COLLECTION":
-        collections.append(child)
-    elif child.get("type") == "DEVICE_COLLECTION":
-        device_groups.append(child)
-
-# Render: Global at top, collections + a single "X Device groups" aggregate node beneath.
-# For each collection with > 4 child sites, also aggregate its children to "X Sites" until expanded.
+# classify every named assignment
+def classify(a):
+    nm, pt = a.get("profile-instance"), a.get("profile-type")
+    if not nm:
+        return "orphaned-unnamed"
+    is_local = nm in local_at.get((a["scope-id"], pt, a["device-function"]), set())
+    if not is_local:
+        return "shared"
+    if nm in shared.get(pt, set()):
+        return "overridden"
+    if shared.get(pt):
+        return "orphaned-local"
+    return "local"
 ```
 
-Reply (rich-client variant — embed card tree; chips for legend):
+Notes:
+- `system-info` and `aliases` are device-local types that do NOT appear in
+  `config-assignments`. To include them, add them to the LOCAL scan at device
+  scopes (`central_get_aliases` / `central_get_system_info` with
+  `view_type="LOCAL"`); they classify `local` (no shared library) unless a
+  shared same-name exists.
+- If a whole subtree is uninteresting, don't scan it — classify only the scopes
+  in view.
 
+### Step 3 — Render (Generative UI)
+
+Call `generate_prefab_ui` **directly as a top-level tool** — NOT from inside an
+`execute()` block. Pass it **self-contained** `code`: inline the Step 1–2
+results as Python literals at the top (do NOT pass a `data` argument — the
+widget executes the code in the browser and won't have `data`'s globals, so any
+name only defined via `data` hangs the widget on "waiting for content").
+
+Confirm component names with `search_prefab_components` ONCE (broad query). The
+component set for this view:
+
+- `Accordion` / `AccordionItem` — the collapsible hierarchy; one item per scope,
+  title = `<scope_name> · <N> profiles · <D> devices`, expandable.
+- `Badge` / `Dot` — a chip per committed profile, **color by class**:
+  shared = neutral/green, local = blue, **overridden = amber ⚠**,
+  **orphaned = red ⚠**. Group chips by `profile-type` with a small `Heading`.
+- `Metric` — top KPIs: total scopes, total profiles committed, # orphaned, # overridden.
+- `Column` / `Row` / `Grid` / `Heading` / `Text` — layout.
+
+```python
+# --- Step 1–2 results, inlined as literals (substitute the REAL values) ---
+hierarchy = [  # flattened, one row per scope, in tree order with a depth
+    {"name": "Global", "type": "GLOBAL", "depth": 0, "profiles": 16, "devices": 0},
+    {"name": "EST Timezone Sites", "type": "SITE_COLLECTION", "depth": 1, "profiles": 51, "devices": 0},
+    # ...
+]
+per_scope = {  # scope_name -> profiles grouped by type, each with a class
+    "EST Timezone Sites": {
+        "policies": [{"name": "apple-tv", "cls": "shared"}, {"name": "night-night", "cls": "shared"}],
+        "aliases":  [{"name": "AdamsLAB", "cls": "shared"}, {"name": "user-vlan", "cls": "overridden"}],
+    },
+}
+summary = {"scopes": 137, "profiles": 240, "orphaned": 2, "overridden": 0}
+CLR = {"shared": "green", "local": "blue", "overridden": "amber", "orphaned-local": "red", "orphaned-unnamed": "red"}
+
+with Column(gap=4) as view:
+    Heading("Central config placement")
+    with Row(gap=4):
+        Metric(label="Scopes", value=summary["scopes"])
+        Metric(label="Profiles committed", value=summary["profiles"])
+        Metric(label="Orphaned", value=summary["orphaned"], description="cleanup candidates")
+        Metric(label="Overridden", value=summary["overridden"], description="local supersedes shared")
+    with Accordion():
+        for node in hierarchy:
+            prof = per_scope.get(node["name"], {})
+            title = f'{"  " * node["depth"]}{node["name"]} · {node["profiles"]} profiles' + (f' · {node["devices"]} devices' if node["devices"] else "")
+            with AccordionItem(title=title):
+                if not prof:
+                    Text("No profiles committed directly at this scope.")
+                for ptype, items in prof.items():
+                    Heading(ptype.replace("-", " ").upper())
+                    with Row(gap=2, wrap=True):
+                        for it in items:
+                            flag = " ⚠" if it["cls"].startswith("overridden") or it["cls"].startswith("orphaned") else ""
+                            Badge(text=it["name"] + flag, color=CLR.get(it["cls"], "gray"))
+app = PrefabApp(view=view)
 ```
-[Global] [Site collection] [Site] [Device collection] [Device]
 
-┌───────────────────────────────────────┐
-│  Global                               │
-│  399 resources                        │
-└───────────────────────────────────────┘
-           │
-   ┌───────┼────────────┬──────────────┐
-   │       │            │              │
-┌─────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────┐
-│  East   │ │  West    │ │ 4 Site       │ │ 28 Device    │
-│  Region │ │  Region  │ │ Collections  │ │ Collections  │
-│  177r   │ │  14r     │ │ Region-A ·   │ │ (group-1,    │
-└─────────┘ └──────────┘ │ Region-B ... │ │  group-2,    │
-                         └──────────────┘ │  group-3 ...)│
-                                          └──────────────┘
-   │
-┌──────────┬──────────┐
-│   HQ     │ BRANCH-1 │
-│   52r ·  │  12r     │
-│   17d    │          │
-└──────────┴──────────┘
+(Use the exact component signatures from `search_prefab_components`; the above is
+the shape, not a guaranteed API. If `Accordion` isn't available, fall back to
+`ExpandableRow`, or nested `Card`s indented by `depth`.)
 
-**Walkthrough:** Global carries the lion's share of the library (399 resources, mostly platform-level: aliases, auth servers, system policies). East Region Sites adds 177 resources that flow down to HQ (52 site-specific on top) and BRANCH-1 (12 site-specific). West Region is a thin collection (14 resources). The 4 site collections at right are organizational containers with light direct config — most config lives one level up in the per-region collections.
+### Step 4 — Text walkthrough (ALWAYS emit, and the deliverable in non-apps clients)
 
-Want to drill into a site, or see what's committed/effective at a specific scope?
-```
+Under the board (or instead of it, in a non-apps client), summarize in prose:
+
+- The shape: how many scopes, how deep, where the bulk of config lives.
+- **Orphans, called out explicitly:** each unnamed orphan (type @ scope) and
+  each orphaned-local, with "safe cleanup candidate."
+- **Overrides, called out explicitly:** each overridden profile (name, the scope
+  where the local copy lives, the shared source it shadows) with the warning that
+  it will NOT receive library edits.
+- Never print raw numeric scope IDs — use scope names.
+
+Example: *"137 scopes; 240 profiles committed, almost all shared from the Global
+library. 2 orphaned assignments: a nameless `policy-groups` binding at Global
+(CAMPUS_AP and MOBILITY_GW) — safe to delete. No local overrides detected."*
+
+## Output rules
+
+1. **Aggregate by default.** 4+ same-type siblings → one aggregated node
+   ("4 Site Collections — Region-A · Region-B · …") with expand-on-demand.
+2. **Real profile names, always** — `profile-instance`, never the generic type.
+   The whole reason this skill exists is to answer "what profile is here", not
+   "there's a policy here."
+3. **Never expose raw numeric scope IDs** — use scope names; for unnamed
+   intermediate scopes show type + child counts.
+4. **Flag orphans and overrides visibly** — ⚠ + red/amber, and in the prose.
+5. **No alerts.** This is a config-placement view.
 
 ## When NOT to use this skill
 
-- **"List sites"** — call `central_get_sites` / `central_get_site_name_id_mapping` directly; visualization is overkill.
-- **"What's the effective config for one specific resource"** — call `central_get_effective_config(scope_id=..., persona=..., include_details=True)` directly and present the resource dict.
-- **"Resolve a site name to its scope_id"** — use the `central-scope-walker` skill (the utility for name→ID resolution; this skill is for the bigger picture).
-- **"Audit scope assignments for compliance"** — use the `central-scope-audit` skill, which is the broader audit runbook.
-
-## Performance notes
-
-`central_get_scope_tree` builds the entire scope tree in one call (~1-2s on
-a typical tenant). The structured output is everything the AI needs for
-the top-level overview — no per-scope round-trips required. Per-scope
-inspectors (`central_get_committed_config`, `central_get_effective_config`,
-`central_get_devices_in_scope`) are sub-second per call. On very large
-tenants (100+ sites), prefer aggregated rendering by default and only
-drill in on operator request.
-
-`central_get_scope_diagram` exists but is **deprecated for visualization
-purposes** — its Mermaid output sprawls horizontally on real tenants and
-makes device groups disconnected islands. Use the structured tree from
-`central_get_scope_tree` and render however your client supports. The
-diagram tool stays available as a text-mode fallback when nothing else
-works.
+- **Single-site health / devices / clients** → `central-site-dashboard`.
+- **Name → scope_id lookup** → `central-scope-walker`.
+- **Compliance drift audit** → `central-scope-audit`.
+- **Inspect a specific profile's actual values** → `central_get_<type>(name=...)`
+  directly (that reads the body; this skill deliberately stays at metadata).

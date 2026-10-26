@@ -1537,7 +1537,7 @@
             "$ref": "#/components/schemas/VMProvisioningPolicy/properties/name"
           },
           "protectionPolicy": {
-            "$ref": "#/components/schemas/VMProvisioningPolicy/properties/protectionPolicy"
+            "$ref": "#/components/schemas/ProtectionPolicy"
           },
           "storageType": {
             "default": "Alletra dHCI",
@@ -1563,7 +1563,7 @@
             "$ref": "#/components/schemas/VMProvisioningPolicy/properties/description"
           },
           "protectionPolicy": {
-            "$ref": "#/components/schemas/VMProvisioningPolicy/properties/protectionPolicy"
+            "$ref": "#/components/schemas/ProtectionPolicy"
           },
           "storageType": {
             "default": "Alletra dHCI",

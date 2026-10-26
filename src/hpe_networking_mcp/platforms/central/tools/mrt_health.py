@@ -64,24 +64,16 @@ async def central_get_sites_client_health(
 @tool(capability=Capability.READ)
 async def central_get_tenant_device_health(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Get tenant-wide device health rollup (single record, tenant scope)."""
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-monitoring/v1/tenant-device-health", params)
+    return await _get(conn, "network-monitoring/v1/tenant-device-health", {})
 
 
 @tool(capability=Capability.READ)
 async def central_get_tenant_client_health(
     ctx: Context,
-    filter: str | None = None,
 ) -> dict | str:
     """Get tenant-wide client health rollup (single record, tenant scope)."""
     conn = get_central_conn(ctx)
-    params: dict = {}
-    if filter:
-        params["filter"] = filter
-    return await _get(conn, "network-monitoring/v1/tenant-client-health", params)
+    return await _get(conn, "network-monitoring/v1/tenant-client-health", {})

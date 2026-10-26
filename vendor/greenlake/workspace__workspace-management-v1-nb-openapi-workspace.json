@@ -8,6 +8,10 @@
           "generation": 1,
           "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
           "resourceUri": "/workspaces/v1/workspaces/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          "tags": {
+            "cost-center": "finops",
+            "hpe:partner": "true"
+          },
           "type": "workspace",
           "updatedAt": "2025-09-17T13:06:59.001Z",
           "workspaceName": "New Workspace",
@@ -381,6 +385,9 @@
             "title": "Resource Uri",
             "type": "string"
           },
+          "tags": {
+            "$ref": "#/components/schemas/TagMap"
+          },
           "type": {
             "description": "Type of data",
             "title": "Type of data",
@@ -658,6 +665,14 @@
           "message"
         ],
         "title": "StandardErrorResponse",
+        "type": "object"
+      },
+      "TagMap": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "description": "Map of user and system tag keys to string values associated with the workspace. The property is omitted when the workspace-tags feature is disabled and is an empty object when enabled for a workspace with no tags.",
+        "title": "Workspace tags",
         "type": "object"
       }
     },

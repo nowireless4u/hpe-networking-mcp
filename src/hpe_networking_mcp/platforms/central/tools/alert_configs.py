@@ -41,8 +41,12 @@ ScopeType = Literal["GLOBAL", "SITE", "DEVICE"]
 
 
 def _scope_query_params(scope_id: str, scope_type: ScopeType) -> dict[str, str]:
-    """Build the standard scope query-param dict shared by all four endpoints."""
-    return {"scopeId": scope_id, "scopeType": scope_type}
+    """Build the standard scope query-param dict shared by all four endpoints.
+
+    New Central names these query params ``scope-id`` / ``scope-type``
+    (kebab-case); the camelCase ``scopeId`` / ``scopeType`` are rejected.
+    """
+    return {"scope-id": scope_id, "scope-type": scope_type}
 
 
 def _typed_scope_query_params(type_id: str, scope_id: str, scope_type: ScopeType) -> dict[str, str]:

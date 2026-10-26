@@ -266,6 +266,16 @@ def _walk_dict(
 #: asks for annotations.
 _STRINGIFIED_RECORD_FIELDS: frozenset[str] = frozenset({"aruba_annotation:scope_device_function"})
 
+#: Fields whose value is sometimes the *entire* per-object annotation set
+#: serialized as one stringified dict/list (rather than an expanded nested
+#: structure). Central returns the ``@`` annotation wrapper this way on some
+#: reads (aliases, and others) — and a DEVICE serial nested inside it (via
+#: ``scope_device_function``) then reaches the client cleartext, because the
+#: walker sees ``@`` as one opaque string and never descends. Parsing the blob
+#: and re-walking it routes the nested fields back through the normal rules
+#: (including the ``scope_device_function`` serial handler above).
+_STRINGIFIED_BLOB_FIELDS: frozenset[str] = frozenset({"@"})
+
 
 def _parse_stringified_records(value: str) -> list | None:
     """Parse a stringified list-of-records, or None if it isn't one.
@@ -332,6 +342,63 @@ def _tokenize_stringified_records(value: str, tokenizer: Tokenizer) -> str:
     return json.dumps(records)
 
 
+def _parse_stringified_value(value: str) -> dict | list | None:
+    """Parse a stringified dict OR list, preserving its container type.
+
+    Unlike :func:`_parse_stringified_records` (which normalizes a dict to a
+    one-element list), this keeps a dict a dict so the ``@`` wrapper re-walks
+    and re-serializes as the object it is. Tries JSON then Python-``repr``
+    (``literal_eval`` — literals only, never executes code).
+    """
+    if not value or value[0] not in "[{":
+        return None
+    for parser in (json.loads, ast.literal_eval):
+        try:
+            parsed = parser(value)
+        except (ValueError, SyntaxError, TypeError):
+            continue
+        if isinstance(parsed, dict | list):
+            return parsed
+    return None
+
+
+def _tokenize_stringified_blob(
+    value: str,
+    tokenizer: Tokenizer,
+    *,
+    depth: int,
+    parent_keys: frozenset[str],
+    parent_field_name: str | None,
+) -> str:
+    """Parse a stringified annotation wrapper (``@``) and re-walk its contents.
+
+    The wrapper holds the whole annotation set as one opaque string, so nested
+    identifiers — notably a DEVICE serial inside ``scope_device_function`` —
+    never get reached by the recursive walk and ship cleartext. Parse it, run
+    the parsed structure back through the normal walker (which routes the nested
+    ``scope_device_function`` field to its serial handler), and re-serialize.
+    Returns ``value`` unchanged when it doesn't parse or nothing was masked, so
+    responses that need no masking keep their original serialization.
+    """
+    parsed = _parse_stringified_value(value)
+    if parsed is None:
+        return value
+    if isinstance(parsed, dict):
+        walked: dict | list = _walk_dict(parsed, tokenizer, depth=depth + 1, parent_field_name=parent_field_name)
+    else:
+        walked = _walk_list(
+            parent_field_name,
+            parsed,
+            tokenizer,
+            depth=depth + 1,
+            parent_keys=parent_keys,
+            parent_field_name=parent_field_name,
+        )
+    if walked == parsed:
+        return value
+    return json.dumps(walked)
+
+
 def _walk_pair(
     key: object,
     value: object,
@@ -375,6 +442,14 @@ def _walk_pair(
     # identifier serialized into it ships cleartext.
     if field_name_lower in _STRINGIFIED_RECORD_FIELDS and isinstance(value, str):
         return _tokenize_stringified_records(value, tokenizer)
+
+    # Stringified annotation wrapper (``@``): parse and re-walk so nested
+    # identifiers (e.g. a DEVICE serial inside ``scope_device_function``) are
+    # reached instead of shipping cleartext inside one opaque string.
+    if field_name_lower in _STRINGIFIED_BLOB_FIELDS and isinstance(value, str):
+        return _tokenize_stringified_blob(
+            value, tokenizer, depth=depth, parent_keys=parent_keys, parent_field_name=parent_field_name
+        )
 
     classification, kind = classify_field(key, value, parent_keys=parent_keys, parent_field_name=parent_field_name)
 

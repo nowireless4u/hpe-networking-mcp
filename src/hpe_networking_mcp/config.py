@@ -1,12 +1,16 @@
 """Secrets and configuration management for HPE Networking MCP Server.
 
-Loads credentials from Docker Compose secrets files at /run/secrets/.
-Each secret is a separate file. Missing secret files auto-disable that platform.
+Loads credentials via a two-tier lookup:
+  1. Docker Compose secret file at SECRETS_DIR/<name> (highest priority)
+  2. Environment variable with the UPPER_CASE equivalent name (fallback)
 
-Docker Compose secrets are:
+Missing credentials auto-disable that platform.
+
+Docker Compose secrets (production):
 - Mounted read-only at /run/secrets/<name>
 - Not exposed in `docker inspect` or environment variables
 - Not baked into the Docker image
+- Declared in the base docker-compose.yml; comment out platforms you don't use
 
 Secret file mapping:
     /run/secrets/mist_api_token
@@ -27,12 +31,50 @@ Secret file mapping:
     /run/secrets/apstra_username
     /run/secrets/apstra_password
     /run/secrets/apstra_verify_ssl (optional, default true)
+    /run/secrets/axis_api_token
+    /run/secrets/aos8_host
+    /run/secrets/aos8_username
+    /run/secrets/aos8_password
+    /run/secrets/aos8_port (optional, default 4343)
+    /run/secrets/aos8_verify_ssl (optional, default true)
     /run/secrets/uxi_client_id
     /run/secrets/uxi_client_secret
     /run/secrets/edgeconnect_host
     /run/secrets/edgeconnect_api_key (or edgeconnect_user + edgeconnect_password)
     /run/secrets/edgeconnect_login_type (optional, default 0)
     /run/secrets/edgeconnect_verify_ssl (optional, default true)
+
+Environment variables (development — via .env file or shell export):
+- Set via .env file (loaded by Docker Compose) or shell export
+- Visible in `docker inspect` — use Docker secrets for production
+
+Credential mapping (file name → env var):
+    mist_api_token          → MIST_API_TOKEN
+    mist_host               → MIST_HOST
+    central_base_url        → CENTRAL_BASE_URL
+    central_client_id       → CENTRAL_CLIENT_ID
+    central_client_secret   → CENTRAL_CLIENT_SECRET
+    greenlake_api_base_url  → GREENLAKE_API_BASE_URL
+    greenlake_client_id     → GREENLAKE_CLIENT_ID
+    greenlake_client_secret → GREENLAKE_CLIENT_SECRET
+    greenlake_workspace_id  → GREENLAKE_WORKSPACE_ID
+    clearpass_server        → CLEARPASS_SERVER
+    clearpass_client_id     → CLEARPASS_CLIENT_ID
+    clearpass_client_secret → CLEARPASS_CLIENT_SECRET
+    clearpass_verify_ssl    → CLEARPASS_VERIFY_SSL (optional, default true)
+    apstra_server           → APSTRA_SERVER
+    apstra_port             → APSTRA_PORT (optional, default 443)
+    apstra_username         → APSTRA_USERNAME
+    apstra_password         → APSTRA_PASSWORD
+    apstra_verify_ssl       → APSTRA_VERIFY_SSL (optional, default true)
+    axis_api_token          → AXIS_API_TOKEN
+    aos8_host               → AOS8_HOST
+    aos8_username           → AOS8_USERNAME
+    aos8_password           → AOS8_PASSWORD
+    aos8_port               → AOS8_PORT (optional, default 4343)
+    aos8_verify_ssl         → AOS8_VERIFY_SSL (optional, default true)
+    uxi_client_id           → UXI_CLIENT_ID
+    uxi_client_secret       → UXI_CLIENT_SECRET
 """
 
 import os
@@ -138,6 +180,7 @@ class EdgeConnectSecrets:
 class ServerConfig:
     """Global server configuration."""
 
+    customer_name: str | None = None
     port: int = 8000
     host: str = "0.0.0.0"
     log_level: str = "INFO"
@@ -235,10 +278,15 @@ class ServerConfig:
 
 
 def _read_secret(name: str) -> str | None:
-    """Read a single secret from /run/secrets/<name>.
+    """Read a credential by name using two-tier lookup.
 
-    Returns the stripped file contents, or None if the file doesn't exist.
+    Priority:
+        1. Docker secret file at SECRETS_DIR/<name> (production)
+        2. Environment variable NAME.upper() (development / .env)
+
+    Returns the stripped value, or None if neither source provides it.
     """
+    # Tier 1: Docker secret file (highest priority)
     secret_path = Path(SECRETS_DIR) / name
     if secret_path.is_file():
         try:
@@ -246,7 +294,14 @@ def _read_secret(name: str) -> str | None:
             if value:
                 return value
         except OSError as e:
-            logger.warning("Failed to read secret {}: {}", name, e)
+            logger.warning("Failed to read secret file {}: {}", name, e)
+
+    # Tier 2: Environment variable fallback
+    env_name = name.upper()
+    env_value = os.environ.get(env_name, "").strip()
+    if env_value:
+        return env_value
+
     return None
 
 
@@ -555,7 +610,10 @@ def _load_edgeconnect() -> EdgeConnectSecrets | None:
 def load_config() -> ServerConfig:
     """Load server configuration from Docker secrets and environment variables.
 
-    Secrets are read from files at /run/secrets/<name> (Docker Compose secrets).
+    Credentials use two-tier lookup per secret:
+        1. Docker secret file at SECRETS_DIR/<name> (production)
+        2. Environment variable NAME.upper() (development / .env)
+
     Server settings come from environment variables:
         MCP_PORT, MCP_HOST, LOG_LEVEL, ENABLE_WRITE_TOOLS,
         DISABLE_ELICITATION, MCP_TOOL_MODE
@@ -566,7 +624,12 @@ def load_config() -> ServerConfig:
     Raises:
         SystemExit: If no platforms have valid credentials.
     """
-    logger.info("Loading secrets from {}", SECRETS_DIR)
+    # Customer name for multi-instance identification
+    customer_name = os.getenv("CUSTOMER_NAME", "").strip() or None
+    if customer_name:
+        logger.info("Customer: {}", customer_name)
+
+    logger.info("Loading credentials (secrets dir: {}, env var fallback: enabled)", SECRETS_DIR)
 
     # Parse environment overrides for server settings
     port = int(os.getenv("MCP_PORT", "8000"))
@@ -611,10 +674,11 @@ def load_config() -> ServerConfig:
             logger.warning("Ignoring unknown MCP_TOOL_MODE={!r}, defaulting to 'code'", tool_mode)
             tool_mode = "code"
 
-    # ALLOWED_ORIGINS — comma-separated. Empty value falls back to the
-    # localhost defaults (most users). ``*`` disables the check.
+    # ALLOWED_ORIGINS — comma-separated. Absent OR blank/whitespace falls back
+    # to the localhost defaults (most users; Compose injects it as an empty
+    # string). ``*`` disables the check.
     allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
-    if allowed_origins_env is None:
+    if not allowed_origins_env or not allowed_origins_env.strip():
         allowed_origins = [f"http://localhost:{port}", f"http://127.0.0.1:{port}"]
     else:
         allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
@@ -660,6 +724,7 @@ def load_config() -> ServerConfig:
     edgeconnect = _load_edgeconnect()
 
     config = ServerConfig(
+        customer_name=customer_name,
         port=port,
         host=host,
         log_level=log_level,
@@ -694,7 +759,9 @@ def load_config() -> ServerConfig:
 
     if not config.enabled_platforms:
         logger.error(
-            "No platforms have valid credentials. Create secret files in {} (see secrets/ directory for examples).",
+            "No platforms have valid credentials. "
+            "Set credentials via environment variables (see .env.example) "
+            "or Docker secret files in {} (see secrets/ directory for examples).",
             SECRETS_DIR,
         )
         raise SystemExit(1)

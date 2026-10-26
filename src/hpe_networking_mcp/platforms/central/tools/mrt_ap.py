@@ -31,15 +31,6 @@ async def _get(conn, path: str, params: dict | None = None) -> dict | str:
     return {"status": "error", "code": code, "message": response.get("msg", "Unknown error")}
 
 
-def _time_params(start: str | None, end: str | None) -> dict:
-    params: dict = {}
-    if start:
-        params["start"] = start
-    if end:
-        params["end"] = end
-    return params
-
-
 # ---------------------------------------------------------------------------
 # AP top-level trends + utility lists
 # ---------------------------------------------------------------------------
@@ -72,17 +63,15 @@ async def central_get_ap_trend(
             ),
         ),
     ] = None,
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp (optional; defaults to last 3h).")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp (optional; defaults to last 3h).")] = None,
 ) -> dict | str:
     """Get one of an AP's top-level time-series trends.
 
     Consolidates the four trend endpoints under
     ``/aps/:serial/<dim>-trends`` (throughput, cpu-utilization,
-    memory-utilization, power-consumption). Omit ``start`` / ``end`` for the
-    last-3-hours default. The ``throughput`` dimension additionally requires an
-    ``interface_type`` (WIRELESS / WIRED / LTE) — the API 400s without it; this tool
-    defaults it to ``WIRELESS`` so an AP throughput query works out of the box.
+    memory-utilization, power-consumption). The ``throughput`` dimension
+    additionally requires an ``interface_type`` (WIRELESS / WIRED / LTE) — the
+    API 400s without it; this tool defaults it to ``WIRELESS`` so an AP
+    throughput query works out of the box.
     """
     suffix_map = {
         "throughput": "throughput-trends",
@@ -91,7 +80,7 @@ async def central_get_ap_trend(
         "power": "power-consumption-trends",
     }
     conn = get_central_conn(ctx)
-    params = _time_params(start, end)
+    params: dict = {}
     if dimension == "throughput":
         # interface-type is a mandatory query param for throughput-trends (enum
         # WIRELESS/WIRED/LTE); WIRELESS is the sensible default for an AP.
@@ -135,8 +124,6 @@ async def central_get_ap_radio_trend(
             ),
         ),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of an AP-radio's time-series trends."""
     suffix_map = {
@@ -151,7 +138,7 @@ async def central_get_ap_radio_trend(
         conn,
         f"network-monitoring/v1/aps/{path_seg(serial_number)}/radios/"
         f"{path_seg(radio_number)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -182,8 +169,6 @@ async def central_get_ap_port_trend(
         _PortTrendDimension,
         Field(description="Per-port trend dimension: ``'throughput'``, ``'frames'``, ``'crc'``, or ``'collisions'``."),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of an AP-port's time-series trends."""
     suffix_map = {
@@ -197,7 +182,7 @@ async def central_get_ap_port_trend(
         conn,
         f"network-monitoring/v1/aps/{path_seg(serial_number)}/ports/"
         f"{path_seg(port_index)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -244,8 +229,6 @@ async def central_get_ap_tunnel_trend(
             ),
         ),
     ],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get one of an AP-tunnel's time-series trends."""
     suffix_map = {
@@ -260,7 +243,7 @@ async def central_get_ap_tunnel_trend(
         conn,
         f"network-monitoring/v1/aps/{path_seg(serial_number)}/tunnels/"
         f"{path_seg(tunnel_id)}/{path_seg(suffix_map[dimension])}",
-        _time_params(start, end),
+        {},
     )
 
 
@@ -289,15 +272,13 @@ async def central_get_ap_wlan_throughput(
     ctx: Context,
     serial_number: Annotated[str, Field(description="AP serial number.")],
     wlan_name: Annotated[str, Field(description="WLAN / SSID name.")],
-    start: Annotated[str | None, Field(description="ISO-8601 start timestamp.")] = None,
-    end: Annotated[str | None, Field(description="ISO-8601 end timestamp.")] = None,
 ) -> dict | str:
     """Get throughput trend for one WLAN as broadcast by one AP."""
     conn = get_central_conn(ctx)
     return await _get(
         conn,
         f"network-monitoring/v1/aps/{path_seg(serial_number)}/wlans/{path_seg(wlan_name)}/throughput-trends",
-        _time_params(start, end),
+        {},
     )
 
 

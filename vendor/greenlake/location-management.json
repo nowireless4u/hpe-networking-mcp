@@ -21,7 +21,7 @@
           },
           "httpStatusCode": {
             "description": "HTTP equivalent status code.",
-            "type": "string"
+            "type": "integer"
           },
           "message": {
             "description": "User-friendly error message.",
@@ -38,6 +38,31 @@
       },
       "apiErrorDetail": {
         "properties": {
+          "issues": {
+            "description": "Present when type is hpe.greenlake.bad_request. One entry for each invalid part of the request.",
+            "items": {
+              "properties": {
+                "description": {
+                  "description": "What is wrong and how to correct it.",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "The part of the request with the issue, for example query.parameter.",
+                  "type": "string"
+                },
+                "subject": {
+                  "description": "The name of the invalid item, for example limit.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source",
+                "subject"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
           "metadata": {
             "description": "Additional metadata about the error.",
             "properties": {
@@ -53,7 +78,7 @@
             "type": "string"
           },
           "type": {
-            "description": "Type of error detail (e.g., hpe.greenlake.metadata).",
+            "description": "Type of error detail (e.g., hpe.greenlake.metadata, or hpe.greenlake.bad_request for an invalid query parameter).",
             "type": "string"
           }
         },
@@ -304,8 +329,14 @@
             "maxLength": 100,
             "type": "string"
           },
+          "phoneExtension": {
+            "description": "The phone extension of the contact. Required only when the Phone Number is provided.",
+            "maxLength": 4,
+            "type": "string"
+          },
           "phoneNumber": {
-            "description": "The phone number associated with the contact.",
+            "description": "The phone number of the contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "maxLength": 20,
             "type": "string"
           },
           "type": {
@@ -358,9 +389,11 @@
       "server.CreateLocationNBRequest": {
         "properties": {
           "addresses": {
+            "description": "Exactly one address of type street is required; one address of type shipping_receiving is optional.",
             "items": {
               "$ref": "#/components/schemas/server.CreateAddressNBRequest"
             },
+            "minItems": 1,
             "type": "array"
           },
           "contacts": {
@@ -384,8 +417,7 @@
                 "$ref": "#/components/schemas/db.LocationType"
               }
             ],
-            "description": "The type of the location.",
-            "value": "building"
+            "description": "The type of the location."
           },
           "name": {
             "description": "Provide a descriptive name for the location.",
@@ -398,7 +430,8 @@
             "type": "boolean"
           },
           "validatedAt": {
-            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "description": "The date and time the location was validated, as an RFC 3339 timestamp in UTC.",
+            "format": "date-time",
             "type": "string"
           },
           "validatedByEmail": {
@@ -415,7 +448,7 @@
                 "$ref": "#/components/schemas/db.ValidationCycle"
               }
             ],
-            "description": "An integer that defines how long, in months, the location remains validated."
+            "description": "The number of months that the location remains validated, as a string."
           },
           "validationExpired": {
             "default": false,
@@ -490,7 +523,10 @@
           },
           "streetAddress2": {
             "description": "The location's address.",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "type": {
             "allOf": [
@@ -510,7 +546,7 @@
             "type": "string"
           },
           "id": {
-            "description": "The unique identifer of the contact.",
+            "description": "The unique identifier of the contact.",
             "format": "uuid",
             "type": "string"
           },
@@ -518,9 +554,19 @@
             "description": "The name of the contact.",
             "type": "string"
           },
+          "phoneExtension": {
+            "description": "The phone extension of the contact. Required only when the Phone Number is provided.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "phoneNumber": {
-            "description": "The phone number associated with the contact.",
-            "type": "string"
+            "description": "The phone number of the contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "type": {
             "$ref": "#/components/schemas/db.ContactType"
@@ -544,11 +590,17 @@
           },
           "description": {
             "description": "A long description of the location.",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "expiredAt": {
             "description": "The date the location expired.",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "description": "The unique identifier for the location.",
@@ -561,8 +613,7 @@
                 "$ref": "#/components/schemas/db.LocationType"
               }
             ],
-            "description": "Type of location.",
-            "value": "building"
+            "description": "Type of location."
           },
           "name": {
             "description": "The name of the location.",
@@ -574,8 +625,12 @@
             "type": "boolean"
           },
           "validatedAt": {
-            "description": "The date the location was validated in the format mm-dd-yyyy.",
-            "type": "string"
+            "description": "The date and time the location was validated, as an RFC 3339 timestamp in UTC.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "validatedByEmail": {
             "description": "Email address of the workspace user that validated the location.",
@@ -591,7 +646,7 @@
                 "$ref": "#/components/schemas/db.ValidationCycle"
               }
             ],
-            "description": "An integer in months that defines how long the location remains validated."
+            "description": "The number of months that the location remains validated, as a string."
           },
           "validationExpired": {
             "default": false,
@@ -726,7 +781,8 @@
             "type": "boolean"
           },
           "validatedAt": {
-            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "description": "The date and time the location was validated, as an RFC 3339 timestamp in UTC.",
+            "format": "date-time",
             "type": "string"
           },
           "validatedByEmail": {
@@ -780,7 +836,10 @@
           },
           "expiredAt": {
             "description": "The date the location expired.",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "id": {
             "description": "The unique identifier of the location.",
@@ -804,7 +863,10 @@
             "items": {
               "$ref": "#/components/schemas/server.GetTags"
             },
-            "type": "array"
+            "type": [
+              "array",
+              "null"
+            ]
           },
           "validated": {
             "default": true,
@@ -812,8 +874,12 @@
             "type": "boolean"
           },
           "validatedAt": {
-            "description": "The date the location was validated in the format mm-dd-yyyy.",
-            "type": "string"
+            "description": "The date and time the location was validated, as an RFC 3339 timestamp in UTC.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "validatedByEmail": {
             "description": "Email address of the workspace user that validated the location.",
@@ -829,7 +895,7 @@
                 "$ref": "#/components/schemas/db.ValidationCycle"
               }
             ],
-            "description": "An integer that defines how long, in months, the location remains validated."
+            "description": "The number of months that the location remains validated, as a string."
           },
           "validationExpired": {
             "default": false,
@@ -957,8 +1023,14 @@
             "maxLength": 100,
             "type": "string"
           },
+          "phoneExtension": {
+            "description": "The phone extension of the contact. Required only when the Phone Number is provided.",
+            "maxLength": 4,
+            "type": "string"
+          },
           "phoneNumber": {
-            "description": "The phone number associated with the contact.",
+            "description": "The phone number of the contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "maxLength": 20,
             "type": "string"
           },
           "type": {
@@ -1017,8 +1089,7 @@
                 "$ref": "#/components/schemas/db.LocationType"
               }
             ],
-            "description": "Type of location.",
-            "value": "building"
+            "description": "Type of location."
           },
           "name": {
             "description": "The name of location.",
@@ -1031,7 +1102,8 @@
             "type": "boolean"
           },
           "validatedAt": {
-            "description": "The date the location was validated in the format mm-dd-yyyy.",
+            "description": "The date and time the location was validated, as an RFC 3339 timestamp in UTC.",
+            "format": "date-time",
             "type": "string"
           },
           "validatedByEmail": {
@@ -1048,7 +1120,7 @@
                 "$ref": "#/components/schemas/db.ValidationCycle"
               }
             ],
-            "description": "An integer that defines, in months, how long the location remains validated."
+            "description": "The number of months that the location remains validated, as a string."
           },
           "validationExpired": {
             "default": false,
@@ -1100,8 +1172,7 @@
                 "$ref": "#/components/schemas/db.LocationType"
               }
             ],
-            "description": "Type of location.",
-            "value": "building"
+            "description": "Type of location."
           },
           "name": {
             "description": "The name of the location.",
@@ -1122,7 +1193,8 @@
             "type": "boolean"
           },
           "validatedAt": {
-            "description": "The date and time the location was validated in the format mm-dd-yyyy.",
+            "description": "The date and time the location was validated, as an RFC 3339 timestamp in UTC.",
+            "format": "date-time",
             "type": "string"
           },
           "validatedByEmail": {
@@ -1139,7 +1211,7 @@
                 "$ref": "#/components/schemas/db.ValidationCycle"
               }
             ],
-            "description": "An integer that defines, in months, how long the location remains validated."
+            "description": "The number of months that the location remains validated, as a string."
           },
           "validationExpired": {
             "default": false,
@@ -1264,6 +1336,14 @@
             "description": "The name of the location to be created.",
             "type": "string"
           },
+          "Phone Extension(Optional)": {
+            "description": "The phone extension of the primary contact, 1 to 4 digits (0-9). Required only when the Phone Number is provided.",
+            "type": "string"
+          },
+          "Phone Number(Optional)": {
+            "description": "The phone number of the primary contact, [+][country code][phone number] format (e.g., `+14155552671`), without spaces or separators.",
+            "type": "string"
+          },
           "Primary Contact Email(Required)": {
             "description": "The email of the primary contact.",
             "type": "string"
@@ -1328,16 +1408,18 @@
         "operationId": "listAllLocations",
         "parameters": [
           {
-            "description": "The zero-based resource offset to start the response from.",
+            "description": "The zero-based resource offset to start the response from. A negative or non-integer value returns 400.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
+              "default": 0,
+              "minimum": 0,
               "type": "integer"
             }
           },
           {
-            "description": "The maximum number of results to be returned.",
+            "description": "The maximum number of results to be returned. A value below 1, above 2000 or that is not an integer returns 400.",
             "in": "query",
             "name": "limit",
             "required": true,
@@ -1349,8 +1431,27 @@
             }
           },
           {
-            "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint, return only the subset of resources that match the filter. The filter grammar is a subset of OData 4.0. <br><br>This API can be filtered by `name`. <br><br>**NOTE:** The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL. The reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents. <br><br>\n",
+            "description": "Optional. Comma-separated workspace ids to restrict the consolidated list to, for an MSP or organization parent workspace. Ids outside the caller's scope are ignored; an empty intersection returns no items. For a non-parent workspace only its own id matches. Ignored unless the consolidated view is enabled for the caller.",
+            "explode": false,
+            "in": "query",
+            "name": "workspaceIds",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          },
+          {
+            "description": "Limit the resources operated on by an endpoint or when used with a multiple-GET endpoint, return only the subset of resources that match the filter. The filter grammar is a subset of OData 4.0. <br><br>Supported properties and operators: <ul><li>`name` with `contains`, for example `contains(name, 'test')`. The match is not case-sensitive.</li><li>`city` and `country` with `eq`, for example `city eq 'Austin'`. The match is not case-sensitive, and a location matches when any of its addresses matches.</li><li>`validated` and `validationExpired` with `eq true` or `eq false`.</li></ul>Only these combinations are supported, using `and`: `city` with `country` (for example `country eq 'United States' and city eq 'Austin'`, which returns locations with an address that matches both), and `validated` with `validationExpired` (for example `validated eq false and validationExpired eq false` returns locations that were never validated). `or`, `not`, other operators, other combinations and a property given more than once return 400. <br><br>**NOTE:** The filter query parameter must use [URL encoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients do this automatically with inputs provided to them specifically as query parameters. Encoding must be done manually for any query parameters provided as part of the URL. The reserved characters `!` `#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]` must be encoded with percent encoded equivalents. <br><br>\n",
             "examples": {
+              "cityAndCountry": {
+                "description": "Return locations with an address in the city and country provided.",
+                "summary": "Filter by location city and country.",
+                "value": "country eq 'test country' and city eq 'test city'"
+              },
               "contains": {
                 "description": "Return locations that contain a name that matches the one provided.",
                 "summary": "Filter by location name.",
@@ -1365,6 +1466,16 @@
                 "description": "Return locations belonging to the country that matches the one provided.",
                 "summary": "Filter by location country.",
                 "value": "country eq 'test country'"
+              },
+              "neverValidated": {
+                "description": "Return locations that are neither validated nor expired.",
+                "summary": "Filter locations that were never validated.",
+                "value": "validated eq false and validationExpired eq false"
+              },
+              "validationExpired": {
+                "description": "Return locations whose validation cycle has lapsed and need re-validation.",
+                "summary": "Filter by expired validation.",
+                "value": "validationExpired eq true"
               }
             },
             "in": "query",
@@ -1582,7 +1693,7 @@
         "operationId": "getCsvUploadStatus",
         "parameters": [
           {
-            "description": "The unique indentifier of the async operation location ID. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "description": "The unique identifier of the async operation location ID. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
             "in": "path",
             "name": "id",
             "required": true,
@@ -1725,16 +1836,18 @@
         "operationId": "listAllTags",
         "parameters": [
           {
-            "description": "The zero-based resource offset to start the response from.",
+            "description": "The zero-based resource offset to start the response from. A negative or non-integer value returns 400.",
             "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
+              "default": 0,
+              "minimum": 0,
               "type": "integer"
             }
           },
           {
-            "description": "The maximum number of results to be returned.",
+            "description": "The maximum number of results to be returned. A value below 1, above 2000 or that is not an integer returns 400.",
             "in": "query",
             "name": "limit",
             "required": true,
@@ -2080,7 +2193,7 @@
         "operationId": "getLocationBy",
         "parameters": [
           {
-            "description": "The unique indentifier of the location. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
+            "description": "The unique identifier of the location. For example, `945e70ec-b043-4cad-9ed0-069c06fdb8af`.",
             "in": "path",
             "name": "id",
             "required": true,

@@ -3,6 +3,28 @@
 [![CI](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml)
 [![Security](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml)
 
+> ### ⚠️ Active development — releases are paused
+>
+> This server is undergoing extensive changes. The gap since the last release is
+> **because of that work, not because the project is inactive** — development is
+> ongoing and moving quickly. Releases will resume once the current round of
+> changes settles.
+>
+> If you are running an existing release it keeps working; just expect the next
+> release to carry a larger-than-usual set of changes.
+>
+> ### 📛 This repository is being renamed
+>
+> The repository will be renamed. **The existing URL will continue to work** —
+> GitHub redirects the old address for both web links and `git` operations, so
+> existing clones, remotes, bookmarks, and `docker`/CI references keep functioning
+> after the rename. No action is required on your part. Updating your remote to
+> the new address afterwards is good hygiene but not necessary:
+>
+> ```bash
+> git remote set-url origin <new-url>
+> ```
+
 > **Unofficial / community project.** This repository is an independent, community-driven project. It is not affiliated with, endorsed by, sponsored by, or supported by Hewlett Packard Enterprise, Aruba Networks, or Juniper Networks. "HPE", "Aruba", "Aruba Central", "Aruba ClearPass", "HPE GreenLake", "Juniper", and "Juniper Mist" are trademarks of their respective owners and are used here only to describe what this software interoperates with. Please direct support and licensing questions about those products to the respective vendors.
 
 A unified [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server that brings **Juniper Mist**, **Aruba Central**, **HPE GreenLake**, **Aruba ClearPass**, **Juniper Apstra**, **Axis Atmos Cloud**, **Aruba OS 8**, **HPE UXI**, and **Aruba EdgeConnect** together into a single, deployable service. One container. One endpoint. All your HPE networking tools.
@@ -60,7 +82,7 @@ Managing HPE networking infrastructure with AI assistants today means juggling m
 | **Exposed meta-tools (dynamic mode)** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
 | **Cross-Platform** | **3 tools + 3 prompts** | **3 tools + 3 prompts** | — | **1 tool** | — | — | — | — | — |
 
-> **Default tool surface (v3.0.0.0+)**: ships with `MCP_TOOL_MODE=code` by default. Code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 4149 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Smallest initial token cost (~minimal context); best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` to use the v2.x default behavior — each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) plus the 4 cross-platform static tools and 2 skills tools (24 total surface, ~3,700 tokens). The `static` mode was REMOVED in v3.0.0.0. Every tool's response is wrapped in a uniform envelope `{ok, status, data, message, tool, platform}`. v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (48 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. v3.2.0.0 adds **HPE UXI** (21 tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
+> **Default tool surface (v3.0.0.0+)**: ships with `MCP_TOOL_MODE=code` by default. Code mode exposes only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`); all 4109 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Smallest initial token cost (~minimal context); best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` to use the v2.x default behavior — each platform exposes 3 meta-tools (`<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`) plus the 4 cross-platform static tools and 2 skills tools (24 total surface, ~3,700 tokens). The `static` mode was REMOVED in v3.0.0.0. Every tool's response is wrapped in a uniform envelope `{ok, status, data, message, tool, platform}`. v2.3.0.0 introduces **Skills** — markdown-defined multi-step procedures discoverable via `skills_list` / `skills_load`; see [docs/TOOLS.md#skills](docs/TOOLS.md). v2.4.0.0 adds **AOS8** (48 tools + 9 prompts) — see [INSTRUCTIONS.md](INSTRUCTIONS.md) for AOS8-specific operator guidance. v3.2.0.0 adds **HPE UXI** (21 tools). See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md).
 
 ### Aruba Central Guided Prompts
 
@@ -125,83 +147,55 @@ cd hpe-networking-mcp
 
 > **No build required.** The `docker-compose.yml` pulls a pre-built image from GitHub Container Registry by default. To build from source instead, edit `docker-compose.yml` and swap `image:` for `build: .`.
 
-### 2. Configure Secrets
+### 2. Configure Credentials
 
-The repo ships with `.example` template files only — **no real secret files**. You create the real files yourself by copying the examples and editing them with your values.
-
-**Important:** `docker-compose.yml` declares every platform's secrets and bind-mounts each of them into the container at startup. If a listed secret file doesn't exist on disk, the container fails immediately with an `invalid mount config` error — **before the app ever runs.** That means you need to pick one of two paths:
-
-- **Path A (most users):** populate every `.example` → real-name pair for every platform listed in the compose file, even the platforms you don't currently use (put dummy content in the unused ones — the app will disable the platform at runtime, see below).
-- **Path B (recommended if you only use some platforms):** create a `docker-compose.override.yml` that removes the unused platforms' secret references so compose stops trying to bind them. See **Disabling platforms you don't use** below.
-
-For the platforms you actually want enabled, copy the templates and edit them with real values:
+Copy the environment template and fill in credentials for the platforms you use:
 
 ```bash
-# Mist (required for this example; do the same for every platform you're using)
-cp secrets/mist_api_token.example secrets/mist_api_token
-cp secrets/mist_host.example secrets/mist_host
-# Edit each file with your real credentials
-
-# Aruba Central
-cp secrets/central_base_url.example secrets/central_base_url
-cp secrets/central_client_id.example secrets/central_client_id
-cp secrets/central_client_secret.example secrets/central_client_secret
-
-# HPE GreenLake
-cp secrets/greenlake_api_base_url.example secrets/greenlake_api_base_url
-cp secrets/greenlake_client_id.example secrets/greenlake_client_id
-cp secrets/greenlake_client_secret.example secrets/greenlake_client_secret
-cp secrets/greenlake_workspace_id.example secrets/greenlake_workspace_id
-
-# ClearPass
-cp secrets/clearpass_server.example secrets/clearpass_server
-cp secrets/clearpass_client_id.example secrets/clearpass_client_id
-cp secrets/clearpass_client_secret.example secrets/clearpass_client_secret
-cp secrets/clearpass_verify_ssl.example secrets/clearpass_verify_ssl
-
-# Juniper Apstra
-cp secrets/apstra_server.example secrets/apstra_server
-cp secrets/apstra_port.example secrets/apstra_port
-cp secrets/apstra_username.example secrets/apstra_username
-cp secrets/apstra_password.example secrets/apstra_password
-cp secrets/apstra_verify_ssl.example secrets/apstra_verify_ssl
-
-# Axis Atmos Cloud
-cp secrets/axis_api_token.example secrets/axis_api_token
+cp .env.example .env
+# Edit .env — uncomment and fill in only the platforms you need
 ```
+
+Only platforms with **all required credentials** set will be enabled. Leave unused platforms commented out or empty — they're automatically disabled.
+
+**Example `.env` for a Mist-only deployment:**
+
+```env
+MIST_API_TOKEN=your-mist-api-token-here
+MIST_HOST=api.mist.com
+```
+
+**Example `.env` for Mist + Central:**
+
+```env
+MIST_API_TOKEN=your-mist-api-token-here
+MIST_HOST=api.mist.com
+CENTRAL_BASE_URL=https://apigw-us5.central.arubanetworks.com
+CENTRAL_CLIENT_ID=your-client-id
+CENTRAL_CLIENT_SECRET=your-client-secret
+```
+
+> **Security:** `.env` is git-ignored and never committed. Restrict file permissions: `chmod 600 .env`. For production deployments where env vars in `docker inspect` are unacceptable, see [Docker Secrets (Production)](#docker-secrets-production) below.
 
 > **Axis token note**: Generate the token in the Axis admin portal at *Settings → Admin API → New API Token*. Pick read or read+write scope and an expiration. The MCP server decodes the JWT's `exp` claim at startup and logs a warning when the token has fewer than 30 days remaining; the `health` tool also surfaces a `token_expires_in_days` countdown when inside that window. There is no refresh — regenerate the token in the portal before it lapses.
 
-Each file contains a single value (e.g., your API token). **Do not leave placeholder contents** (like `apstra.example.com` or `replace-with-real-password`) in a file for a platform you're not using — the server will try to authenticate with those fake values at startup and fill your logs with failed-login errors. If you're not using a platform, use Path B below (override file) or leave the secret file empty — the app treats an empty file as "not configured" and disables the platform.
+### 3. Start
 
-### 3. Disable platforms you don't use (recommended)
-
-Create a `docker-compose.override.yml` alongside `docker-compose.yml`. Compose auto-merges it at startup, and the committed `docker-compose.yml` stays untouched. A ready-to-copy template is shipped in the repo:
+Credentials from a `.env` file use the env overlay, which drops the base file's Docker-secret mounts so no `secrets/*` files are needed:
 
 ```bash
-cp docker-compose.override.yml.example docker-compose.override.yml
-# edit to match the platforms you actually use
+docker compose -f docker-compose.yml -f docker-compose.env.yml up -d
 ```
 
-The template shows a Mist-only deployment that drops every other platform's secret references — and you need to do **both halves** for Compose to stop trying to bind-mount the unused files: the service-level `secrets:` list **and** the top-level `secrets:` block. The two halves use different Compose tags. Adjust the `secrets: !override` list under `services:` to keep whichever platforms you need — `!override` replaces the base list with just your entries (don't use `!reset` on this list; it empties it and mounts nothing). Then `!reset` only the top-level entries you're actually dropping, which removes those map keys so Compose won't resolve their files. The template also has examples for per-platform write-tool flags, log level, and tool mode overrides.
+> Using **Docker secret files** instead of `.env`? Run the plain `docker compose up -d` — the base compose mounts the secret files directly (unchanged from prior releases). See [Docker Secrets (Production)](#docker-secrets-production).
 
-`docker-compose.override.yml` is already in `.gitignore`, so your per-deployment tailoring never ends up in git. With the Mist-only override in place, you only need `secrets/mist_api_token` and `secrets/mist_host` on disk — every other secret file can be absent.
-
-> **Compose version required:** the `!override` and `!reset` tags both need Docker Compose v2.24 or newer. If you're on an older Compose, either upgrade (recommended) or skip the override file and edit `docker-compose.yml` directly, commenting out the unused platform's service-level and top-level secret entries.
-
-### 4. Start
-
-```bash
-docker compose up -d
-```
-
-### 5. Verify
+### 4. Verify
 
 ```bash
 docker compose logs
 ```
 
-Look for lines like `Mist: 1050 underlying tools registered (code mode)`, `ClearPass: 142 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 48 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `EdgeConnect: registered 187 generated tool module(s) (code mode)`, `GreenLake: registered 959 tools across 169 tool module(s) (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 4149 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
+Look for lines like `Mist: 1050 underlying tools registered (code mode)`, `ClearPass: 142 underlying tools registered (code mode)`, `Axis: 25 underlying tools registered (code mode)`, `AOS8: 48 underlying tools (code mode)`, `UXI: 21 underlying tools (code mode)`, `EdgeConnect: registered 187 generated tool module(s) (code mode)`, `GreenLake: registered 919 tools across 163 tool module(s) (code mode)`, `Tool mode: code`, and `Uvicorn running on http://0.0.0.0:8000`. Your MCP server is running at `http://localhost:8000/mcp`. In the default code mode (since v3.0.0.0), only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are exposed at the top level; all 4109 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. Set `MCP_TOOL_MODE=dynamic` to use the v2.x meta-tool surface instead. Mist registers 2 guided prompts; Central registers 12; AOS8 registers 9.
 
 ### Health & readiness probes
 
@@ -255,7 +249,7 @@ docker pull ghcr.io/nowireless4u/hpe-networking-mcp:latest
 
 ## Platform Auto-Disable
 
-You don't need credentials for all nine platforms. The server detects which platforms have valid secret content at startup and only enables those. A platform is disabled if any of its required secret files is **empty or absent** from `SECRETS_DIR` (inside the container) — which, under Docker Compose, means the file on disk was empty or you used a `docker-compose.override.yml` to drop that platform's secrets entirely (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
+You don't need credentials for all nine platforms. The server detects which platforms have valid credentials at startup and only enables those. A platform is disabled if any of its required credentials is **empty or absent** — whether provided via environment variable or Docker secret file.
 
 - **All nine platforms configured** → All tools available (Mist + Central + GreenLake + ClearPass + Apstra + Axis + AOS8 + UXI + EdgeConnect)
 - **Only Mist configured** → Only `mist_*` tools available; other platforms disabled
@@ -263,7 +257,7 @@ You don't need credentials for all nine platforms. The server detects which plat
 - **Only ClearPass configured** → Only `clearpass_*` tools available; other platforms disabled
 - **No valid credentials** → Server refuses to start with a clear error message
 
-Add a platform later by populating its secret files (and, if you dropped it in the override, adding its names back to the service-level `secrets: !override` list and removing its top-level `!reset` lines), then restarting the container. The server logs which platforms are enabled at startup:
+Add a platform later by setting its credentials in `.env` (or via Docker secrets) and restarting the container. The server logs which platforms are enabled at startup:
 
 ```
 Mist: credentials loaded (token: abcd...wxyz, host: api.mist.com)
@@ -273,8 +267,6 @@ AOS8: disabled (missing secrets: aos8_host)
 Enabled platforms: mist
 Tool mode: code
 ```
-
-> **Heads up:** auto-disable triggers on **empty or absent secret content**, not on placeholder/example values. If you copy `apstra_server.example` → `apstra_server` and leave the contents as `apstra.example.com`, the server thinks Apstra is configured and tries to authenticate against the fake host — your logs fill with login errors. Either empty those files, drop the platform via `docker-compose.override.yml`, or fill in real values.
 
 ---
 
@@ -462,79 +454,132 @@ If you put the server behind an authenticating reverse proxy that already valida
 
 ## Secrets
 
-This project uses **Docker Compose secrets** for credential management — the most secure native Docker approach:
+Credentials are loaded via a **two-tier lookup** for each value:
 
-- Each credential is a **separate file** in the `secrets/` directory
-- Files are mounted **read-only** at `/run/secrets/` inside the container
-- Secrets are **never** baked into the Docker image, exposed in `docker inspect`, or stored as environment variables
-- Real secret files are **git-ignored** — only `.example` templates are committed
+1. **Docker secret file** at `SECRETS_DIR/<name>` — highest priority (production)
+2. **Environment variable** with the UPPER_CASE equivalent — fallback (development)
 
-### How It Works
+If both exist, the Docker secret file wins. If neither exists, the platform is disabled.
 
+### Environment Variables (`.env` file)
+
+The quickest setup for development — no per-platform secret files. Create a `.env` and start with the **env overlay** (`docker-compose.env.yml`), which removes the base file's Docker-secret mounts so no `secrets/*` files need to exist:
+
+```bash
+cp .env.example .env
+chmod 600 .env
+# Edit .env with your credentials
+docker compose -f docker-compose.yml -f docker-compose.env.yml up -d
 ```
-secrets/
-├── mist_api_token.example      # Template (committed to git)
-├── mist_api_token              # Your real secret (git-ignored)
-├── mist_host.example
-├── mist_host
-└── ...
+
+The `.env` file is git-ignored and never leaves your machine. For multiple isolated instances, add `--env-file .env-<name> -p <name>` (see `.env.example`).
+
+### Docker Secrets (Production)
+
+For production deployments where credentials must not be visible in `docker inspect` or `/proc/<pid>/environ`, use Docker secret files. They are wired into the base `docker-compose.yml`, so the plain command works **unchanged from prior releases** — just create the files and start:
+
+```bash
+# Create secret files from templates
+cp secrets/mist_api_token.example secrets/mist_api_token
+cp secrets/mist_host.example secrets/mist_host
+# Edit with real values...
+
+docker compose up -d
 ```
 
-Docker Compose reads these files and mounts them at `/run/secrets/<name>` inside the container. The server reads each file at startup.
+A credential present as a secret **file** takes priority over the matching environment variable, so you can mix the two (secret files for sensitive platforms, `.env` for the rest — omit the env overlay when you want the secret mounts).
 
-### Platform Credentials
+Docker secrets are:
+- Mounted **read-only** at `/run/secrets/` inside the container
+- **Not** visible in `docker inspect` or environment variables
+- **Not** baked into the Docker image
+
+> **Note:** the base `docker-compose.yml` declares a secret file for every platform, so plain `docker compose up -d` expects those files to exist. Either create a file per platform you use (and comment out the rest in the `secrets:` sections), or supply credentials via `.env` with the env overlay above — that path needs no `secrets/*` files at all.
+
+### Credential Lookup Reference
+
+| Environment Variable | Docker Secret File | Required | Platform |
+|---------------------|-------------------|----------|----------|
+| `MIST_API_TOKEN` | `mist_api_token` | yes | Mist |
+| `MIST_HOST` | `mist_host` | yes | Mist |
+| `CENTRAL_BASE_URL` | `central_base_url` | yes | Central |
+| `CENTRAL_CLIENT_ID` | `central_client_id` | yes | Central |
+| `CENTRAL_CLIENT_SECRET` | `central_client_secret` | yes | Central |
+| `GREENLAKE_API_BASE_URL` | `greenlake_api_base_url` | yes | GreenLake |
+| `GREENLAKE_CLIENT_ID` | `greenlake_client_id` | yes | GreenLake |
+| `GREENLAKE_CLIENT_SECRET` | `greenlake_client_secret` | yes | GreenLake |
+| `GREENLAKE_WORKSPACE_ID` | `greenlake_workspace_id` | yes | GreenLake |
+| `CLEARPASS_SERVER` | `clearpass_server` | yes | ClearPass |
+| `CLEARPASS_CLIENT_ID` | `clearpass_client_id` | yes | ClearPass |
+| `CLEARPASS_CLIENT_SECRET` | `clearpass_client_secret` | yes | ClearPass |
+| `CLEARPASS_VERIFY_SSL` | `clearpass_verify_ssl` | no (default: `true`) | ClearPass |
+| `APSTRA_SERVER` | `apstra_server` | yes | Apstra |
+| `APSTRA_USERNAME` | `apstra_username` | yes | Apstra |
+| `APSTRA_PASSWORD` | `apstra_password` | yes | Apstra |
+| `APSTRA_PORT` | `apstra_port` | no (default: `443`) | Apstra |
+| `APSTRA_VERIFY_SSL` | `apstra_verify_ssl` | no (default: `true`) | Apstra |
+| `AXIS_API_TOKEN` | `axis_api_token` | yes | Axis |
+| `AOS8_HOST` | `aos8_host` | yes | AOS8 |
+| `AOS8_USERNAME` | `aos8_username` | yes | AOS8 |
+| `AOS8_PASSWORD` | `aos8_password` | yes | AOS8 |
+| `AOS8_PORT` | `aos8_port` | no (default: `4343`) | AOS8 |
+| `AOS8_VERIFY_SSL` | `aos8_verify_ssl` | no (default: `true`) | AOS8 |
+| `UXI_CLIENT_ID` | `uxi_client_id` | yes | UXI |
+| `UXI_CLIENT_SECRET` | `uxi_client_secret` | yes | UXI |
+
+### Where to Obtain Credentials
 
 #### Juniper Mist
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `mist_api_token` | Mist API token | Mist Dashboard > Organization > Settings > API Token |
-| `mist_host` | Mist API host | `api.mist.com` (Global), `api.eu.mist.com` (EU), `api.gc1.mist.com` (GovCloud) |
+| Credential | How to Obtain |
+|------------|---------------|
+| `MIST_API_TOKEN` | Mist Dashboard > Organization > Settings > API Token |
+| `MIST_HOST` | `api.mist.com` (Global), `api.eu.mist.com` (EU), `api.gc1.mist.com` (GovCloud) |
 
 #### Aruba Central
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `central_base_url` | Central API gateway URL | HPE GreenLake Platform > Aruba Central > API Gateway |
-| `central_client_id` | OAuth2 client ID | HPE GreenLake Platform > API Clients |
-| `central_client_secret` | OAuth2 client secret | HPE GreenLake Platform > API Clients |
+| Credential | How to Obtain |
+|------------|---------------|
+| `CENTRAL_BASE_URL` | HPE GreenLake Platform > Aruba Central > API Gateway |
+| `CENTRAL_CLIENT_ID` | HPE GreenLake Platform > API Clients |
+| `CENTRAL_CLIENT_SECRET` | HPE GreenLake Platform > API Clients |
 
 #### HPE GreenLake
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `greenlake_api_base_url` | GreenLake API base URL | Typically `https://global.api.greenlake.hpe.com` |
-| `greenlake_client_id` | OAuth2 client ID | HPE GreenLake Platform > API Clients |
-| `greenlake_client_secret` | OAuth2 client secret | HPE GreenLake Platform > API Clients |
-| `greenlake_workspace_id` | GreenLake workspace ID | HPE GreenLake Platform > Workspaces |
+| Credential | How to Obtain |
+|------------|---------------|
+| `GREENLAKE_API_BASE_URL` | Typically `https://global.api.greenlake.hpe.com` |
+| `GREENLAKE_CLIENT_ID` | HPE GreenLake Platform > API Clients |
+| `GREENLAKE_CLIENT_SECRET` | HPE GreenLake Platform > API Clients |
+| `GREENLAKE_WORKSPACE_ID` | HPE GreenLake Platform > Workspaces |
 
 #### Aruba ClearPass
 
-| Secret File | Description | How to Obtain |
-|-------------|-------------|---------------|
-| `clearpass_server` | ClearPass API URL | `https://your-clearpass-server/api` — the CPPM server hostname with `/api` path |
-| `clearpass_client_id` | OAuth2 client ID | ClearPass Admin > API Clients > Create API Client |
-| `clearpass_client_secret` | OAuth2 client secret | ClearPass Admin > API Clients > Client Secret |
-| `clearpass_verify_ssl` | SSL verification (optional) | `true` (default) or `false` for self-signed certificates |
+| Credential | How to Obtain |
+|------------|---------------|
+| `CLEARPASS_SERVER` | `https://your-clearpass-server/api` — the CPPM server hostname with `/api` path |
+| `CLEARPASS_CLIENT_ID` | ClearPass Admin > API Clients > Create API Client |
+| `CLEARPASS_CLIENT_SECRET` | ClearPass Admin > API Clients > Client Secret |
+| `CLEARPASS_VERIFY_SSL` | `true` (default) or `false` for self-signed certificates |
 
 #### Aruba OS 8 / Mobility Conductor
 
-| Secret File | Required | Default | Purpose |
+| Credential | Required | Default | Purpose |
 |---|---|---|---|
-| `aos8_host` | yes | — | Conductor or standalone controller hostname/IP |
-| `aos8_username` | yes | — | API username with sufficient role |
-| `aos8_password` | yes | — | API password |
-| `aos8_port` | no | `4343` | HTTPS port (Mobility Conductor API port) |
-| `aos8_verify_ssl` | no | `true` | Set to `false` for self-signed certs (logged as WARNING) |
+| `AOS8_HOST` | yes | — | Conductor or standalone controller hostname/IP |
+| `AOS8_USERNAME` | yes | — | API username with sufficient role |
+| `AOS8_PASSWORD` | yes | — | API password |
+| `AOS8_PORT` | no | `4343` | HTTPS port (Mobility Conductor API port) |
+| `AOS8_VERIFY_SSL` | no | `true` | Set to `false` for self-signed certs (logged as WARNING) |
 
 Set `ENABLE_AOS8_WRITE_TOOLS=true` to expose the 12 AOS8 write tools (gated by elicitation middleware; default `false`).
 
 #### HPE UXI / Aruba User Experience Insight
 
-| Secret File | Required | Default | Purpose |
+| Credential | Required | Default | Purpose |
 |---|---|---|---|
-| `uxi_client_id` | yes | — | HPE SSO OAuth2 client ID |
-| `uxi_client_secret` | yes | — | HPE SSO OAuth2 client secret |
+| `UXI_CLIENT_ID` | yes | — | HPE SSO OAuth2 client ID |
+| `UXI_CLIENT_SECRET` | yes | — | HPE SSO OAuth2 client secret |
 
 Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by elicitation middleware; default `false`).
 
@@ -562,7 +607,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 │ │ 1050   │ │669tools│ │10 tools│ │142 tool│ │19 tools│ │25 tools│ │48 tools│ │21 tools││
 │ │+2 prmt │ │+12prmt │ │        │ │        │ │        │ │        │ │+9 prmt │ │        ││
 │                                                                                         │
-│  All 4149 underlying tools reachable via call_tool() in code mode or via                │
+│  All 4109 underlying tools reachable via call_tool() in code mode or via                │
 │  per-platform meta-tools (<platform>_list_tools / get_schema / invoke) in dynamic mode. │
 │ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘│
 │     │          │          │          │          │          │          │          │       │
@@ -579,7 +624,7 @@ Set `ENABLE_UXI_WRITE_TOOLS=true` to expose the 10 UXI write tools (gated by eli
 
 - **FastMCP** framework with Python 3.12+
 - **Streamable HTTP** transport (modern MCP standard)
-- **Code tool mode by default (since v3.0.0.0)** — only `execute` + 5 discovery tools exposed; all 4149 underlying tools reachable via `await call_tool(name, params)` inside the sandbox. Smallest initial token cost; best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` for the v2.x meta-tool surface (24 tools, ~3,700 tokens).
+- **Code tool mode by default (since v3.0.0.0)** — only `execute` + 5 discovery tools exposed; all 4109 underlying tools reachable via `await call_tool(name, params)` inside the sandbox. Smallest initial token cost; best for orchestrators driving small / local LLMs. Set `MCP_TOOL_MODE=dynamic` for the v2.x meta-tool surface (24 tools, ~3,700 tokens).
 - **Tool namespacing** — `mist_*`, `central_*`, `greenlake_*`, `clearpass_*`, `apstra_*`, `axis_*`, `aos8_*`, `uxi_*` prefixes prevent collisions
 - **Platform isolation** — each module manages its own API client and auth; a failing platform doesn't affect the others
 - **Non-root container** — runs as `mcpuser` (uid 1000)
@@ -603,7 +648,7 @@ Write/mutation tools (e.g., creating WLANs in Mist, modifying configurations) ar
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis Atmos Cloud write/mutation tools (every write stages — call `axis_commit_changes` to apply) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (12 tools; every write returns `requires_write_memory_for` — call `aos8_write_memory` explicitly) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (10 tools: sensor/agent/group/assignment mutations) |
-| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (446 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
+| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (424 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
 | `MCP_APP_ENABLE` | `false` | Single switch for all MCP-Apps capabilities. Registers the FastMCP `FileUpload` provider (`file_manager` drag/pick upload UI + `list_files` for file metadata) **and** the `GenerativeUI` provider (`generate_prefab_ui` — the model writes a live Prefab dashboard from data it collected — + `search_prefab_components`). All UIs render only in MCP-Apps hosts (e.g. Claude Desktop / ChatGPT / claude.ai). Uploaded files are read **server-side only** — the content-returning `read_file` tool is deliberately removed so upload contents (device serials/MACs, AOS 8 PSKs / RADIUS secrets) never enter the model context; consuming tools (`greenlake_bulk_add_devices`, `aos8_parse_config`) read by name inside the server. |
 | `DISABLE_ELICITATION` | `false` | Skip user confirmation for write tools (**use with caution**) |
 
@@ -634,8 +679,8 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 |---------------------|---------|-------------|
 | `MCP_PORT` | `8000` | Port the MCP server listens on |
 | `MCP_HOST` | `0.0.0.0` | Bind address **inside the container's namespace** — leave at `0.0.0.0` so Docker's port-forwarder can reach the app. Restrict who can reach the host port via `ports:` in compose, not this. |
-| `ALLOWED_ORIGINS` | `http://localhost:<MCP_PORT>,http://127.0.0.1:<MCP_PORT>` | Comma-separated allowlist for the `Origin` request header (DNS-rebinding defense per MCP spec). Browsers always send `Origin`; non-browser clients (supergateway, curl) don't and pass through. Set to `*` to disable the check (use only behind an auth proxy). |
-| `SECRETS_DIR` | `/run/secrets` | Directory containing Docker secret files |
+| `ALLOWED_ORIGINS` | `http://localhost:<HOST_PORT>,http://127.0.0.1:<HOST_PORT>` | Comma-separated allowlist for the `Origin` request header (DNS-rebinding defense per MCP spec). Compose derives the default from `HOST_PORT` so multi-instance setups get the right origin automatically. Browsers always send `Origin`; non-browser clients (supergateway, curl) don't and pass through. Set to `*` to disable the check (use only behind an auth proxy). |
+| `SECRETS_DIR` | `/run/secrets` | Directory for Docker secret files (credentials in files here take priority over env vars) |
 | `LOG_LEVEL` | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
 | `ENABLE_MIST_WRITE_TOOLS` | `false` | Enable Mist write/mutation tools |
 | `ENABLE_CENTRAL_WRITE_TOOLS` | `false` | Enable Central write/mutation tools |
@@ -644,9 +689,9 @@ The retry logic detects transient failures in two patterns: response-dict (Mist/
 | `ENABLE_AXIS_WRITE_TOOLS` | `false` | Enable Axis write/mutation tools (staged; commit with `axis_commit_changes`) |
 | `ENABLE_AOS8_WRITE_TOOLS` | `false` | Enable AOS8 write tools (call `aos8_write_memory` after each change to persist) |
 | `ENABLE_UXI_WRITE_TOOLS` | `false` | Enable UXI write tools (sensor/agent/group/assignment mutations) |
-| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (446 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
+| `ENABLE_GREENLAKE_WRITE_TOOLS` | `false` | Enable GreenLake write tools (424 spec-generated writes/deletes + `greenlake_bulk_add_devices` bulk CSV device onboarding) |
 | `DISABLE_ELICITATION` | `false` | Disable write confirmation prompts |
-| `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 4149 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
+| `MCP_TOOL_MODE` | `code` | Tool exposure: `code` (default since v3.0.0.0 — 6 tools at top level: `execute` + 5 discovery; all 4109 underlying tools reachable via `call_tool()` inside the sandbox) or `dynamic` (24 tools — 4 cross-platform + 21 per-platform meta-tools + 2 skills tools; underlying tools hidden until invoked via `<platform>_invoke_tool`). The `static` value was REMOVED in v3.0.0.0 |
 | `RETRY_MAX_ATTEMPTS` | `3` | Max retry attempts on transient failures (5xx reads, 429 reads+writes). Set to `1` to disable retry |
 | `RETRY_INITIAL_DELAY` | `1.0` | Initial retry backoff seconds (exponential: 1s, 2s, 4s) |
 | `RETRY_MAX_DELAY` | `60.0` | Cap on a single retry sleep (also caps `Retry-After` header values) |
@@ -707,7 +752,7 @@ hpe-networking-mcp/
 ├── src/hpe_networking_mcp/
 │   ├── __main__.py              # CLI entry point
 │   ├── server.py                # FastMCP server setup and lifespan
-│   ├── config.py                # Docker secrets loading and validation
+│   ├── config.py                # Credential loading (env vars + Docker secrets)
 │   ├── INSTRUCTIONS.md          # LLM instructions for all platforms
 │   ├── middleware/              # null-strip, validation-catch, sandbox-error-catch, elicitation, retry
 │   ├── skills/                  # Markdown-defined multi-step procedures + skills engine
@@ -716,7 +761,7 @@ hpe-networking-mcp/
 │       ├── health.py            # Cross-platform health probe tool
 │       ├── mist/                # 1050 Mist tools (spec-driven) + 2 prompts + API client
 │       ├── central/             # 669 Central tools + 12 prompts + API client
-│       ├── greenlake/           # 959 GreenLake tools (spec-generated) + bulk_add + OAuth2 client
+│       ├── greenlake/           # 919 GreenLake tools (spec-generated) + bulk_add + OAuth2 client
 │       ├── clearpass/           # 142 ClearPass tools + async httpx client
 │       ├── apstra/              # 19 Apstra tools + async httpx client
 │       ├── axis/                # 25 Axis Atmos Cloud tools + httpx client (JWT bearer)
@@ -729,10 +774,12 @@ hpe-networking-mcp/
 │       └── site_rf_check.py     # Cross-platform Wi-Fi RF dashboard
 ├── tests/                       # Unit and integration tests (2150+ unit tests)
 ├── docs/                        # PRD, PRP, tool reference
-├── secrets/                     # Secret files (only .example committed)
+├── secrets/                     # Secret file templates (.example only in git)
+├── .env.example                 # Environment variable template (copy to .env)
 ├── .github/workflows/           # CI, security, Docker publish
 ├── Dockerfile                   # Multi-stage build, non-root user
-├── docker-compose.yml           # Production (pulls GHCR image)
+├── docker-compose.yml           # Base — mounts Docker secret files (plain `up -d`)
+├── docker-compose.env.yml       # Overlay — drops secret mounts for the `.env` path
 └── docker-compose.dev.yml       # Development (mounts tests)
 ```
 
@@ -752,14 +799,14 @@ docker compose logs -f                     # Follow live
 
 ### Platform Disabled at Startup
 
-If a platform shows as disabled, the relevant secret file is either absent or empty from the container's perspective:
+If a platform shows as disabled, its credentials are missing or empty:
 
 ```
 Mist: disabled (mist_api_token secret not found)
 Central: disabled (missing secrets: central_client_id, central_client_secret)
 ```
 
-**Fix:** Populate the missing secret files in `secrets/` with real values (no extra whitespace or newlines — each file should contain exactly one value). If you *intended* to disable that platform, ignore the message — the server continues running with the platforms that do have credentials.
+**Fix:** Set the missing credentials in your `.env` file (or the matching Docker secret file). If you *intended* to disable that platform, ignore the message — the server continues running with the platforms that do have credentials.
 
 ### Container exits immediately with `invalid mount config for type "bind"`
 
@@ -768,12 +815,11 @@ Error response from daemon: invalid mount config for type "bind":
 bind source path does not exist: .../secrets/apstra_verify_ssl
 ```
 
-This means `docker-compose.yml` references a secret file that doesn't exist on disk, and Docker failed the bind mount *before* the app started. Two fixes:
+This means the base `docker-compose.yml` declares a secret file for a platform whose file doesn't exist on disk (Docker requires every referenced secret file to be present before the container starts).
 
-- **If you want that platform enabled:** run `cp secrets/<name>.example secrets/<name>` and populate the file with your real values.
-- **If you don't want that platform:** drop the platform's secret references via a `docker-compose.override.yml` (see [Disable platforms you don't use](#3-disable-platforms-you-dont-use-recommended)).
-
-Do **not** create an empty file with placeholder contents left over from the `.example` template — the app will boot but fail authentication against the fake values, as explained in [Platform Auto-Disable](#platform-auto-disable).
+**Fix — pick one:**
+- **Using `.env` for credentials?** Add the env overlay, which removes all secret mounts: `docker compose -f docker-compose.yml -f docker-compose.env.yml up -d`. No `secrets/*` files are needed on this path.
+- **Using Docker secret files?** Create the missing file (`cp secrets/<name>.example secrets/<name>` and populate it), or comment out that platform's entries in the `secrets:` sections of `docker-compose.yml`.
 
 ### Authentication Failures
 
@@ -817,7 +863,7 @@ ports:
   - "127.0.0.1:8080:8000"    # Map to port 8080 instead, loopback-only
 ```
 
-If you change the host port, also update `ALLOWED_ORIGINS` so it matches (e.g. `ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080`) — the default tracks `MCP_PORT` (which is the *container* port, 8000), not the host port.
+If you change the host port via `HOST_PORT`, the Compose default for `ALLOWED_ORIGINS` tracks it automatically (`http://localhost:<HOST_PORT>`). You only need to set `ALLOWED_ORIGINS` explicitly if you're using a custom domain or reverse-proxy URL.
 
 ### Tools Not Appearing in AI Client
 
@@ -845,25 +891,25 @@ If tools time out after ~4 minutes, check that:
 - Node.js is installed: `npx --version`
 - The container didn't lose connectivity after sleep: `docker compose restart`
 
-### Tool Surface Looks Wrong (6 tools vs. 4149)
+### Tool Surface Looks Wrong (6 tools vs. 4109)
 
-Since v3.0.0.0, the server defaults to `MCP_TOOL_MODE=code`: only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4149 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. A correctly configured server with all 9 platforms enabled will advertise **6 tools** to the AI client.
+Since v3.0.0.0, the server defaults to `MCP_TOOL_MODE=code`: only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4109 underlying tools are reachable via `await call_tool(name, params)` inside a sandboxed Python `execute()` block. A correctly configured server with all 9 platforms enabled will advertise **6 tools** to the AI client.
 
 Check the mode in the logs:
 
 ```bash
 docker compose logs | grep "Tool mode"
-# "Tool mode: code"      → default since v3.0.0.0 (6 exposed tools, 4149 underlying via call_tool)
+# "Tool mode: code"      → default since v3.0.0.0 (6 exposed tools, 4109 underlying via call_tool)
 # "Tool mode: dynamic"   → opt-in to v2.x meta-tool surface (24 exposed: 21 per-platform + 4 cross-platform + 2 skills)
 ```
 
 To use the v2.x meta-tool discovery surface (each platform exposes `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`), set `MCP_TOOL_MODE=dynamic` in `docker-compose.yml` under `environment`:
 ```yaml
 - MCP_TOOL_MODE=dynamic   # 24 exposed; per-platform meta-tools + cross-platform + skills
-- MCP_TOOL_MODE=code      # 6 exposed; sandboxed call_tool() reaches all 4149 (default since v3.0.0.0)
+- MCP_TOOL_MODE=code      # 6 exposed; sandboxed call_tool() reaches all 4109 (default since v3.0.0.0)
 ```
 
-The `static` mode (every underlying tool visible up front) was REMOVED in v3.0.0.0 — at 4149 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` now raises an error at startup with a migration message.
+The `static` mode (every underlying tool visible up front) was REMOVED in v3.0.0.0 — at 4109 tools / ~64K tokens it was no longer practical. Setting `MCP_TOOL_MODE=static` now raises an error at startup with a migration message.
 
 See [docs/MIGRATING_TO_V2.md](docs/MIGRATING_TO_V2.md) for the v1.x → v2.x meta-tool history.
 

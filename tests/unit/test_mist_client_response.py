@@ -102,3 +102,38 @@ async def test_empty_collection_survives_envelope_end_to_end():
     assert (dict_res.structured_content or {}).get("data") == _EMPTY
     # A bare empty list collapses to data:null — documents WHY the dict is needed.
     assert (list_res.structured_content or {}).get("data") is None
+
+
+async def test_no_such_metric_404_enriched_with_sle_metric_guidance():
+    """#638: a guessed SLE metric key returns a bare 404 `{"detail": "no such
+    metric"}`; the enricher must point at `mist_list_site_sles_metrics` and name
+    real keys so the AI stops guessing (e.g. `successful-connect` is NOT a key)."""
+    from fastmcp.exceptions import ToolError
+
+    ctx = _ctx(_resp(status=404, json_value={"detail": "no such metric"}))
+    with pytest.raises(ToolError) as e:
+        await mist_request(
+            ctx,
+            "GET",
+            "/api/v1/sites/s/sle/site/s/metric/successful-connect/impact-summary",
+        )
+    payload = e.value.args[0]
+    assert payload["status_code"] == 404
+    msg = payload["message"]
+    assert "mist_list_site_sles_metrics" in msg
+    assert "time-to-connect" in msg
+    assert "successful-connect" in msg  # explicitly called out as NOT a key
+
+
+async def test_403_hint_points_to_existing_self_tool():
+    """The 403 hint must name a real tool: `mist_get_self`, not the
+    non-existent `mist_get_self_account_info` (which itself returned unknown_tool)."""
+    from fastmcp.exceptions import ToolError
+
+    ctx = _ctx(_resp(status=403, json_value={"detail": "permission denied"}))
+    with pytest.raises(ToolError) as e:
+        await mist_request(ctx, "GET", "/api/v1/orgs/x/sites")
+    payload = e.value.args[0]
+    assert payload["status_code"] == 403
+    assert "mist_get_self" in payload["message"]
+    assert "mist_get_self_account_info" not in payload["message"]

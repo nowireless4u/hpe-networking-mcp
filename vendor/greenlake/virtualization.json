@@ -952,7 +952,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorCluster/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -1013,7 +1013,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -1044,7 +1044,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -1067,7 +1067,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -1816,7 +1816,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -1839,7 +1839,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2010,7 +2010,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2044,7 +2044,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2075,7 +2075,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -2247,7 +2247,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2493,7 +2493,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2850,7 +2850,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -2873,7 +2873,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3007,7 +3007,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorResourcePool/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -3036,7 +3036,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorCluster/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3074,7 +3074,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3249,7 +3249,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3995,7 +3995,7 @@
                           "type": "string"
                         },
                         "type": {
-                          "$ref": "#/components/schemas/Datastore/properties/type"
+                          "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                         }
                       },
                       "type": "object"
@@ -4029,7 +4029,7 @@
                         "type": "string"
                       },
                       "type": {
-                        "$ref": "#/components/schemas/HypervisorResourcePool/properties/type"
+                        "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                       }
                     },
                     "type": "object"
@@ -4105,7 +4105,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorCluster/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4162,7 +4162,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4221,7 +4221,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4242,7 +4242,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4306,7 +4306,7 @@
                       "type": "string"
                     },
                     "type": {
-                      "$ref": "#/components/schemas/HypervisorNetwork/properties/type"
+                      "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                     }
                   },
                   "type": "object"
@@ -4426,7 +4426,7 @@
                               "type": "string"
                             },
                             "type": {
-                              "$ref": "#/components/schemas/Datastore/properties/type"
+                              "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                             }
                           },
                           "type": "object"

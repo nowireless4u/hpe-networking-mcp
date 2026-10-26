@@ -171,7 +171,7 @@
                       "$ref": "#/components/schemas/ApplicationHost/properties/resourceUri"
                     },
                     "type": {
-                      "$ref": "#/components/schemas/ApplicationHost/properties/type"
+                      "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                     }
                   },
                   "type": "object"
@@ -856,7 +856,7 @@
                             "$ref": "#/components/schemas/PreScriptInfoOverrides"
                           },
                           "scheduleId": {
-                            "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/scheduleId"
+                            "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
                           },
                           "vmwareOptions": {
                             "$ref": "#/components/schemas/VmwareOptions"
@@ -1059,7 +1059,7 @@
                         "$ref": "#/components/schemas/Schedule"
                       },
                       "scheduleId": {
-                        "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/scheduleId"
+                        "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
                       },
                       "sourceProtectionScheduleId": {
                         "description": "Id of the source protection schedule. If provided this schedule becomes dependent.",
@@ -1074,7 +1074,7 @@
                   "type": "array"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/type"
+                  "$ref": "#/components/schemas/ProtectionType"
                 }
               },
               "type": "object"
@@ -1131,7 +1131,7 @@
           "scheduleIds": {
             "description": "An array of protection schedule Ids to resume",
             "items": {
-              "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/scheduleId"
+              "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
             },
             "type": "array"
           }
@@ -1154,7 +1154,7 @@
           "scheduleIds": {
             "description": "An array of protection schedule Ids to run now.",
             "items": {
-              "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/scheduleId"
+              "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
             },
             "type": "array"
           }
@@ -1166,7 +1166,7 @@
           "scheduleIds": {
             "description": "An array of protection schedule Ids to suspend",
             "items": {
-              "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/scheduleId"
+              "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
             },
             "type": "array"
           }
@@ -1243,7 +1243,7 @@
                         "$ref": "#/components/schemas/PreScriptInfo"
                       },
                       "schedule": {
-                        "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/schedule"
+                        "$ref": "#/components/schemas/Schedule"
                       },
                       "scheduleId": {
                         "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
@@ -1511,7 +1511,7 @@
                         "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/namePattern"
                       },
                       "schedule": {
-                        "$ref": "#/components/schemas/DataManagementTemplatesDetail/properties/protections/items/properties/schedules/items/properties/schedule"
+                        "$ref": "#/components/schemas/Schedule"
                       },
                       "scheduleId": {
                         "$ref": "#/components/schemas/ScheduleInfo/properties/scheduleId"
@@ -2296,7 +2296,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorCluster/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2357,7 +2357,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -2388,7 +2388,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -2411,7 +2411,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3502,7 +3502,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -3525,7 +3525,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3668,7 +3668,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3702,7 +3702,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -3733,7 +3733,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -3877,7 +3877,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4286,7 +4286,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -4309,7 +4309,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4415,7 +4415,7 @@
                   "type": "string"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/HypervisorResourcePool/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -4444,7 +4444,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorCluster/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4482,7 +4482,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -4893,7 +4893,7 @@
                   "$ref": "#/components/schemas/MSSQLDatabase/properties/resourceUri"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/MSSQLDatabase/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -5088,7 +5088,7 @@
                 "type": "string"
               },
               "protectionStoreInfo": {
-                "$ref": "#/components/schemas/MSSQLDatabaseBackup/properties/protectionStoreInfo"
+                "$ref": "#/components/schemas/CopyPoolInfo"
               },
               "storageSystemInfo": {
                 "$ref": "#/components/schemas/MSSQLDatabaseBackup/properties/storageSystemInfo"
@@ -5574,13 +5574,13 @@
         "description": "The members list is the absolute list of member databses and not the difference.\n",
         "properties": {
           "description": {
-            "$ref": "#/components/schemas/MSSQLDatabaseProtectionGroupCreate/properties/description"
+            "$ref": "#/components/schemas/MSSQLDatabaseProtectionGroup/properties/description"
           },
           "members": {
             "$ref": "#/components/schemas/MSSQLDatabaseProtectionGroupCreate/properties/members"
           },
           "name": {
-            "$ref": "#/components/schemas/MSSQLDatabaseProtectionGroupCreate/properties/name"
+            "$ref": "#/components/schemas/MSSQLDatabaseProtectionGroup/properties/name"
           },
           "nativeAppInfo": {
             "properties": {
@@ -5658,7 +5658,7 @@
                   "$ref": "#/components/schemas/MSSQLDatabase/properties/resourceUri"
                 },
                 "type": {
-                  "$ref": "#/components/schemas/MSSQLDatabase/properties/type"
+                  "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                 }
               },
               "type": "object"
@@ -8005,7 +8005,7 @@
                           "type": "string"
                         },
                         "type": {
-                          "$ref": "#/components/schemas/Datastore/properties/type"
+                          "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                         }
                       },
                       "type": "object"
@@ -8039,7 +8039,7 @@
                         "type": "string"
                       },
                       "type": {
-                        "$ref": "#/components/schemas/HypervisorResourcePool/properties/type"
+                        "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                       }
                     },
                     "type": "object"
@@ -8115,7 +8115,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorCluster/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -8172,7 +8172,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorFolder/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -8231,7 +8231,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorHost/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -8252,7 +8252,7 @@
                 "type": "string"
               },
               "type": {
-                "$ref": "#/components/schemas/HypervisorManager/properties/type"
+                "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
               }
             },
             "type": "object"
@@ -8316,7 +8316,7 @@
                       "type": "string"
                     },
                     "type": {
-                      "$ref": "#/components/schemas/HypervisorNetwork/properties/type"
+                      "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                     }
                   },
                   "type": "object"
@@ -8436,7 +8436,7 @@
                               "type": "string"
                             },
                             "type": {
-                              "$ref": "#/components/schemas/Datastore/properties/type"
+                              "$ref": "#/components/schemas/CommonResourceProperties/properties/type"
                             }
                           },
                           "type": "object"

@@ -120,6 +120,19 @@ def test_execute_description_mentions_in_sandbox_discovery_path() -> None:
 
 
 @pytest.mark.unit
+def test_execute_description_mentions_report_progress() -> None:
+    """The execute() sandbox exposes ``report_progress`` (via ``_HpeCodeMode``);
+    the description must advertise it so the model streams status during long
+    multi-call blocks instead of leaving the client on a silent spinner. Behavior
+    is verified end-to-end in ``test_code_mode_progress.py``.
+    """
+    body = _read_execute_description_block()
+    assert "report_progress" in body, (
+        "execute_description must present `report_progress` as an in-sandbox external function."
+    )
+
+
+@pytest.mark.unit
 def test_discovery_tool_descriptions_carry_platform_keywords() -> None:
     """v3.0.1.15 (issue #302): top-level discovery tool descriptions must
     include the HPE networking platform names so client semantic tool_search

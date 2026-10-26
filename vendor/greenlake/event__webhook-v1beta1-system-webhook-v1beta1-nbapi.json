@@ -2090,23 +2090,6 @@
   ],
   "servers": [
     {
-      "description": "Hoku endpoint(Dev)",
-      "url": "https://hoku-ext-api.ccs.arubathena.com"
-    },
-    {
-      "description": "Polaris endpoint(QA)",
-      "url": "https://polaris-default-ext-api.ccs.arubathena.com"
-    },
-    {
-      "description": "Mira endpoint(QA)",
-      "url": "https://mira-default-ext-api-api.ccs.arubathena.com"
-    },
-    {
-      "description": "Pavo endpoint(Staging)",
-      "url": "https://pavo-default-ext-api.common.cloud.hpe.com"
-    },
-    {
-      "description": "Aquila endpoint(Production)",
       "url": "https://global.api.greenlake.hpe.com"
     }
   ],

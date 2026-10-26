@@ -136,3 +136,66 @@ class TestUnknownToolSuggestMiddleware:
 
         with pytest.raises(ValueError):
             await mw.on_call_tool(_Ctx(), call_next)
+
+
+@pytest.mark.unit
+class TestDisabledPlatform:
+    """#640: a call to a platform with zero registered tools (disabled — empty or
+    absent secrets) must return a clear 'not configured' verdict, NOT a
+    ``<plat>_invoke_tool`` dispatch hint that points at a tool that also doesn't
+    exist. Affects every platform identically, so this is verified across all of
+    them."""
+
+    @pytest.fixture
+    def central_on_clearpass_off(self):
+        """Central enabled (has tools); ClearPass disabled (no tools)."""
+        reg = tool_registry.REGISTRIES
+        snap = {p: dict(reg.get(p, {})) for p in ("central", "clearpass")}
+        reg["central"] = {
+            "central_get_sites": ToolSpec(
+                name="central_get_sites", func=lambda: None, platform="central", category="test"
+            )
+        }
+        reg["clearpass"] = {}
+        yield
+        for p, d in snap.items():
+            reg[p] = d
+
+    def test_disabled_platform_returns_not_configured(self, central_on_clearpass_off) -> None:
+        out = suggest_tools("clearpass_get_sessions")
+        assert out["error"] == "platform_not_configured"
+        assert out["platform"] == "clearpass"
+        assert out["candidates"] == []
+        assert "dispatch" not in out  # no circular pointer to a non-existent tool
+        assert "not configured" in out["message"].lower()
+
+    def test_enabled_platform_still_suggests_candidates(self, central_on_clearpass_off) -> None:
+        # A configured platform's bad guess still gets candidates + dispatch.
+        out = suggest_tools("central_list_sites")
+        assert out["error"] == "unknown_tool"
+        assert "central_get_sites" in out["candidates"]
+        assert out["dispatch"] == "central_invoke_tool(name, params)"
+
+    def test_payload_from_text_surfaces_not_configured(self, central_on_clearpass_off) -> None:
+        out = unknown_tool_payload_from_text("Unknown tool: clearpass_invoke_tool")
+        assert out is not None
+        assert out["error"] == "platform_not_configured"
+        assert out["platform"] == "clearpass"
+
+    def test_all_known_platforms_when_empty(self) -> None:
+        """Every platform prefix, when it has zero tools, yields not_configured."""
+        from hpe_networking_mcp.platforms._common.tool_suggest import _KNOWN_PLATFORMS
+
+        reg = tool_registry.REGISTRIES
+        snap = {p: dict(reg.get(p, {})) for p in _KNOWN_PLATFORMS}
+        for p in _KNOWN_PLATFORMS:
+            reg[p] = {}
+        try:
+            for p in _KNOWN_PLATFORMS:
+                out = suggest_tools(f"{p}_invoke_tool")
+                assert out["error"] == "platform_not_configured", p
+                assert out["platform"] == p
+                assert "dispatch" not in out, p
+        finally:
+            for p, d in snap.items():
+                reg[p] = d

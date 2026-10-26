@@ -193,6 +193,80 @@ class TestScopeAnnotationBlob:
         assert out["@"]["aruba-annotation:scope_device_function"] == blob
 
 
+class TestStringifiedAnnotationWrapper:
+    """Central sometimes serializes the WHOLE per-object annotation set as one
+    stringified value under ``@`` (seen on alias reads). The walker saw ``@`` as
+    one opaque string and never descended, so a DEVICE serial nested inside its
+    ``scope_device_function`` shipped cleartext — even though the same serial was
+    tokenized elsewhere. Found during scope-visualizer work."""
+
+    # A DEVICE serial nested inside a stringified @ wrapper (single-quoted repr).
+    _WRAPPER = (
+        "{'aruba-annotation:object_type': 'LOCAL', "
+        "'aruba-annotation:scope_device_function': "
+        "\"[{'scope_type': 'DEVICE', 'scope_name': 'CNABC12345'}]\"}"
+    )
+
+    def test_serial_inside_stringified_wrapper_is_masked(self):
+        tok = _tokenizer()
+        out = tokenize_response({"name": "a", "@": self._WRAPPER}, tok)
+
+        blob = json.dumps(out)
+        assert "CNABC12345" not in blob
+        assert "[[SERIAL:" in blob
+        assert "LOCAL" in blob  # non-sensitive annotation preserved
+
+    def test_json_serialized_wrapper_is_handled(self):
+        """The wrapper also arrives JSON-serialized (double quotes)."""
+        tok = _tokenizer()
+        wrapper = json.dumps(
+            {
+                "aruba-annotation:object_type": "LOCAL",
+                "aruba-annotation:scope_device_function": json.dumps(
+                    [{"scope_type": "DEVICE", "scope_name": "CNABC12345"}]
+                ),
+            }
+        )
+        out = tokenize_response({"@": wrapper}, tok)
+
+        assert "CNABC12345" not in json.dumps(out)
+
+    def test_site_name_in_wrapper_stays_cleartext(self):
+        """The DEVICE-only rule still applies inside the wrapper — architecture
+        labels (SITE/collection names) must not be over-masked."""
+        tok = _tokenizer()
+        wrapper = "{'aruba-annotation:scope_device_function': \"[{'scope_type': 'SITE', 'scope_name': 'Branch-1'}]\"}"
+
+        out = tokenize_response({"@": wrapper}, tok)
+
+        assert "Branch-1" in json.dumps(out)
+
+    def test_wrapper_needing_no_masking_is_unchanged(self):
+        tok = _tokenizer()
+        wrapper = "{'aruba-annotation:object_type': 'SHARED', 'aruba-annotation:is_editable': False}"
+
+        out = tokenize_response({"@": wrapper}, tok)
+
+        assert out["@"] == wrapper  # byte-identical when nothing masked
+
+    def test_idempotent(self):
+        tok = _tokenizer()
+        once = tokenize_response({"@": self._WRAPPER}, tok)
+        twice = tokenize_response(once, tok)
+
+        assert twice == once
+        assert "CNABC12345" not in json.dumps(twice)
+
+    def test_non_wrapper_json_string_is_untouched(self):
+        """Only the ``@`` field triggers blob parsing — a JSON-looking string
+        under an ordinary field must not be reparsed/reserialized."""
+        tok = _tokenizer()
+
+        out = tokenize_response({"description": "{'foo': 'bar'}"}, tok)
+
+        assert out["description"] == "{'foo': 'bar'}"
+
+
 class TestCertificateOverMasking:
     """TokenKind.CERT exists for PEM blocks, but its field names are ordinary
     words, so short scalars that merely reused the key were masked."""

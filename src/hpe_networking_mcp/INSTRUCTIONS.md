@@ -18,7 +18,7 @@ Tools are namespaced by platform:
 
 Two modes are supported (the `static` mode was removed in v3.0.0.0):
 
-- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4149 underlying tools are reachable from inside a sandboxed Python `execute()` block — discover names with `search` / `<platform>_list_tools`, then call EITHER directly by name (`await call_tool("mist_search_org_devices", {...})`) OR via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})`; both work for every platform (Mist included, as of v3.4.5.6). The smallest initial surface; best for orchestrators driving small / local LLMs.
+- **`MCP_TOOL_MODE=code`** (default since v3.0.0.0) — only `execute` + 5 discovery tools (`tags`, `search`, `get_schema`, `skills_list`, `skills_load`) are visible at the top level. All 4109 underlying tools are reachable from inside a sandboxed Python `execute()` block — discover names with `search` / `<platform>_list_tools`, then call EITHER directly by name (`await call_tool("mist_search_org_devices", {...})`) OR via `await call_tool("<platform>_invoke_tool", {"name": "<tool>", "params": {...}})`; both work for every platform (Mist included, as of v3.4.5.6). The smallest initial surface; best for orchestrators driving small / local LLMs.
 - **`MCP_TOOL_MODE=dynamic`** (opt-in since v3.0.0.0; was the v2.x default) — 24 tools visible:
     - **cross-platform tools**: `health`, `site_health_check`, `site_rf_check`, `translate_wlan_preview`, `translate_wlan_apply`, `translate_config_preview`, `translate_config_apply`
     - **3 meta-tools per platform × 9 platforms** = 27: `<platform>_list_tools`, `<platform>_get_tool_schema`, `<platform>_invoke_tool`
@@ -270,6 +270,7 @@ The `execute()` sandbox uses `pydantic-monty` for its Python parser. It supports
 - `re` (verified — used by Stage 9b filtering helpers)
 - The clock: `datetime.now()`, `datetime.now(datetime.timezone.utc)`, `datetime.date.today()` (verified — the sandbox grants a read-only host clock; see the blocked table for the `utcnow()` / `time` gaps)
 - The injected `await call_tool(name, params)` for platform tool dispatch
+- The injected `await report_progress(progress, total=None, message=None)` for streaming status to the client during long multi-call blocks (harmless no-op when the client didn't request progress — always safe to call; see pattern 5)
 
 **Known-blocked** — using any of these returns a sandbox error:
 
@@ -302,7 +303,26 @@ The sandbox kills any `execute()` block that runs longer than the configured bud
 
 For these tools: **call them in their own `execute()` block — don't chain other calls after them** — and lower `max_attempts` / `poll_interval` when you need a tighter budget. A block that runs `central_cable_test` plus another Central read will routinely breach the default 30s with `TimeoutError: time limit exceeded`.
 
-### 5. Write confirmation is structural — a real prompt first, `confirmation_required` only as fallback
+### 5. Stream progress on long multi-call blocks with `report_progress`
+
+When a block makes many sequential `call_tool` invocations — a per-scope classification sweep, a multi-stage migration plan, a fan-out across sites — call `await report_progress(done, total, message)` as you go so the client can show a live status line instead of a silent spinner. It's a harmless no-op on clients that didn't request progress, so it is always safe to include.
+
+```python
+# ✅ Stream status across a per-scope sweep.
+scopes = (await call_tool("central_get_scope_tree", {}))["data"]["children"]
+total = len(scopes)
+results = []
+for i, s in enumerate(scopes):
+    await report_progress(i + 1, total, f"classifying {s['scope_name']} ({i + 1}/{total})")
+    cfg = await call_tool("central_get_config_assignments", {"scope_id": s["scope_id"]})
+    results.append(cfg["data"])
+result = {"scope_count": total, "results": results}
+result
+```
+
+Signature: `report_progress(progress: float, total: float | None = None, message: str | None = None)`. `total` lets the client render a percentage; `message` is a short human-readable status. Do NOT `report_progress` from a block that makes only one call — the overhead isn't worth it, and the sandbox already returns quickly.
+
+### 6. Write confirmation is structural — a real prompt first, `confirmation_required` only as fallback
 
 Destructive tools are confirmed by a universal gate at `<platform>_invoke_tool` dispatch: it shows a REAL confirmation prompt whenever your client supports MCP elicitation — including from inside code-mode `execute()` blocks, where the prompt round-trips transparently. Passing `confirmed=true` does NOT skip a working prompt; the human's answer always wins. Only when no prompt can be shown does the flow below apply.
 
@@ -426,7 +446,7 @@ When asked to create a new site based on an existing site:
   - Use `central_get_scope_resources` to see what configuration profiles are assigned at a specific scope level (legacy walker; `central_get_committed_config` returns the same data in a shape that diffs cleanly against `central_get_effective_config`)
   - Use `central_get_committed_config(scope_id, persona?, include_details=True)` to see resources directly assigned AT a scope — same per-resource shape as `central_get_effective_config` for clean side-by-side diff when asking "what did the parent contribute vs what was added here?" (v3.1.7.0+)
   - Use `central_get_effective_config` to see what configuration a device inherits and from where — pass `include_details=true` for full resource configuration data
-  - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — **deprecated for visualization** (sprawls horizontally on real tenants); for visualization use the `central-scope-visualizer` skill which fetches the structured tree and lets the AI build whatever diagram fits the request
+  - Use `central_get_scope_diagram` to generate a Mermaid flowchart of the scope hierarchy — **deprecated for visualization** (sprawls horizontally on real tenants); for visualization use the `central-scope-visualizer` skill, which renders the hierarchy (collapsible tree + per-scope profile names) via Generative UI and classifies every committed profile as shared / local / overridden / orphaned (finding stray and nameless configs)
   - **Presenting scope data**: Each scope node includes `persona_count`, `resource_count`, and per-persona `categories` (e.g. policy, vlan, profile). Present as an indented hierarchy with counts at each level. Group resources by category, not as flat lists. For effective config, show the `inheritance_path` first (Global → Collection → Site), then group resources by origin scope to show what each level contributes. Use the `scope_configuration_overview` or `scope_effective_config` prompts for guided workflows.
 - **Config Health & Resync**: central_get_devices_config_health (fleet view — spot `OUT_OF_SYNC` / non-zero `activeIssues`), central_get_device_config_issues (drill into one serial), central_resync_device_config
   - When a device is `OUT_OF_SYNC` or shows `CONFIG_PUSH_FAILURES`, call `central_resync_device_config(serials=[...])` to force a full configuration re-push. Operational annotation — runs immediately, no elicitation, not write-gated. Idempotent and non-destructive (re-applies the *intended* config; does not change it).
@@ -629,7 +649,7 @@ After reading the report, drill down into specific issues using the exact tool c
 
 # HPE GREENLAKE (greenlake_* tools)
 
-GreenLake is **spec-generated** (like Mist and EdgeConnect): ~959 tools are emitted
+GreenLake is **spec-generated** (like Mist and EdgeConnect): ~919 tools are emitted
 from the vendored OpenAPI specs (`vendor/greenlake/`, one per northbound service —
 devices, subscriptions, identity, workspaces, locations, service-provisioning,
 compute-ops, storage, MLOps, and more). Do not assume a fixed short list — **discover
@@ -637,7 +657,7 @@ the tool you need** with `search` (code mode) or `greenlake_list_tools` /
 `greenlake_get_tool_schema` / `greenlake_invoke_tool` (dynamic mode).
 
 ## Common read tools (representative — the full surface is much larger)
-- **Audit Logs**: greenlake_get_auditlogs_ui_v1_search, greenlake_get_auditlogs_ui_v1_details
+- **Audit Logs**: greenlake_get_audit_log_v2beta1_logs, greenlake_get_audit_log_v2beta1_logs_id_details
 - **Devices**: greenlake_get_devices_v1_devices, greenlake_get_devices_v1_devices_id
 - **Subscriptions**: greenlake_get_subscriptions_v1_subscriptions, greenlake_get_subscriptions_v1_subscriptions_id
 - **Users**: greenlake_get_identity_v1_users, greenlake_get_identity_v1_users_id
