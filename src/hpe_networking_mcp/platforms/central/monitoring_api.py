@@ -66,7 +66,9 @@ TROUBLESHOOTING_METHOD_DEVICE_MAPPING = {
 _VERSIONS = ["v1alpha1", "v1"]
 _CATEGORIES: dict[str, dict[str, str]] = {
     "monitoring": {"value": "network-monitoring", "latest": "v1"},
-    "troubleshooting": {"value": "network-troubleshooting", "latest": "v1alpha1"},
+    # Central retired network-troubleshooting/v1alpha1 (every route 404s
+    # "Route Not Found"); the vendored OAS documents only v1 (#705).
+    "troubleshooting": {"value": "network-troubleshooting", "latest": "v1"},
 }
 
 
@@ -76,7 +78,7 @@ def _generate_url(api_endpoint: str, category: str = "monitoring", version: str 
     Mirrors pycentral's ``generate_url`` for the two categories this module
     uses: ``monitoring`` resolves ``latest`` to ``v1`` under
     ``network-monitoring/``; ``troubleshooting`` resolves ``latest`` to
-    ``v1alpha1`` under ``network-troubleshooting/``. Explicit versions must be
+    ``v1`` under ``network-troubleshooting/``. Explicit versions must be
     one of ``v1alpha1`` / ``v1``.
 
     Args:
@@ -2051,7 +2053,7 @@ async def initiate_ping_aps_test(
 ) -> dict[str, Any]:
     """Initiate a ping test on the specified AP device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/aps/{serial_number}/ping``.
+    Calls ``POST network-troubleshooting/v1/aps/{serial_number}/ping``.
 
     Args:
         central_conn: CentralClient connection object.
@@ -2137,7 +2139,7 @@ async def initiate_ping_cx_test(
 ) -> dict[str, Any]:
     """Initiate a ping test on the specified CX device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/cx/{serial_number}/ping``.
+    Calls ``POST network-troubleshooting/v1/cx/{serial_number}/ping``.
 
     Args:
         central_conn: CentralClient connection object.
@@ -2226,7 +2228,7 @@ async def initiate_ping_gateways_test(
 ) -> dict[str, Any]:
     """Initiate a ping test on the specified Gateway device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/gateways/{serial_number}/ping``.
+    Calls ``POST network-troubleshooting/v1/gateways/{serial_number}/ping``.
 
     Args:
         central_conn: CentralClient connection object.
@@ -2540,7 +2542,7 @@ async def initiate_traceroute_aps_test(
 ) -> dict[str, Any]:
     """Initiate a traceroute test on the specified AP device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/aps/{serial_number}/traceroute``.
+    Calls ``POST network-troubleshooting/v1/aps/{serial_number}/traceroute``.
 
     Args:
         central_conn: CentralClient connection object.
@@ -2603,7 +2605,7 @@ async def initiate_traceroute_cx_test(
 ) -> dict[str, Any]:
     """Initiate a traceroute test on the specified CX device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/cx/{serial_number}/traceroute``.
+    Calls ``POST network-troubleshooting/v1/cx/{serial_number}/traceroute``.
 
     Args:
         central_conn: CentralClient connection object.
@@ -2675,7 +2677,7 @@ async def initiate_traceroute_gateways_test(
 ) -> dict[str, Any]:
     """Initiate a traceroute test on the specified Gateway device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/gateways/{serial_number}/traceroute``.
+    Calls ``POST network-troubleshooting/v1/gateways/{serial_number}/traceroute``.
 
     Args:
         central_conn: CentralClient connection object.
@@ -2839,7 +2841,7 @@ async def initiate_cable_test(
 ) -> dict[str, Any]:
     """Initiate a cable test on the specified device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/{device_type}/{serial_number}/cableTest``.
+    Calls ``POST network-troubleshooting/v1/{device_type}/{serial_number}/cableTest``.
     Supported device types: AOS-S and CX.
 
     Args:
@@ -2998,7 +3000,7 @@ async def initiate_show_commands(
 ) -> dict[str, Any]:
     """Initiate an asynchronous execution of 'show' command(s) on a device.
 
-    Calls ``POST network-troubleshooting/v1alpha1/{device_type}/{serial_number}/showCommands``.
+    Calls ``POST network-troubleshooting/v1/{device_type}/{serial_number}/showCommands``.
     Supported device types: AOS-S, AP, CX, and GATEWAY. All commands must
     start with 'show '.
 

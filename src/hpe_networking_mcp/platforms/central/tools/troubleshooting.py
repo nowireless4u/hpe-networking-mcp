@@ -183,6 +183,10 @@ async def central_show_commands(
     detailed device diagnostics. Use ``central_list_supported_show_commands``
     to discover which show commands a given device accepts (the AP catalogue
     is the broadest — hundreds of AP-specific ``show ap ...`` commands).
+    Central runs only commands on that list; anything else completes with
+    ``Command '<cmd>' not allowed`` in its output. On CX, transceivers/optics
+    are listed by ``show system inventory`` — ``show interface transceiver``
+    is not on Central's CX list.
 
     Parameters:
         serial_number: Device serial number (required).

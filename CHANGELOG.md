@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0.2] - 2026-10-26
+
+### Fixed
+- **Central troubleshooting tools no longer fail with `404 Route Not Found`.** `monitoring_api` resolved the `troubleshooting` category to `network-troubleshooting/v1alpha1`, which Central has retired, so every call failed regardless of the command or device: `central_show_commands`, ping, traceroute, cable test, port bounce, PoE bounce, and the five client/user disconnects, plus their `async-operations` polling. The category now resolves to `v1`, the only version the vendored New Central OAS documents. Request bodies and the `202 location` task handoff are unchanged in `v1`. Live-verified: every action's `v1alpha1` route returns `Route Not Found` while `v1` is live, and a show command on a CX switch now completes end to end. Tool names and parameters are unchanged. Closes #705.
+- **`central_show_commands` docstring** now says that Central runs only commands on its per-device allow-list (anything else completes with `Command '<cmd>' not allowed`), and that on CX, transceivers are listed by `show system inventory`. `show interface transceiver` is not on Central's CX list.
+
+### Added
+- **`test_central_troubleshooting_routes.py`** drives every troubleshooting helper (initiate, poll and disconnect, across each supported device family) through a recording connection and asserts that each request's method and path exists in the vendored `troubleshooting.json` spec. It catches both a retired version and a renamed path segment.
+
 ## [3.7.0.1] - 2026-10-26
 
 **Patch — security release. Upgrade recommended for every deployment.** The published `:latest` image (v3.7.0.0) carried 5 critical and 103 high vulnerabilities (Trivy); this release ships 0 critical and 0 *fixable* high. The remaining high findings are Debian base packages with no upstream fix yet. No tool, parameter or behaviour changes.
