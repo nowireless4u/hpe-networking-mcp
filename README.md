@@ -236,8 +236,10 @@ The pre-built image is available on GitHub Container Registry:
 
 ```
 ghcr.io/nowireless4u/hpe-networking-mcp:latest
-ghcr.io/nowireless4u/hpe-networking-mcp:0.6.0
+ghcr.io/nowireless4u/hpe-networking-mcp:v3.7.0.1
 ```
+
+Every release is also published under its version tag (`v<version>`, as in the example above). Pin a version tag in production so you can see which build you are running and roll back to it.
 
 You can also pull it directly:
 

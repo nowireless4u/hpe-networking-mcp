@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0.1] - 2026-10-26
+
+**Patch — security release. Upgrade recommended for every deployment.** The published `:latest` image (v3.7.0.0) carried 5 critical and 103 high vulnerabilities (Trivy); this release ships 0 critical and 0 *fixable* high. The remaining high findings are Debian base packages with no upstream fix yet. No tool, parameter or behaviour changes.
+
+### Security
+- **Dependency upgrades (`uv.lock`)** clearing all open pip-audit / Dependabot advisories: PyJWT 2.13.0 → 2.15.1 (key-confusion / signature-bypass advisories incl. the critical GHSA-ffc3-869f-jxw9), anyio 4.13.0 → 4.14.2 (critical GHSA-82r6-8w77-94w6), urllib3 2.7.0 → 2.8.0, certifi → 2026.10.23 (eMudhra CA distrust), fastmcp 3.4.2 → 3.4.11 (stays on 3.x; backported SSRF, path-parameter, auth and transform hardening), mcp 1.28.1 → 1.30.0 (stays on 1.x; unbounded StreamableHTTP session accumulation), authlib 1.7.0 → 1.9.1, opentelemetry-api 1.41.1 → 1.45.1, plus dev-only virtualenv / filelock / pip.
+- **The image now installs exactly what `uv.lock` pins.** The Dockerfile never copied `uv.lock`, so `uv sync --frozen` failed silently and the `|| uv sync` fallback re-resolved fresh versions at every build — the shipped image could differ from the audited lockfile. `uv.lock` is now copied into both stages and installed with `uv sync --locked` (no fallback), so a missing or stale lockfile fails the build.
+- **System pip removed from the runtime image.** The app runs from a uv-managed venv that never uses it; pip's vendored urllib3 / msgpack / setuptools were the last fixable high findings. ensurepip's bundled wheel is removed too.
+- **Base images pinned by version tag + multi-arch digest** (`python:3.13-slim-trixie`, `uv` 0.13.5, `deno` 2.9.8) instead of floating `:latest` / `:bin` tags. `uv` and `deno` are now named `FROM` stages so Dependabot's docker ecosystem can bump them. Root's uv download cache no longer ships in the image (`--no-cache`).
+
 ## [3.7.0.0] - 2026-08-06
 
 **Minor — credentials may now come from a `.env` file or environment variables, alongside the existing Docker secret files.** Classified minor rather than patch because it changes how the server is configured and deployed. Existing secrets-based deployments are unaffected: the secret file still wins and the base `docker-compose.yml` still mounts it, so `docker compose up -d` keeps working unchanged.
