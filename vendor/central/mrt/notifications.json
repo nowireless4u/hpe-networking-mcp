@@ -828,10 +828,6 @@
             "description": "Type of the resource.\n",
             "type": "string"
           },
-          "typeId": {
-            "description": "Type identifier of the alert.\n",
-            "type": "string"
-          },
           "updatedAt": {
             "description": "Timestamp when the alert was last updated.\n",
             "format": "date-time",
@@ -846,7 +842,6 @@
           "id",
           "key",
           "category",
-          "typeId",
           "name",
           "severity",
           "priority",
@@ -1262,11 +1257,6 @@
           "name": {
             "description": "The name of the classification group.\n",
             "example": "System",
-            "type": "string"
-          },
-          "typeId": {
-            "description": "The type identifier for this classification group.\n",
-            "example": "102",
             "type": "string"
           }
         },
@@ -2318,11 +2308,11 @@
         "operationId": "getAlertListV1",
         "parameters": [
           {
-            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the table below. \n\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `typeId` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `category` | `eq` and `in` |\n| `deviceType` | `eq` and `in`|\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n* `in`: Only values present in the given list are returned.\n\n**List of applicable filters for field and terms:**\n\n| Field | Applicable Terms |\n| --------- | -------- |\n|  `siteId` | `string` |\n| `typeId` | `string` |\n| `status` | `[\"Active\", \"Deferred\", \"Cleared\"]` |\n| `deviceType` | `[\"Access Point\", \"Gateway\", \"Switch\", \"Bridge\", \"Access Point, Switch\", \"Switch, Switch\"]` |\n| `category` | `[\"Clients\", \"System\", \"LAN\", \"WLAN\", \"WAN\", \"Cluster\", \"Routing\", \"Security\"]` |\n\n",
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the table below. \n\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `category` | `eq` and `in` |\n| `deviceType` | `eq` and `in`|\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n* `in`: Only values present in the given list are returned.\n\n**List of applicable filters for field and terms:**\n\n| Field | Applicable Terms |\n| --------- | -------- |\n|  `siteId` | `string` |\n| `status` | `[\"Active\", \"Deferred\", \"Cleared\"]` |\n| `deviceType` | `[\"Access Point\", \"Gateway\", \"Switch\", \"Bridge\"]` |\n| `category` | `[\"Clients\", \"System\", \"LAN\", \"WLAN\", \"WAN\", \"Cluster\", \"Routing\", \"Security\"]` |\n\n",
             "in": "query",
             "name": "filter",
             "schema": {
-              "example": "typeId in ('102', '4') and siteId eq '1234567'",
+              "example": "deviceType in ('Access Point', 'Switch') and siteId eq '1234567'",
               "type": "string"
             }
           },

@@ -195,6 +195,15 @@
         "title": "EmailSendResult",
         "type": "object"
       },
+      "Handler": {
+        "description": "Select the service to use when sending the message",
+        "enum": [
+          23
+        ],
+        "example": 23,
+        "title": "Handler",
+        "type": "integer"
+      },
       "RandomMpskGenerator": {
         "properties": {
           "random_mpsk_length": {
@@ -257,9 +266,7 @@
             "$ref": "#/components/schemas/Carrier"
           },
           "handler": {
-            "description": "Select the service to use when sending the message",
-            "format": "int64",
-            "type": "integer"
+            "$ref": "#/components/schemas/Handler"
           },
           "message": {
             "description": "Enter the message to send (maximum 160 characters)",
@@ -296,7 +303,7 @@
   "info": {
     "contact": {},
     "title": "Tools And Utilities",
-    "version": "6.12.7"
+    "version": "6.14.1"
   },
   "openapi": "3.0.0",
   "paths": {

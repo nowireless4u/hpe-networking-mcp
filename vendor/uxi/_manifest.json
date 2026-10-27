@@ -1,8 +1,8 @@
 {
+  "branch_definition_count": 1,
   "definition_count": 1,
   "definitions": [
     {
-      "id": "2j1jmli8l514",
       "path_count": 18,
       "slug": "hpe-networking-uxi-configuration",
       "title": "HPE Networking UXI Configuration",
@@ -11,5 +11,6 @@
   ],
   "project": "uxi",
   "source": "https://dash.readme.com/api/v1/api-registry/<uuid> (discovered via https://developer.arubanetworks.com/uxi/reference)",
+  "superseded": [],
   "total_paths": 18
 }

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Aruba OAS sync works again.** The daily sync of the New Central, AOS 8, UXI, ClearPass and AOS-CX specs had failed every day since 2026-09-29 with `no OpenAPI definitions found in ssr-props apiDefinitions`. The developer hub moved its per-file registry list within the reference page's ssr-props. `fetch_aruba_oas.py` now:
+  - reads the registry from its current location, and fails with a clear message if it moves again;
+  - accepts definitions labelled `swagger` (ClearPass's are relabelled although they are OpenAPI 3);
+  - rebuilds definitions that have no registry entry from their reference pages instead of silently dropping them;
+  - refuses to update a project whose definition count drops, or where a definition loses more than half its paths.
+
+  Vendored layout is unchanged (flat `vendor/clearpass/`, single `vendor/aoscx/` file).
+- **Sync failures no longer file one issue per day.** The Aruba, GreenLake and Mist sync workflows keep a single open failure issue with a fixed title, comment on it on each repeat failure, and close it on the next successful run.
+
+### Changed
+- **Vendored Aruba specs refreshed** (first successful sync since 2026-07-09):
+  - New Central monitoring: +6 operations, including `threats`, `device-notes`, AP `dhcp-pools` and `subscription-expiring-summary`.
+  - New Central services: +8 operations / −1. Added `wids-monitored-aps`, `wids-intrusions`, live-upgrade status and asset-tag images. Removed `airmatch-state`, which no tool uses.
+  - ClearPass: 6.12.7 → 6.14.1, with the same paths.
+  - Central config, AOS 8, UXI and AOS-CX: no path changes.
+- `vendor/central/SOURCE.md` now describes the current fetch mechanism.
+
 ## [3.7.0.2] - 2026-10-26
 
 ### Fixed

@@ -92,19 +92,39 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MIST_SYNC_PAT }}
 
-      - name: File issue on sync failure
+      # Failures keep ONE open issue (fixed title) up to date instead of filing a
+      # new issue per run; the next successful run closes it.
+      - name: Open or update the sync-failure issue
         if: failure()
         run: |
-          gh issue create \
-            --title "GreenLake OAS sync failed on $(date -u +%Y-%m-%d)" \
-            --body "The scheduled GreenLake OAS sync failed today. The vendored copies under \`vendor/greenlake/\` were NOT updated.
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          existing=$(gh issue list --state open --label ci/cd --search "in:title \"$ISSUE_TITLE\"" \
+            --json number,title -q ".[] | select(.title == \"$ISSUE_TITLE\") | .number" | head -1)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing on $(date -u +%Y-%m-%d): $run_url"
+          else
+            gh issue create --title "$ISSUE_TITLE" --label "ci/cd" --body "The scheduled GreenLake OAS sync is failing. The vendored copies under \`vendor/greenlake/\` are NOT being updated.
+
+          First failing run: $run_url
 
           Possible causes:
           - The portal changed how it serves specs (the \`/_bundle/.../<spec>.json?download\` paths moved or casing changed)
           - A spec stopped parsing as OpenAPI (upstream regression)
           - Network failure mid-sync
 
-          Action: re-run the workflow once the portal is stable, or update \`vendor/greenlake/sources.json\` / \`.github/scripts/fetch_greenlake_oas.py\` if the portal structure changed." \
-            --label "ci/cd"
+          This issue is updated on each further failure and closed automatically by the next successful sync. Update \`vendor/greenlake/sources.json\` / \`.github/scripts/fetch_greenlake_oas.py\` if the portal structure changed."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: "GreenLake OAS sync failing"
+
+      - name: Close the sync-failure issue once the sync succeeds
+        if: success()
+        run: |
+          for n in $(gh issue list --state open --label ci/cd --search "in:title \"$ISSUE_TITLE\"" \
+              --json number,title -q ".[] | select(.title == \"$ISSUE_TITLE\") | .number"); do
+            gh issue close "$n" --comment "Sync succeeded: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: "GreenLake OAS sync failing"

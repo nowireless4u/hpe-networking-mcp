@@ -325,6 +325,9 @@
             "type": "string"
           }
         },
+        "required": [
+          "enforcement_profile"
+        ],
         "title": "MACActiveSessionParams",
         "type": "object"
       },
@@ -447,7 +450,7 @@
   "info": {
     "contact": {},
     "title": "Session Control",
-    "version": "6.12.7"
+    "version": "6.14.1"
   },
   "openapi": "3.0.0",
   "paths": {

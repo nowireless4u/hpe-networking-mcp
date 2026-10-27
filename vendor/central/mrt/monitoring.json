@@ -171,7 +171,7 @@
         }
       },
       "FilterDeviceInventory": {
-        "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction; ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `deviceType` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `deviceFunction` | `eq` and `in` |\n| `isProvisioned` | `eq` and `in` |\n| `deviceGroupName` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n",
+        "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction; ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `deviceType` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `deviceFunction` | `eq` and `in` |\n| `isProvisioned` | `eq` and `in` |\n| `deviceGroupName` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.",
         "example": "siteId eq '12345' and deployment in ('Standalone', 'Virtual Controller')",
         "in": "query",
         "name": "filter",
@@ -183,7 +183,7 @@
         }
       },
       "FilterDevices": {
-        "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction; ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `deviceType` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `deployment` | `eq` and `in` |\n| `clusterName` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n",
+        "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction; ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `deviceType` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `deployment` | `eq` and `in` |\n| `clusterName` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.",
         "example": "siteId eq '12345' and deployment in ('Standalone', 'Virtual Controller')",
         "in": "query",
         "name": "filter",
@@ -194,8 +194,28 @@
           "type": "string"
         }
       },
+      "Id": {
+        "description": "ID of the Threat for which Threat detail information is requested\n",
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Id"
+        }
+      },
+      "Iddevice": {
+        "description": "The unique identifier of the asynchronous operation. This is the UUID returned in the `Location` header of the `POST /network-monitoring/v1/device-notes` response.",
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "example": "550e8400-e29b-41d4-a716-446655440000",
+          "format": "uuid",
+          "type": "string"
+        }
+      },
       "Limit": {
-        "description": "Specifies the maximum number of devices returned in the response. Maximum value is 1000.\n\n",
+        "description": "Specifies the maximum number of devices returned in the response. Maximum value is 1000.",
         "in": "query",
         "name": "limit",
         "required": false,
@@ -214,7 +234,7 @@
         }
       },
       "Next": {
-        "description": "Specifies the pagination cursor for the next page of resources.\nThe minimum value is 1.\n",
+        "description": "Specifies the pagination cursor for the next page of resources.\nThe minimum value is 1.",
         "in": "query",
         "name": "next",
         "required": false,
@@ -252,7 +272,7 @@
         }
       },
       "SerialNumber": {
-        "description": "The serial number of the device.\n",
+        "description": "The serial number of the device.",
         "in": "path",
         "name": "serial-number",
         "required": true,
@@ -288,7 +308,7 @@
         }
       },
       "SiteAssigned": {
-        "description": "Specifies the site assignment status of the devices. Can be either \"ASSIGNED\" or \"UNASSIGNED\".\n",
+        "description": "Specifies the site assignment status of the devices. Can be either \"ASSIGNED\" or \"UNASSIGNED\".",
         "in": "query",
         "name": "site-assigned",
         "required": false,
@@ -301,7 +321,16 @@
         }
       },
       "SiteId": {
-        "description": "ID of the site for which gateway-related information is requested.\n",
+        "description": "ID of the Site for which Threat detail information is requested\n",
+        "in": "query",
+        "name": "site-id",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/SiteId"
+        }
+      },
+      "SiteIdOptional": {
+        "description": "ID of the Site for which access point related information is requested\n",
         "in": "query",
         "name": "site-id",
         "required": false,
@@ -309,8 +338,8 @@
           "$ref": "#/components/schemas/SiteID"
         }
       },
-      "SiteIdOptional": {
-        "description": "ID of the Site for which access point related information is requested\n",
+      "SiteIdgw": {
+        "description": "ID of the site for which gateway-related information is requested.\n",
         "in": "query",
         "name": "site-id",
         "required": false,
@@ -328,7 +357,7 @@
         }
       },
       "SortDeviceInventory": {
-        "description": "A comma-separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\nSupported fields are `siteId`, `siteName`, `serialNumber`, `deviceName`, `macAddress`, `deviceType`, `ipv4`, `model`, `deviceGroupName`, and `deviceFunction`.\n",
+        "description": "A comma-separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\nSupported fields are `siteId`, `siteName`, `serialNumber`, `deviceName`, `macAddress`, `deviceType`, `ipv4`, `model`, `deviceGroupName`, and `deviceFunction`.",
         "in": "query",
         "name": "sort",
         "required": false,
@@ -337,7 +366,7 @@
         }
       },
       "SortDevices": {
-        "description": "A comma-separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\nSupported fields are `siteId`, `siteName`, `serialNumber`, `deviceName`, `deployment`, and `model`.\n",
+        "description": "A comma-separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\nSupported fields are `siteId`, `siteName`, `serialNumber`, `deviceName`, `deployment`, and `model`.",
         "in": "query",
         "name": "sort",
         "required": false,
@@ -352,6 +381,15 @@
         "required": false,
         "schema": {
           "$ref": "#/components/schemas/DateTime"
+        }
+      },
+      "Timestamp": {
+        "description": "The timestamp (RFC 3339 UTC+0) of the threat occurrence for which threat detail information is requested.",
+        "in": "query",
+        "name": "time-at",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/Timestamp"
         }
       },
       "TrendsFilter": {
@@ -553,6 +591,27 @@
           }
         },
         "description": "The response object provides cpu utilization trend of an access point over a period of time.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "AccessPointDHCPPoolListResponseV1": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AccessPointDHCPPoolListResponseV1"
+            }
+          }
+        },
+        "description": "List of access point DHCP pools, along with their details and associated pagination information.\n",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -783,20 +842,23 @@
               "interval": "5 mins",
               "keys": [
                 "Wired",
-                "Wireless"
+                "Wireless",
+                "Remote"
               ],
               "samples": [
                 {
                   "data": [
                     2,
-                    4
+                    4,
+                    1
                   ],
                   "ts": "2025-08-29T03:45:00Z"
                 },
                 {
                   "data": [
                     2,
-                    4
+                    4,
+                    1
                   ],
                   "ts": "2025-08-29T03:50:00Z"
                 }
@@ -1014,22 +1076,8 @@
         }
       },
       "DeletedDeviceResponseV1": {
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/DeviceResponseV1"
-            }
-          }
-        },
-        "description": "Details of a deleted device, including Access Point or Switch or Gateway.\n",
+        "description": "The device has been successfully deleted.",
         "headers": {
-          "Location": {
-            "description": "The URL of the resource that was deleted or the resource that will be available.",
-            "schema": {
-              "format": "uri",
-              "type": "string"
-            }
-          },
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
           },
@@ -1049,7 +1097,7 @@
             }
           }
         },
-        "description": "List of network devices, including Access Points, Switches, and Gateways from device inventory, along with their details and associated pagination information.\n",
+        "description": "List of network devices, including Access Points, Switches, and Gateways from device inventory, along with their details and associated pagination information.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -1070,7 +1118,28 @@
             }
           }
         },
-        "description": "List of network devices, including Access Points, Switches, and Gateways, along with their details and associated pagination information.\n",
+        "description": "List of network devices, including Access Points, Switches, and Gateways, along with their details and associated pagination information.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ExpiringLicensesSummaryResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ExpiringLicensesSummary"
+            }
+          }
+        },
+        "description": "Successful response containing expiring licenses summary.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -2007,6 +2076,27 @@
           }
         }
       },
+      "NotesConflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "Conflict. Another notes operation is already in progress for this tenant.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "OnboardingCountResponse": {
         "content": {
           "application/json": {
@@ -2447,6 +2537,90 @@
         "content": {
           "application/json": {
             "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service unavailable.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ServiceUnavailableapp": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableErrorDetails"
+            }
+          }
+        },
+        "description": "Service unavailable.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimitHeader"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemainingHeader"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitResetHeader"
+          }
+        }
+      },
+      "ServiceUnavailabledevice": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service Unavailable. The server cannot process the request due to capacity constraints. Please retry after some time.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ServiceUnavailabledles": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service Unavailable.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ServiceUnavailablefirewall": {
+        "content": {
+          "application/json": {
+            "schema": {
               "$ref": "#/components/schemas/ServiceUnavailableErrorDetails"
             }
           }
@@ -2842,6 +3016,48 @@
           }
         }
       },
+      "ThreatDetailResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ThreatDetailResponse"
+            }
+          }
+        },
+        "description": "Object containing information about the threat, such as affected products, attack target, category, CVE reference, description, device MAC, device type, threat ID, impact, malware family, MITRE tags, severity, signature ID, signature name, site ID, site name, source city, source IP, summary and username.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ThreatListResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ThreatListResponse"
+            }
+          }
+        },
+        "description": "A list of threats along with their respective details.\n The list will contain only the latest 20 threats sorted in descending order of occurredAt if no sorting and pagination are applied. Otherwise, it will contain the requested number of threats starting from the given offset, with the default offset value being 0.\n If there is no data, an empty list will be returned.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "TooManyRequests": {
         "content": {
           "application/json": {
@@ -3066,6 +3282,27 @@
           }
         }
       },
+      "UnsupportedMediaType": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnsupportedMediaTypeError"
+            }
+          }
+        },
+        "description": "Unsupported Media Type. The request payload format is not supported by the server.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "UpdateDeviceNotesResponseV1": {
         "content": {
           "application/json": {
@@ -3112,7 +3349,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/WlanInfoV1"
+              "$ref": "#/components/schemas/WlanInfoWithClientCount"
             }
           }
         },
@@ -3429,6 +3666,106 @@
         ],
         "type": "object"
       },
+      "AccessPointDHCPPoolListResponseV1": {
+        "allOf": [
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "properties": {
+                    "availableAddresses": {
+                      "description": "Number of available IP addresses in the DHCP pool.\n",
+                      "example": 200,
+                      "format": "int64",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "$ref": "#/components/schemas/DHCPPoolIdentifier"
+                    },
+                    "leaseDurationInSecs": {
+                      "$ref": "#/components/schemas/LeaseDurationInSecs"
+                    },
+                    "poolName": {
+                      "description": "Name of the DHCP pool.\n",
+                      "example": "Pool-Alpha",
+                      "format": "const",
+                      "maxLength": 128,
+                      "type": "string"
+                    },
+                    "poolSize": {
+                      "description": "Total number of IP addresses in the DHCP pool.\n",
+                      "example": 254,
+                      "format": "int64",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "subnet": {
+                      "description": "Subnet of the DHCP pool in CIDR notation.\n",
+                      "example": "192.168.10.0/24",
+                      "format": "const",
+                      "maxLength": 19,
+                      "type": "string"
+                    },
+                    "type": {
+                      "$ref": "#/components/schemas/Typeap"
+                    },
+                    "utilization": {
+                      "description": "Percentage of IP addresses in use in the DHCP pool.\n",
+                      "example": 21,
+                      "format": "int64",
+                      "maximum": 100,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "vlan": {
+                      "description": "VLAN ID associated with the DHCP pool.\n",
+                      "example": 10,
+                      "format": "int64",
+                      "maximum": 4094,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "type",
+                    "poolName"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginatedResponseap"
+          }
+        ],
+        "example": {
+          "count": 1,
+          "items": [
+            {
+              "availableAddresses": 200,
+              "id": "AP00000001/dhcp-pools/Pool-Alpha",
+              "leaseDurationInSecs": 86400,
+              "poolName": "Pool-Alpha",
+              "poolSize": 254,
+              "subnet": "192.168.10.0/24",
+              "type": "network-monitoring/access-point-monitoring",
+              "utilization": 21,
+              "vlan": 10
+            }
+          ],
+          "next": null,
+          "total": 1
+        }
+      },
       "AccessPointListResponse": {
         "allOf": [
           {
@@ -3447,7 +3784,7 @@
                       "$ref": "#/components/schemas/ClusterId"
                     },
                     "clusterName": {
-                      "$ref": "#/components/schemas/ClusterNameap"
+                      "$ref": "#/components/schemas/ClusterName"
                     },
                     "cpuUtilization": {
                       "description": "Represents the percentage of CPU utilization by the access point.\n",
@@ -3483,6 +3820,20 @@
                     },
                     "floorId": {
                       "$ref": "#/components/schemas/FloorIdap"
+                    },
+                    "gatewayClusters": {
+                      "description": "List of gateway clusters associated with the AP tunnel.",
+                      "example": [
+                        "cluster-alpha",
+                        "cluster-beta"
+                      ],
+                      "items": {
+                        "$ref": "#/components/schemas/GatewayCluster"
+                      },
+                      "type": "array"
+                    },
+                    "hibernate": {
+                      "$ref": "#/components/schemas/Hibernate"
                     },
                     "id": {
                       "$ref": "#/components/schemas/IDap"
@@ -3574,7 +3925,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -3593,6 +3944,11 @@
               "deviceName": "ArubaAP",
               "firmwareVersion": "8.5.2.0_59123",
               "floorId": "16a0aad7-4070-4a19-8a19-fd6b8e1ff012",
+              "gatewayClusters": [
+                "cluster-alpha",
+                "cluster-beta"
+              ],
+              "hibernate": false,
               "id": "AP00000001",
               "ipv4": "114.191.59.254",
               "ipv6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
@@ -4028,7 +4384,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/ListResponseWithoutPagination"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -4061,6 +4417,7 @@
               "type": "network-monitoring/access-point-monitoring"
             }
           ],
+          "next": null,
           "total": 1
         }
       },
@@ -4078,6 +4435,11 @@
           "deployment": "Standalone",
           "deviceName": "ap_1",
           "firmwareVersion": "8.5.2.0_59123",
+          "gatewayClusters": [
+            "cluster-alpha",
+            "cluster-beta"
+          ],
+          "hibernate": false,
           "id": "AP00000001",
           "ipv4": "198.51.100.42",
           "ipv6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
@@ -4192,6 +4554,20 @@
           },
           "firmwareVersion": {
             "$ref": "#/components/schemas/FirmwareVersionap"
+          },
+          "gatewayClusters": {
+            "description": "List of gateway clusters associated with the AP tunnel.",
+            "example": [
+              "cluster-alpha",
+              "cluster-beta"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/GatewayCluster"
+            },
+            "type": "array"
+          },
+          "hibernate": {
+            "$ref": "#/components/schemas/Hibernate"
           },
           "id": {
             "$ref": "#/components/schemas/IDap"
@@ -4638,7 +5014,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -4751,6 +5127,14 @@
         ],
         "type": "object"
       },
+      "Action": {
+        "description": "The action taken on the threat.\n",
+        "examples": [
+          "ALLOWED"
+        ],
+        "maxLength": 32,
+        "type": "string"
+      },
       "Address": {
         "properties": {
           "address": {
@@ -4775,6 +5159,14 @@
           }
         },
         "type": "object"
+      },
+      "AffectedProducts": {
+        "description": "The products affected by the threat.\n",
+        "examples": [
+          "Web_Server_Applications"
+        ],
+        "maxLength": 128,
+        "type": "string"
       },
       "AlertGroup": {
         "properties": {
@@ -4805,6 +5197,14 @@
         "description": "Antenna type of the radio. Possible values are Internal or External.\n",
         "example": null,
         "maxLength": 16,
+        "type": "string"
+      },
+      "AppProto": {
+        "description": "The application protocol of the threat.\n",
+        "examples": [
+          "HTTP"
+        ],
+        "maxLength": 64,
         "type": "string"
       },
       "ApplicationCategoryUsageItem": {
@@ -4923,7 +5323,7 @@
             "type": "array"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetapp"
           },
           "total": {
             "$ref": "#/components/schemas/Totalapp"
@@ -5160,7 +5560,7 @@
         "maxItems": 1000,
         "properties": {
           "count": {
-            "$ref": "#/components/schemas/Count"
+            "$ref": "#/components/schemas/Countapp"
           },
           "items": {
             "items": {
@@ -5172,7 +5572,7 @@
             "$ref": "#/components/schemas/Next"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetapp"
           },
           "total": {
             "$ref": "#/components/schemas/Totalapp"
@@ -5280,6 +5680,182 @@
         ],
         "type": "object"
       },
+      "AsyncNotesResult": {
+        "description": "Status and results of an asynchronous notes update operation.",
+        "properties": {
+          "endedAt": {
+            "description": "ISO 8601 timestamp indicating when the operation finished. `null` if not yet finished.",
+            "example": "2026-03-25T10:30:05Z",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "description": "Error details if the entire operation failed. `null` otherwise.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AsyncOperationError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "failed": {
+            "description": "Number of devices whose notes update failed.",
+            "example": 1,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "description": "The unique identifier of the asynchronous notes update operation.",
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "type": "string"
+          },
+          "logMessages": {
+            "description": "Chronological log messages describing the progress of the operation.",
+            "items": {
+              "$ref": "#/components/schemas/AsyncOperationLogMessage"
+            },
+            "type": "array"
+          },
+          "progressPercent": {
+            "description": "Percentage completion of the operation (0–100).",
+            "example": 100,
+            "format": "int32",
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "results": {
+            "description": "Detailed per-device results. `null` before processing begins.",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NotesOperationResults"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sourceResourceUri": {
+            "description": "The URI of the resource that initiated the asynchronous operation.",
+            "example": "/network-monitoring/v1/device-notes",
+            "format": "uri-reference",
+            "type": "string"
+          },
+          "startedAt": {
+            "description": "ISO 8601 timestamp indicating when the operation started processing. `null` if not yet started.",
+            "example": "2026-03-25T10:30:00Z",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/AsyncOperationState"
+          },
+          "succeeded": {
+            "description": "Number of devices whose notes were updated successfully.",
+            "example": 2,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of devices in the request.",
+            "example": 3,
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Typedevice"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "sourceResourceUri",
+          "state",
+          "progressPercent",
+          "total",
+          "succeeded",
+          "failed"
+        ],
+        "type": "object"
+      },
+      "AsyncOperationError": {
+        "description": "Error details when the entire asynchronous operation fails.",
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier for debugging and troubleshooting.",
+            "example": "78f002e32e0cefba3d8cc94fa8179342",
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Machine-readable error code with HPE_GL_ prefix.",
+            "example": "HPE_GL_NETWORK_MONITORING_INTERNAL_SERVER_ERROR",
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code of the error.",
+            "example": 500,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Human-readable error message.",
+            "example": "Device with serial number AP00000002 not found.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "AsyncOperationLogMessage": {
+        "description": "A timestamped log message from the asynchronous operation.",
+        "properties": {
+          "message": {
+            "description": "A human-readable log message describing an operation event.",
+            "example": "Notes update initiated",
+            "type": "string"
+          },
+          "timestamp": {
+            "description": "ISO 8601 timestamp of when the log message was recorded.",
+            "example": "2026-03-25T10:30:00Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "AsyncOperationState": {
+        "description": "The state of the asynchronous operation.",
+        "enum": [
+          "INITIALIZED",
+          "RUNNING",
+          "SUCCEEDED",
+          "FAILED",
+          "CANCELLED",
+          "TIMEDOUT"
+        ],
+        "example": "SUCCEEDED",
+        "type": "string"
+      },
+      "AttackTarget": {
+        "description": "The target of the attack threat\n",
+        "examples": [
+          "Client_Endpoint"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
       "Authentication": {
         "description": "The authentication method used in the tunnel.\n",
         "enum": [
@@ -5303,7 +5879,7 @@
         "description": "Bad request error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdtopology"
           },
           "errorCode": {
             "description": "Error code",
@@ -5322,7 +5898,7 @@
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagetopology"
           }
         },
         "required": [
@@ -5435,7 +6011,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -5514,7 +6090,7 @@
         "type": "array"
       },
       "BuildingId": {
-        "description": "Building ID associated with the device in UUID format. Omitted if no specific building is associated with the device.\n",
+        "description": "Building ID associated with the device in UUID format. Omitted if no specific building is associated with the device.",
         "example": "bld2bd91-de81-4097-8420-3ca7f87450fd",
         "format": "uuid",
         "maxLength": 256,
@@ -5716,6 +6292,14 @@
         ],
         "type": "object"
       },
+      "Category": {
+        "description": "The category of the threat.\n",
+        "examples": [
+          "EXPLOIT"
+        ],
+        "maxLength": 256,
+        "type": "string"
+      },
       "Channel": {
         "description": "Indicates the channel used by the radio for communication.\n",
         "example": 8,
@@ -5846,7 +6430,7 @@
             "$ref": "#/components/schemas/Typeclients"
           },
           "userName": {
-            "$ref": "#/components/schemas/UserName"
+            "$ref": "#/components/schemas/UserNameclients"
           },
           "vlanId": {
             "$ref": "#/components/schemas/VlanId"
@@ -5888,7 +6472,8 @@
         "description": "Specifies the client type.",
         "enum": [
           "Wired",
-          "Wireless"
+          "Wireless",
+          "Remote"
         ],
         "example": "Wireless",
         "type": "string"
@@ -5998,7 +6583,7 @@
             "$ref": "#/components/schemas/Typeclients"
           },
           "userName": {
-            "$ref": "#/components/schemas/UserName"
+            "$ref": "#/components/schemas/UserNameclients"
           },
           "vlanId": {
             "$ref": "#/components/schemas/VlanId"
@@ -6086,6 +6671,14 @@
         ],
         "type": "object"
       },
+      "ClientMacaddr": {
+        "description": "The MAC address of the client.\n",
+        "examples": [
+          "00:00:00:00:xx:xx"
+        ],
+        "maxLength": 32,
+        "type": "string"
+      },
       "ClientManufacturer": {
         "description": "Specifies the manufacturer of the client device.",
         "example": "Samsung",
@@ -6117,7 +6710,7 @@
         "maxItems": 1000,
         "properties": {
           "count": {
-            "$ref": "#/components/schemas/Count"
+            "$ref": "#/components/schemas/Countfirewall"
           },
           "items": {
             "items": {
@@ -6129,10 +6722,10 @@
             "$ref": "#/components/schemas/Next"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetfirewall"
           },
           "total": {
-            "$ref": "#/components/schemas/Total"
+            "$ref": "#/components/schemas/Totalfirewall"
           }
         },
         "required": [
@@ -6183,7 +6776,7 @@
         "maxItems": 1000,
         "properties": {
           "count": {
-            "$ref": "#/components/schemas/Count"
+            "$ref": "#/components/schemas/Countfirewall"
           },
           "items": {
             "items": {
@@ -6195,10 +6788,10 @@
             "$ref": "#/components/schemas/Next"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetfirewall"
           },
           "total": {
-            "$ref": "#/components/schemas/Total"
+            "$ref": "#/components/schemas/Totalfirewall"
           }
         },
         "required": [
@@ -6701,13 +7294,6 @@
         }
       },
       "ClusterName": {
-        "description": "The name of the cluster to which the device belongs. If the device is not part of any cluster then the cluster name will be null.\n",
-        "example": "cluster 1",
-        "format": "const",
-        "maxLength": 256,
-        "type": "string"
-      },
-      "ClusterNameap": {
         "description": "The name of the cluster to which the device belongs. If the device is not part of any cluster then the cluster name will be null.",
         "example": "cluster 1",
         "format": "const",
@@ -6882,18 +7468,52 @@
         "type": "string"
       },
       "ConfigLastModifiedAt": {
-        "description": "An RFC 3339 date-time indicating the last config modified time of the device.\n",
+        "description": "An RFC 3339 date-time indicating the last config modified time of the device.",
         "example": "2025-03-12T07:20:50.52Z",
         "format": "date-time",
         "maxLength": 128,
         "type": "string"
       },
       "ConfigStatus": {
-        "description": "Config status of the device. Possible values are `Synchronized`, `Out of Sync`, `Update in Progress`, and `Synchronized with Limitations`.\n",
+        "description": "Config status of the device. Possible values are `Synchronized`, `Out of Sync`, `Update in Progress`, and `Synchronized with Limitations`.",
         "example": "Synchronized",
         "format": "const",
         "maxLength": 256,
         "type": "string"
+      },
+      "ConflictError": {
+        "description": "Conflict error details returned from the server.",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugIddevice"
+          },
+          "errorCode": {
+            "description": "* A unique, machine-friendly, but human-readable identifier for the error. It has the prefix HPE_GL_.\n* For more details regarding the error please refer to the error message.",
+            "enum": [
+              "HPE_GL_NETWORK_MONITORING_CONFLICT"
+            ],
+            "example": "HPE_GL_NETWORK_MONITORING_CONFLICT",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code.",
+            "example": 409,
+            "maximum": 409,
+            "minimum": 409,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessagedevice"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
       },
       "ConnectedAt": {
         "description": "Specifies the timestamp when the client was connected.",
@@ -6917,9 +7537,11 @@
         "type": "string"
       },
       "Count": {
-        "description": "The count of items returned in the response.\n",
-        "example": 0,
-        "format": "int32",
+        "description": "Specifies the number of items in the response.\n",
+        "examples": [
+          1
+        ],
+        "format": "int64",
         "type": "integer"
       },
       "Countap": {
@@ -6928,9 +7550,21 @@
         "format": "int32",
         "type": "integer"
       },
+      "Countapp": {
+        "description": "The count of items returned in the response.\n",
+        "example": 0,
+        "format": "int32",
+        "type": "integer"
+      },
       "Countdevice": {
-        "description": "Number of items in the response.\n",
+        "description": "Number of items in the response.",
         "example": 1,
+        "format": "int32",
+        "type": "integer"
+      },
+      "Countfirewall": {
+        "description": "The count of items returned in the response.\n",
+        "example": 0,
         "format": "int32",
         "type": "integer"
       },
@@ -6945,6 +7579,14 @@
         "example": 1,
         "format": "int32",
         "type": "integer"
+      },
+      "CreatedAt": {
+        "description": "The date-time (RFC 3339 UTC+0) at which the resource was created.\n",
+        "examples": [
+          "2024-11-10T00:01:43.000Z"
+        ],
+        "format": "date-time",
+        "type": "string"
       },
       "CryptoType": {
         "description": "The cryptographic key exchange type used by the tunnel.",
@@ -6961,6 +7603,29 @@
         "description": "Identifier of the uplink interface currently used by the access point.\n",
         "example": "Ethernet",
         "maxLength": 64,
+        "type": "string"
+      },
+      "CustomerId": {
+        "description": "The ID of the customer.\n",
+        "examples": [
+          "cf3f80d06b7011ef85c8dac199bxxxxx"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
+      "CveReference": {
+        "description": "The CVE related to the signature that detected the threat.\n",
+        "examples": [
+          "CVE-2007-0015"
+        ],
+        "maxLength": 32,
+        "type": "string"
+      },
+      "DHCPPoolIdentifier": {
+        "description": "Primary identifier of a DHCP pool under an access point.",
+        "example": "AP00000001/dhcp-pools/Pool-Alpha",
+        "format": "const",
+        "maxLength": 36,
         "type": "string"
       },
       "DataPoint": {
@@ -6998,14 +7663,22 @@
         "type": "string"
       },
       "DebugId": {
-        "description": "A unique identifier used for troubleshooting purposes.",
-        "example": "78f002e32e0cefba3d8cc94fa8179342",
-        "format": "const",
+        "description": "A unique identifier used for troubleshooting and debugging purposes.\n",
+        "examples": [
+          "78f002e32e0cefba3d8cc94fa8179342"
+        ],
         "maxLength": 512,
         "type": "string"
       },
       "DebugIdap": {
         "description": "A unique identifier used for troubleshooting and debugging purposes.\n",
+        "example": "78f002e32e0cefba3d8cc94fa8179342",
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "DebugIddevice": {
+        "description": "A unique identifier used for troubleshooting and debugging purposes.",
         "example": "78f002e32e0cefba3d8cc94fa8179342",
         "format": "const",
         "maxLength": 512,
@@ -7018,8 +7691,15 @@
         "maxLength": 512,
         "type": "string"
       },
+      "DebugIdtopology": {
+        "description": "A unique identifier used for troubleshooting purposes.",
+        "example": "78f002e32e0cefba3d8cc94fa8179342",
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
       "Deployment": {
-        "description": "The operating mode of the device.\n",
+        "description": "The operating mode of the device.",
         "example": "Standalone",
         "format": "const",
         "maxLength": 16,
@@ -7041,6 +7721,46 @@
         "example": "Standalone",
         "maxLength": 10,
         "type": "string"
+      },
+      "Description": {
+        "description": "The description of the signature that detected the threat.\n",
+        "examples": [
+          "WEB_CLIENT signatures are designed to alert on attacks against web client software"
+        ],
+        "maxLength": 4096,
+        "type": "string"
+      },
+      "DestCity": {
+        "description": "The destination city of the threat.\n",
+        "examples": [
+          "San Jose"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "DestCountry": {
+        "description": "The destination country of the threat.\n",
+        "examples": [
+          "USA"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "DestIp": {
+        "description": "The destination IP of the threat.\n",
+        "examples": [
+          "192.168.x.x"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
+      "DestPort": {
+        "description": "The destination Port of the threat.\n",
+        "examples": [
+          80
+        ],
+        "format": "int64",
+        "type": "integer"
       },
       "DestinationAp": {
         "description": "Specifies the AP name to which the client roamed.",
@@ -7094,7 +7814,7 @@
         "type": "string"
       },
       "DeviceFunction": {
-        "description": "Device function (persona) of the device.\n",
+        "description": "Device function (persona) of the device.",
         "example": "Instant",
         "format": "const",
         "maxLength": 20,
@@ -7108,14 +7828,14 @@
         "type": "string"
       },
       "DeviceGroupId": {
-        "description": "DeviceGroupId property represents the unique identifier for the group to which the device belongs. This identifier is used to group devices that share common characteristics or are part of the same operational group, facilitating easier management and monitoring.\n",
+        "description": "Device group ID represents the unique identifier for the group to which the device belongs. This identifier is used to group devices that share common characteristics or are part of the same operational group, facilitating easier management and monitoring.",
         "example": 8100143262,
         "format": "const",
         "maxLength": 16,
         "type": "string"
       },
       "DeviceGroupName": {
-        "description": "DeviceGroupName represents the name of the group to which the device belongs. This name is used to categorize and manage devices that share common characteristics or are part of the same operational group.\n",
+        "description": "Device group name represents the name of the group to which the device belongs. This name is used to categorize and manage devices that share common characteristics or are part of the same operational group.",
         "example": "AP Persona group",
         "format": "const",
         "maxLength": 256,
@@ -7141,10 +7861,10 @@
                       "$ref": "#/components/schemas/DeviceGroupName"
                     },
                     "deviceName": {
-                      "$ref": "#/components/schemas/DeviceName"
+                      "$ref": "#/components/schemas/DeviceNamedevice"
                     },
                     "deviceType": {
-                      "$ref": "#/components/schemas/DeviceType"
+                      "$ref": "#/components/schemas/DeviceTypedevice"
                     },
                     "firmwareVersion": {
                       "$ref": "#/components/schemas/FirmwareVersion"
@@ -7195,7 +7915,7 @@
                       "$ref": "#/components/schemas/Tier"
                     },
                     "type": {
-                      "$ref": "#/components/schemas/Type"
+                      "$ref": "#/components/schemas/Typedevice"
                     }
                   },
                   "required": [
@@ -7255,6 +7975,14 @@
           "total": 4
         }
       },
+      "DeviceIp": {
+        "description": "The IP address of the device.\n",
+        "examples": [
+          "192.168.x.x"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
       "DeviceListResponseV1": {
         "allOf": [
           {
@@ -7311,15 +8039,39 @@
           "total": 4
         }
       },
+      "DeviceMac": {
+        "description": "The Mac address of the device.\n",
+        "examples": [
+          "00:1A:2B:3C:4D:5F"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
+      "DeviceModel": {
+        "description": "The model of the device.\n",
+        "examples": [
+          "GW-275"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
       "DeviceName": {
         "description": "The name of the device.\n",
+        "examples": [
+          "ap_1"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "DeviceNameap": {
+        "description": "The access point name.\n",
         "example": "ap_1",
         "format": "const",
         "maxLength": 256,
         "type": "string"
       },
-      "DeviceNameap": {
-        "description": "The access point name.\n",
+      "DeviceNamedevice": {
+        "description": "The name of the device.",
         "example": "ap_1",
         "format": "const",
         "maxLength": 256,
@@ -7330,6 +8082,91 @@
         "example": "gw_1",
         "maxLength": 256,
         "type": "string"
+      },
+      "DeviceNotesFailedResult": {
+        "description": "A device whose notes update failed.",
+        "properties": {
+          "errorCode": {
+            "description": "Machine-readable error code with HPE_GL_ prefix.",
+            "example": "HPE_GL_NETWORK_MONITORING_DEVICE_NOT_FOUND",
+            "type": "string"
+          },
+          "errorMessage": {
+            "description": "Human-readable error message.",
+            "example": "Device not found",
+            "type": "string"
+          },
+          "id": {
+            "description": "The serial number of the device, used as the resource identifier.",
+            "example": "AP00000004",
+            "type": "string"
+          },
+          "notes": {
+            "description": "The notes from the request. `null` if the device was not found.",
+            "example": null,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "serialNumber": {
+            "description": "The serial number of the device.",
+            "example": "AP00000002",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "example": "network-monitoring/device-monitoring",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "DeviceNotesInput": {
+        "properties": {
+          "notes": {
+            "description": "The note text to set for the device. Set to an empty string (`\"\"`) to clear/delete the note.",
+            "example": "Device is located in Building A, Floor 2",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "The serial number of the device.",
+            "example": "AP00000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "serialNumber",
+          "notes"
+        ],
+        "type": "object"
+      },
+      "DeviceNotesSucceededResult": {
+        "description": "A device whose notes were updated successfully.",
+        "properties": {
+          "id": {
+            "description": "The serial number of the device, used as the resource identifier.",
+            "example": "AP00000001",
+            "type": "string"
+          },
+          "notes": {
+            "description": "The notes that were set on the device.",
+            "example": "Device is located in Building A, Floor 2",
+            "type": "string"
+          },
+          "serialNumber": {
+            "description": "The serial number of the device.",
+            "example": "AP00000001",
+            "type": "string"
+          },
+          "type": {
+            "description": "The type of the resource.",
+            "example": "network-monitoring/device-monitoring",
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "DeviceResponseV1": {
         "example": {
@@ -7379,10 +8216,10 @@
             "$ref": "#/components/schemas/DeviceFunction"
           },
           "deviceName": {
-            "$ref": "#/components/schemas/DeviceName"
+            "$ref": "#/components/schemas/DeviceNamedevice"
           },
           "deviceType": {
-            "$ref": "#/components/schemas/DeviceType"
+            "$ref": "#/components/schemas/DeviceTypedevice"
           },
           "firmwareVersion": {
             "$ref": "#/components/schemas/FirmwareVersion"
@@ -7430,7 +8267,7 @@
             "$ref": "#/components/schemas/Status"
           },
           "type": {
-            "$ref": "#/components/schemas/Type"
+            "$ref": "#/components/schemas/Typedevice"
           },
           "uptimeInMillis": {
             "$ref": "#/components/schemas/UptimeInMillis"
@@ -7446,6 +8283,14 @@
           "type"
         ],
         "type": "object"
+      },
+      "DeviceSerialNum": {
+        "description": "The serial number of the device.\n",
+        "examples": [
+          "GW00000001"
+        ],
+        "maxLength": 128,
+        "type": "string"
       },
       "DeviceSummary": {
         "properties": {
@@ -7475,7 +8320,15 @@
         "type": "object"
       },
       "DeviceType": {
-        "description": "The type of network device.\n",
+        "description": "The type of the device.\n",
+        "examples": [
+          "GW"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
+      "DeviceTypedevice": {
+        "description": "The type of network device.",
         "enum": [
           "ACCESS_POINT",
           "SWITCH",
@@ -7978,9 +8831,10 @@
         "type": "object"
       },
       "ErrorMessage": {
-        "description": "Error message indicating the cause of the failure.",
-        "example": "Error Message",
-        "format": "const",
+        "description": "Error message indicating the cause of the failure.\n",
+        "examples": [
+          "Reason for the error"
+        ],
         "maxLength": 512,
         "type": "string"
       },
@@ -7991,9 +8845,23 @@
         "maxLength": 512,
         "type": "string"
       },
+      "ErrorMessagedevice": {
+        "description": "Error message indicating the cause of the failure.",
+        "example": "Error Message",
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
       "ErrorMessageswitch": {
         "description": "Error message indicating the cause of the failure.\n",
         "example": "Reason for the error",
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
+      "ErrorMessagetopology": {
+        "description": "Error message indicating the cause of the failure.",
+        "example": "Error Message",
         "format": "const",
         "maxLength": 512,
         "type": "string"
@@ -8030,6 +8898,223 @@
         ],
         "type": "object"
       },
+      "ExpiringLicensePerMonth": {
+        "properties": {
+          "advancedExpCount": {
+            "description": "Total Advanced tier licenses expiring this month.",
+            "examples": [
+              8
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "advancedExpCountAp": {
+            "description": "Advanced licenses expiring for Access Points.",
+            "examples": [
+              5
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "advancedExpCountGw": {
+            "description": "Advanced licenses expiring for Gateways.",
+            "examples": [
+              1
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "advancedExpCountOt": {
+            "description": "Advanced licenses expiring for Other device types.",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "advancedExpCountSw": {
+            "description": "Advanced licenses expiring for Switches.",
+            "examples": [
+              2
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "foundationExpCount": {
+            "description": "Total Foundation tier licenses expiring this month.",
+            "examples": [
+              15
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "foundationExpCountAp": {
+            "description": "Foundation licenses expiring for Access Points.",
+            "examples": [
+              10
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "foundationExpCountGw": {
+            "description": "Foundation licenses expiring for Gateways.",
+            "examples": [
+              2
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "foundationExpCountOt": {
+            "description": "Foundation licenses expiring for Other device types.",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "foundationExpCountSw": {
+            "description": "Foundation licenses expiring for Switches.",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "month": {
+            "description": "Month name in uppercase (e.g. FEBRUARY).",
+            "examples": [
+              "FEBRUARY"
+            ],
+            "type": "string"
+          },
+          "monthYear": {
+            "description": "Combined month-year label in uppercase (e.g. FEBRUARY-2026).",
+            "examples": [
+              "FEBRUARY-2026"
+            ],
+            "type": "string"
+          },
+          "otherExpCount": {
+            "description": "Total Other tier licenses expiring this month.",
+            "examples": [
+              3
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "otherExpCountAp": {
+            "description": "Other tier licenses expiring for Access Points.",
+            "examples": [
+              2
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "otherExpCountGw": {
+            "description": "Other tier licenses expiring for Gateways.",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "otherExpCountOt": {
+            "description": "Other tier licenses expiring for Other device types.",
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "otherExpCountSw": {
+            "description": "Other tier licenses expiring for Switches.",
+            "examples": [
+              1
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sequence": {
+            "description": "Sequence number of the month (1-12).",
+            "examples": [
+              1
+            ],
+            "maximum": 12,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "year": {
+            "description": "Year (e.g. 2026).",
+            "examples": [
+              2026
+            ],
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sequence",
+          "month",
+          "year",
+          "monthYear",
+          "foundationExpCount",
+          "advancedExpCount",
+          "otherExpCount",
+          "foundationExpCountAp",
+          "foundationExpCountSw",
+          "foundationExpCountGw",
+          "foundationExpCountOt",
+          "advancedExpCountAp",
+          "advancedExpCountSw",
+          "advancedExpCountGw",
+          "advancedExpCountOt",
+          "otherExpCountAp",
+          "otherExpCountSw",
+          "otherExpCountGw",
+          "otherExpCountOt"
+        ],
+        "type": "object"
+      },
+      "ExpiringLicensesSummary": {
+        "properties": {
+          "count": {
+            "description": "Total number of monthly entries returned (always 12).",
+            "examples": [
+              12
+            ],
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for this summary resource (tenant ID).",
+            "examples": [
+              "tenant-12345"
+            ],
+            "type": "string"
+          },
+          "items": {
+            "description": "List of expiring license counts for each of the next 12 months.",
+            "items": {
+              "$ref": "#/components/schemas/ExpiringLicensePerMonth"
+            },
+            "maxItems": 12,
+            "minItems": 12,
+            "type": "array"
+          },
+          "type": {
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/subscription-expiring-summary"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "items",
+          "count"
+        ],
+        "type": "object"
+      },
       "Filter": {
         "description": "OData Version 4.0 filter string (limited functionality).\n<br> Supports only `eq` and `in` operations (`gt`, `ge`, `lt` and `le` are NOT supported). </br> Supports only `and` conjunction (`or` and `not` are NOT supported).\n<br>Supported __filter__ fields are:  </br>\n* `floorId` \n* `buildingId`  \n* `types` (devicetypes- `in` operator must be used )\n",
         "example": "floorId eq 'dd5ccb1f-9b65-42a8-b50e-faa7842bbcd8'",
@@ -8043,7 +9128,7 @@
         "type": "string"
       },
       "FirmwareVersion": {
-        "description": "Firmware version currently running on the device.\n",
+        "description": "Firmware version currently running on the device.",
         "example": "8.5.2.0_59123",
         "format": "const",
         "maxLength": 32,
@@ -8063,7 +9148,7 @@
         "type": "string"
       },
       "FloorId": {
-        "description": "Floor ID associated with the device in UUID format. Omitted if no specific floor is associated with the device.\n",
+        "description": "Floor ID associated with the device in UUID format. Omitted if no specific floor is associated with the device.",
         "example": "16a-aad7-4070-8a19-fd6b8e1ff012",
         "format": "uuid",
         "maxLength": 128,
@@ -8224,11 +9309,19 @@
         },
         "type": "object"
       },
+      "FlowId": {
+        "description": "The flow ID of the threat\n",
+        "examples": [
+          12345
+        ],
+        "format": "int64",
+        "type": "integer"
+      },
       "ForbiddenRequest": {
         "description": "Forbidden error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdtopology"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.* For more details regarding error please refer to error message",
@@ -8244,7 +9337,7 @@
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagetopology"
           }
         },
         "required": [
@@ -8263,6 +9356,12 @@
       "Gateway": {
         "description": "The name of the gateway to which the tunnel belongs.\n",
         "example": "gw_1",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "GatewayCluster": {
+        "description": "Name of the gateway cluster to which the AP tunnel is established. \n",
+        "format": "const",
         "maxLength": 256,
         "type": "string"
       },
@@ -8657,7 +9756,7 @@
                       "$ref": "#/components/schemas/ClusterNamegw"
                     },
                     "cpuUtilization": {
-                      "description": "The latest CPU utilization of the gateway.\n",
+                      "description": "The latest CPU utilization of the gateway, expressed as a percentage (0–100).\n",
                       "example": 32,
                       "format": "float",
                       "type": "number"
@@ -8696,7 +9795,7 @@
                       "type": "string"
                     },
                     "memoryUtilization": {
-                      "description": "The latest memory utilization of the gateway.\n",
+                      "description": "The latest memory utilization of the gateway, expressed as a percentage (0–100).\n",
                       "example": 32,
                       "format": "float",
                       "type": "number"
@@ -9334,7 +10433,7 @@
             "$ref": "#/components/schemas/ClusterNamegw"
           },
           "cpuUtilization": {
-            "description": "The latest CPU utilization of the gateway.\n",
+            "description": "The latest CPU utilization of the gateway, expressed as a percentage (0–100).\n",
             "example": 32,
             "format": "float",
             "type": "number"
@@ -9373,7 +10472,7 @@
             "type": "string"
           },
           "memoryUtilization": {
-            "description": "The latest memory utilization of the gateway.\n",
+            "description": "The latest memory utilization of the gateway, expressed as a percentage (0–100).\n",
             "example": 32,
             "format": "float",
             "type": "number"
@@ -10748,6 +11847,14 @@
         ],
         "type": "object"
       },
+      "Generation": {
+        "description": "A monotonically increasing number indicating the number of times the resource has been updated.\n",
+        "examples": [
+          1
+        ],
+        "format": "int64",
+        "type": "integer"
+      },
       "Geo": {
         "externalDocs": {
           "url": "http://geojson.org/geojson-spec.html#geometry-objects"
@@ -10844,20 +11951,23 @@
           "interval": "5 mins",
           "keys": [
             "Wired",
-            "Wireless"
+            "Wireless",
+            "Remote"
           ],
           "samples": [
             {
               "data": [
                 2,
-                4
+                4,
+                1
               ],
               "ts": "2025-08-29T03:45:00Z"
             },
             {
               "data": [
                 2,
-                4
+                4,
+                1
               ],
               "ts": "2025-08-29T03:50:00Z"
             }
@@ -10880,7 +11990,8 @@
             "description": "List of categories available for a selected filter",
             "example": [
               "Wired",
-              "Wireless"
+              "Wireless",
+              "Remote"
             ],
             "items": {
               "format": "const",
@@ -10980,7 +12091,7 @@
       "GetTopNClientsByUsageResponse": {
         "description": "Response containing list of top N clients by usage",
         "example": {
-          "count": 3,
+          "count": 4,
           "items": [
             {
               "clientConnectionType": "Wireless",
@@ -11005,6 +12116,14 @@
               "siteId": 2778352,
               "siteName": "Site-3",
               "usage": 6644045
+            },
+            {
+              "clientConnectionType": "Remote",
+              "clientName": "A8:2B:D6:4C:50:01",
+              "macAddress": "a8:2b:d6:4c:50:01",
+              "siteId": 2778400,
+              "siteName": "Site-4",
+              "usage": 5120000
             }
           ]
         },
@@ -11021,7 +12140,8 @@
                   "description": "Specifies the type of client",
                   "enum": [
                     "Wired",
-                    "Wireless"
+                    "Wireless",
+                    "Remote"
                   ],
                   "type": "string"
                 },
@@ -11105,6 +12225,22 @@
           "timestamp"
         ],
         "type": "object"
+      },
+      "GroupId": {
+        "description": "The group ID of the Device.\n",
+        "examples": [
+          "12345"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "GroupName": {
+        "description": "The group name of the device.\n",
+        "examples": [
+          "group1"
+        ],
+        "maxLength": 128,
+        "type": "string"
       },
       "GroupValue": {
         "properties": {
@@ -12631,6 +13767,11 @@
         },
         "type": "object"
       },
+      "Hibernate": {
+        "description": "Indicates whether the access point is in hibernate mode.",
+        "example": false,
+        "type": "boolean"
+      },
       "HostName": {
         "description": "The client's hostname.",
         "example": "13_B3_20_22_B0_04H",
@@ -12651,7 +13792,7 @@
         "type": "string"
       },
       "IDdevice": {
-        "description": "Primary identifier for the resource.\n",
+        "description": "Primary identifier for the resource.",
         "example": "AP00000001",
         "format": "const",
         "maxLength": 36,
@@ -12674,7 +13815,7 @@
         "type": "string"
       },
       "IPv4Address": {
-        "description": "IPv4 address of the device.\n",
+        "description": "IPv4 address of the device.",
         "example": "198.51.100.42",
         "format": "ipv4",
         "maxLength": 15,
@@ -12688,7 +13829,7 @@
         "type": "string"
       },
       "IPv6Address": {
-        "description": "IPv6 address of the device.\n",
+        "description": "IPv6 address of the device.",
         "example": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
         "format": "ipv6",
         "maxLength": 39,
@@ -12702,13 +13843,29 @@
         "type": "string"
       },
       "Id": {
-        "description": "Primary identifier for the resource.",
-        "example": "00001",
+        "description": "The unique identifier of the threat.\n",
+        "examples": [
+          "threat~1732223424345~x~xxxxx-x"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "Idsite": {
         "description": "Primary identifier for the resource.\n",
         "example": "00001",
+        "type": "string"
+      },
+      "Idtopology": {
+        "description": "Primary identifier for the resource.",
+        "example": "00001",
+        "type": "string"
+      },
+      "Impact": {
+        "description": "The impact of the threat.\n",
+        "examples": [
+          "Compromised Workstation"
+        ],
+        "maxLength": 256,
         "type": "string"
       },
       "ImportStatus": {
@@ -12841,7 +13998,7 @@
         "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdtopology"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has a prefix HPE_GL_.* For more details regarding error, please refer to the error message",
@@ -12861,7 +14018,7 @@
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagetopology"
           }
         },
         "required": [
@@ -12906,7 +14063,7 @@
         "type": "string"
       },
       "IsProvisioned": {
-        "description": "IsProvisioned indicates the provisioning state of the device. This property specifies whether the device has been successfully provisioned and is ready for use. For example, a value of `YES` indicates that the device has been provisioned, while a value of `NO` indicates that the device has not been provisioned.\n",
+        "description": "Indicates the provisioning state of the device. This property specifies whether the device has been successfully provisioned and is ready for use. For example, a value of `YES` indicates that the device has been provisioned, while a value of `NO` indicates that the device has not been provisioned.",
         "example": "YES",
         "format": "const",
         "maxLength": 16,
@@ -12915,7 +14072,7 @@
       "IsolatedNodes": {
         "properties": {
           "id": {
-            "$ref": "#/components/schemas/Id"
+            "$ref": "#/components/schemas/Idtopology"
           },
           "isolatedDevices": {
             "description": "List of isolated devices associated with the site",
@@ -13044,7 +14201,7 @@
         "type": "string"
       },
       "LastSeenAt": {
-        "description": "An RFC 3339 date-time indicating the last detected time of the device in the system. If the device is online, this value will be null.\n",
+        "description": "An RFC 3339 date-time indicating the last detected time of the device in the system. If the device is online, this value will be null.",
         "example": "2024-03-12T07:20:50.52Z",
         "format": "date-time",
         "maxLength": 128,
@@ -13069,6 +14226,13 @@
         "format": "date-time",
         "maxLength": 128,
         "type": "string"
+      },
+      "LeaseDurationInSecs": {
+        "description": "Duration of the DHCP lease in seconds.",
+        "example": 86400,
+        "format": "int64",
+        "minimum": 0,
+        "type": "integer"
       },
       "Limit": {
         "default": 1000,
@@ -13223,20 +14387,6 @@
         ],
         "type": "object"
       },
-      "ListResponseWithoutPagination": {
-        "properties": {
-          "count": {
-            "$ref": "#/components/schemas/Countap"
-          },
-          "total": {
-            "$ref": "#/components/schemas/Totalap"
-          }
-        },
-        "required": [
-          "count"
-        ],
-        "type": "object"
-      },
       "Mac": {
         "description": "The device mac address.",
         "example": "a1:b2:c3:d4:e5:f6",
@@ -13245,7 +14395,7 @@
         "type": "string"
       },
       "MacAddress": {
-        "description": "The device MAC address.\n",
+        "description": "The device MAC address.",
         "example": "11:22:33:44:55:66",
         "format": "const",
         "maxLength": 18,
@@ -13269,11 +14419,45 @@
         "maxLength": 18,
         "type": "string"
       },
+      "MalwareFamily": {
+        "description": "The family that the malware belongs to.\n",
+        "examples": [
+          "Android_SmsThief"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
       "MeshRole": {
         "description": "Mesh role of the access point when mesh is configured.\n",
         "example": "PORTAL",
         "maxLength": 32,
         "type": "string"
+      },
+      "MitreTags": {
+        "description": "The MITRE tags associated with the threat.\n",
+        "properties": {
+          "mitreTacticName": {
+            "description": "Mitre Tactic Name\n",
+            "examples": [
+              "Initial_Access"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          },
+          "mitreTechniqueName": {
+            "description": "Mitre Technique Name\n",
+            "examples": [
+              "Exploit_Public_Facing_Application"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          }
+        },
+        "required": [
+          "mitreTacticName",
+          "mitreTechniqueName"
+        ],
+        "type": "object"
       },
       "MloOperMode": {
         "description": "Specifies the Multi-Link Operation (MLO) mode used by the client for Wi-Fi 7 connectivity.",
@@ -13350,7 +14534,7 @@
         "type": "string"
       },
       "Model": {
-        "description": "Hardware model of the device.\n",
+        "description": "Hardware model of the device.",
         "example": "AP-275",
         "format": "const",
         "maxLength": 32,
@@ -13383,7 +14567,7 @@
       "Neighbours": {
         "properties": {
           "id": {
-            "$ref": "#/components/schemas/Id"
+            "$ref": "#/components/schemas/Idtopology"
           },
           "neighbours": {
             "description": "List of neighbouring devices linked to the given device",
@@ -13415,13 +14599,13 @@
                   "type": "string"
                 },
                 "siteId": {
-                  "$ref": "#/components/schemas/SiteId",
+                  "$ref": "#/components/schemas/SiteIdtopology",
                   "description": "Site id of the neighbour device. This value will be null for unmanaged neighbours.",
                   "example": "965498321",
                   "nullable": true
                 },
                 "siteName": {
-                  "$ref": "#/components/schemas/SiteName",
+                  "$ref": "#/components/schemas/SiteNametopology",
                   "description": "Site name of the neighbour device. This value will be null for unmanaged neighbours.",
                   "example": "Site1",
                   "nullable": true
@@ -13513,11 +14697,31 @@
         "type": "object"
       },
       "Notes": {
-        "description": "Notes for the device. \n",
+        "description": "Notes for the device.",
         "example": "Device is located in Building A, Floor 2",
         "format": "const",
         "maxLength": 256,
         "type": "string"
+      },
+      "NotesOperationResults": {
+        "description": "Per-device results of the notes update operation.",
+        "properties": {
+          "failed": {
+            "description": "Devices whose notes update failed.",
+            "items": {
+              "$ref": "#/components/schemas/DeviceNotesFailedResult"
+            },
+            "type": "array"
+          },
+          "succeeded": {
+            "description": "Devices whose notes were updated successfully.",
+            "items": {
+              "$ref": "#/components/schemas/DeviceNotesSucceededResult"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
       },
       "OccurredAt": {
         "description": "Specifies the transition time of the client.",
@@ -13525,10 +14729,11 @@
         "type": "string"
       },
       "Offset": {
-        "description": "The offset of the first item in the response.\n",
-        "example": 0,
-        "format": "int32",
-        "minimum": 0,
+        "description": "Specifies the offset of the first item in the response.\n",
+        "examples": [
+          10
+        ],
+        "format": "int64",
         "type": "integer"
       },
       "OffsetParam": {
@@ -13537,6 +14742,20 @@
           0
         ],
         "format": "int32",
+        "type": "integer"
+      },
+      "Offsetapp": {
+        "description": "The offset of the first item in the response.\n",
+        "example": 0,
+        "format": "int32",
+        "minimum": 0,
+        "type": "integer"
+      },
+      "Offsetfirewall": {
+        "description": "The offset of the first item in the response.\n",
+        "example": 0,
+        "format": "int32",
+        "minimum": 0,
         "type": "integer"
       },
       "Offsetsite": {
@@ -13930,6 +15149,46 @@
       "PaginatedResponse": {
         "properties": {
           "count": {
+            "$ref": "#/components/schemas/Count"
+          },
+          "offset": {
+            "$ref": "#/components/schemas/Offset"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Total"
+          }
+        },
+        "required": [
+          "count",
+          "total",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "PaginatedResponseV1": {
+        "properties": {
+          "count": {
+            "$ref": "#/components/schemas/Countdevice"
+          },
+          "next": {
+            "description": "Indicates the next page number, null if there are no further pages.",
+            "example": "2",
+            "format": "int32",
+            "type": "string"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Totaldevice"
+          }
+        },
+        "required": [
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "PaginatedResponseap": {
+        "properties": {
+          "count": {
             "$ref": "#/components/schemas/Countap"
           },
           "next": {
@@ -13940,27 +15199,6 @@
           },
           "total": {
             "$ref": "#/components/schemas/Totalap"
-          }
-        },
-        "required": [
-          "count",
-          "next"
-        ],
-        "type": "object"
-      },
-      "PaginatedResponseV1": {
-        "properties": {
-          "count": {
-            "$ref": "#/components/schemas/Countdevice"
-          },
-          "next": {
-            "description": "Indicates the next page number, null if there are no further pages.\n",
-            "example": "2",
-            "format": "int32",
-            "type": "string"
-          },
-          "total": {
-            "$ref": "#/components/schemas/Totaldevice"
           }
         },
         "required": [
@@ -14057,7 +15295,7 @@
         "type": "object"
       },
       "PartNumber": {
-        "description": "The part number of the device.\n",
+        "description": "The part number of the device.",
         "example": "JX973A",
         "format": "const",
         "maxLength": 12,
@@ -14771,7 +16009,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/ListResponseWithoutPagination"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -14794,6 +16032,7 @@
               "vlanMode": "-"
             }
           ],
+          "next": null,
           "total": 1
         }
       },
@@ -14914,6 +16153,14 @@
         "example": "172.51.100.42",
         "format": "ipv4",
         "maxLength": 15,
+        "type": "string"
+      },
+      "Proto": {
+        "description": "The protocol of the threat.\n",
+        "examples": [
+          "TCP"
+        ],
+        "maxLength": 64,
         "type": "string"
       },
       "PublicIp": {
@@ -15382,7 +16629,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -15711,7 +16958,7 @@
         "type": "string"
       },
       "Role": {
-        "description": "Role of the device in the network-topology.\n",
+        "description": "Role of the device in the network-topology.",
         "example": "Conductor",
         "format": "const",
         "maxLength": 16,
@@ -15775,7 +17022,7 @@
         "type": "integer"
       },
       "ScopeId": {
-        "description": "ScopeId represents the unique identifier for the asset scope associated with the device. This identifier is used to categorize and manage assets within a specific scope, allowing for better organization and tracking of devices.\n",
+        "description": "Scope ID represents the unique identifier for the asset scope associated with the device. This identifier is used to categorize and manage assets within a specific scope, allowing for better organization and tracking of devices.",
         "example": 1296571332,
         "format": "const",
         "maxLength": 16,
@@ -15838,7 +17085,7 @@
             "type": "array"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetapp"
           },
           "total": {
             "$ref": "#/components/schemas/Totalapp"
@@ -15860,7 +17107,7 @@
         "type": "string"
       },
       "SerialNumber": {
-        "description": "The device serial number.\n",
+        "description": "The device serial number.",
         "example": "AP00000001",
         "format": "const",
         "maxLength": 16,
@@ -15883,6 +17130,44 @@
         "example": "AP00000001",
         "format": "const",
         "type": "string"
+      },
+      "ServiceUnavailableError": {
+        "description": "Service unavailable error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "enum": [
+              "HPE_GL_ERROR_SERVICE_UNAVAILABLE"
+            ],
+            "examples": [
+              "HPE_GL_ERROR_SERVICE_UNAVAILABLE"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "examples": [
+              503
+            ],
+            "maximum": 503,
+            "minimum": 503,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
       },
       "ServiceUnavailableErrorDetails": {
         "description": "Error details.\n",
@@ -16210,7 +17495,7 @@
         "maxItems": 1000,
         "properties": {
           "count": {
-            "$ref": "#/components/schemas/Count"
+            "$ref": "#/components/schemas/Countfirewall"
           },
           "items": {
             "items": {
@@ -16222,10 +17507,10 @@
             "$ref": "#/components/schemas/Next"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetfirewall"
           },
           "total": {
-            "$ref": "#/components/schemas/Total"
+            "$ref": "#/components/schemas/Totalfirewall"
           }
         },
         "required": [
@@ -16235,6 +17520,30 @@
           "total"
         ],
         "type": "object"
+      },
+      "Severity": {
+        "description": "The severity of the threat.\n",
+        "examples": [
+          "Informational"
+        ],
+        "maxLength": 64,
+        "type": "string"
+      },
+      "SignatureId": {
+        "description": "The signature ID of the threat.\n",
+        "examples": [
+          2016141
+        ],
+        "format": "int64",
+        "type": "integer"
+      },
+      "SignatureName": {
+        "description": "The signature name of the threat.\n",
+        "examples": [
+          "12345"
+        ],
+        "maxLength": 256,
+        "type": "string"
       },
       "SiteHealth": {
         "properties": {
@@ -16293,10 +17602,11 @@
         "type": "string"
       },
       "SiteID": {
-        "description": "Id of a site where devices are associated.",
-        "example": "24833497",
-        "format": "uuid",
-        "maxLength": 16,
+        "description": "The site ID to which the device belongs.\n",
+        "examples": [
+          "12345"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "SiteIDap": {
@@ -16307,7 +17617,7 @@
         "type": "string"
       },
       "SiteIDdevice": {
-        "description": "ID of the Site in which the device is present.\n",
+        "description": "ID of the site in which the device is present.",
         "example": "24833497",
         "format": "const",
         "maxLength": 128,
@@ -16319,10 +17629,11 @@
         "type": "string"
       },
       "SiteId": {
-        "description": "Id of a site where devices are associated.",
-        "example": "24833497",
-        "format": "uuid",
-        "maxLength": 16,
+        "description": "The site ID to which the device belongs.\n",
+        "examples": [
+          "12345"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "SiteIdclients": {
@@ -16341,6 +17652,13 @@
         "example": "24833497",
         "format": "const",
         "maxLength": 128,
+        "type": "string"
+      },
+      "SiteIdtopology": {
+        "description": "Id of a site where devices are associated.",
+        "example": "24833497",
+        "format": "uuid",
+        "maxLength": 16,
         "type": "string"
       },
       "SiteInfo": {
@@ -16365,10 +17683,11 @@
         "type": "object"
       },
       "SiteName": {
-        "description": "Name of the site where the device is located.",
-        "example": "Site1",
-        "format": "const",
-        "maxLength": 256,
+        "description": "The site name to which the device belongs.\n",
+        "examples": [
+          "site1"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "SiteNameap": {
@@ -16384,7 +17703,7 @@
         "type": "string"
       },
       "SiteNamedevice": {
-        "description": "SiteName represents the name of the site where the device is located. This name is used to identify and manage devices based on their physical location, allowing for better organization and tracking.\n",
+        "description": "Site name represents the name of the site where the device is located. This name is used to identify and manage devices based on their physical location, allowing for better organization and tracking.",
         "example": "site_test_new",
         "format": "const",
         "maxLength": 256,
@@ -16399,6 +17718,13 @@
       "SiteNamesite": {
         "description": "Name of the Site.\n",
         "example": "12345678",
+        "type": "string"
+      },
+      "SiteNametopology": {
+        "description": "Name of the site where the device is located.",
+        "example": "Site1",
+        "format": "const",
+        "maxLength": 256,
         "type": "string"
       },
       "SiteSummary": {
@@ -16751,6 +18077,38 @@
         "format": "int32",
         "type": "integer"
       },
+      "SrcCity": {
+        "description": "The source city of the threat.\n",
+        "examples": [
+          "San Jose"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "SrcCountry": {
+        "description": "The source country of the threat.\n",
+        "examples": [
+          "US"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "SrcIp": {
+        "description": "The source IP address of the threat.\n",
+        "examples": [
+          "192.168.x.x"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "SrcPort": {
+        "description": "The source port of the threat.\n",
+        "examples": [
+          80
+        ],
+        "format": "int64",
+        "type": "integer"
+      },
       "Ssid": {
         "description": "The name of the SSID configured in the tunnel.\n",
         "example": "SSID_1",
@@ -16802,7 +18160,7 @@
         "type": "object"
       },
       "StackId": {
-        "description": "StackId represents the unique identifier for the stack to which the device belongs.\n",
+        "description": "Stack ID represents the unique identifier for the stack to which the device belongs.",
         "example": "07009020-c27d1b2",
         "format": "const",
         "maxLength": 16,
@@ -17183,7 +18541,7 @@
         "type": "object"
       },
       "Status": {
-        "description": "Status of the device, which can be either ONLINE or OFFLINE.\n",
+        "description": "Status of the device, which can be either ONLINE or OFFLINE.",
         "enum": [
           "ONLINE",
           "OFFLINE"
@@ -17222,6 +18580,14 @@
         "maxLength": 7,
         "type": "string"
       },
+      "Strategy": {
+        "description": "The strategy of the threat.\n",
+        "examples": [
+          "IPS_STRICT"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
       "SubnetMask": {
         "description": "Subnet mask assigned to the access point IPv4 interface.\n",
         "example": "255.255.255.0",
@@ -17230,10 +18596,18 @@
         "type": "string"
       },
       "SubscriptionKey": {
-        "description": "Subscription license key associated with the device.\n",
+        "description": "Subscription license key associated with the device.",
         "example": "ET45ENIPPEADN9FQ",
         "format": "const",
         "maxLength": 32,
+        "type": "string"
+      },
+      "Summary": {
+        "description": "The summary of the threat.\n",
+        "examples": [
+          "This alert is triggered when traffic matching a known Command and Control pattern is observed.\n"
+        ],
+        "maxLength": 1024,
         "type": "string"
       },
       "SwarmInfo": {
@@ -17256,7 +18630,7 @@
             "$ref": "#/components/schemas/ClusterId"
           },
           "clusterName": {
-            "$ref": "#/components/schemas/ClusterNameap"
+            "$ref": "#/components/schemas/ClusterName"
           },
           "conductorDeviceName": {
             "$ref": "#/components/schemas/ConductorDeviceName"
@@ -17316,7 +18690,7 @@
             "$ref": "#/components/schemas/ClusterId"
           },
           "clusterName": {
-            "$ref": "#/components/schemas/ClusterNameap"
+            "$ref": "#/components/schemas/ClusterName"
           },
           "conductorDeviceName": {
             "$ref": "#/components/schemas/ConductorDeviceName"
@@ -17374,7 +18748,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/PaginatedResponse"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -18455,27 +19829,27 @@
       "SwitchTrends": {
         "properties": {
           "cpuUtilization": {
-            "description": "CPU Utilization of the switch.",
+            "description": "CPU Utilization of the switch, expressed as a percentage (0–100).",
             "example": "20",
             "type": "number"
           },
           "memoryUtilization": {
-            "description": "Memory Utilization of the switch.",
+            "description": "Memory Utilization of the switch, expressed as a percentage (0–100).",
             "example": "20",
             "type": "number"
           },
           "poeAvailable": {
-            "description": "Total Poe available.",
+            "description": "Total Poe available, expressed as watts (W).",
             "example": "136",
             "type": "number"
           },
           "poeConsumption": {
-            "description": "Poe drawn.",
+            "description": "Poe drawn, expressed as watts (W).",
             "example": "20",
             "type": "number"
           },
           "powerConsumption": {
-            "description": "Total power available.",
+            "description": "Total power available, expressed as watts (W).",
             "example": "300",
             "type": "number"
           },
@@ -18488,12 +19862,12 @@
             "type": "string"
           },
           "systemTemperature": {
-            "description": "Temperature of the switch.",
+            "description": "Temperature of the switch, expressed in degrees Celsius (°C).",
             "example": "2",
             "type": "number"
           },
           "totalPowerConsumption": {
-            "description": "Total power consumed.",
+            "description": "Total power consumed, expressed as watts (W).",
             "example": "20",
             "type": "number"
           },
@@ -18649,7 +20023,348 @@
             "properties": {
               "items": {
                 "items": {
-                  "$ref": "#/components/schemas/WlanInfo"
+                  "$ref": "#/components/schemas/WlanInfoWithClientCount"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginatedResponseap"
+          }
+        ],
+        "example": {
+          "count": 1,
+          "items": [
+            {
+              "band": "2.4 GHz, 5 GHz",
+              "clientCount": 15,
+              "id": "wlans/wlan1",
+              "security": "Enhanced Open",
+              "securityLevel": "Personal",
+              "status": "ENABLED",
+              "type": "network-monitoring/access-point-monitoring",
+              "vlan": "1",
+              "wlanName": "wlan1"
+            }
+          ],
+          "next": null,
+          "total": 1
+        }
+      },
+      "ThreatDetailResponse": {
+        "examples": [
+          {
+            "affectedProducts": "Android",
+            "attackTarget": "Client_Endpoint",
+            "category": "MOBILE_MALWARE",
+            "createdAt": "2024-11-10T00:01:43.000Z",
+            "cveReference": "CVE-2007-0015",
+            "description": "Android Mobile Malware is software that is used specifically to compromise the Android operating system",
+            "destCity": "New York",
+            "deviceMac": "20:4c:03:d3:2b:58",
+            "deviceType": "GATEWAY",
+            "generation": 1,
+            "id": "threat~1734212641997~0~29310-7",
+            "impact": "Compromised Workstation",
+            "malwareFamily": "Android_SmsThief",
+            "mitreTags": [
+              {
+                "mitreTacticName": "Initial_Access",
+                "mitreTechniqueName": "Exploit_Public_Facing_Application"
+              },
+              {
+                "mitreTacticName": "Lateral_Movement",
+                "mitreTechniqueName": "Exploitation_Of_Remote_Services"
+              }
+            ],
+            "severity": "Critical",
+            "signatureId": 2826904,
+            "signatureName": "Trojan-Spy.AndroidOS.SmsThief.fe SMS/Contact Exfil via SMTP",
+            "siteId": "9902688897",
+            "siteName": "CN-BROOKE-IDPS",
+            "srcCity": "Belfast",
+            "srcIp": "80.0.0.11",
+            "summary": "This alert is triggered when traffic matching a known Command and Control pattern is observed",
+            "type": "network-monitoring/idps",
+            "updatedAt": "2024-11-10T00:01:43.000Z",
+            "userName": "user1"
+          }
+        ],
+        "properties": {
+          "affectedProducts": {
+            "$ref": "#/components/schemas/AffectedProducts"
+          },
+          "attackTarget": {
+            "$ref": "#/components/schemas/AttackTarget"
+          },
+          "category": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAt"
+          },
+          "cveReference": {
+            "$ref": "#/components/schemas/CveReference"
+          },
+          "description": {
+            "$ref": "#/components/schemas/Description"
+          },
+          "destCity": {
+            "$ref": "#/components/schemas/DestCity"
+          },
+          "deviceMac": {
+            "$ref": "#/components/schemas/DeviceMac"
+          },
+          "deviceType": {
+            "$ref": "#/components/schemas/DeviceType"
+          },
+          "generation": {
+            "$ref": "#/components/schemas/Generation"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Id"
+          },
+          "impact": {
+            "$ref": "#/components/schemas/Impact"
+          },
+          "malwareFamily": {
+            "$ref": "#/components/schemas/MalwareFamily"
+          },
+          "mitreTags": {
+            "description": "The MITRE tags associated with the threat.\n",
+            "items": {
+              "$ref": "#/components/schemas/MitreTags"
+            },
+            "type": "array"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "signatureId": {
+            "$ref": "#/components/schemas/SignatureId"
+          },
+          "signatureName": {
+            "$ref": "#/components/schemas/SignatureName"
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "siteName": {
+            "$ref": "#/components/schemas/SiteName"
+          },
+          "srcCity": {
+            "$ref": "#/components/schemas/SrcCity"
+          },
+          "srcIp": {
+            "$ref": "#/components/schemas/SrcIp"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "type": {
+            "$ref": "#/components/schemas/Type"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/UpdatedAt"
+          },
+          "userName": {
+            "$ref": "#/components/schemas/UserName"
+          }
+        },
+        "required": [
+          "affectedProducts",
+          "attackTarget",
+          "category",
+          "cveReference",
+          "description",
+          "destCity",
+          "deviceMac",
+          "deviceType",
+          "id",
+          "impact",
+          "malwareFamily",
+          "mitreTags",
+          "severity",
+          "signatureId",
+          "signatureName",
+          "siteId",
+          "siteName",
+          "srcCity",
+          "srcIp",
+          "summary",
+          "type",
+          "userName",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ThreatListResponse": {
+        "allOf": [
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "properties": {
+                    "action": {
+                      "$ref": "#/components/schemas/Action"
+                    },
+                    "appProto": {
+                      "$ref": "#/components/schemas/AppProto"
+                    },
+                    "clientMacaddr": {
+                      "$ref": "#/components/schemas/ClientMacaddr"
+                    },
+                    "createdAt": {
+                      "$ref": "#/components/schemas/CreatedAt"
+                    },
+                    "customerId": {
+                      "$ref": "#/components/schemas/CustomerId"
+                    },
+                    "cveReference": {
+                      "$ref": "#/components/schemas/CveReference"
+                    },
+                    "description": {
+                      "$ref": "#/components/schemas/Description"
+                    },
+                    "destCity": {
+                      "$ref": "#/components/schemas/DestCity"
+                    },
+                    "destCountry": {
+                      "$ref": "#/components/schemas/DestCountry"
+                    },
+                    "destIp": {
+                      "$ref": "#/components/schemas/DestIp"
+                    },
+                    "destPort": {
+                      "$ref": "#/components/schemas/DestPort"
+                    },
+                    "deviceIp": {
+                      "$ref": "#/components/schemas/DeviceIp"
+                    },
+                    "deviceModel": {
+                      "$ref": "#/components/schemas/DeviceModel"
+                    },
+                    "deviceName": {
+                      "$ref": "#/components/schemas/DeviceName"
+                    },
+                    "deviceSerialNum": {
+                      "$ref": "#/components/schemas/DeviceSerialNum"
+                    },
+                    "flowId": {
+                      "$ref": "#/components/schemas/FlowId"
+                    },
+                    "generation": {
+                      "$ref": "#/components/schemas/Generation"
+                    },
+                    "groupId": {
+                      "$ref": "#/components/schemas/GroupId"
+                    },
+                    "groupName": {
+                      "$ref": "#/components/schemas/GroupName"
+                    },
+                    "id": {
+                      "$ref": "#/components/schemas/Id"
+                    },
+                    "malwareFamily": {
+                      "$ref": "#/components/schemas/MalwareFamily"
+                    },
+                    "occurredAt": {
+                      "$ref": "#/components/schemas/Timestamp"
+                    },
+                    "proto": {
+                      "$ref": "#/components/schemas/Proto"
+                    },
+                    "severity": {
+                      "$ref": "#/components/schemas/Severity"
+                    },
+                    "signatureId": {
+                      "$ref": "#/components/schemas/SignatureId"
+                    },
+                    "signatureName": {
+                      "$ref": "#/components/schemas/SignatureName"
+                    },
+                    "siteId": {
+                      "$ref": "#/components/schemas/SiteId"
+                    },
+                    "siteName": {
+                      "$ref": "#/components/schemas/SiteName"
+                    },
+                    "srcCity": {
+                      "$ref": "#/components/schemas/SrcCity"
+                    },
+                    "srcCountry": {
+                      "$ref": "#/components/schemas/SrcCountry"
+                    },
+                    "srcIp": {
+                      "$ref": "#/components/schemas/SrcIp"
+                    },
+                    "srcPort": {
+                      "$ref": "#/components/schemas/SrcPort"
+                    },
+                    "strategy": {
+                      "$ref": "#/components/schemas/Strategy"
+                    },
+                    "type": {
+                      "$ref": "#/components/schemas/Type"
+                    },
+                    "updatedAt": {
+                      "$ref": "#/components/schemas/UpdatedAt"
+                    },
+                    "userName": {
+                      "$ref": "#/components/schemas/UserName"
+                    },
+                    "userRole": {
+                      "$ref": "#/components/schemas/UserRole"
+                    }
+                  },
+                  "required": [
+                    "action",
+                    "appProto",
+                    "clientMacaddr",
+                    "customerId",
+                    "cveReference",
+                    "description",
+                    "destCity",
+                    "destCountry",
+                    "destIp",
+                    "destPort",
+                    "deviceIp",
+                    "deviceModel",
+                    "deviceName",
+                    "deviceSerialNum",
+                    "flowId",
+                    "groupId",
+                    "groupName",
+                    "id",
+                    "malwareFamily",
+                    "proto",
+                    "severity",
+                    "signatureId",
+                    "signatureName",
+                    "siteId",
+                    "siteName",
+                    "srcCity",
+                    "srcCountry",
+                    "srcIp",
+                    "srcPort",
+                    "strategy",
+                    "occurredAt",
+                    "type",
+                    "userName",
+                    "userRole",
+                    "generation",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "type": "object"
                 },
                 "maxItems": 1000,
                 "type": "array"
@@ -18664,29 +20379,68 @@
             "$ref": "#/components/schemas/PaginatedResponse"
           }
         ],
-        "example": {
-          "count": 1,
-          "items": [
-            {
-              "band": "2.4 GHz, 5 GHz",
-              "id": "wlans/wlan1",
-              "security": "Enhanced Open",
-              "securityLevel": "Personal",
-              "status": "ENABLED",
-              "type": "network-monitoring/access-point-monitoring",
-              "vlan": "1",
-              "wlanName": "wlan1"
-            }
-          ],
-          "next": null,
-          "total": 1
-        }
+        "examples": [
+          {
+            "count": 1,
+            "items": [
+              {
+                "action": "ALLOWED",
+                "appProto": "APP_SMTP",
+                "clientMacaddr": "00:1A:2B:3C:4D:5E",
+                "createdAt": "2024-11-10T00:01:43.000Z",
+                "customerId": "fc0cafa0853011efae90929e7bxxxxxx",
+                "cveReference": "CVE-2007-0015",
+                "description": "WEB_CLIENT signatures are designed to alert on attacks against web client software",
+                "destCity": "New York",
+                "destCountry": "USA",
+                "destIp": "192.168.1.1",
+                "destPort": 90,
+                "deviceIp": "192.168.1.2",
+                "deviceModel": "ModelX",
+                "deviceName": "DeviceX",
+                "deviceSerialNum": "SN123456",
+                "flowId": 123456,
+                "generation": 1,
+                "groupId": "group123",
+                "groupName": "GroupName",
+                "id": "id123",
+                "malwareFamily": null,
+                "occurredAt": "2024-11-10T00:01:43.009Z",
+                "proto": "TCP",
+                "severity": "high",
+                "signatureId": 2000007,
+                "signatureName": "Catalyst SSH protocol mismatch",
+                "siteId": "site123",
+                "siteName": "SiteName",
+                "srcCity": "Los Angeles",
+                "srcCountry": "USA",
+                "srcIp": "192.168.1.3",
+                "srcPort": 8080,
+                "strategy": "strategyX",
+                "type": "network-monitoring/idps",
+                "updatedAt": "2024-11-10T00:01:43.000Z",
+                "userName": "user123",
+                "userRole": "admin"
+              }
+            ],
+            "offset": 11,
+            "total": 103
+          }
+        ]
       },
       "Tier": {
-        "description": "Tier represents the tier of the license associated with the device. This tier indicates the level of features and capabilities that are available for the device based on the license.\n",
+        "description": "Tier represents the license tier associated with the device. This tier indicates the level of features and capabilities that are available for the device based on the license.",
         "example": "ADVANCED_SWITCH_6300",
         "format": "const",
         "maxLength": 32,
+        "type": "string"
+      },
+      "Timestamp": {
+        "description": "The timestamp (RFC 3339 UTC+0) at which the threat occurred.\n",
+        "examples": [
+          "2024-11-10T00:01:43.345Z"
+        ],
+        "format": "date-time",
         "type": "string"
       },
       "ToChannel": {
@@ -18698,7 +20452,7 @@
         "description": "Too many requests error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdtopology"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.* For more details regarding error please refer to error message",
@@ -18714,7 +20468,7 @@
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagetopology"
           }
         },
         "required": [
@@ -18886,7 +20640,7 @@
             "$ref": "#/components/schemas/Devices"
           },
           "id": {
-            "$ref": "#/components/schemas/Id"
+            "$ref": "#/components/schemas/Idtopology"
           },
           "isolatedDevicesCount": {
             "description": "The number of isolated devices in the topology.",
@@ -18947,8 +20701,10 @@
         "type": "object"
       },
       "Total": {
-        "description": "The total number of items that meet the API request parameters.\n",
-        "example": 0,
+        "description": "Specifies the total number of items available for a given filter query.\n",
+        "examples": [
+          100
+        ],
         "format": "int64",
         "type": "integer"
       },
@@ -18965,8 +20721,14 @@
         "type": "integer"
       },
       "Totaldevice": {
-        "description": "Specifies the total number of items available for a given filter query.\n",
+        "description": "Specifies the total number of items available for a given filter query.",
         "example": 10,
+        "format": "int64",
+        "type": "integer"
+      },
+      "Totalfirewall": {
+        "description": "The total number of items that meet the API request parameters.\n",
+        "example": 0,
         "format": "int64",
         "type": "integer"
       },
@@ -19172,9 +20934,10 @@
       },
       "Type": {
         "description": "The type of the resource.\n",
-        "example": "network-monitoring/device-monitoring",
-        "format": "const",
-        "maxLength": 36,
+        "examples": [
+          "network-monitoring/idps"
+        ],
+        "maxLength": 64,
         "type": "string"
       },
       "Typeap": {
@@ -19191,6 +20954,13 @@
         "maxLength": 36,
         "type": "string"
       },
+      "Typedevice": {
+        "description": "The type of the resource.",
+        "example": "network-monitoring/device-monitoring",
+        "format": "const",
+        "maxLength": 36,
+        "type": "string"
+      },
       "Typegw": {
         "description": "The type of the resource.\n",
         "example": "network-monitoring/gateway-monitoring",
@@ -19201,7 +20971,7 @@
         "description": "Unauthorized error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdtopology"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.* For more details regarding error please refer to error message",
@@ -19217,7 +20987,7 @@
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagetopology"
           }
         },
         "required": [
@@ -19242,7 +21012,7 @@
             "type": "string"
           },
           "id": {
-            "$ref": "#/components/schemas/Id"
+            "$ref": "#/components/schemas/Idtopology"
           },
           "mac": {
             "description": "MAC address of the device",
@@ -19286,13 +21056,47 @@
         ],
         "type": "object"
       },
+      "UnsupportedMediaTypeError": {
+        "description": "Unsupported media type error details returned from the server.",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugIddevice"
+          },
+          "errorCode": {
+            "description": "* A unique, machine-friendly, but human-readable identifier for the error. It has the prefix HPE_GL_.\n* For more details regarding the error please refer to the error message.",
+            "enum": [
+              "HPE_GL_NETWORK_MONITORING_UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "example": "HPE_GL_NETWORK_MONITORING_UNSUPPORTED_MEDIA_TYPE",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "The HTTP status code.",
+            "example": 415,
+            "maximum": 415,
+            "minimum": 415,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessagedevice"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
       "UpdateDeviceNotesData": {
         "example": {
           "notes": "Device is located in Building A, Floor 2"
         },
         "properties": {
           "notes": {
-            "description": "Updated notes for the device. \n",
+            "description": "Updated notes for the device.",
             "example": "Device is located in Building A, Floor 2",
             "maxLength": 2048,
             "type": "string"
@@ -19306,7 +21110,7 @@
       "UpdateDeviceNotesRequestV1": {
         "properties": {
           "notes": {
-            "description": "Notes to be updated for the device. This field contains user-provided notes. \n",
+            "description": "Notes to be updated for the device. This field contains user-provided notes.",
             "example": "Device is located in Building A, Floor 2",
             "maxLength": 256,
             "type": "string"
@@ -19317,8 +21121,33 @@
         ],
         "type": "object"
       },
+      "UpdateNotesAsyncRequest": {
+        "properties": {
+          "devices": {
+            "description": "List of devices with notes to update. Maximum 1000 items.",
+            "items": {
+              "$ref": "#/components/schemas/DeviceNotesInput"
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "devices"
+        ],
+        "type": "object"
+      },
+      "UpdatedAt": {
+        "description": "The date-time (RFC 3339 UTC+0) at which the resource was last updated.\n",
+        "examples": [
+          "2024-11-10T00:01:43.000Z"
+        ],
+        "format": "date-time",
+        "type": "string"
+      },
       "UptimeInMillis": {
-        "description": "Elapsed time in milliseconds since the device's last boot. This value will be null if the device is offline.\n",
+        "description": "Elapsed time in milliseconds since the device's last boot. This value will be null if the device is offline.",
         "example": 1702794777,
         "format": "double",
         "maximum": 9223372036854776000,
@@ -19350,8 +21179,24 @@
         "type": "number"
       },
       "UserName": {
+        "description": "The name of the user.\n",
+        "examples": [
+          "user1"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "UserNameclients": {
         "description": "The client's username.",
         "example": "user",
+        "type": "string"
+      },
+      "UserRole": {
+        "description": "The role of the user.\n",
+        "examples": [
+          "admin"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "Vlan": {
@@ -19959,7 +21804,7 @@
             "type": "array"
           },
           "offset": {
-            "$ref": "#/components/schemas/Offset"
+            "$ref": "#/components/schemas/Offsetapp"
           },
           "total": {
             "$ref": "#/components/schemas/Totalapp"
@@ -20034,7 +21879,7 @@
         ],
         "type": "object"
       },
-      "WlanInfoV1": {
+      "WlanInfoWithClientCount": {
         "example": {
           "band": "2.4 GHz, 5 GHz",
           "clientCount": 15,
@@ -20090,7 +21935,7 @@
             "properties": {
               "items": {
                 "items": {
-                  "$ref": "#/components/schemas/WlanInfo"
+                  "$ref": "#/components/schemas/WlanInfoWithClientCount"
                 },
                 "maxItems": 100,
                 "type": "array"
@@ -20102,7 +21947,7 @@
             "type": "object"
           },
           {
-            "$ref": "#/components/schemas/ListResponseWithoutPagination"
+            "$ref": "#/components/schemas/PaginatedResponseap"
           }
         ],
         "example": {
@@ -20110,6 +21955,7 @@
           "items": [
             {
               "band": "2.4 GHz, 5 GHz",
+              "clientCount": 15,
               "id": "AP00000001/wlans/wlan1",
               "security": "Enhanced Open",
               "securityLevel": "Personal",
@@ -20119,6 +21965,7 @@
               "wlanName": "wlan1"
             }
           ],
+          "next": null,
           "total": 1
         }
       },
@@ -20698,7 +22545,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailableapp"
           }
         },
         "security": [
@@ -20865,7 +22712,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailableapp"
           }
         },
         "security": [
@@ -20885,8 +22732,8 @@
         "operationId": "getAccessPointsV1",
         "parameters": [
           {
-            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction; ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `deployment` | `eq` and `in` |\n| `clusterId` | `eq` and `in` |\n| `clusterName` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n",
-            "example": "siteId eq '12345' and deployment in ('Standalone', 'Virtual Controller')",
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction; ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `deployment` | `eq` and `in` |\n| `clusterId` | `eq` and `in` |\n| `clusterName` | `eq` and `in` |\n| `hibernate` | `eq` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned. For the `hibernate` field, values `true` and `false` are case-insensitive.\n\n* `in`: Only values present in the given list are returned.\n\n",
+            "example": "siteId eq '12345' and deployment in ('Standalone', 'Virtual Controller') and hibernate eq true",
             "in": "query",
             "name": "filter",
             "required": false,
@@ -21055,6 +22902,93 @@
         ]
       }
     },
+    "/network-monitoring/v1/aps/{serial-number}/dhcp-pools": {
+      "get": {
+        "description": "This API endpoint retrieves a list of DHCP pools associated with a specific access point. Each DHCP pool in the returned list includes details like pool name, VLAN, subnet, lease duration in seconds, available addresses, pool size, and utilization.\n",
+        "operationId": "getAccessPointDHCPPoolListV1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/SerialNumberap"
+          },
+          {
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | -------- |\n| `poolName` | `eq` and `in` |\n| `vlan` | `eq` and `in` |\n| `subnet` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n",
+            "example": "poolName eq 'Pool-Alpha'",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\n\nSupported fields are `poolName`, `vlan`, `subnet`, `leaseDurationInSecs`, `availableAddresses`, `poolSize`, and `utilization`.\n",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "example": "poolName asc,leaseDurationInSecs desc",
+              "format": "const",
+              "maxLength": 256,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Denotes the maximum number of DHCP pools returned in the response.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "example": 20,
+              "format": "int64",
+              "maximum": 1000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.\n\nMinimum value: 1\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Next"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AccessPointDHCPPoolListResponseV1"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get a list of AP DHCP Pools",
+        "tags": [
+          "Access Points"
+        ]
+      }
+    },
     "/network-monitoring/v1/aps/{serial-number}/memory-utilization-trends": {
       "get": {
         "description": "The API retrieves memory utilization trend data in percentage for a specified access point. The data will be fetched based on the timestamp range provided in the filter. If no timestamp range is specified in the filter, data for the last 3 hours will be returned by default.\n",
@@ -21111,6 +23045,31 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/SerialNumberap"
+          },
+          {
+            "description": "Specifies the maximum number of ports returned in the response.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "examples": [
+                20
+              ],
+              "format": "int64",
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Next"
+            }
           }
         ],
         "responses": {
@@ -21415,6 +23374,31 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/SerialNumberap"
+          },
+          {
+            "description": "Specifies the maximum number of radios returned in the response.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "examples": [
+                20
+              ],
+              "format": "int64",
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Next"
+            }
           }
         ],
         "responses": {
@@ -22189,6 +24173,31 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/SerialNumberap"
+          },
+          {
+            "description": "Specifies the maximum number of WLANs returned in the response.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "examples": [
+                20
+              ],
+              "format": "int64",
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the pagination cursor for the next page of resources.\n",
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Next"
+            }
           }
         ],
         "responses": {
@@ -22563,7 +24572,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailablefirewall"
           }
         },
         "security": [
@@ -23126,7 +25135,7 @@
             }
           },
           {
-            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). By default, `status eq 'Connected'` filter is applied. To retrieve clients with a different status, explicitly specify the status in the filter. If other filters are provided without status, the default connected status filter is still applied. Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | --------  |\n| `clientConnectionType` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `wlanName` | `eq` and `in` |\n| `vlanId` | `eq` and `in` |\n| `tunnelType` | `eq` and `in` |\n| `role` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n* `in`: Only values present in the given list are returned.\n\n**List of applicable filters for field and terms:**\n\n| Field | Applicable Terms |\n| --------- | -------- |\n| clientConnectionType | `[\"Wired\", \"Wireless\"]`  |\n| status | `[\"Connected\", \"Failed\"]` |\n| wlanName | `string` |\n| vlanId | `string` |\n| tunnelType | `[\"Port-based\", \"User-based\", \"Overlay\"]` |\n| role | `string` |\n\n",
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). By default, `status eq 'Connected'` filter is applied. To retrieve clients with a different status, explicitly specify the status in the filter. If other filters are provided without status, the default connected status filter is still applied. Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | --------  |\n| `clientConnectionType` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `wlanName` | `eq` and `in` |\n| `vlanId` | `eq` and `in` |\n| `tunnelType` | `eq` and `in` |\n| `role` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n* `in`: Only values present in the given list are returned.\n\n**List of applicable filters for field and terms:**\n\n| Field | Applicable Terms |\n| --------- | -------- |\n| clientConnectionType | `[\"Wired\", \"Wireless\", \"Remote\"]`  |\n| status | `[\"Connected\", \"Failed\"]` |\n| wlanName | `string` |\n| vlanId | `string` |\n| tunnelType | `[\"Port-based\", \"User-based\", \"Overlay\"]` |\n| role | `string` |\n\n",
             "example": "tunnelType in ('Port-based', 'Overlay') and clientConnectionType eq 'Wired'",
             "in": "query",
             "name": "filter",
@@ -23377,7 +25386,8 @@
               "enum": [
                 "ALL",
                 "WIRELESS",
-                "WIRED"
+                "WIRED",
+                "REMOTE"
               ],
               "type": "string"
             }
@@ -23482,7 +25492,7 @@
         "operationId": "getClientDetails",
         "parameters": [
           {
-            "description": "MAC address of the Wireless/Wired Client to be queried",
+            "description": "MAC address of the Wireless/Wired/Remote Client to be queried",
             "in": "path",
             "name": "mac-address",
             "required": true,
@@ -24129,7 +26139,7 @@
             "$ref": "#/components/parameters/SiteAssigned"
           },
           {
-            "description": "Specifies the maximum number of devices returned in the response. Maximum value is 1000.\n",
+            "description": "Specifies the maximum number of devices returned in the response. Maximum value is 1000.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -24178,9 +26188,311 @@
         ]
       }
     },
+    "/network-monitoring/v1/device-notes": {
+      "post": {
+        "description": "Initiates an asynchronous bulk update of device notes. Returns a task ID that can be used to poll for operation status. Maximum 1000 devices per request. Only one async operation per tenant is allowed at a time. To delete the notes, set the notes to an empty string.\n\n**Note:**\n- For stack switch devices, either the member or conductor serial number can be used.\n- This operation overwrites any previously set notes for the specified devices.",
+        "operationId": "createDeviceNotesAsyncV1",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "update_notes": {
+                  "summary": "Update notes for two devices",
+                  "value": {
+                    "devices": [
+                      {
+                        "notes": "Device is in Building A, Floor 2",
+                        "serialNumber": "AP00000001"
+                      },
+                      {
+                        "notes": "Replacement scheduled",
+                        "serialNumber": "AP00000002"
+                      }
+                    ]
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotesAsyncRequest"
+              }
+            }
+          },
+          "description": "List of devices with their notes to update.",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Accepted. The asynchronous operation has been successfully initiated. Use the URI in the `Location` header to track the operation status.",
+            "headers": {
+              "Location": {
+                "description": "The relative URI to query the status and result of the asynchronous operation.",
+                "schema": {
+                  "example": "/network-monitoring/v1/device-notes-async-operations/550e8400-e29b-41d4-a716-446655440000",
+                  "format": "uri-reference",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/NotesConflict"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailabledevice"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Update notes for multiple devices",
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
+    "/network-monitoring/v1/device-notes-async-operations/{id}": {
+      "get": {
+        "description": "This API endpoint retrieves the status and results of a previously initiated asynchronous notes update operation. Use the task ID from the `Location` header returned by `POST /network-monitoring/v1/device-notes`.",
+        "operationId": "getDeviceNotesOperationV1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Iddevice"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "running": {
+                    "summary": "Operation in progress",
+                    "value": {
+                      "endedAt": null,
+                      "error": null,
+                      "failed": 0,
+                      "logMessages": [
+                        {
+                          "message": "Notes update initiated",
+                          "timestamp": "2026-03-25T10:30:00Z"
+                        },
+                        {
+                          "message": "Processing started",
+                          "timestamp": "2026-03-25T10:30:00Z"
+                        }
+                      ],
+                      "progressPercent": 33,
+                      "results": {
+                        "failed": [],
+                        "succeeded": [
+                          {
+                            "id": "AP00000001",
+                            "notes": "Device is in Building A",
+                            "serialNumber": "AP00000001",
+                            "type": "network-monitoring/device-monitoring"
+                          }
+                        ]
+                      },
+                      "sourceResourceUri": "/network-monitoring/v1/device-notes",
+                      "startedAt": "2026-03-25T10:30:00Z",
+                      "state": "RUNNING",
+                      "succeeded": 1,
+                      "total": 3
+                    }
+                  },
+                  "succeeded": {
+                    "summary": "Operation completed successfully",
+                    "value": {
+                      "endedAt": "2026-03-25T10:30:05Z",
+                      "error": null,
+                      "failed": 1,
+                      "logMessages": [
+                        {
+                          "message": "Notes update initiated",
+                          "timestamp": "2026-03-25T10:30:00Z"
+                        },
+                        {
+                          "message": "Processing started",
+                          "timestamp": "2026-03-25T10:30:00Z"
+                        },
+                        {
+                          "message": "Processing completed successfully",
+                          "timestamp": "2026-03-25T10:30:05Z"
+                        }
+                      ],
+                      "progressPercent": 100,
+                      "results": {
+                        "failed": [
+                          {
+                            "errorCode": "HPE_GL_NETWORK_MONITORING_DEVICE_NOT_FOUND",
+                            "errorMessage": "Device not found",
+                            "id": "AP00000004",
+                            "notes": null,
+                            "serialNumber": "AP00000004",
+                            "type": "network-monitoring/device-monitoring"
+                          }
+                        ],
+                        "succeeded": [
+                          {
+                            "id": "AP00000001",
+                            "notes": "Device is in Building A",
+                            "serialNumber": "AP00000001",
+                            "type": "network-monitoring/device-monitoring"
+                          },
+                          {
+                            "id": "AP00000003",
+                            "notes": "Replacement scheduled",
+                            "serialNumber": "AP00000003",
+                            "type": "network-monitoring/device-monitoring"
+                          }
+                        ]
+                      },
+                      "sourceResourceUri": "/network-monitoring/v1/device-notes",
+                      "startedAt": "2026-03-25T10:30:00Z",
+                      "state": "SUCCEEDED",
+                      "succeeded": 2,
+                      "total": 3
+                    }
+                  },
+                  "timed_out": {
+                    "summary": "Operation timed out",
+                    "value": {
+                      "endedAt": "2026-03-25T10:40:00Z",
+                      "error": null,
+                      "failed": 1,
+                      "logMessages": [
+                        {
+                          "message": "Notes update initiated",
+                          "timestamp": "2026-03-25T10:30:00Z"
+                        },
+                        {
+                          "message": "Processing started",
+                          "timestamp": "2026-03-25T10:30:00Z"
+                        },
+                        {
+                          "message": "Operation timed out before all devices were processed",
+                          "timestamp": "2026-03-25T10:40:00Z"
+                        }
+                      ],
+                      "progressPercent": 66,
+                      "results": {
+                        "failed": [
+                          {
+                            "errorCode": "HPE_GL_NETWORK_MONITORING_DEVICE_NOT_FOUND",
+                            "errorMessage": "Device not found",
+                            "id": "AP00000004",
+                            "notes": null,
+                            "serialNumber": "AP00000004",
+                            "type": "network-monitoring/device-monitoring"
+                          }
+                        ],
+                        "succeeded": [
+                          {
+                            "id": "AP00000001",
+                            "notes": "Device is in Building A",
+                            "serialNumber": "AP00000001",
+                            "type": "network-monitoring/device-monitoring"
+                          }
+                        ]
+                      },
+                      "sourceResourceUri": "/network-monitoring/v1/device-notes",
+                      "startedAt": "2026-03-25T10:30:00Z",
+                      "state": "TIMEDOUT",
+                      "succeeded": 1,
+                      "total": 3
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/AsyncNotesResult"
+                }
+              }
+            },
+            "description": "OK. Returns the current status and results of the asynchronous notes operation.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailabledevice"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get notes async operation status and results",
+        "tags": [
+          "Devices"
+        ]
+      }
+    },
     "/network-monitoring/v1/devices": {
       "get": {
-        "description": "This API endpoint retrieves a list of network devices that are on-boarded and currently being monitored, such as access points, switches, and gateways, based on the query parameters provided. Each device in the returned list includes details like serial number, MAC address, device name, device type, IP address, status, etc. The query parameters allow you to narrow down the results to devices that meet specific criteria, ensuring you receive only the relevant data.\n\nNotes: The notes field in the response will have a value only when the request is filtered by the site ID or serialNumber.\n",
+        "description": "This API endpoint retrieves a list of network devices that are on-boarded and currently being monitored, such as access points, switches, and gateways, based on the query parameters provided. Each device in the returned list includes details like serial number, MAC address, device name, device type, IP address, status, etc. The query parameters allow you to narrow down the results to devices that meet specific criteria, ensuring you receive only the relevant data.\n\nNotes: The notes field in the response will have a value only when the request is filtered by the site ID or serialNumber.",
         "operationId": "getDevicesV1",
         "parameters": [
           {
@@ -24229,7 +26541,7 @@
     },
     "/network-monitoring/v1/devices/{serial-number}": {
       "delete": {
-        "description": "This API endpoint deletes a network device based on the provided serial number.\n",
+        "description": "This API endpoint deletes a network device based on the provided serial number.",
         "operationId": "deleteUnifiedDeviceV1",
         "parameters": [
           {
@@ -24237,7 +26549,7 @@
           }
         ],
         "responses": {
-          "202": {
+          "204": {
             "$ref": "#/components/responses/DeletedDeviceResponseV1"
           },
           "400": {
@@ -24270,7 +26582,7 @@
         ]
       },
       "patch": {
-        "description": "This API endpoint updates the notes for a network device based on the provided serial number. To delete the notes, please set the notes to empty string. \n",
+        "description": "This API endpoint updates the notes for a network device based on the provided serial number. To delete the notes, set the notes to an empty string.\n\n**Note:**\n- For stack switch devices, either the member or conductor serial number can be used.\n- This operation overwrites any previously set notes for the device.",
         "operationId": "updateDeviceNotesV1",
         "parameters": [
           {
@@ -24279,7 +26591,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "application/merge-patch+json": {
               "schema": {
                 "$ref": "#/components/schemas/UpdateDeviceNotesRequestV1"
               }
@@ -24449,7 +26761,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailablefirewall"
           }
         },
         "security": [
@@ -24466,7 +26778,7 @@
     "/network-monitoring/v1/gateways": {
       "get": {
         "description": "Retrieves a list of gateways with details like serialNumber, deviceName, macAddress, siteId, status and more. The query parameters allow you to narrow down the results to gateways that meet specific criteria, ensuring you receive only the relevant data.\n",
-        "operationId": "getGatewayListV1",
+        "operationId": "getGatewaysV1",
         "parameters": [
           {
             "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | -------- |\n| `siteId` | `eq` and `in` |\n| `model` | `eq` and `in` |\n| `status` | `eq` and `in` |\n| `deployment` | `eq` and `in` |\n| `macAddress` | `eq` and `in` |\n| `siteName` | `eq` and `in` |\n| `deviceName` | `eq` and `in` |\n| `firmwareVersion` | `eq` and `in` |\n| `serialNumber` | `eq` and `in` |\n| `clusterName` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n",
@@ -24600,7 +26912,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           }
         ],
         "responses": {
@@ -24814,7 +27126,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           }
         ],
         "responses": {
@@ -24906,7 +27218,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           }
         ],
         "responses": {
@@ -24952,7 +27264,7 @@
             "$ref": "#/components/parameters/SerialNumbergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           }
         ],
         "responses": {
@@ -25141,7 +27453,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/PortNumber"
@@ -25193,7 +27505,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/PortNumber"
@@ -25245,7 +27557,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/PortNumber"
@@ -25297,7 +27609,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/PortNumber"
@@ -25489,7 +27801,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/TunnelName"
@@ -25541,7 +27853,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/TunnelName"
@@ -25593,7 +27905,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/TunnelName"
@@ -25751,7 +28063,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/LinkTag"
@@ -25803,7 +28115,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/LinkTag"
@@ -25867,7 +28179,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/LinkTag"
@@ -25916,7 +28228,7 @@
             "$ref": "#/components/parameters/SerialNumbergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/LinkTag"
@@ -25971,7 +28283,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/LinkTag"
@@ -26020,7 +28332,7 @@
             "$ref": "#/components/parameters/SerialNumbergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           },
           {
             "$ref": "#/components/parameters/VlanId"
@@ -26209,7 +28521,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           }
         ],
         "responses": {
@@ -26258,7 +28570,7 @@
             "$ref": "#/components/parameters/TrendsFiltergw"
           },
           {
-            "$ref": "#/components/parameters/SiteId"
+            "$ref": "#/components/parameters/SiteIdgw"
           }
         ],
         "responses": {
@@ -26350,7 +28662,7 @@
             "name": "site-id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/SiteId"
+              "$ref": "#/components/schemas/SiteIdtopology"
             }
           }
         ],
@@ -26674,7 +28986,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailableapp"
           }
         },
         "security": [
@@ -26815,7 +29127,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailablefirewall"
           }
         },
         "security": [
@@ -26831,7 +29143,7 @@
     },
     "/network-monitoring/v1/site-health/{site-id}": {
       "get": {
-        "description": "This API endpoint provides the detailed health information for the requested site, including site Id, health of the site, and poor health reasons for the site. The response includes the count of devices, clients, VMs, and hosts categorized by performance as poor, fair or good.",
+        "description": "This API endpoint provides the detailed health information for the requested site, including site Id, health of the site, and poor health reasons for the site. The response includes the count of devices, clients, VMs, and hosts categorized by performance as poor, fair or good.\n\n**Note:** To retrieve the `siteId` for a known site name, use the `GET /network-monitoring/v1/sites-health` endpoint with `filter=siteName eq 'my-site'`.",
         "operationId": "getSiteHealthV1",
         "parameters": [
           {
@@ -29897,7 +32209,7 @@
     },
     "/network-monitoring/v1/sites-health": {
       "get": {
-        "description": "This API endpoint provides a list of health information for each site, including devices, clients, critical alerts with count, along with their respective health and health reasons.",
+        "description": "This API endpoint provides a list of health information for each site, including devices, clients, critical alerts with count, along with their respective health and health reasons.\n\n**Tip:** To retrieve the `siteId` for a known site name, use the `filter` query parameter (e.g., `filter=siteName eq 'my-site'`) to look up the `siteId`.",
         "operationId": "listSitesHealthV1",
         "parameters": [
           {
@@ -30015,6 +32327,50 @@
         "summary": "Get a list of Stack Members",
         "tags": [
           "Switch"
+        ]
+      }
+    },
+    "/network-monitoring/v1/subscription-expiring-summary": {
+      "get": {
+        "description": "This API endpoint returns a month-by-month breakdown of expiring licenses for the next twelve months, broken down by license tier (Foundation, Advanced, Other) and device type (AP, Switch, Gateway, Other). The response contains an items array of exactly 12 monthly entries along with a count (always 12) and offset (always 0).",
+        "operationId": "getExpiringLicensesSummaryV1",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ExpiringLicensesSummaryResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailabledles"
+          },
+          "default": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get expiring licenses summary for the next 12 months",
+        "tags": [
+          "Subscriptions"
         ]
       }
     },
@@ -31072,6 +33428,182 @@
         ]
       }
     },
+    "/network-monitoring/v1/threats": {
+      "get": {
+        "description": "Retrieves a list of IDPS threats detected by the Suricata engine in the Gateways.\n",
+        "operationId": "getThreatsV1",
+        "parameters": [
+          {
+            "description": "Specifies the start time (RFC 3339 UTC+0) from which the threats should be listed.\n",
+            "in": "query",
+            "name": "start-at",
+            "required": true,
+            "schema": {
+              "examples": [
+                "2024-11-10T00:00:00.000Z"
+              ],
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the end time (RFC 3339 UTC+0) up to which the threats should be listed.\n",
+            "in": "query",
+            "name": "end-at",
+            "required": false,
+            "schema": {
+              "examples": [
+                "2024-11-10T01:00:00.000Z"
+              ],
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). The only supported operator is 'eq' ('in' is NOT supported). Supported fields are: `action`, `appProto`, `clientMacaddr`, `customerId`, `destCity`, `destCountry`, `destIp`, `destPort`, `deviceIp`, `deviceModel`, `deviceName`, `deviceSerialNum`, `flowId`, `groupId`, `groupName`, `proto`, `signatureId`, `siteId`, `siteName`, `severity`, `srcCity`, `srcCountry`, `srcIp`, `srcPort`, `strategy`, `id`, `occurredAt`, `userName` and `userRole`.\n",
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "examples": [
+                "action eq 'ALLOWED' and id eq 'id123' and siteId eq 'site123'"
+              ],
+              "maxLength": 1024,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\n\nSupported fields are `action`, `appProto`, `clientMacaddr`, `customerId`, `destIp`, `destPort`, `destCity`, `destCountry`, `deviceIp`, `deviceModel`, `deviceName`, `deviceSerialNum`, `flowId`, `groupId`, `groupName`, `id`, `proto`, `signatureId`, `siteId`, `siteName`, `srcCity`, `srcCountry`, `srcIp`, `srcPort`, `strategy`, `occurredAt`, `userName` and `userRole`.\n",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "examples": [
+                "signatureId desc, destPort, occurredAt asc"
+              ],
+              "maxLength": 1024,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Specifies the maximum number of threats returned in the response threat list.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "examples": [
+                20
+              ],
+              "format": "int32",
+              "maximum": 1000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the offset in the threat list at which to begin the response.\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "examples": [
+                123
+              ],
+              "format": "int64",
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ThreatListResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get a list of IDPS threats.\n",
+        "tags": [
+          "IDPS"
+        ]
+      }
+    },
+    "/network-monitoring/v1/threats/{id}": {
+      "get": {
+        "description": "Retrieves the details of a specific IDPS threat based on the threat ID provided.\n",
+        "operationId": "getThreatDetailV1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Id"
+          },
+          {
+            "$ref": "#/components/parameters/SiteId"
+          },
+          {
+            "$ref": "#/components/parameters/Timestamp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/ThreatDetailResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get an IDPS threat's details\n",
+        "tags": [
+          "IDPS"
+        ]
+      }
+    },
     "/network-monitoring/v1/top-aps-by-usage": {
       "get": {
         "description": "The API will retrieve a list of the top access points ranked by their combined bandwidth usage of wired & wireless, sorted in descending order, for a specified site and time period.\n",
@@ -31294,7 +33826,7 @@
             "name": "site-id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/SiteId"
+              "$ref": "#/components/schemas/SiteIdtopology"
             }
           }
         ],
@@ -31341,7 +33873,7 @@
             "name": "site-id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/SiteId"
+              "$ref": "#/components/schemas/SiteIdtopology"
             }
           },
           {
@@ -31969,7 +34501,7 @@
             "$ref": "#/components/responses/InternalServerError"
           },
           "503": {
-            "$ref": "#/components/responses/ServiceUnavailable"
+            "$ref": "#/components/responses/ServiceUnavailableapp"
           }
         },
         "security": [
@@ -32272,8 +34804,16 @@
       "name": "Gateways"
     },
     {
+      "description": "IDPS(Intrusion Detection and Prevention System) Monitoring APIs to retrieve threat list and a particular threat details",
+      "name": "IDPS"
+    },
+    {
       "description": "Site Health APIs to get site details with health, devices, clients, alerts information.",
       "name": "Site Health"
+    },
+    {
+      "description": "APIs to retrieve subscription and license information.",
+      "name": "Subscriptions"
     },
     {
       "description": "Switch Monitoring APIs to get details about Switch and related info",

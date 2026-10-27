@@ -171,19 +171,39 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MIST_SYNC_PAT }}
 
-      - name: File issue on validation failure
+      # Failures keep ONE open issue (fixed title) up to date instead of filing a
+      # new issue per run; the next successful run closes it.
+      - name: Open or update the validation-failure issue
         if: failure() && steps.validate.outcome == 'failure'
         run: |
-          gh issue create \
-            --title "Mist OpenAPI sync: spec failed validation on $(date -u +%Y-%m-%d)" \
-            --body "The scheduled Mist OpenAPI sync detected that the upstream spec at https://github.com/mistsys/mist_openapi failed our OpenAPI 3.x validation check today. Vendored copy was NOT updated.
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          existing=$(gh issue list --state open --label openapi-sync --search "in:title \"$ISSUE_TITLE\"" \
+            --json number,title -q ".[] | select(.title == \"$ISSUE_TITLE\") | .number" | head -1)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing validation on $(date -u +%Y-%m-%d): $run_url"
+          else
+            gh issue create --title "$ISSUE_TITLE" --label "mist,openapi-sync" --body "The scheduled Mist OpenAPI sync detected that the upstream spec at https://github.com/mistsys/mist_openapi fails our OpenAPI 3.x validation check. The vendored copy is NOT being updated.
+
+          First failing run: $run_url
 
           Possible causes:
           - Upstream shipped a malformed spec (rare; their CI normally catches this)
           - Network failure mid-download
           - Schema structure changed in a way our validator doesn't recognize
 
-          Action: re-run the workflow once upstream stabilizes, or investigate the validator if upstream is intact. See \`vendor/mist/mist_openapi.SOURCE.md\` for sync design notes." \
-            --label "mist,openapi-sync"
+          This issue is updated on each further failure and closed automatically by the next successful sync. See \`vendor/mist/mist_openapi.SOURCE.md\` for sync design notes."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: "Mist OpenAPI sync: spec failing validation"
+
+      - name: Close the validation-failure issue once the sync succeeds
+        if: success()
+        run: |
+          for n in $(gh issue list --state open --label openapi-sync --search "in:title \"$ISSUE_TITLE\"" \
+              --json number,title -q ".[] | select(.title == \"$ISSUE_TITLE\") | .number"); do
+            gh issue close "$n" --comment "Sync succeeded: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: "Mist OpenAPI sync: spec failing validation"

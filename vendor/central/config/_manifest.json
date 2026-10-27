@@ -1,176 +1,152 @@
 {
+  "branch_definition_count": 25,
   "definition_count": 25,
   "definitions": [
     {
-      "id": "e2t121zmq0s2pj6",
       "path_count": 10,
       "slug": "application-experience",
       "title": "Application Experience",
       "version": "v1alpha1"
     },
     {
-      "id": "efby11mq0s33h9",
       "path_count": 2,
       "slug": "assignments",
       "title": "Assignments",
       "version": "v1alpha1"
     },
     {
-      "id": "9a25qv24mq0s3h9j",
       "path_count": 22,
       "slug": "central-nac",
       "title": "Central NAC",
       "version": "v1alpha1"
     },
     {
-      "id": "18et1xmq0s2hjv",
       "path_count": 25,
       "slug": "central-nac-service",
       "title": "Central NAC Service",
       "version": "1.0.0"
     },
     {
-      "id": "3zc1034mq0s3k6g",
       "path_count": 5,
       "slug": "config-management",
       "title": "Config Management",
       "version": "v1alpha1"
     },
     {
-      "id": "b374ik1cmq0s27qi",
       "path_count": 3,
       "slug": "configuration-health",
       "title": "Configuration Health",
       "version": "0.0.1"
     },
     {
-      "id": "1bgu2cmq0s3ogx",
       "path_count": 6,
       "slug": "extensions",
       "title": "Extensions",
       "version": "v1alpha1"
     },
     {
-      "id": "40jz1kmq0s3re7",
       "path_count": 1,
       "slug": "firmware-policy",
       "title": "Firmware Policy",
       "version": "v1alpha1"
     },
     {
-      "id": "1bgu2cmq0s3u3m",
       "path_count": 2,
       "slug": "gateway-clustering-orchestration",
       "title": "Gateway Clustering Orchestration",
       "version": "v1alpha1"
     },
     {
-      "id": "3zc101qmq0s3xxq",
       "path_count": 8,
       "slug": "high-availability",
       "title": "High Availability",
       "version": "v1alpha1"
     },
     {
-      "id": "1bgu1hmq0s48gc",
       "path_count": 43,
       "slug": "interfaces",
       "title": "Interfaces",
       "version": "v1alpha1"
     },
     {
-      "id": "2vuu5nz1bmq0s4fxb",
       "path_count": 2,
       "slug": "iot",
       "title": "IoT",
       "version": "v1alpha1"
     },
     {
-      "id": "e2t122vmq0s4k50",
       "path_count": 12,
       "slug": "miscellaneous",
       "title": "Miscellaneous",
       "version": "v1alpha1"
     },
     {
-      "id": "1bgu2jmq0s4p8q",
       "path_count": 6,
       "slug": "named-object",
       "title": "Named Object",
       "version": "v1alpha1"
     },
     {
-      "id": "3zc1034mq0s4wxa",
       "path_count": 44,
       "slug": "network-services",
       "title": "Network Services",
       "version": "v1alpha1"
     },
     {
-      "id": "3zc101qmq0s543a",
       "path_count": 12,
       "slug": "roles-policy",
       "title": "Roles & Policy",
       "version": "v1alpha1"
     },
     {
-      "id": "40jzhmq0s5cj5",
       "path_count": 44,
       "slug": "routing-overlays",
       "title": "Routing & Overlays",
       "version": "v1alpha1"
     },
     {
-      "id": "1fkx1wmq0s1vs6",
       "path_count": 32,
       "slug": "scope-management",
       "title": "Scope Management",
       "version": "1.0.0"
     },
     {
-      "id": "efby2pmq0s5oms",
       "path_count": 64,
       "slug": "security",
       "title": "Security",
       "version": "v1alpha1"
     },
     {
-      "id": "tdgmkgmq0s5sbl",
       "path_count": 9,
       "slug": "services",
       "title": "Services",
       "version": "v1alpha1"
     },
     {
-      "id": "tdgmkhmq0s67li",
       "path_count": 71,
       "slug": "system",
       "title": "System",
       "version": "v1alpha1"
     },
     {
-      "id": "18etfmq0s6cbv",
       "path_count": 18,
       "slug": "telemetry",
       "title": "Telemetry",
       "version": "v1alpha1"
     },
     {
-      "id": "tdgmkhmq0s6frc",
       "path_count": 4,
       "slug": "tunnels",
       "title": "Tunnels",
       "version": "v1alpha1"
     },
     {
-      "id": "40jz3amq0s6kac",
       "path_count": 23,
       "slug": "vlans-networks",
       "title": "VLANs & Networks",
       "version": "v1alpha1"
     },
     {
-      "id": "efbynmq0s6q3c",
       "path_count": 14,
       "slug": "wireless",
       "title": "Wireless",
@@ -179,5 +155,6 @@
   ],
   "project": "new-central-config",
   "source": "https://dash.readme.com/api/v1/api-registry/<uuid> (discovered via https://developer.arubanetworks.com/new-central-config/reference)",
+  "superseded": [],
   "total_paths": 482
 }

@@ -93,6 +93,32 @@
           "type": "string"
         }
       },
+      "X-Rate-Limit-Limit": {
+        "description": "Request limit per hour.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-Rate-Limit-Remaining": {
+        "description": "The number of requests left for the time window.",
+        "schema": {
+          "format": "int64",
+          "maximum": 9223372036854776000,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "X-Rate-Limit-Reset": {
+        "description": "The UTC date/time at which the current rate limit window resets.",
+        "schema": {
+          "format": "date-time",
+          "maxLength": 20,
+          "type": "string"
+        }
+      },
       "X-RateLimit-Limit": {
         "description": "The request limit per hour.",
         "schema": {
@@ -168,6 +194,19 @@
         "schema": {
           "format": "const",
           "maxLength": 256,
+          "type": "string"
+        }
+      },
+      "Filterwebhooks": {
+        "description": "Optional OData filter expression used to narrow the returned webhooks. Filtering is supported on the webhook fields (id, name, endpoint, authMechanism, type, generation, createdAt, updatedAt, messageFormat) using the comparison operators eq, ne, gt, ge, lt and le, the logical operators and, or and not, the lambda operators any and all, and the boolean string functions startswith, endswith and contains. A malformed or non-predicate filter expression returns HTTP 400.",
+        "in": "query",
+        "name": "filter",
+        "required": false,
+        "schema": {
+          "examples": [
+            "contains(name,'prod') and authMechanism eq 'API_KEY'"
+          ],
+          "maxLength": 1024,
           "type": "string"
         }
       },
@@ -541,6 +580,64 @@
           },
           "X-RateLimit-Reset": {
             "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "BadRequestwids": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.",
+              "properties": {
+                "debugId": {
+                  "$ref": "#/components/schemas/DebugId"
+                },
+                "errorCode": {
+                  "description": "Error code",
+                  "enum": [
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INVALID_PAGE_INFO_INPUT",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INVALID_QUERY_TIME",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INVALID_FIELD_INPUT",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INVALID_QUERY_PARAMS"
+                  ],
+                  "examples": [
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INVALID_PAGE_INFO_INPUT"
+                  ],
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code",
+                  "examples": [
+                    400
+                  ],
+                  "maximum": 400,
+                  "minimum": 400,
+                  "type": "integer"
+                },
+                "message": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Invalid input received.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
           }
         }
       },
@@ -1061,24 +1158,118 @@
           }
         }
       },
+      "ForbiddenRequestwids": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "description": "Error details returned from the server.",
+              "properties": {
+                "debugId": {
+                  "$ref": "#/components/schemas/DebugId"
+                },
+                "errorCode": {
+                  "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n\n* For more details regarding error please refer to error message",
+                  "enum": [
+                    "HPE_GL_ERROR_FORBIDDEN"
+                  ],
+                  "examples": [
+                    "HPE_GL_ERROR_FORBIDDEN"
+                  ],
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code",
+                  "examples": [
+                    403
+                  ],
+                  "maximum": 403,
+                  "minimum": 403,
+                  "type": "integer"
+                },
+                "message": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
+            }
+          }
+        },
+        "description": "Forbidden: Access is denied.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
+          }
+        }
+      },
       "InternalServerError": {
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/InternalServerErrorSchema"
+              "description": "Error details returned from the server.",
+              "properties": {
+                "debugId": {
+                  "$ref": "#/components/schemas/DebugId"
+                },
+                "errorCode": {
+                  "description": "Internal error code.",
+                  "enum": [
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INTERNAL_SERVER_ERROR",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_UNKNOWN_ERROR",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_CLICKHOUSE_DATABASE_ERROR",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_ARANGODB_DATABASE_ERROR",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_KAFKA_PUBLISH_ERROR",
+                    "HPE_GL_NETWORK_SERVICES_WIDS_FILE_STORAGE_ERROR"
+                  ],
+                  "examples": [
+                    "HPE_GL_NETWORK_SERVICES_WIDS_INTERNAL_SERVER_ERROR"
+                  ],
+                  "type": "string"
+                },
+                "httpStatusCode": {
+                  "description": "HTTP status code.",
+                  "examples": [
+                    500
+                  ],
+                  "maximum": 500,
+                  "minimum": 500,
+                  "type": "integer"
+                },
+                "message": {
+                  "$ref": "#/components/schemas/ErrorMessage"
+                }
+              },
+              "required": [
+                "errorCode",
+                "message",
+                "debugId",
+                "httpStatusCode"
+              ],
+              "type": "object"
             }
           }
         },
-        "description": "Internal server error.\n",
+        "description": "Internal Server Error.",
         "headers": {
           "X-RateLimit-Limit": {
-            "$ref": "#/components/headers/XRateLimitLimit"
+            "$ref": "#/components/headers/X-Rate-Limit-Limit"
           },
           "X-RateLimit-Remaining": {
-            "$ref": "#/components/headers/XRateLimitRemaining"
+            "$ref": "#/components/headers/X-Rate-Limit-Remaining"
           },
           "X-RateLimit-Reset": {
-            "$ref": "#/components/headers/XRateLimitReset"
+            "$ref": "#/components/headers/X-Rate-Limit-Reset"
           }
         }
       },
@@ -1413,6 +1604,27 @@
           },
           "X-RateLimit-Reset": {
             "$ref": "#/components/headers/X-RateLimit-Reset"
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service unavailable.\n",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
           }
         }
       },
@@ -1828,6 +2040,26 @@
         "minLength": 1,
         "type": "string"
       },
+      "AssetTagImageResponse": {
+        "description": "Response body returned after a successful asset tag image upload.",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/DeviceId"
+          },
+          "type": {
+            "description": "Resource type.",
+            "example": "network-services/asset-tags",
+            "format": "const",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ],
+        "type": "object"
+      },
       "Associated": {
         "description": "Provides Boolean indication of whether this client is associated to an AP.\n",
         "example": true,
@@ -2097,6 +2329,16 @@
           "null"
         ]
       },
+      "Bssid": {
+        "description": "BSSID of the Monitored AP",
+        "examples": [
+          "11:22:33:44:55:66"
+        ],
+        "format": "mac",
+        "maxLength": 17,
+        "minLength": 17,
+        "type": "string"
+      },
       "BuildingId": {
         "description": "Building ID associated with the device in UUID format. Omitted if no specific building is associated with the device.\n",
         "examples": [
@@ -2255,6 +2497,43 @@
         "minimum": 1,
         "type": "integer"
       },
+      "Classification": {
+        "description": "The classification of the monitored AP",
+        "enum": [
+          "UNKNOWN",
+          "INTERFERING",
+          "SUSPECT_ROGUE",
+          "ROGUE",
+          "VALID",
+          "DOS",
+          "KNOWN_INTERFERING"
+        ],
+        "examples": [
+          "SUSPECT_ROGUE"
+        ],
+        "type": "string"
+      },
+      "ClassificationMethod": {
+        "description": "The method used to classify the monitored AP",
+        "enum": [
+          "DEVICE",
+          "RULE",
+          "MANUAL",
+          "UNSPECIFIED"
+        ],
+        "examples": [
+          "RULE"
+        ],
+        "type": "string"
+      },
+      "ClassificationRule": {
+        "description": "The name of the classification rule used to classify the monitored AP",
+        "examples": [
+          "Corporate_SSID_Whitelist"
+        ],
+        "maxLength": 48,
+        "type": "string"
+      },
       "ClientClassification": {
         "description": "System estimated classification for this client.\n",
         "example": "Unknown",
@@ -2334,6 +2613,18 @@
         "example": true,
         "type": "boolean"
       },
+      "ContainmentStatus": {
+        "description": "The containment status of the monitored AP",
+        "enum": [
+          "CONTAINED",
+          "UN_CONTAINED",
+          "KNOWN_INTERFERING"
+        ],
+        "examples": [
+          "CONTAINED"
+        ],
+        "type": "string"
+      },
       "Coordinates": {
         "description": "The location of the tag.",
         "properties": {
@@ -2369,6 +2660,15 @@
       "CreatedAtwebhooks": {
         "description": "The creation timestamp of the webhook in RFC 3339 format.",
         "format": "date-time",
+        "type": "string"
+      },
+      "CreatedAtwids": {
+        "description": "Time of resource creation. RFC 3339 (and ISO 8601) in UTC+0 timezone.",
+        "examples": [
+          "2023-10-01T12:00:00.000Z"
+        ],
+        "format": "date-time",
+        "maxLength": 24,
         "type": "string"
       },
       "CustomId": {
@@ -2444,6 +2744,14 @@
         "maxLength": 4096,
         "type": "string"
       },
+      "Descriptionwids": {
+        "description": "Description of the WIDS event",
+        "examples": [
+          "An AP detected performing suspicious activity"
+        ],
+        "maxLength": 256,
+        "type": "string"
+      },
       "Destination": {
         "description": "Name of the entity/component on which action has been performed.\n",
         "example": "Global",
@@ -2454,6 +2762,14 @@
         "description": "The serial number or Host Name of the audit.\n",
         "example": "CX0001066",
         "maxLength": 128,
+        "type": "string"
+      },
+      "DetectingAp": {
+        "description": "Serial of the AP that detected the intrusion",
+        "examples": [
+          "QWR124780123"
+        ],
+        "maxLength": 20,
         "type": "string"
       },
       "DeviceClassification": {
@@ -2613,11 +2929,36 @@
         "example": "ACCESS_POINT",
         "type": "string"
       },
+      "Encryption": {
+        "description": "Specifies the wireless security protocol used by this SSID",
+        "enum": [
+          "UNSPECIFIED",
+          "OPEN",
+          "WEP",
+          "WPA",
+          "WPA2",
+          "WPA3"
+        ],
+        "examples": [
+          "WPA2"
+        ],
+        "type": "string"
+      },
       "EndAt": {
         "description": "End time in epoch for the location analytics trends/insights.",
         "example": "1683284400000",
         "format": "const",
         "type": "string"
+      },
+      "EndQueryTime": {
+        "description": "End timestamp in epoch time milliseconds for the query. (Default: current time)",
+        "examples": [
+          1698246458000
+        ],
+        "format": "int64",
+        "maximum": 9223372036854776000,
+        "minimum": 0,
+        "type": "integer"
       },
       "Endpoint": {
         "description": "The URL to which the webhook payloads will be sent.",
@@ -2747,86 +3088,27 @@
         },
         "type": "array"
       },
-      "ErrorDetails500": {
-        "description": "A list of detailed error information.",
-        "items": {
-          "description": "Details about a specific error.",
-          "properties": {
-            "issues": {
-              "description": "A list of issues related to the error.",
-              "items": {
-                "description": "Details about a specific issue.",
-                "properties": {
-                  "description": {
-                    "description": "A detailed description of the issue.",
-                    "example": "The 'name' field is required.",
-                    "type": "string"
-                  },
-                  "source": {
-                    "description": "The source of the issue.",
-                    "example": "requestBody",
-                    "type": "string"
-                  },
-                  "subject": {
-                    "description": "The subject of the issue.",
-                    "example": "name",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "source",
-                  "subject"
-                ],
-                "type": "object"
-              },
-              "type": "array"
-            },
-            "metadata": {
-              "additionalProperties": true,
-              "description": "Additional metadata about the error.",
-              "properties": {
-                "field": {
-                  "description": "The field related to the error.",
-                  "example": "name",
-                  "type": "string"
-                },
-                "reason": {
-                  "description": "The reason for the error.",
-                  "example": "Field is required.",
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            },
-            "retryAfterSeconds": {
-              "description": "The number of seconds to wait before retrying the request.",
-              "example": 30,
-              "type": "integer"
-            },
-            "source": {
-              "description": "The source of the issue.",
-              "example": "requestBody",
-              "type": "string"
-            },
-            "type": {
-              "description": "The type of the error.",
-              "example": "validation_error",
-              "type": "string"
-            }
-          },
-          "required": [
-            "type",
-            "retryAfterSeconds"
-          ],
-          "type": "object"
-        },
-        "type": "array"
+      "ErrorMessage": {
+        "description": "Error message indicating the cause of the failure.\n",
+        "example": "Missing required parameter: start-at",
+        "format": "const",
+        "maxLength": 1024,
+        "type": "string"
       },
       "ErrorMessagewebhooks": {
         "description": "Error message indicating the cause of the failure.\n",
         "example": "Reason for the error",
         "format": "const",
         "maxLength": 512,
+        "type": "string"
+      },
+      "EventTime": {
+        "description": "The timestamp of the signature. RFC 3339 (and ISO 8601) in UTC+0 timezone.",
+        "examples": [
+          "2023-10-01T12:00:00.000Z"
+        ],
+        "format": "date-time",
+        "maxLength": 24,
         "type": "string"
       },
       "Filter": {
@@ -2951,11 +3233,36 @@
         "maxLength": 32,
         "type": "string"
       },
+      "FirstDetDeviceName": {
+        "description": "Name of AP that first detected the monitored AP",
+        "examples": [
+          "Building-A-Floor-2-AP-001"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "FirstDetDeviceSerial": {
+        "description": "Serial of AP that first detected the monitored AP",
+        "examples": [
+          "QWR124780123"
+        ],
+        "maxLength": 20,
+        "type": "string"
+      },
       "FirstSeen": {
         "description": "The first-seen date/time of the tag.",
         "example": "2023-10-01T12:00:00Z",
         "format": "date-time",
         "maxLength": 20,
+        "type": "string"
+      },
+      "FirstSeenwids": {
+        "description": "The first seen time of the Monitored AP. RFC 3339 (and ISO 8601) in UTC+0 timezone.",
+        "examples": [
+          "2023-10-01T12:00:00.000Z"
+        ],
+        "format": "date-time",
+        "maxLength": 24,
         "type": "string"
       },
       "FloorId": {
@@ -3104,6 +3411,15 @@
         "maxLength": 36,
         "type": "string"
       },
+      "Idwids": {
+        "description": "The unique ID identifier for the resource",
+        "examples": [
+          "3b5b0e6c-4b73-9f6e-4e89-5a080190abcd"
+        ],
+        "format": "uuid",
+        "maxLength": 128,
+        "type": "string"
+      },
       "Idwifi": {
         "description": "Resource ID: client MAC address and createdAt.\n",
         "example": "11:22:33:44:55:66-1234567890123",
@@ -3111,43 +3427,117 @@
         "maxLength": 31,
         "type": "string"
       },
-      "InternalServerErrorSchema": {
-        "description": "Internal server error details returned from the server.\n",
+      "IntrusionCategory": {
+        "description": "Category of the intrusion",
+        "enum": [
+          "CLIENT",
+          "INFRASTRUCTURE"
+        ],
+        "examples": [
+          "INFRASTRUCTURE"
+        ],
+        "type": "string"
+      },
+      "IntrusionData": {
+        "description": "Object with Signature details\n",
         "properties": {
-          "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+          "category": {
+            "$ref": "#/components/schemas/IntrusionCategory"
           },
-          "errorCode": {
-            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding errors, please refer to the error message\n",
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAtwids"
+          },
+          "description": {
+            "$ref": "#/components/schemas/Descriptionwids"
+          },
+          "detectingAp": {
+            "$ref": "#/components/schemas/DetectingAp"
+          },
+          "eventTime": {
+            "$ref": "#/components/schemas/EventTime"
+          },
+          "eventType": {
+            "$ref": "#/components/schemas/SignatureType"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Idwids"
+          },
+          "level": {
+            "$ref": "#/components/schemas/IntrusionLevel"
+          },
+          "radioBand": {
+            "$ref": "#/components/schemas/RadioBand"
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteIdwids"
+          },
+          "siteName": {
+            "$ref": "#/components/schemas/SiteNamewids"
+          },
+          "stationMac": {
+            "$ref": "#/components/schemas/StationMac"
+          },
+          "type": {
+            "description": "Resource type.\n",
             "enum": [
-              "HPE_GL_NETWORK_SERVICES_INTERNAL_SERVER_ERROR"
+              "network-services/wids-intrusions"
             ],
-            "example": "HPE_GL_NETWORK_SERVICES_INTERNAL_SERVER_ERROR",
-            "format": "const",
-            "maxLength": 128,
+            "examples": [
+              "network-services/wids-intrusions"
+            ],
+            "format": "enum",
             "type": "string"
-          },
-          "errorDetails": {
-            "$ref": "#/components/schemas/ErrorDetails500"
-          },
-          "httpStatusCode": {
-            "description": "HTTP status code.",
-            "example": 500,
-            "maximum": 500,
-            "minimum": 500,
-            "type": "integer"
-          },
-          "message": {
-            "$ref": "#/components/schemas/ErrorMessagewebhooks"
           }
         },
         "required": [
-          "httpStatusCode",
-          "errorCode",
-          "message",
-          "debugId"
+          "id",
+          "type",
+          "createdAt",
+          "siteId",
+          "siteName",
+          "detectingAp",
+          "category",
+          "eventType",
+          "level",
+          "eventTime",
+          "radioBand",
+          "description"
         ],
         "type": "object"
+      },
+      "IntrusionLevel": {
+        "description": "Severity level of the intrusion",
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH"
+        ],
+        "examples": [
+          "MEDIUM"
+        ],
+        "type": "string"
+      },
+      "IntrusionListPage": {
+        "allOf": [
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/IntrusionData"
+                },
+                "maxItems": 2147483647,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponsePropertieswids"
+          }
+        ]
       },
       "IpAddress": {
         "description": "Source IP Address of the user executed the operation.\n",
@@ -3427,11 +3817,35 @@
         "minLength": 17,
         "type": "string"
       },
+      "LastDetDeviceName": {
+        "description": "Name of AP that last detected the monitored AP",
+        "examples": [
+          "Building-A-Floor-2-AP-001"
+        ],
+        "type": "string"
+      },
+      "LastDetDeviceSerial": {
+        "description": "Serial of AP that last detected the monitored AP",
+        "examples": [
+          "QWR124780123"
+        ],
+        "maxLength": 20,
+        "type": "string"
+      },
       "LastSeen": {
         "description": "The last-seen date/time of the Asset Tag.",
         "example": "2023-10-01T12:00:00Z",
         "format": "date-time",
         "maxLength": 20,
+        "type": "string"
+      },
+      "LastSeenwids": {
+        "description": "The last seen time of the Monitored AP. RFC 3339 (and ISO 8601) in UTC+0 timezone.",
+        "examples": [
+          "2023-10-01T12:00:00.000Z"
+        ],
+        "format": "date-time",
+        "maxLength": 24,
         "type": "string"
       },
       "LastUpgradedTimeAt": {
@@ -3525,6 +3939,17 @@
         "example": 20,
         "format": "int32",
         "maximum": 1000,
+        "type": "integer"
+      },
+      "Limitwids": {
+        "default": 100,
+        "description": "Specifies the number of results to be returned. (Default: 100)\n",
+        "examples": [
+          20
+        ],
+        "format": "int32",
+        "maximum": 1000,
+        "minimum": 0,
         "type": "integer"
       },
       "Limitwifi": {
@@ -3820,6 +4245,22 @@
           "string"
         ]
       },
+      "MacVendor": {
+        "description": "Mac Vendor of monitored AP",
+        "examples": [
+          "ProCurve Networking by HP"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
+      "MessageFormat": {
+        "description": "The message payload format used for webhook delivery.",
+        "enum": [
+          "JSON",
+          "SLACK"
+        ],
+        "type": "string"
+      },
       "Messagewebhooks": {
         "description": "A message providing additional information about the operation.",
         "type": "string"
@@ -3831,9 +4272,136 @@
         "maxLength": 40,
         "type": "string"
       },
+      "MonitoredApData": {
+        "description": "Object with Monitored AP details\n",
+        "properties": {
+          "bssid": {
+            "$ref": "#/components/schemas/Bssid"
+          },
+          "classification": {
+            "$ref": "#/components/schemas/Classification"
+          },
+          "classificationMethod": {
+            "$ref": "#/components/schemas/ClassificationMethod"
+          },
+          "classificationRule": {
+            "$ref": "#/components/schemas/ClassificationRule"
+          },
+          "containmentStatus": {
+            "$ref": "#/components/schemas/ContainmentStatus"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/CreatedAtwids"
+          },
+          "encryption": {
+            "$ref": "#/components/schemas/Encryption"
+          },
+          "firstDetDeviceName": {
+            "$ref": "#/components/schemas/FirstDetDeviceName"
+          },
+          "firstDetDeviceSerial": {
+            "$ref": "#/components/schemas/FirstDetDeviceSerial"
+          },
+          "firstSeen": {
+            "$ref": "#/components/schemas/FirstSeenwids"
+          },
+          "id": {
+            "$ref": "#/components/schemas/Idwids"
+          },
+          "lastDetDeviceName": {
+            "$ref": "#/components/schemas/LastDetDeviceName"
+          },
+          "lastDetDeviceSerial": {
+            "$ref": "#/components/schemas/LastDetDeviceSerial"
+          },
+          "lastSeen": {
+            "$ref": "#/components/schemas/LastSeenwids"
+          },
+          "macVendor": {
+            "$ref": "#/components/schemas/MacVendor"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Namewids"
+          },
+          "portData": {
+            "$ref": "#/components/schemas/PortData"
+          },
+          "signal": {
+            "$ref": "#/components/schemas/Signal"
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteIdwids"
+          },
+          "siteName": {
+            "$ref": "#/components/schemas/SiteNamewids"
+          },
+          "ssid": {
+            "$ref": "#/components/schemas/Ssid"
+          },
+          "type": {
+            "description": "Resource type.\n",
+            "enum": [
+              "network-services/wids-monitored-aps"
+            ],
+            "examples": [
+              "network-services/wids-monitored-aps"
+            ],
+            "format": "enum",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "createdAt",
+          "bssid",
+          "siteId",
+          "siteName",
+          "classification",
+          "classificationMethod",
+          "firstSeen",
+          "firstDetDeviceSerial",
+          "firstDetDeviceName",
+          "lastSeen",
+          "lastDetDeviceSerial",
+          "lastDetDeviceName",
+          "encryption"
+        ],
+        "type": "object"
+      },
+      "MonitoredApListPage": {
+        "allOf": [
+          {
+            "properties": {
+              "items": {
+                "items": {
+                  "$ref": "#/components/schemas/MonitoredApData"
+                },
+                "maxItems": 2147483647,
+                "type": "array"
+              }
+            },
+            "required": [
+              "items"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/PaginationResponsePropertieswids"
+          }
+        ]
+      },
       "Name": {
         "description": "Name of the webhook. Must be unique per customer.",
         "maxLength": 64,
+        "type": "string"
+      },
+      "Namewids": {
+        "description": "Name of the monitored AP",
+        "examples": [
+          "Procurve Net-A5:E3:A1"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "Next": {
@@ -3876,6 +4444,17 @@
       "Offsetfco": {
         "default": 0,
         "description": "The offset of the first item in the collection to return.",
+        "format": "int32",
+        "maximum": 2147483647,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "Offsetwids": {
+        "default": 0,
+        "description": "Specifies the zero-based resource offset to start the response from. (Default: 0)\n",
+        "examples": [
+          1
+        ],
         "format": "int32",
         "maximum": 2147483647,
         "minimum": 0,
@@ -4026,6 +4605,68 @@
         ],
         "type": "object"
       },
+      "PaginationResponsePropertieswids": {
+        "description": "Fields appended to a list to facilitate paging.\n",
+        "properties": {
+          "count": {
+            "description": "The number of objects returned in the current list.\n",
+            "examples": [
+              1
+            ],
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "offset": {
+            "description": "Specifies the offset of the returned page.\n",
+            "examples": [
+              0
+            ],
+            "format": "int32",
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of objects contained in the datastore.\n",
+            "examples": [
+              1
+            ],
+            "format": "int64",
+            "maximum": 9223372036854776000,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "PortData": {
+        "description": "Switch port information where the monitored AP is connected",
+        "examples": [
+          "Switch-1 name - 1/1/6"
+        ],
+        "maxLength": 128,
+        "minLength": 3,
+        "type": "string"
+      },
+      "RadioBand": {
+        "description": "Radio band on which the signature was detected",
+        "enum": [
+          "UNSPECIFIED",
+          "BAND_2_4GHZ",
+          "BAND_5GHZ",
+          "BAND_6GHZ"
+        ],
+        "examples": [
+          "BAND_2_4GHZ"
+        ],
+        "type": "string"
+      },
       "RecommendedVersion": {
         "description": "The recommended firmware version for the device.\n",
         "example": "8.5.2.0_59123",
@@ -4096,6 +4737,44 @@
         "maxLength": 16,
         "type": "string"
       },
+      "ServiceUnavailableError": {
+        "description": "Service unavailable error details returned from the server.",
+        "properties": {
+          "debugId": {
+            "description": "Internal debug id.",
+            "format": "const",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Internal error code.",
+            "enum": [
+              "HPE_GL_NETWORK_SERVICES_SERVICE_UNAVAILABLE"
+            ],
+            "maxLength": 64,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "maximum": 503,
+            "minimum": 503,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Error message indicating the cause of the failure.",
+            "format": "const",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "errorCode",
+          "message",
+          "debugId",
+          "httpStatusCode"
+        ],
+        "type": "object"
+      },
       "SessionId": {
         "description": "A unique system generated identifier for an ftm scan. This is a string representation of a uint64.\n",
         "examples": [
@@ -4103,6 +4782,120 @@
         ],
         "format": "const",
         "maxLength": 128,
+        "type": "string"
+      },
+      "Signal": {
+        "description": "RSSI Signal Strength of the Rogue AP (in dBm)",
+        "examples": [
+          -75
+        ],
+        "exclusiveMaximum": 0,
+        "type": "number"
+      },
+      "SignatureType": {
+        "description": "Type of signature",
+        "enum": [
+          "EVENT_ID_IMPERSONATION_ATTACK",
+          "EVENT_ID_ANOMALY_AP",
+          "EVENT_ID_ASSOC_RESP_FLOOD",
+          "EVENT_ID_DEAUTH_DISASSOC_FLOOD",
+          "EVENT_ID_ANOMALY_STA",
+          "EVENT_ID_POT_ANOMALIES",
+          "AP_SPOOFING",
+          "WINDOWS_BRIDGE_AP",
+          "WINDOWS_BRIDGE_STA",
+          "ADHOC_BRIDGE_AP",
+          "ADHOC_BRIDGE_STA",
+          "MITM_DETECT",
+          "ADHOC_USING_VALID_SSID",
+          "MALFORMED_LARGE_DURATION",
+          "ADHOC_NETWORK",
+          "VALID_SSID_VIOLATION",
+          "WIRELESS_BRIDGE",
+          "HT_40MHZ_INTOLERANCE_AP",
+          "HT_40MHZ_INTOLERANCE_STA",
+          "HT_GREENFIELD_SUPPORTED",
+          "FAKE_AP_FLOOD",
+          "FAKE_CLIENT_FLOOD",
+          "BAD_WEP",
+          "BAD_WEP_WEAK_KEY",
+          "CTS_RATE_ANOMALY",
+          "RTS_RATE_ANOMALY",
+          "INVALID_ADDRESS_COMBINATION",
+          "MALFORMED_HTIE",
+          "MALFORMED_ASSOC_REQ",
+          "MALFORMED_AUTH_FRAME",
+          "OVERFLOW_IE",
+          "OVERFLOW_EAPOL_KEY",
+          "BEACON_WRONG_CHANNEL",
+          "INVALID_MAC_OUI_AP",
+          "INVALID_MAC_OUI_STA",
+          "GHOSTTUNNEL_SERVER",
+          "OMERTA_ATTACK",
+          "FATA_JACK",
+          "BLOCK_ACK",
+          "HOTSPOTTER",
+          "VALID_CLIENT_UNENCRYPTED",
+          "POWER_SAVE_DOS",
+          "EAP_RATE_ANOMALY",
+          "CHOPCHOP",
+          "TKIP_REPLAY",
+          "WPA_FT_ATTACK",
+          "GHOSTTUNNEL_CLIENT",
+          "VALID_STA_MISASSOCIATION",
+          "CHANNEL_RATE_ANOMALY",
+          "VALID_STA_VIOLATION",
+          "CHANNEL_MISCONFIGURATION",
+          "OUI_MISCONFIGURATION",
+          "SSID_MISCONFIGURATION",
+          "WEP_MISCONFIGURATION",
+          "STA_WEAK_WEP_VIOLATION",
+          "AP_INTERFERENCE_DETECTED",
+          "AP_INTERFERENCE_CLEARED",
+          "STA_INTERFERENCE_DETECTED",
+          "STA_INTERFERENCE_CLEARED",
+          "FRAME_RECEIVE_ERROR_RATE_EXCEEDED",
+          "FRAME_RETRY_RATE_EXCEEDED",
+          "FRAME_FRAGMENTATION_RATE_EXCEEDED",
+          "FRAME_LOW_SPEED_RATE_EXCEEDED",
+          "FRAME_BANDWIDTH_RATE_EXCEEDED",
+          "FRAME_NONUNICAST_RATE_EXCEEDED",
+          "WPA_MISCONFIGURATION",
+          "SIGNATURE_MATCH",
+          "STA_ASSOC_TO_UAP",
+          "STA_UNASSOC_FROM_UAP",
+          "CHANNEL_FRAME_RETRY_RATE_EXCEEDED",
+          "CHANNEL_FRAME_ERROR_RATE_EXCEEDED",
+          "CHANNEL_FRAME_FRAGMENTATION_RATE_EXCEEDED",
+          "AP_DEAUTH_CONTAINMENT",
+          "AP_WIRED_CONTAINMENT",
+          "STA_WIRED_CONTAINMENT",
+          "AP_TAGGED_WIRED_CONTAINMENT",
+          "STA_TAGGED_WIRED_CONTAINMENT",
+          "TARPIT_CONTAINMENT",
+          "WIRELESS_HOSTED_NETWORK",
+          "CLIENT_ASSOC_HOSTED_NETWORK",
+          "WIRELESS_NETWORK_HOST_CONTAINMENT",
+          "ENHANCE_ADHOC_NETWORK",
+          "IBSS_USING_VALID_SSID",
+          "PHONY_BSSID_DETECTED",
+          "PEER_ASSOC_TO_WIFI",
+          "PEER_ASSOC_TO_WIFI_CONTAINMENT",
+          "STA_REPEAT_WEP_VIOLATION",
+          "SIGN_NETSTUMBLER",
+          "SIGN_ASLEAP",
+          "SIGN_NULL_PROBE_RESP",
+          "SIGN_AIRJACK",
+          "SIGN_DEAUTH_BCAST",
+          "SIGN_DISASSOC_BCAST",
+          "SIGN_WELLENREITER",
+          "CLIENT_ASSOC_WRONG_CHANNEL",
+          "CLIENT_DEAUTH_CONTAINMENT",
+          "WIRELESS_HOSTED_NETWORK_CONTAINMENT"
+        ],
+        "examples": [
+          "WPA_FT_ATTACK"
+        ],
         "type": "string"
       },
       "SiteIDfirmware": {
@@ -4145,6 +4938,14 @@
         "maxLength": 128,
         "type": "string"
       },
+      "SiteIdwids": {
+        "description": "Site ID associated with the SSID.\n",
+        "examples": [
+          "82479680478"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
       "SiteIdwifi": {
         "description": "Site ID associated with the client.\n",
         "example": "1033566193",
@@ -4164,6 +4965,14 @@
         "example": "Main Campus",
         "type": "string"
       },
+      "SiteNamewids": {
+        "description": "The name of the site.",
+        "examples": [
+          "Main Campus"
+        ],
+        "maxLength": 128,
+        "type": "string"
+      },
       "Sort": {
         "default": "totalVisitorCount DESC",
         "example": "totalVisitorCount ASC",
@@ -4180,6 +4989,14 @@
         "description": "Email ID of the user executed the operation.\n",
         "example": "System",
         "maxLength": 256,
+        "type": "string"
+      },
+      "Ssid": {
+        "description": "The SSID of the monitored AP",
+        "examples": [
+          "NR_01_HP-425"
+        ],
+        "maxLength": 128,
         "type": "string"
       },
       "StartApRangingScanResponse": {
@@ -4242,6 +5059,26 @@
         "format": "const",
         "type": "string"
       },
+      "StartQueryTime": {
+        "description": "Start timestamp in epoch time milliseconds for the query. (Default: 3 hours ago)",
+        "examples": [
+          1698246458000
+        ],
+        "format": "int64",
+        "maximum": 9223372036854776000,
+        "minimum": 0,
+        "type": "integer"
+      },
+      "StationMac": {
+        "description": "MAC address of the station the attack is targeting\n",
+        "examples": [
+          "11:22:33:44:55:66"
+        ],
+        "format": "mac",
+        "maxLength": 17,
+        "minLength": 17,
+        "type": "string"
+      },
       "SubCategory": {
         "description": "Sub-category of the executed action.\n",
         "example": "Configuration",
@@ -4267,6 +5104,10 @@
           "id": {
             "$ref": "#/components/schemas/DeviceId"
           },
+          "imagePresent": {
+            "description": "Indicates whether an image is currently associated with the tag. `true` when an image has been uploaded via the image PUT endpoint and has not been removed via the image DELETE endpoint; `false` otherwise.",
+            "type": "boolean"
+          },
           "lastKnownLocation": {
             "$ref": "#/components/schemas/TagLastKnownLocation"
           },
@@ -4288,7 +5129,8 @@
           "deviceClassifications",
           "firstSeen",
           "metadata",
-          "lastKnownLocation"
+          "lastKnownLocation",
+          "imagePresent"
         ],
         "type": "object"
       },
@@ -4658,6 +5500,7 @@
             "hmacKey": "5e175c081f53ca19894cbb6d541560f5c5e9a0754ae69639ef4d56b774b4e04e",
             "id": "26dd26c8-8a6a-4d",
             "message": "Webhook registered!",
+            "messageFormat": "JSON",
             "name": "webhook-1",
             "success": true,
             "type": "network-services",
@@ -4681,6 +5524,9 @@
               },
               "message": {
                 "$ref": "#/components/schemas/Messagewebhooks"
+              },
+              "messageFormat": {
+                "$ref": "#/components/schemas/MessageFormat"
               },
               "name": {
                 "$ref": "#/components/schemas/Name"
@@ -4775,6 +5621,9 @@
           "id": {
             "$ref": "#/components/schemas/idwebhooks"
           },
+          "messageFormat": {
+            "$ref": "#/components/schemas/MessageFormat"
+          },
           "name": {
             "$ref": "#/components/schemas/Name"
           },
@@ -4856,6 +5705,7 @@
             "generation": 4,
             "id": "a1234567-89b9-01",
             "message": "Webhook patched successfully!",
+            "messageFormat": "JSON",
             "name": "webhooktest2",
             "success": true,
             "type": "network-services",
@@ -4876,6 +5726,9 @@
               },
               "message": {
                 "$ref": "#/components/schemas/Messagewebhooks"
+              },
+              "messageFormat": {
+                "$ref": "#/components/schemas/MessageFormat"
               },
               "name": {
                 "$ref": "#/components/schemas/Name"
@@ -4999,6 +5852,9 @@
           "endpoint": {
             "$ref": "#/components/schemas/Endpoint"
           },
+          "messageFormat": {
+            "$ref": "#/components/schemas/MessageFormat"
+          },
           "name": {
             "$ref": "#/components/schemas/Name"
           }
@@ -5044,6 +5900,10 @@
           },
           "endpoint": {
             "$ref": "#/components/schemas/Endpoint"
+          },
+          "messageFormat": {
+            "$ref": "#/components/schemas/MessageFormat",
+            "default": "JSON"
           },
           "name": {
             "$ref": "#/components/schemas/Name"
@@ -5118,6 +5978,7 @@
             "hmacKey": "b27e63985fce36484959fd03118821e8641028bd9f0e0baa564fb3389c1e0219",
             "id": "a1234567-89b9-01",
             "message": "Webhook updated!",
+            "messageFormat": "JSON",
             "name": "webhooktest1",
             "success": true,
             "type": "network-services",
@@ -5141,6 +6002,9 @@
               },
               "message": {
                 "$ref": "#/components/schemas/Messagewebhooks"
+              },
+              "messageFormat": {
+                "$ref": "#/components/schemas/MessageFormat"
               },
               "name": {
                 "$ref": "#/components/schemas/Name"
@@ -6278,83 +7142,6 @@
         "format": "const",
         "maxLength": 1024,
         "type": "string"
-      },
-      "migration_state": {
-        "description": "Paginated list response for migration state records.",
-        "properties": {
-          "count": {
-            "description": "Total number of migration state records returned",
-            "example": 1,
-            "type": "integer"
-          },
-          "id": {
-            "type": "string"
-          },
-          "items": {
-            "items": {
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "migrationState": {
-                  "description": "Current migration state",
-                  "enum": [
-                    "Tran-Begin",
-                    "PE-Enable",
-                    "PE-Finalize",
-                    "T-Enable",
-                    "PE-Direct",
-                    "E-Enable",
-                    "PE-UD",
-                    "PE-SD"
-                  ],
-                  "example": "Tran-Begin",
-                  "type": "string"
-                },
-                "migrationUpdatedTimestamp": {
-                  "description": "Unix timestamp of last update",
-                  "example": 1642694400,
-                  "format": "int64",
-                  "type": "integer"
-                },
-                "readyReason": {
-                  "description": "Additional details for the readiness status",
-                  "example": "all good",
-                  "type": "string"
-                },
-                "readyStatus": {
-                  "description": "Migration readiness status",
-                  "example": "ready",
-                  "type": "string"
-                },
-                "tenantId": {
-                  "description": "The tenant identifier",
-                  "example": "tenant123",
-                  "type": "string"
-                },
-                "type": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "id",
-                "type"
-              ],
-              "type": "object"
-            },
-            "type": "array"
-          },
-          "type": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "type",
-          "count",
-          "items"
-        ],
-        "type": "object"
       },
       "non_friends": {
         "description": "Non-friends document",
@@ -10329,30 +11116,81 @@
         ]
       }
     },
-    "/network-services/v1/airmatch-state": {
+    "/network-services/v1/ap-live-upgrades": {
       "get": {
-        "description": "Retrieve the current migration state for a given tenant",
-        "operationId": "getMigrationStateV1",
+        "description": "Get AP upgrade information organized in a hierarchy from the config scope at which they were triggered from.",
+        "operationId": "listApLiveUpgradesV1",
         "parameters": [
           {
-            "description": "Limit for pagination of results",
-            "example": 100,
+            "description": "Upgrade started after - in YYYY-MM-DDTHH:MM:SS[Z|(+|-)HH:MM] format.",
+            "example": "2025-01-31T13:00:00-07:00",
+            "in": "query",
+            "name": "start-at",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Upgrade started before - in YYYY-MM-DDTHH:MM:SS[Z|(+|-)HH:MM] format.",
+            "example": "2025-02-28T18:00:00Z",
+            "in": "query",
+            "name": "end-at",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Scope ID in which upgrade was initiated. Either this parameter or serial-numbers must be present",
+            "example": "34536546654",
+            "in": "query",
+            "name": "scope-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Whether or not to include historical upgrades.",
+            "in": "query",
+            "name": "history",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Specifies the maximum number of upgrades in the response list.\n",
             "in": "query",
             "name": "limit",
+            "required": false,
             "schema": {
-              "default": 500,
-              "maximum": 500,
-              "minimum": 0,
+              "default": 10,
+              "examples": [
+                5
+              ],
+              "format": "int32",
+              "maximum": 10,
+              "minimum": 1,
               "type": "integer"
             }
           },
           {
-            "description": "Offset for pagination of results",
-            "example": 0,
+            "description": "Specifies the offset in the upgrades list at which to begin the response.\n",
             "in": "query",
             "name": "offset",
+            "required": false,
             "schema": {
               "default": 0,
+              "examples": [
+                123
+              ],
+              "format": "int64",
+              "maximum": 2147483647,
               "minimum": 0,
               "type": "integer"
             }
@@ -10363,49 +11201,549 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/migration_state"
+                  "properties": {
+                    "count": {
+                      "description": "The number of objects returned in the response.\n",
+                      "examples": [
+                        2
+                      ],
+                      "format": "int32",
+                      "maximum": 10,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "completedAt": {
+                            "examples": [
+                              "2025-08-22T04:57:15.587Z"
+                            ],
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "examples": [
+                              "2025-08-22T03:57:14.587Z"
+                            ],
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "customerId": {
+                            "examples": [
+                              "2829030694de11efb0c6761baa27ec60"
+                            ],
+                            "type": "string"
+                          },
+                          "generation": {
+                            "examples": [
+                              1
+                            ],
+                            "format": "int64",
+                            "type": "integer"
+                          },
+                          "id": {
+                            "description": "Unique id formed by combining Customer Id and Config Id.",
+                            "examples": [
+                              "2829030694de11efb0c6761baa27ec60--225"
+                            ],
+                            "type": "string"
+                          },
+                          "initiatedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:15.587Z"
+                            ],
+                            "type": "string"
+                          },
+                          "partitions": {
+                            "items": {
+                              "properties": {
+                                "apRebootSets": {
+                                  "items": {
+                                    "properties": {
+                                      "apRebootSetStatus": {
+                                        "enum": [
+                                          "REQUEST_RECEIVED_FROM_USER",
+                                          "IMAGE_DOWNLOAD_REQUESTED",
+                                          "IMAGE_DOWNLOAD_COMPLETED",
+                                          "REBOOT_READY",
+                                          "AWAITING_OTHER_REBOOT_COMPLETION",
+                                          "REBOOT_STARTED",
+                                          "REBOOT_COMPLETED",
+                                          "FAILED",
+                                          "COMPLETED_WITH_FAILURES",
+                                          "ABORTED"
+                                        ],
+                                        "examples": [
+                                          "REBOOT_STARTED"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "aps": {
+                                        "items": {
+                                          "properties": {
+                                            "downloadFinishedAt": {
+                                              "examples": [
+                                                "2025-08-22T03:59:34.902Z"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "downloadRetries": {
+                                              "examples": [
+                                                1
+                                              ],
+                                              "type": "integer"
+                                            },
+                                            "downloadStartedAt": {
+                                              "examples": [
+                                                "2025-08-22T03:58:04.902Z"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "failureReason": {
+                                              "examples": [
+                                                "Device response not received post reboot"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "rebootFinishedAt": {
+                                              "examples": [
+                                                "2025-08-22T03:59:34.902Z"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "rebootRetries": {
+                                              "examples": [
+                                                0
+                                              ],
+                                              "type": "integer"
+                                            },
+                                            "rebootStartedAt": {
+                                              "examples": [
+                                                "2025-08-22T03:59:54.902Z"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "seed": {
+                                              "examples": [
+                                                true
+                                              ],
+                                              "type": "boolean"
+                                            },
+                                            "seedAp": {
+                                              "examples": [
+                                                "CNJ3KD5H7C"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "seededAps": {
+                                              "items": {
+                                                "examples": [
+                                                  "CNJ3KD5H7C"
+                                                ],
+                                                "type": "string"
+                                              },
+                                              "type": "array"
+                                            },
+                                            "serial": {
+                                              "examples": [
+                                                "CNJ3KD5H7C"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "status": {
+                                              "enum": [
+                                                "REQUEST_RECEIVED_FROM_USER",
+                                                "WAITING_ON_ANOTHER_UPGRADE",
+                                                "WAITING_FOR_SEEDING",
+                                                "IMAGE_DOWNLOAD_REQUESTED",
+                                                "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                                "IMAGE_DOWNLOAD_COMPLETED",
+                                                "IMAGE_DOWNLOAD_FAILED",
+                                                "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                                "UPDATING_BOOT_PARTITION",
+                                                "BOOT_PARTITION_UPDATED",
+                                                "BOOT_PARTITION_UPDATE_FAILED",
+                                                "SEEDING_OTHER_APS",
+                                                "REBOOT_READY",
+                                                "REBOOT_REQUESTED",
+                                                "REBOOTING",
+                                                "REBOOT_COMPLETED",
+                                                "FAILED",
+                                                "ABORTED"
+                                              ],
+                                              "examples": [
+                                                "WAITING_FOR_SEEDING"
+                                              ],
+                                              "type": "string"
+                                            },
+                                            "version": {
+                                              "examples": [
+                                                "10.5.0.1_81235"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "type": "object"
+                                        },
+                                        "type": "array"
+                                      },
+                                      "downloadFinishedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:59:34.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "downloadRetries": {
+                                        "examples": [
+                                          1
+                                        ],
+                                        "type": "integer"
+                                      },
+                                      "downloadStartedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:58:04.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "id": {
+                                        "description": "Unique id formed by combining Customer Id, Config Id, RF partition id",
+                                        "examples": [
+                                          "2829030694de11efb0c6761baa27ec60--225_16111306652446720_RFD-1:RFP-4:ARS_2"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "rebootFinishedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:59:34.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "rebootRetries": {
+                                        "examples": [
+                                          0
+                                        ],
+                                        "type": "integer"
+                                      },
+                                      "rebootStartedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:59:54.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "statusCounts": {
+                                        "items": {
+                                          "properties": {
+                                            "count": {
+                                              "examples": [
+                                                10
+                                              ],
+                                              "type": "integer"
+                                            },
+                                            "status": {
+                                              "enum": [
+                                                "REQUEST_RECEIVED_FROM_USER",
+                                                "WAITING_ON_ANOTHER_UPGRADE",
+                                                "WAITING_FOR_SEEDING",
+                                                "IMAGE_DOWNLOAD_REQUESTED",
+                                                "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                                "IMAGE_DOWNLOAD_COMPLETED",
+                                                "IMAGE_DOWNLOAD_FAILED",
+                                                "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                                "UPDATING_BOOT_PARTITION",
+                                                "BOOT_PARTITION_UPDATED",
+                                                "BOOT_PARTITION_UPDATE_FAILED",
+                                                "SEEDING_OTHER_APS",
+                                                "REBOOT_READY",
+                                                "REBOOT_REQUESTED",
+                                                "REBOOTING",
+                                                "REBOOT_COMPLETED",
+                                                "FAILED",
+                                                "ABORTED"
+                                              ],
+                                              "examples": [
+                                                "IMAGE_DOWNLOAD_IN_PROGRESS"
+                                              ],
+                                              "type": "string"
+                                            }
+                                          },
+                                          "type": "object"
+                                        },
+                                        "type": "array"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "downloadFinishedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:59:34.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "downloadRetries": {
+                                  "examples": [
+                                    1
+                                  ],
+                                  "type": "integer"
+                                },
+                                "downloadStartedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:58:04.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "description": "Unique id formed by combining Customer Id, Config Id, RF partition id",
+                                  "examples": [
+                                    "2829030694de11efb0c6761baa27ec60--225_16111306652446720_RFD-15:RFP-0"
+                                  ],
+                                  "type": "string"
+                                },
+                                "partitionStatus": {
+                                  "enum": [
+                                    "REQUEST_RECEIVED_FROM_USER",
+                                    "WAITING_ON_ANOTHER_UPGRADE",
+                                    "SENT_TO_WORKER",
+                                    "SUBNET_INFO_REQUESTED",
+                                    "SUBNET_INFO_RECEIVED",
+                                    "SEEDING_COMPLETED",
+                                    "LU_PARTITIONING_STARTED",
+                                    "LU_PARTITIONING_COMPLETED",
+                                    "IMAGE_DOWNLOADS_REQUESTED",
+                                    "IMAGE_DOWNLOADS_COMPLETED",
+                                    "REBOOTS_REQUESTED",
+                                    "AWAITING_OVERLAY_TUNNEL_CREATION",
+                                    "COMPLETED_WITH_FAILURES",
+                                    "REBOOTS_COMPLETED",
+                                    "FAILED",
+                                    "ABORTED"
+                                  ],
+                                  "examples": [
+                                    "REBOOTS_REQUESTED"
+                                  ],
+                                  "type": "string"
+                                },
+                                "rebootFinishedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:59:34.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "rebootRetries": {
+                                  "examples": [
+                                    0
+                                  ],
+                                  "type": "integer"
+                                },
+                                "rebootStartedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:59:54.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "statusCounts": {
+                                  "items": {
+                                    "properties": {
+                                      "count": {
+                                        "examples": [
+                                          10
+                                        ],
+                                        "type": "integer"
+                                      },
+                                      "status": {
+                                        "enum": [
+                                          "REQUEST_RECEIVED_FROM_USER",
+                                          "WAITING_ON_ANOTHER_UPGRADE",
+                                          "WAITING_FOR_SEEDING",
+                                          "IMAGE_DOWNLOAD_REQUESTED",
+                                          "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                          "IMAGE_DOWNLOAD_COMPLETED",
+                                          "IMAGE_DOWNLOAD_FAILED",
+                                          "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                          "UPDATING_BOOT_PARTITION",
+                                          "BOOT_PARTITION_UPDATED",
+                                          "BOOT_PARTITION_UPDATE_FAILED",
+                                          "SEEDING_OTHER_APS",
+                                          "REBOOT_READY",
+                                          "REBOOT_REQUESTED",
+                                          "REBOOTING",
+                                          "REBOOT_COMPLETED",
+                                          "FAILED",
+                                          "ABORTED"
+                                        ],
+                                        "examples": [
+                                          "IMAGE_DOWNLOAD_IN_PROGRESS"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "requestReceivedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:14.587Z"
+                            ],
+                            "type": "string"
+                          },
+                          "status": {
+                            "enum": [
+                              "REQUEST_RECEIVED_FROM_USER",
+                              "WAITING_ON_ANOTHER_UPGRADE",
+                              "AWAITING_DEVICES_STATES",
+                              "AWAITING_RF_PARTITIONING",
+                              "RF_PARTITIONING_DONE",
+                              "SENT_TO_WORKER",
+                              "WORKER_PROCESSING_STARTED",
+                              "IMAGE_DOWNLOADS_REQUESTED",
+                              "IMAGE_DOWNLOADS_COMPLETED",
+                              "REBOOTS_REQUESTED",
+                              "ABORTED",
+                              "FAILED",
+                              "COMPLETED_WITH_FAILURES",
+                              "COMPLETED"
+                            ],
+                            "examples": [
+                              "REBOOTS_REQUESTED"
+                            ],
+                            "type": "string"
+                          },
+                          "statusCounts": {
+                            "items": {
+                              "properties": {
+                                "count": {
+                                  "examples": [
+                                    10
+                                  ],
+                                  "type": "integer"
+                                },
+                                "status": {
+                                  "enum": [
+                                    "REQUEST_RECEIVED_FROM_USER",
+                                    "WAITING_ON_ANOTHER_UPGRADE",
+                                    "WAITING_FOR_SEEDING",
+                                    "IMAGE_DOWNLOAD_REQUESTED",
+                                    "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                    "IMAGE_DOWNLOAD_COMPLETED",
+                                    "IMAGE_DOWNLOAD_FAILED",
+                                    "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                    "UPDATING_BOOT_PARTITION",
+                                    "BOOT_PARTITION_UPDATED",
+                                    "BOOT_PARTITION_UPDATE_FAILED",
+                                    "SEEDING_OTHER_APS",
+                                    "REBOOT_READY",
+                                    "REBOOT_REQUESTED",
+                                    "REBOOTING",
+                                    "REBOOT_COMPLETED",
+                                    "FAILED",
+                                    "ABORTED"
+                                  ],
+                                  "examples": [
+                                    "IMAGE_DOWNLOAD_IN_PROGRESS"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "type": {
+                            "examples": [
+                              "network-services/ap-live-upgrades"
+                            ],
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:15.587Z"
+                            ],
+                            "format": "date-time",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "generation",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "description": "Offset of the first item in the response.\n",
+                      "examples": [
+                        10
+                      ],
+                      "format": "int32",
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "total": {
+                      "description": "Total number of objects matching the query.\n",
+                      "examples": [
+                        20
+                      ],
+                      "format": "int32",
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "offset",
+                    "total"
+                  ],
+                  "type": "object"
                 }
               }
             },
-            "description": "Migration state retrieved successfully",
+            "description": "Successful response",
             "headers": {
               "X-RateLimit-Limit": {
-                "description": "The maximum number of requests allowed per time window",
-                "schema": {
-                  "$ref": "#/components/schemas/X-RateLimit-Limit"
-                }
+                "$ref": "#/components/headers/XRateLimitLimit"
               },
               "X-RateLimit-Remaining": {
-                "description": "The number of requests remaining in the current time window",
-                "schema": {
-                  "$ref": "#/components/schemas/X-RateLimit-Remaining"
-                }
+                "$ref": "#/components/headers/XRateLimitRemaining"
               },
               "X-RateLimit-Reset": {
-                "description": "The time at which the current rate limit window resets",
-                "schema": {
-                  "$ref": "#/components/schemas/X-RateLimit-Reset"
-                }
+                "$ref": "#/components/headers/XRateLimitReset"
               }
             }
           },
           "400": {
-            "$ref": "#/components/responses/BadRequest"
+            "$ref": "#/components/responses/BadRequestError"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/ForbiddenRequest"
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
-            "$ref": "#/components/responses/NotFound"
+            "$ref": "#/components/responses/NotFoundError"
           },
           "429": {
             "$ref": "#/components/responses/TooManyRequests"
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
@@ -10413,9 +11751,9 @@
             "OAuth2": []
           }
         ],
-        "summary": "Get migration state for a tenant",
+        "summary": "Get all AP upgrades",
         "tags": [
-          "AirMatch"
+          "Live Upgrade"
         ]
       }
     },
@@ -10728,6 +12066,250 @@
         ]
       }
     },
+    "/network-services/v1/asset-tags/{asset-tag-id}/image": {
+      "delete": {
+        "description": "Removes the image associated with the specified Asset Tag. This operation is idempotent: if the Asset Tag has no image, 204 is returned with no error.",
+        "operationId": "deleteAssetTagImageV1",
+        "parameters": [
+          {
+            "description": "ID of the Asset Tag",
+            "in": "path",
+            "name": "asset-tag-id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Image deleted successfully, or the Asset Tag had no image.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Limit"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Remainingasset"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Resetasset"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestasset"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenRequestasset"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundasset"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Delete Asset Tag image",
+        "tags": [
+          "Location"
+        ]
+      },
+      "get": {
+        "description": "Returns the image associated with the specified Asset Tag. Returns 404 if the Asset Tag does not exist or has no image.",
+        "operationId": "getAssetTagImageV1",
+        "parameters": [
+          {
+            "description": "ID of the Asset Tag",
+            "in": "path",
+            "name": "asset-tag-id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "description": "JPEG image of the Asset Tag.",
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "description": "PNG image of the Asset Tag.",
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "description": "WebP image of the Asset Tag.",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Image file associated with the Asset Tag.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Limit"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Remainingasset"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Resetasset"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestasset"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenRequestasset"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundasset"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get Asset Tag image",
+        "tags": [
+          "Location"
+        ]
+      },
+      "put": {
+        "description": "Uploads an image for the specified Asset Tag, replacing any existing image. Supported formats: JPEG (.jpg, .jpeg), PNG (.png), and WebP (.webp). Maximum file size: 4 MB.",
+        "operationId": "updateAssetTagImageV1",
+        "parameters": [
+          {
+            "description": "ID of the Asset Tag",
+            "in": "path",
+            "name": "asset-tag-id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "Image file to upload. Supported formats: JPEG (.jpg, .jpeg), PNG (.png), WebP (.webp). Maximum size: 4 MB.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetTagImageResponse"
+                }
+              }
+            },
+            "description": "Image uploaded successfully.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Limit"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Remainingasset"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "schema": {
+                  "$ref": "#/components/schemas/X-RateLimit-Resetasset"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestasset"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenRequestasset"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundasset"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Upload or replace Asset Tag image",
+        "tags": [
+          "Location"
+        ]
+      }
+    },
     "/network-services/v1/asset-tags/{asset-tag-id}/metadata": {
       "delete": {
         "description": "This API removes all metadata parameters for a specific Asset Tag.",
@@ -11034,12 +12616,12 @@
             }
           },
           {
-            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | -------- |\n| `action` | `eq` and `in` |\n| `description` | `eq` and `in` |\n| `destination` | `eq` and `in` |\n| `category` | `eq` and `in` |\n| `subCategory` | `eq` and `in` |\n| `destinationName` | `eq` and `in` |\n| `ipAddress` | `eq` and `in` |\n| `source` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n.",
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n\n| Field | Operators |\n| --------- | -------- |\n|  `destination` | `eq` and `in` |\n| `category` | `eq` and `in` |\n| `subCategory` | `eq` and `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n.",
             "in": "query",
             "name": "filter",
             "required": false,
             "schema": {
-              "example": "action eq 'Scope mapped' and  category eq 'Alert Management' and destination eq 'Global'",
+              "example": "subCategory eq 'Configuration' and  category eq 'Alert Management' and destination eq 'Global'",
               "maxLength": 1024,
               "type": "string"
             }
@@ -11214,6 +12796,341 @@
         "summary": "Get Audit log based on the audit id.",
         "tags": [
           "Audit Trail Information"
+        ]
+      }
+    },
+    "/network-services/v1/device-live-upgrades": {
+      "get": {
+        "description": "Get AP or Gateway upgrade information in a flat format keyed by device serials.",
+        "operationId": "listDeviceLiveUpgradesV1",
+        "parameters": [
+          {
+            "description": "Upgrade started after - in YYYY-MM-DDTHH:MM:SS[Z|(+|-)HH:MM] format.",
+            "example": "2025-01-31T13:00:00-07:00",
+            "in": "query",
+            "name": "start-at",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Upgrade started before - in YYYY-MM-DDTHH:MM:SS[Z|(+|-)HH:MM] format.",
+            "example": "2025-02-28T18:00:00Z",
+            "in": "query",
+            "name": "end-at",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "List of comma separated device serials. Either this parameter or scope-id must be present",
+            "example": "CNJ3KD5H7C,CX0002127",
+            "in": "query",
+            "name": "serial-numbers",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Scope ID in which upgrade was initiated",
+            "example": "34536546654",
+            "in": "query",
+            "name": "scope-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Whether or not to include historical upgrades.",
+            "in": "query",
+            "name": "history",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Specifies the maximum number of device upgrades in the response list.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 1000,
+              "examples": [
+                100
+              ],
+              "format": "int32",
+              "maximum": 2000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the offset in the device upgrades list at which to begin the response.\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "examples": [
+                123
+              ],
+              "format": "int64",
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "description": "The number of objects returned in the response.\n",
+                      "examples": [
+                        100
+                      ],
+                      "format": "int32",
+                      "maximum": 2000,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "clusterName": {
+                            "examples": [
+                              "3167467890:Site-LA-Cluster"
+                            ],
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "examples": [
+                              "2025-08-22T03:55:39.080Z"
+                            ],
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "downloadFinishedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:39.080Z"
+                            ],
+                            "type": "string"
+                          },
+                          "downloadRetries": {
+                            "examples": [
+                              0
+                            ],
+                            "type": "integer"
+                          },
+                          "downloadStartedAt": {
+                            "examples": [
+                              "2025-08-22T03:55:39.080Z"
+                            ],
+                            "type": "string"
+                          },
+                          "failureReason": {
+                            "examples": [
+                              "Device response not received post reboot"
+                            ],
+                            "type": "string"
+                          },
+                          "generation": {
+                            "examples": [
+                              1
+                            ],
+                            "format": "int64",
+                            "type": "integer"
+                          },
+                          "id": {
+                            "description": "Unique id formed by combining Device serial number, Customer Id, Config Id",
+                            "examples": [
+                              "CNJ3KD5H7C:2829030694de11efb0c6761baa27ec60--225"
+                            ],
+                            "type": "string"
+                          },
+                          "rebootFinishedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:39.080Z"
+                            ],
+                            "type": "string"
+                          },
+                          "rebootRetries": {
+                            "examples": [
+                              0
+                            ],
+                            "type": "integer"
+                          },
+                          "rebootStartedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:39.080Z"
+                            ],
+                            "type": "string"
+                          },
+                          "seed": {
+                            "examples": [
+                              false
+                            ],
+                            "type": "boolean"
+                          },
+                          "seedAp": {
+                            "examples": [
+                              "CNJ3KD5H7C"
+                            ],
+                            "type": "string"
+                          },
+                          "seededAps": {
+                            "items": {
+                              "examples": [
+                                "CNJ3KD5H7C"
+                              ],
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "serial": {
+                            "examples": [
+                              "CNJ3KD5H7C"
+                            ],
+                            "type": "string"
+                          },
+                          "status": {
+                            "enum": [
+                              "NOT_STARTED",
+                              "IMAGE_DOWNLOAD_REQUESTED",
+                              "IMAGE_DOWNLOAD_IN_PROGRESS",
+                              "IMAGE_DOWNLOAD_COMPLETED",
+                              "IMAGE_DOWNLOAD_FAILED",
+                              "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                              "UPDATING_BOOT_PARTITION",
+                              "BOOT_PARTITION_UPDATED",
+                              "BOOT_PARTITION_UPDATE_FAILED",
+                              "REBOOT_REQUESTED",
+                              "REBOOTING",
+                              "REBOOT_COMPLETED",
+                              "FAILED",
+                              "ABORTED"
+                            ],
+                            "examples": [
+                              "IMAGE_DOWNLOAD_IN_PROGRESS"
+                            ],
+                            "type": "string"
+                          },
+                          "type": {
+                            "examples": [
+                              "network-services/device-live-upgrades"
+                            ],
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:39.080Z"
+                            ],
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "version": {
+                            "examples": [
+                              "10.5.0.1_81234"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "generation",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "description": "Offset of the first item in the response.\n",
+                      "examples": [
+                        200
+                      ],
+                      "format": "int32",
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "total": {
+                      "description": "Total number of objects matching the query.\n",
+                      "examples": [
+                        500
+                      ],
+                      "format": "int32",
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "offset",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get device upgrades",
+        "tags": [
+          "Live Upgrade"
         ]
       }
     },
@@ -11412,6 +13329,488 @@
         "summary": "Get device list with firmware details",
         "tags": [
           "Firmware Management"
+        ]
+      }
+    },
+    "/network-services/v1/gateway-live-upgrades": {
+      "get": {
+        "description": "Get Gateway upgrade information organized in a hierarchy from the config scope at which they were triggered from.",
+        "operationId": "listGatewayLiveUpgradesV1",
+        "parameters": [
+          {
+            "description": "Upgrade started after - in YYYY-MM-DDTHH:MM:SS[Z|(+|-)HH:MM] format.",
+            "example": "2025-01-31T13:00:00-07:00",
+            "in": "query",
+            "name": "start-at",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Upgrade started before - in YYYY-MM-DDTHH:MM:SS[Z|(+|-)HH:MM] format.",
+            "example": "2025-02-28T18:00:00Z",
+            "in": "query",
+            "name": "end-at",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Scope ID in which upgrade was initiated.",
+            "example": "34536546654",
+            "in": "query",
+            "name": "scope-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Whether or not to include historical upgrades.",
+            "in": "query",
+            "name": "history",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Specifies the maximum number of upgrades in the response list.\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "examples": [
+                5
+              ],
+              "format": "int32",
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Specifies the offset in the upgrades list at which to begin the response.\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "examples": [
+                123
+              ],
+              "format": "int64",
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "count": {
+                      "description": "The number of objects returned in the response.\n",
+                      "examples": [
+                        2
+                      ],
+                      "format": "int32",
+                      "maximum": 10,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "items": {
+                      "items": {
+                        "properties": {
+                          "clusters": {
+                            "items": {
+                              "properties": {
+                                "clusterStatus": {
+                                  "examples": [
+                                    "REBOOT_STARTED"
+                                  ],
+                                  "type": "string"
+                                },
+                                "downloadFinishedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:59:34.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "downloadRetries": {
+                                  "examples": [
+                                    1
+                                  ],
+                                  "type": "integer"
+                                },
+                                "downloadStartedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:58:04.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "gateways": {
+                                  "items": {
+                                    "properties": {
+                                      "clusterName": {
+                                        "examples": [
+                                          "3456789012:Site-LA-Cluster"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "downloadFinishedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:59:34.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "downloadRetries": {
+                                        "examples": [
+                                          1
+                                        ],
+                                        "type": "integer"
+                                      },
+                                      "downloadStartedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:58:04.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "failureReason": {
+                                        "examples": [
+                                          "Device response not received post reboot"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "rebootFinishedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:59:34.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "rebootRetries": {
+                                        "examples": [
+                                          0
+                                        ],
+                                        "type": "integer"
+                                      },
+                                      "rebootStartedAt": {
+                                        "examples": [
+                                          "2025-08-22T03:59:54.902Z"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "serial": {
+                                        "examples": [
+                                          "CNJ3KD5H7C"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "status": {
+                                        "enum": [
+                                          "REQUEST_RECEIVED_FROM_USER",
+                                          "WAITING_ON_ANOTHER_UPGRADE",
+                                          "IMAGE_DOWNLOAD_REQUESTED",
+                                          "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                          "IMAGE_DOWNLOAD_COMPLETED",
+                                          "IMAGE_DOWNLOAD_FAILED",
+                                          "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                          "UPDATING_BOOT_PARTITION",
+                                          "REBOOT_READY",
+                                          "REBOOT_REQUESTED",
+                                          "REBOOTING",
+                                          "REBOOT_COMPLETED",
+                                          "FAILED",
+                                          "ABORTED"
+                                        ],
+                                        "examples": [
+                                          "IMAGE_DOWNLOAD_IN_PROGRESS"
+                                        ],
+                                        "type": "string"
+                                      },
+                                      "version": {
+                                        "examples": [
+                                          "10.5.0.1_81235"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                },
+                                "name": {
+                                  "examples": [
+                                    "3456789012:Site-LA-Cluster"
+                                  ],
+                                  "type": "string"
+                                },
+                                "rebootFinishedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:59:34.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "rebootRetries": {
+                                  "examples": [
+                                    0
+                                  ],
+                                  "type": "integer"
+                                },
+                                "rebootStartedAt": {
+                                  "examples": [
+                                    "2025-08-22T03:59:54.902Z"
+                                  ],
+                                  "type": "string"
+                                },
+                                "statusCounts": {
+                                  "items": {
+                                    "properties": {
+                                      "count": {
+                                        "examples": [
+                                          10
+                                        ],
+                                        "type": "integer"
+                                      },
+                                      "status": {
+                                        "enum": [
+                                          "REQUEST_RECEIVED_FROM_USER",
+                                          "WAITING_ON_ANOTHER_UPGRADE",
+                                          "IMAGE_DOWNLOAD_REQUESTED",
+                                          "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                          "IMAGE_DOWNLOAD_COMPLETED",
+                                          "IMAGE_DOWNLOAD_FAILED",
+                                          "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                          "UPDATING_BOOT_PARTITION",
+                                          "REBOOT_READY",
+                                          "REBOOT_REQUESTED",
+                                          "REBOOTING",
+                                          "REBOOT_COMPLETED",
+                                          "FAILED",
+                                          "ABORTED"
+                                        ],
+                                        "examples": [
+                                          "IMAGE_DOWNLOAD_IN_PROGRESS"
+                                        ],
+                                        "type": "string"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "type": "array"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "completedAt": {
+                            "examples": [
+                              "2025-08-22T04:57:15.587Z"
+                            ],
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "examples": [
+                              "2025-08-22T03:57:14.587Z"
+                            ],
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "customerId": {
+                            "examples": [
+                              "2829030694de11efb0c6761baa27ec60"
+                            ],
+                            "type": "string"
+                          },
+                          "generation": {
+                            "examples": [
+                              1
+                            ],
+                            "format": "int64",
+                            "type": "integer"
+                          },
+                          "id": {
+                            "description": "Unique id formed by combining Customer Id, Config Id",
+                            "examples": [
+                              "2829030694de11efb0c6761baa27ec60--225"
+                            ],
+                            "type": "string"
+                          },
+                          "initiatedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:15.587Z"
+                            ],
+                            "type": "string"
+                          },
+                          "requestReceivedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:14.587Z"
+                            ],
+                            "type": "string"
+                          },
+                          "status": {
+                            "enum": [
+                              "REQUEST_RECEIVED_FROM_USER",
+                              "WAITING_ON_ANOTHER_UPGRADE",
+                              "SENT_TO_WORKER",
+                              "IMAGE_DOWNLOADS_REQUESTED",
+                              "IMAGE_DOWNLOADS_COMPLETED",
+                              "REBOOTS_REQUESTED",
+                              "ABORTED",
+                              "FAILED",
+                              "COMPLETED_WITH_FAILURES",
+                              "COMPLETED"
+                            ],
+                            "examples": [
+                              "REBOOTS_REQUESTED"
+                            ],
+                            "type": "string"
+                          },
+                          "statusCounts": {
+                            "items": {
+                              "properties": {
+                                "count": {
+                                  "examples": [
+                                    10
+                                  ],
+                                  "type": "integer"
+                                },
+                                "status": {
+                                  "enum": [
+                                    "REQUEST_RECEIVED_FROM_USER",
+                                    "WAITING_ON_ANOTHER_UPGRADE",
+                                    "IMAGE_DOWNLOAD_REQUESTED",
+                                    "IMAGE_DOWNLOAD_IN_PROGRESS",
+                                    "IMAGE_DOWNLOAD_COMPLETED",
+                                    "IMAGE_DOWNLOAD_FAILED",
+                                    "IMAGE_DOWNLOAD_FAILED_PERMANENTLY",
+                                    "UPDATING_BOOT_PARTITION",
+                                    "REBOOT_READY",
+                                    "REBOOT_REQUESTED",
+                                    "REBOOTING",
+                                    "REBOOT_COMPLETED",
+                                    "FAILED",
+                                    "ABORTED"
+                                  ],
+                                  "examples": [
+                                    "IMAGE_DOWNLOAD_IN_PROGRESS"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "type": {
+                            "examples": [
+                              "network-services/gateway-live-upgrades"
+                            ],
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "examples": [
+                              "2025-08-22T03:57:15.587Z"
+                            ],
+                            "format": "date-time",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "generation",
+                          "createdAt",
+                          "updatedAt"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "offset": {
+                      "description": "Offset of the first item in the response.\n",
+                      "examples": [
+                        10
+                      ],
+                      "format": "int32",
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "total": {
+                      "description": "Total number of objects matching the query.\n",
+                      "examples": [
+                        20
+                      ],
+                      "format": "int32",
+                      "maximum": 2147483647,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "count",
+                    "offset",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get all Gateway upgrades",
+        "tags": [
+          "Live Upgrade"
         ]
       }
     },
@@ -12245,8 +14644,13 @@
     },
     "/network-services/v1/webhooks": {
       "get": {
-        "description": "This API endpoint retrieves a list of Webhooks and the details associated to the receiver such as the endpointURL and the authMechanism along with createdAt and updatedAt timestamps.",
+        "description": "This API endpoint retrieves a list of Webhooks and the details associated to the receiver such as the endpointURL and the authMechanism along with createdAt and updatedAt timestamps. Results can optionally be narrowed using an OData filter query parameter.",
         "operationId": "getWebhooksV1",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Filterwebhooks"
+          }
+        ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/WebhookDetailsList"
@@ -12601,6 +15005,240 @@
         ]
       }
     },
+    "/network-services/v1/wids-intrusions": {
+      "get": {
+        "description": "This API endpoint retrieves wireless security events and intrusion alerts detected by the WIDS system. \n\nSupports filtering by site, event category (client/infrastructure), specific event types, severity levels, radio bands, and time ranges. \n",
+        "operationId": "listIntrusionsV1",
+        "parameters": [
+          {
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported).\n\n**Supported Fields and Operators:**\n\n| Field | Operators |\n|-------|----------|\n| `siteId` | `eq`, `in` |\n| `category` | `eq`, `in` |\n| `eventType` | `eq`, `in` |\n| `level` | `eq`, `in` |\n| `radioBand` | `eq`, `in`|\n\n**Operator Definitions:**\n- `eq`: Only values exactly matching the given value are returned\n- `in`: Only values present in the given list are returned\n\n**Applicable Values by Field:**\n\n| Field | Applicable Terms |\n|-------|------------------|\n| `siteId` | `string` |\n| `category` | `['CLIENT', 'INFRASTRUCTURE']` |\n| `eventType` | `See SignatureType schema for all possible values` |\n| `level` | `['LOW', 'MEDIUM', 'HIGH']` |\n| `radioBand` | `['UNSPECIFIED', 'BAND_2_4GHZ', 'BAND_5GHZ', 'BAND_6GHZ']`|",
+            "examples": {
+              "default": {
+                "value": "siteId eq 'site_1' and category eq 'INFRASTRUCTURE' and level in ('MEDIUM', 'HIGH')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Retrieve data starting at the specified timestamp. Given in milliseconds from epoch. (Default: 3 hours ago)\n",
+            "in": "query",
+            "name": "start-at",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/StartQueryTime"
+            }
+          },
+          {
+            "description": "Retrieve data ending at the specified timestamp. Given in milliseconds from epoch. (Default: current time)\n",
+            "in": "query",
+            "name": "end-at",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/EndQueryTime"
+            }
+          },
+          {
+            "description": "Denotes the maximum number of items returned in the response. (Default: 100)\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Limitwids"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the page from. (Default: 0)\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Offsetwids"
+            }
+          },
+          {
+            "description": "Comma separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\n\nSupported fields are `eventType`, `category`, `level`, `eventTime`, `stationMac`, `detectingAp`, `radioBand`, and `siteName`\n",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "examples": [
+                "level asc,eventTime desc"
+              ],
+              "maxLength": 256,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrusionListPage"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestwids"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenRequestwids"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get a list of signatures over a time period.",
+        "tags": [
+          "WIDS"
+        ]
+      }
+    },
+    "/network-services/v1/wids-monitored-aps": {
+      "get": {
+        "description": "This API endpoint retrieves wireless access points detected and monitored by the WIDS (Wireless Intrusion Detection System). \n\nSupports filtering by site, classification type, detection method, time ranges, containment status, and encryption protocols. \n",
+        "operationId": "listMonitoredApsV1",
+        "parameters": [
+          {
+            "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported).\n\n**Supported Fields and Operators:**\n\n| Field | Operators |\n|-------|----------|\n| `siteId` | `eq`, `in` |\n| `classification` | `eq`, `in` |\n| `classificationMethod` | `eq`, `in` |\n| `firstSeen` | `le`, `ge` |\n| `lastSeen` | `le`, `ge` |\n| `containmentStatus` | `eq`, `in` |\n| `encryption` | `eq`, `in` |\n\n**Operator Definitions:**\n- `eq`: Only values exactly matching the given value are returned\n- `in`: Only values present in the given list are returned\n- `le`: Less than or equal to (for time fields)\n- `ge`: Greater than or equal to (for time fields)\n\n**Applicable Values by Field:**\n\n| Field | Applicable Terms |\n|-------|------------------|\n| `siteId` | `string` |\n| `classification` | `['UNKNOWN', 'INTERFERING', 'SUSPECT_ROGUE', 'ROGUE', 'VALID', 'DOS', 'KNOWN_INTERFERING']` |\n| `classificationMethod` | `['DEVICE', 'RULE', 'MANUAL', 'UNSPECIFIED']` |\n| `firstSeen` | `epoch time in seconds` |\n| `lastSeen` | `epoch time in seconds` |\n| `containmentStatus` | `['CONTAINED', 'UN_CONTAINED', 'KNOWN_INTERFERING']` |\n| `encryption` | `['UNSPECIFIED', 'OPEN', 'WEP', 'WPA', 'WPA2', 'WPA3']` |",
+            "examples": {
+              "default": {
+                "value": "siteId eq 'site_1' and classification in ('SUSPECT_ROGUE', 'ROGUE')"
+              }
+            },
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Retrieve data starting at the specified timestamp. Given in milliseconds from epoch. (Default: 3 hours ago)\n",
+            "in": "query",
+            "name": "start-at",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/StartQueryTime"
+            }
+          },
+          {
+            "description": "Retrieve data ending at the specified timestamp. Given in milliseconds from epoch. (Default: current time)\n",
+            "in": "query",
+            "name": "end-at",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/EndQueryTime"
+            }
+          },
+          {
+            "description": "Denotes the maximum number of items returned in the response. (Default: 100)\n",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Limitwids"
+            }
+          },
+          {
+            "description": "Specifies the zero-based resource offset to start the page from. (Default: 0)\n",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/Offsetwids"
+            }
+          },
+          {
+            "description": "Comma separated list of sort expressions. Each sort expression is a property name optionally followed by a direction indicator asc (ascending) or desc (descending).\n\nThe first sort expression in the list defines the primary sort order, the second defines the secondary sort order, and so on. If a direction indicator is omitted the default direction is ascending.\n\nSupported fields are `bssid`, `name`, `classification`, `classificationMethod`, `ssid`, `lastSeen`, `firstSeen`, `signal`, `encryption`, `containmentStatus`, `macVendor`, and `siteName`\n",
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "examples": [
+                "name asc,lastSeen desc"
+              ],
+              "maxLength": 256,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonitoredApListPage"
+                }
+              }
+            },
+            "description": "Successful operation",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/X-Rate-Limit-Limit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/X-Rate-Limit-Remaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/X-Rate-Limit-Reset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestwids"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenRequestwids"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get a list of monitored APs over a time period.",
+        "tags": [
+          "WIDS"
+        ]
+      }
+    },
     "/network-services/v1/wifi-clients-locations": {
       "get": {
         "description": "This API provides Wi-Fi client locations using a variety of query options. Please use either `latest-location-per-client` or `latest-connected-client-mac` query parameters. For details please refer to descriptions of corresponding parameters.",
@@ -12793,12 +15431,20 @@
       "name": "Firmware Management"
     },
     {
+      "description": "Live Upgrade APIs to get AP and Gateway upgrade details",
+      "name": "Live Upgrade"
+    },
+    {
       "description": "APIs that allow for interacting with Location Service offerings.",
       "name": "Location"
     },
     {
       "description": "Location Analytics APIs to get the client related analytics describing how the client is classified.",
       "name": "Location Analytics"
+    },
+    {
+      "description": " APIs for retrieving and managing wireless APs and signatures detected by the WIDS (Wireless Intrusion Detection System).",
+      "name": "WIDS"
     },
     {
       "description": "APIs for managing webhooks.",

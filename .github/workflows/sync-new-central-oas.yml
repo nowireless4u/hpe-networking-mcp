@@ -1,15 +1,19 @@
 name: Sync New Central OAS
 
-# Pulls the Aruba New Central OpenAPI definitions from the developer hub daily
-# and opens an auto-merge PR with the refreshed vendored copies if they changed.
+# Pulls the Aruba developer-hub OpenAPI definitions (New Central MRT + config,
+# AOS 8, UXI, ClearPass, AOS-CX) daily and opens an auto-merge PR with the
+# refreshed vendored copies if they changed.
 #
 # Source: developer.arubanetworks.com is a ReadMe-hosted hub. Each project's API
-# reference is split across many uploaded definitions, each served as raw JSON at
-# https://developer.arubanetworks.com/<project>/openapi/<apiSetting-id>.
-# .github/scripts/fetch_aruba_oas.py discovers the ids, fetches + validates each
-# definition, and writes them under vendor/central/{mrt,config}/. **Tool
+# reference is split across many uploaded definitions. fetch_aruba_oas.py reads
+# the reference page's ssr-props, resolves each current definition to its
+# api-registry uuid (or, for registry-less ones, rebuilds it from the reference
+# pages), validates it, and writes it under vendor/<project>/. **Tool
 # regeneration does NOT happen here** — the maintainer re-runs the Central
 # importer at release time so tool-surface changes are reviewed before tagging.
+#
+# Failures keep ONE open issue (fixed title) up to date instead of filing a new
+# issue per day; the next successful run closes it.
 #
 # Branch protection on `main` requires PRs + status checks, and the default
 # GITHUB_TOKEN cannot trigger downstream workflows on a PR it opens, so this
@@ -67,20 +71,20 @@ jobs:
             vendor/clearpass/**
             vendor/aoscx/**
           commit-message: |
-            chore(vendor): sync Aruba OAS — New Central + AOS 8 (${{ steps.date.outputs.today }}) (auto)
+            chore(vendor): sync Aruba OAS — New Central, AOS 8, UXI, ClearPass, AOS-CX (${{ steps.date.outputs.today }}) (auto)
 
-            Source: https://developer.arubanetworks.com (ReadMe /openapi/<id>)
+            Source: https://developer.arubanetworks.com (ReadMe api-registry)
 
             Tool regeneration not run by this workflow — maintainer re-runs the
             Central importer at release time before tagging.
-          title: "chore(vendor): sync Aruba OAS (New Central + AOS 8)"
+          title: "chore(vendor): sync Aruba OAS (New Central, AOS 8, UXI, ClearPass, AOS-CX)"
           body: |
-            Automated daily sync of the Aruba New Central + ArubaOS 8 OpenAPI definitions.
+            Automated daily sync of the Aruba developer-hub OpenAPI definitions.
 
-            - **Source**: https://developer.arubanetworks.com (ReadMe `/openapi/<id>`)
-            - **Vendored to**: `vendor/central/mrt/`, `vendor/central/config/`, and `vendor/aos8/`
-            - Per-definition counts and provenance are in each project's
-              `_manifest.json`.
+            - **Source**: https://developer.arubanetworks.com (ReadMe api-registry, discovered via each project's reference page)
+            - **Vendored to**: `vendor/central/mrt/`, `vendor/central/config/`, `vendor/aos8/`, `vendor/uxi/`, `vendor/clearpass/`, `vendor/aoscx/`
+            - Per-definition counts are in each project's `_manifest.json`; the
+              workflow log records where each definition came from.
 
             Tool regeneration is **not** triggered by this PR — the maintainer
             re-runs the Central importer at release time so tool-surface changes
@@ -95,19 +99,37 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MIST_SYNC_PAT }}
 
-      - name: File issue on sync failure
+      - name: Open or update the sync-failure issue
         if: failure()
         run: |
-          gh issue create \
-            --title "New Central OAS sync failed on $(date -u +%Y-%m-%d)" \
-            --body "The scheduled New Central OAS sync failed today. The vendored copies under \`vendor/central/\` were NOT updated.
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          existing=$(gh issue list --state open --label openapi-sync --search "in:title \"$ISSUE_TITLE\"" \
+            --json number,title -q ".[] | select(.title == \"$ISSUE_TITLE\") | .number" | head -1)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing on $(date -u +%Y-%m-%d): $run_url"
+          else
+            gh issue create --title "$ISSUE_TITLE" --label "openapi-sync,central" --body "The scheduled Aruba OAS sync is failing. The vendored copies under \`vendor/{central,aos8,uxi,clearpass,aoscx}/\` are NOT being updated.
+
+          First failing run: $run_url
 
           Possible causes:
-          - The developer hub changed how it serves definitions (the \`/openapi/<id>\` endpoint or the \`apiSetting\` discovery markers moved)
-          - A definition count dropped vs the committed \`_manifest.json\` (regression guard tripped — could be a transient fetch miss or a real upstream removal)
+          - The developer hub changed how it serves definitions (the ssr-props registry list or the reference-page layout moved) — the run log's \`::error::\` line names the project and what was missing
+          - A regression guard tripped: a definition count dropped, or a definition lost more than half its paths, vs the committed \`_manifest.json\` (a transient fetch miss, or a real upstream removal to review)
           - Network failure mid-sync
 
-          Action: re-run the workflow once the hub is stable, or inspect \`.github/scripts/fetch_aruba_oas.py\` if the portal structure changed." \
-            --label "openapi-sync,central"
+          This issue is updated on each further failure and closed automatically by the next successful sync. Fix in \`.github/scripts/fetch_aruba_oas.py\` if the portal structure changed."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: "Aruba OAS sync failing"
+
+      - name: Close the sync-failure issue once the sync succeeds
+        if: success()
+        run: |
+          for n in $(gh issue list --state open --label openapi-sync --search "in:title \"$ISSUE_TITLE\"" \
+              --json number,title -q ".[] | select(.title == \"$ISSUE_TITLE\") | .number"); do
+            gh issue close "$n" --comment "Sync succeeded: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: "Aruba OAS sync failing"

@@ -1,8 +1,8 @@
 {
+  "branch_definition_count": 1,
   "definition_count": 1,
   "definitions": [
     {
-      "id": "cjpas1kkx7bible",
       "path_count": 168,
       "slug": "arubaos-json-api-specification",
       "title": "ArubaOS JSON API Specification",
@@ -11,5 +11,6 @@
   ],
   "project": "aos8",
   "source": "https://dash.readme.com/api/v1/api-registry/<uuid> (discovered via https://developer.arubanetworks.com/aos8/reference)",
+  "superseded": [],
   "total_paths": 168
 }
