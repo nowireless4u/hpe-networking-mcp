@@ -167,6 +167,27 @@
           }
         }
       },
+      "Conflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "Conflict. The request conflicts with the current state of the resource.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "DeviceConflictLocating": {
         "content": {
           "application/json": {
@@ -496,6 +517,27 @@
           }
         }
       },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service Unavailable. The service is temporarily unable to handle the request.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "TaskNotFound": {
         "content": {
           "application/json": {
@@ -619,6 +661,27 @@
               "maxLength": 20,
               "type": "string"
             }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnsupportedMediaTypeError"
+            }
+          }
+        },
+        "description": "Unsupported Media Type. The request payload format is not supported.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
           }
         }
       }
@@ -1122,6 +1185,45 @@
         "required": [
           "category",
           "count"
+        ],
+        "type": "object"
+      },
+      "ConflictError": {
+        "description": "Error details returned from the server when the request conflicts with the current state.",
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier used to correlate the error for debugging.",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-readable error code, prefixed with HPE_GL_.",
+            "examples": [
+              "HPE_GL_NETWORK_TROUBLESHOOTING_CONFLICT"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "examples": [
+              409
+            ],
+            "maximum": 409,
+            "minimum": 409,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Human-readable description of the error.",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
         ],
         "type": "object"
       },
@@ -3642,6 +3744,45 @@
         ],
         "title": "GATEWAY PORT BOUNCE RESULT"
       },
+      "ServiceUnavailableError": {
+        "description": "Error details returned from the server when the service is temporarily unavailable.",
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier used to correlate the error for debugging.",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-readable error code, prefixed with HPE_GL_.",
+            "examples": [
+              "HPE_GL_NETWORK_TROUBLESHOOTING_SERVICE_UNAVAILABLE"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "examples": [
+              503
+            ],
+            "maximum": 503,
+            "minimum": 503,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Human-readable description of the error.",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
       "ShowCommandOutput": {
         "properties": {
           "commands": {
@@ -4505,6 +4646,784 @@
           }
         },
         "title": "GATEWAY TRACEROUTE ROW",
+        "type": "object"
+      },
+      "UnsupportedMediaTypeError": {
+        "description": "Error details returned from the server when the request media type is not supported.",
+        "properties": {
+          "debugId": {
+            "description": "Unique identifier used to correlate the error for debugging.",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Unique machine-readable error code, prefixed with HPE_GL_.",
+            "examples": [
+              "HPE_GL_NETWORK_TROUBLESHOOTING_UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "examples": [
+              415
+            ],
+            "maximum": 415,
+            "minimum": 415,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Human-readable description of the error.",
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "deviceInfoResp": {
+        "description": "Device information collection response.",
+        "properties": {
+          "count": {
+            "description": "Number of items returned in this page.",
+            "type": "integer"
+          },
+          "description": {
+            "description": "Description of the overall request status",
+            "type": "string"
+          },
+          "items": {
+            "description": "List of devices with their information",
+            "items": {
+              "properties": {
+                "createdAt": {
+                  "description": "RFC 3339 timestamp when the resource was created.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description of the device information status",
+                  "type": "string"
+                },
+                "deviceClass": {
+                  "description": "Class of the device (e.g., c2c, iap)",
+                  "type": "string"
+                },
+                "deviceInfo": {
+                  "additionalProperties": true,
+                  "description": "Detailed device information.",
+                  "type": "object"
+                },
+                "generation": {
+                  "description": "Monotonically increasing counter incremented on each update.",
+                  "readOnly": true,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Primary identifier for the resource given by the system.",
+                  "format": "uuid",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "serialNumber": {
+                  "description": "Device serial number",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "Status of retrieving device information (Success/Error)",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "The type of the resource, prefixed by the API group name.",
+                  "examples": [
+                    "network-troubleshooting/telemetry-device"
+                  ],
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "updateTimes": {
+                  "description": "Number of times the device information was updated.",
+                  "type": "integer"
+                },
+                "updatedAt": {
+                  "description": "RFC 3339 timestamp when the resource was last updated.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "generation",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based offset of the first item returned in this page.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "status": {
+            "description": "Overall status of the request (Success/Error)",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items in the result set.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "eventResp": {
+        "description": "Telemetry events collection response.",
+        "properties": {
+          "count": {
+            "description": "Number of items returned in this page.",
+            "type": "integer"
+          },
+          "description": {
+            "description": "Description of the overall request status",
+            "type": "string"
+          },
+          "items": {
+            "description": "List of device events",
+            "items": {
+              "properties": {
+                "createdAt": {
+                  "description": "RFC 3339 timestamp when the resource was created.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "deviceClass": {
+                  "description": "Class of the device (e.g., c2c, iap)",
+                  "type": "string"
+                },
+                "eventBody": {
+                  "additionalProperties": true,
+                  "description": "Detailed event information.",
+                  "type": "object"
+                },
+                "eventId": {
+                  "description": "Identifier for the event type.",
+                  "type": "string"
+                },
+                "generation": {
+                  "description": "Monotonically increasing counter incremented on each update.",
+                  "readOnly": true,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Primary identifier for the resource given by the system.",
+                  "format": "uuid",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "occurredAt": {
+                  "description": "Timestamp when the event occurred.",
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "serialNumber": {
+                  "description": "Device serial number",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "The type of the resource, prefixed by the API group name.",
+                  "examples": [
+                    "network-troubleshooting/telemetry-event"
+                  ],
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "RFC 3339 timestamp when the resource was last updated.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "generation",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of events; empty string when there are no more pages.",
+            "type": "string"
+          },
+          "status": {
+            "description": "Overall status of the request (Success/Error)",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items in the result set.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "operationGetResp": {
+        "description": "Response for device operation status request",
+        "properties": {
+          "count": {
+            "description": "Number of items returned in this page.",
+            "type": "integer"
+          },
+          "description": {
+            "description": "Description of the overall operation status",
+            "type": "string"
+          },
+          "items": {
+            "description": "List of device operation statuses",
+            "items": {
+              "properties": {
+                "createdAt": {
+                  "description": "RFC 3339 timestamp when the resource was created.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description of the operation result",
+                  "type": "string"
+                },
+                "deviceClass": {
+                  "description": "Device class (e.g., c2c, iap)",
+                  "type": "string"
+                },
+                "generation": {
+                  "description": "Monotonically increasing counter incremented on each update.",
+                  "readOnly": true,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Primary identifier for the resource given by the system.",
+                  "format": "uuid",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "operation": {
+                  "description": "Operation state",
+                  "enum": [
+                    "IDLE",
+                    "START",
+                    "STOP",
+                    "CLEAR"
+                  ],
+                  "type": "string"
+                },
+                "serialNumber": {
+                  "description": "Device serial number",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "Device operation status (Success/Error)",
+                  "type": "string"
+                },
+                "troubleshootingStatus": {
+                  "description": "Status of different troubleshooting data types",
+                  "items": {
+                    "properties": {
+                      "queriedAt": {
+                        "description": "Last query timestamp",
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "queryTimes": {
+                        "description": "Number of queries",
+                        "type": "integer"
+                      },
+                      "telemetryLimited": {
+                        "description": "Whether telemetry is limited",
+                        "type": "boolean"
+                      },
+                      "troubleshootingType": {
+                        "description": "Type of troubleshooting data (STATE, STATS, EVENTS)",
+                        "enum": [
+                          "STATE",
+                          "STATS",
+                          "EVENTS"
+                        ],
+                        "type": "string"
+                      },
+                      "updateTimes": {
+                        "description": "Number of updates",
+                        "type": "integer"
+                      },
+                      "updatedAt": {
+                        "description": "Last update timestamp",
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "description": "The type of the resource, prefixed by the API group name.",
+                  "examples": [
+                    "network-troubleshooting/device-operation"
+                  ],
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "RFC 3339 timestamp when the resource was last updated.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "generation",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based offset of the first item returned in this page.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "status": {
+            "description": "Overall status of the operation request (Success/Error)",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items in the result set.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
+        "type": "object"
+      },
+      "operationPostReq": {
+        "description": "Each ap operation. serialNumber is the key.",
+        "examples": [
+          {
+            "operation": "START",
+            "serialNumber": "XXXXX9V015"
+          },
+          {
+            "operation": "STOP",
+            "serialNumber": "YYYYY00252"
+          }
+        ],
+        "items": {
+          "properties": {
+            "operation": {
+              "enum": [
+                "IDLE",
+                "START",
+                "STOP",
+                "CLEAR"
+              ],
+              "type": "string"
+            },
+            "serialNumber": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "serialNumber"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "operationPostResp": {
+        "description": "The response of the device operation request.",
+        "properties": {
+          "description": {
+            "description": "Description of the overall operation status",
+            "type": "string"
+          },
+          "deviceOperations": {
+            "description": "List of device operation results",
+            "items": {
+              "properties": {
+                "createdAt": {
+                  "description": "RFC 3339 timestamp when the resource was created.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description of the operation result for this device",
+                  "type": "string"
+                },
+                "generation": {
+                  "description": "Monotonically increasing counter incremented on each update.",
+                  "readOnly": true,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Primary identifier for the resource given by the system.",
+                  "format": "uuid",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "operation": {
+                  "description": "Operation that was requested",
+                  "enum": [
+                    "IDLE",
+                    "START",
+                    "STOP",
+                    "CLEAR"
+                  ],
+                  "type": "string"
+                },
+                "serialNumber": {
+                  "description": "Device serial number",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "Status of this specific device operation (Success/Error)",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "The type of the resource, prefixed by the API group name.",
+                  "examples": [
+                    "network-troubleshooting/device-operation"
+                  ],
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "RFC 3339 timestamp when the resource was last updated.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "generation",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "status": {
+            "description": "Overall status of the operation request (Success/Error)",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "subscriptionReq": {
+        "description": "List of device subscription requests.",
+        "examples": [
+          {
+            "serialNumber": "XXXXX9V015",
+            "subscribeExpire": 1000,
+            "subscribeInterval": 30,
+            "subscribeMessageCategory": "STATE",
+            "subscribePath": [
+              "/iap/ap/state/*"
+            ],
+            "subscribeReqType": "SUB_PERIODIC_UPDATE",
+            "subscriptionKey": "XXXXX9V015-1"
+          }
+        ],
+        "items": {
+          "properties": {
+            "serialNumber": {
+              "description": "Device serial number",
+              "type": "string"
+            },
+            "subscribeExpire": {
+              "description": "Subscription expiration time in seconds.",
+              "type": "integer"
+            },
+            "subscribeInterval": {
+              "description": "Interval between updates in seconds (required for SUB_PERIODIC_UPDATE).",
+              "type": "integer"
+            },
+            "subscribeMessageCategory": {
+              "description": "Category of messages to subscribe to.",
+              "enum": [
+                "STATE",
+                "STATS",
+                "EVENTS"
+              ],
+              "type": "string"
+            },
+            "subscribePath": {
+              "description": "List of telemetry paths to subscribe to.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "subscribeReqType": {
+              "description": "Type of subscription request.",
+              "enum": [
+                "SUB_PERIODIC_UPDATE",
+                "SUB_GET_ONE_TIME"
+              ],
+              "type": "string"
+            },
+            "subscriptionKey": {
+              "description": "Client-provided unique identifier for the subscription.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "subscriptionKey",
+            "serialNumber",
+            "subscribeMessageCategory",
+            "subscribePath",
+            "subscribeReqType"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "subscriptionResp": {
+        "description": "Response for subscription requests.",
+        "properties": {
+          "description": {
+            "description": "Description of the overall subscription status",
+            "type": "string"
+          },
+          "status": {
+            "description": "Overall status of the subscription request (Success/Error)",
+            "type": "string"
+          },
+          "subscribeList": {
+            "description": "List of device subscription results",
+            "items": {
+              "properties": {
+                "createdAt": {
+                  "description": "RFC 3339 timestamp when the resource was created.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description of the subscription result for this device",
+                  "type": "string"
+                },
+                "generation": {
+                  "description": "Monotonically increasing counter incremented on each update.",
+                  "readOnly": true,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Primary identifier for the resource given by the system.",
+                  "format": "uuid",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "serialNumber": {
+                  "description": "Device serial number",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "Status of this specific subscription (Success/Error)",
+                  "type": "string"
+                },
+                "subscriptionKey": {
+                  "description": "Client-provided unique identifier for the subscription.",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "The type of the resource, prefixed by the API group name.",
+                  "examples": [
+                    "network-troubleshooting/telemetry-subscription"
+                  ],
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "RFC 3339 timestamp when the resource was last updated.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "generation",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "telemetryDataResp": {
+        "description": "Telemetry data collection response.",
+        "properties": {
+          "count": {
+            "description": "Number of items returned in this page.",
+            "type": "integer"
+          },
+          "description": {
+            "description": "Description of the overall request status",
+            "type": "string"
+          },
+          "items": {
+            "description": "List of devices with their telemetry data",
+            "items": {
+              "properties": {
+                "createdAt": {
+                  "description": "RFC 3339 timestamp when the resource was created.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Description of the telemetry data status",
+                  "type": "string"
+                },
+                "deviceClass": {
+                  "description": "Class of the device (e.g., c2c, iap)",
+                  "type": "string"
+                },
+                "generation": {
+                  "description": "Monotonically increasing counter incremented on each update.",
+                  "readOnly": true,
+                  "type": "integer"
+                },
+                "id": {
+                  "description": "Primary identifier for the resource given by the system.",
+                  "format": "uuid",
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "queriedAt": {
+                  "description": "Timestamp of the last query.",
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "queryTimes": {
+                  "description": "Number of times the telemetry data was queried.",
+                  "type": "integer"
+                },
+                "serialNumber": {
+                  "description": "Device serial number",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "Status of retrieving telemetry data (Success/Error)",
+                  "type": "string"
+                },
+                "telemetryData": {
+                  "description": "Array of telemetry data paths and their corresponding data.",
+                  "items": {
+                    "properties": {
+                      "data": {
+                        "additionalProperties": true,
+                        "description": "Actual telemetry data.",
+                        "type": "object"
+                      },
+                      "path": {
+                        "description": "JSON path of the telemetry data.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "description": "The type of the resource, prefixed by the API group name.",
+                  "examples": [
+                    "network-troubleshooting/telemetry-metric"
+                  ],
+                  "readOnly": true,
+                  "type": "string"
+                },
+                "updateTimes": {
+                  "description": "Number of times the telemetry data was updated.",
+                  "type": "integer"
+                },
+                "updatedAt": {
+                  "description": "RFC 3339 timestamp when the resource was last updated.",
+                  "format": "date-time",
+                  "readOnly": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "generation",
+                "createdAt",
+                "updatedAt"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "description": "Zero-based offset of the first item returned in this page.",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "status": {
+            "description": "Overall status of the request (Success/Error)",
+            "type": "string"
+          },
+          "total": {
+            "description": "Total number of items in the result set.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "offset"
+        ],
         "type": "object"
       }
     },
@@ -10555,6 +11474,331 @@
         ]
       }
     },
+    "/network-troubleshooting/v1/device-operations": {
+      "get": {
+        "description": "Get single device's operate status by serialNumber.",
+        "operationId": "listDeviceOperationsV1",
+        "parameters": [
+          {
+            "description": "List of serialNumber for the request.",
+            "explode": false,
+            "in": "query",
+            "name": "serial-number",
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          },
+          {
+            "description": "Filter devices by troubleshooting operation state.",
+            "in": "query",
+            "name": "operation",
+            "schema": {
+              "enum": [
+                "IDLE",
+                "START",
+                "STOP",
+                "CLEAR"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "only response summary info for device list.",
+            "in": "query",
+            "name": "summary",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Maximum number of devices to return in a single page.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zero-based offset of the first device to return.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "summary": "Successful operation status response",
+                    "value": {
+                      "count": 2,
+                      "description": "The operation was successful.",
+                      "items": [
+                        {
+                          "createdAt": "2025-03-17T05:00:00.000Z",
+                          "description": "Success",
+                          "deviceClass": "c2c",
+                          "generation": 1,
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "operation": "START",
+                          "serialNumber": "XXXXX9V015",
+                          "status": "Success",
+                          "troubleshootingStatus": [
+                            {
+                              "queriedAt": "2025-03-17T05:53:43.367Z",
+                              "queryTimes": 4,
+                              "telemetryLimited": false,
+                              "troubleshootingType": "STATE",
+                              "updateTimes": 1752,
+                              "updatedAt": "2025-03-17T18:18:46.507Z"
+                            },
+                            {
+                              "queriedAt": "2025-03-17T05:53:50.397Z",
+                              "queryTimes": 1,
+                              "telemetryLimited": false,
+                              "troubleshootingType": "STATS",
+                              "updateTimes": 1144,
+                              "updatedAt": "2025-03-17T18:14:44.464Z"
+                            },
+                            {
+                              "queriedAt": "2025-03-17T05:20:30.502Z",
+                              "queryTimes": 0,
+                              "telemetryLimited": false,
+                              "troubleshootingType": "EVENTS",
+                              "updateTimes": 46,
+                              "updatedAt": "2025-03-17T18:14:56.347Z"
+                            }
+                          ],
+                          "type": "network-troubleshooting/device-operation",
+                          "updatedAt": "2025-03-17T18:18:46.507Z"
+                        },
+                        {
+                          "createdAt": "2025-03-17T05:00:00.000Z",
+                          "description": "No event metadata found in database.",
+                          "deviceClass": "",
+                          "generation": 1,
+                          "id": "223e4567-e89b-12d3-a456-426614174001",
+                          "operation": "START",
+                          "serialNumber": "YYYYY00252",
+                          "status": "Success",
+                          "troubleshootingStatus": [
+                            {
+                              "queriedAt": "1901-01-01T00:00:00.000Z",
+                              "queryTimes": 0,
+                              "telemetryLimited": false,
+                              "troubleshootingType": "STATE",
+                              "updateTimes": 0,
+                              "updatedAt": "1901-01-01T00:00:00.000Z"
+                            },
+                            {
+                              "queriedAt": "1901-01-01T00:00:00.000Z",
+                              "queryTimes": 0,
+                              "telemetryLimited": false,
+                              "troubleshootingType": "STATS",
+                              "updateTimes": 0,
+                              "updatedAt": "1901-01-01T00:00:00.000Z"
+                            },
+                            {
+                              "queriedAt": "1901-01-01T00:00:00.000Z",
+                              "queryTimes": 0,
+                              "telemetryLimited": false,
+                              "troubleshootingType": "EVENTS",
+                              "updateTimes": 0,
+                              "updatedAt": "1901-01-01T00:00:00.000Z"
+                            }
+                          ],
+                          "type": "network-troubleshooting/device-operation",
+                          "updatedAt": "2025-03-17T18:14:56.347Z"
+                        }
+                      ],
+                      "offset": 0,
+                      "status": "Success",
+                      "total": 2
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/operationGetResp"
+                }
+              }
+            },
+            "description": "the 200 response of the operation request.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get single device's operation status by serialNumber.",
+        "tags": [
+          "Troubleshooting Operations"
+        ]
+      },
+      "post": {
+        "description": "Operate a device to start, stop, clear the troubleshooting data.",
+        "operationId": "createDeviceOperationsV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/operationPostReq"
+              }
+            }
+          },
+          "description": "a list of device that need to operate.",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "summary": "Successful operation response",
+                    "value": {
+                      "description": "The operation was successful.",
+                      "deviceOperations": [
+                        {
+                          "createdAt": "2025-03-17T05:00:00.000Z",
+                          "description": "The operation was successful.",
+                          "generation": 1,
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "operation": "START",
+                          "serialNumber": "XXXXX9V015",
+                          "status": "Success",
+                          "type": "network-troubleshooting/device-operation",
+                          "updatedAt": "2025-03-17T18:18:46.507Z"
+                        },
+                        {
+                          "createdAt": "2025-03-17T05:00:00.000Z",
+                          "description": "The operation was successful.",
+                          "generation": 1,
+                          "id": "223e4567-e89b-12d3-a456-426614174001",
+                          "operation": "STOP",
+                          "serialNumber": "YYYYY00252",
+                          "status": "Success",
+                          "type": "network-troubleshooting/device-operation",
+                          "updatedAt": "2025-03-17T18:14:56.347Z"
+                        }
+                      ],
+                      "status": "Success"
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/operationPostResp"
+                }
+              }
+            },
+            "description": "the 201 created response of the operation request.",
+            "headers": {
+              "Location": {
+                "description": "URI of the created device-operations resource.",
+                "required": true,
+                "schema": {
+                  "examples": [
+                    "/network-troubleshooting/v1/device-operations"
+                  ],
+                  "format": "uri",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Operate a device to start, stop, clear the troubleshooting data.",
+        "tags": [
+          "Troubleshooting Operations"
+        ]
+      }
+    },
     "/network-troubleshooting/v1/event-extra-attributes": {
       "get": {
         "description": "This API endpoint retrieves extra attributes of the event. The response includes event attributes as key-value pairs.",
@@ -13194,6 +14438,590 @@
           "Gateways"
         ]
       }
+    },
+    "/network-troubleshooting/v1/telemetry-devices": {
+      "get": {
+        "description": "Return device information for the requested devices.",
+        "operationId": "listTelemetryDevicesV1",
+        "parameters": [
+          {
+            "description": "List of serial numbers for the request.",
+            "explode": false,
+            "in": "query",
+            "name": "serial-number",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          },
+          {
+            "description": "Include the original device data.",
+            "in": "query",
+            "name": "orig-data",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Maximum number of devices to return in a single page.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zero-based offset of the first device to return.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "summary": "Successful device information response",
+                    "value": {
+                      "count": 1,
+                      "description": "Success",
+                      "items": [
+                        {
+                          "createdAt": "2025-03-17T18:14:56.347Z",
+                          "description": "Success",
+                          "deviceClass": "c2c",
+                          "deviceInfo": {
+                            "deviceType": "IAP_VC",
+                            "fwVersion": "10.5.0.0-10.5.0.0_0",
+                            "hostname": "XXXXX9V015"
+                          },
+                          "generation": 1,
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "serialNumber": "XXXXX9V015",
+                          "status": "Success",
+                          "type": "network-troubleshooting/telemetry-device",
+                          "updateTimes": 46,
+                          "updatedAt": "2025-03-17T18:14:56.347Z"
+                        }
+                      ],
+                      "offset": 0,
+                      "status": "Success",
+                      "total": 1
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/deviceInfoResp"
+                }
+              }
+            },
+            "description": "the 200 response of the device information request.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List device information.",
+        "tags": [
+          "Telemetry Data"
+        ]
+      }
+    },
+    "/network-troubleshooting/v1/telemetry-events": {
+      "get": {
+        "description": "Return device event telemetry for the requested devices.",
+        "operationId": "listTelemetryEventsV1",
+        "parameters": [
+          {
+            "description": "List of serial numbers for the request.",
+            "explode": false,
+            "in": "query",
+            "name": "serial-number",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          },
+          {
+            "description": "Telemetry event type.",
+            "in": "query",
+            "name": "event-type",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Query telemetry events starting from this RFC 3339 timestamp.",
+            "in": "query",
+            "name": "start-at",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Query telemetry events up to this RFC 3339 timestamp.",
+            "in": "query",
+            "name": "end-at",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Include the original event data.",
+            "in": "query",
+            "name": "orig-data",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Maximum number of events to return in a single page.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of events.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "summary": "Successful events response",
+                    "value": {
+                      "count": 1,
+                      "description": "Success",
+                      "items": [
+                        {
+                          "createdAt": "2025-03-17T05:20:30.496Z",
+                          "deviceClass": "c2c",
+                          "eventBody": {
+                            "apSerialNum": "XXXXX9V015",
+                            "eventid": "DPP_CONN_REQ"
+                          },
+                          "eventId": "DPP_CONN_REQ",
+                          "generation": 1,
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "occurredAt": "2025-03-17T05:20:30.496Z",
+                          "serialNumber": "XXXXX9V015",
+                          "type": "network-troubleshooting/telemetry-event",
+                          "updatedAt": "2025-03-17T05:20:30.496Z"
+                        }
+                      ],
+                      "next": "",
+                      "status": "Success",
+                      "total": 1
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/eventResp"
+                }
+              }
+            },
+            "description": "the 200 response of the events data request.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get device events data.",
+        "tags": [
+          "Telemetry Data"
+        ]
+      }
+    },
+    "/network-troubleshooting/v1/telemetry-metrics": {
+      "get": {
+        "description": "Return device telemetry data for the selected dataset.",
+        "operationId": "listTelemetryMetricsV1",
+        "parameters": [
+          {
+            "description": "Telemetry dataset to query.",
+            "in": "query",
+            "name": "dataset",
+            "required": true,
+            "schema": {
+              "enum": [
+                "STATE",
+                "STATS"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "List of serial numbers for the request.",
+            "explode": false,
+            "in": "query",
+            "name": "serial-number",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          },
+          {
+            "description": "Telemetry paths to query.",
+            "explode": false,
+            "in": "query",
+            "name": "telemetry-path",
+            "required": true,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "style": "form"
+          },
+          {
+            "description": "Include the original telemetry data.",
+            "in": "query",
+            "name": "orig-data",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Maximum number of devices to return in a single page.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zero-based offset of the first device to return.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "summary": "Successful telemetry data response",
+                    "value": {
+                      "count": 1,
+                      "description": "Success",
+                      "items": [
+                        {
+                          "createdAt": "2025-03-17T05:13:24.310Z",
+                          "description": "Success",
+                          "deviceClass": "c2c",
+                          "generation": 1,
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "queriedAt": "2025-03-17T05:53:43.367Z",
+                          "queryTimes": 4,
+                          "serialNumber": "XXXXX9V015",
+                          "status": "Success",
+                          "telemetryData": [
+                            {
+                              "data": {
+                                "imageVersion": "10.5.0.0-10.5.0.0_0",
+                                "vcName": "device-troubleshooting"
+                              },
+                              "path": "$.cluster"
+                            }
+                          ],
+                          "type": "network-troubleshooting/telemetry-metric",
+                          "updateTimes": 160,
+                          "updatedAt": "2025-03-17T05:52:25.124Z"
+                        }
+                      ],
+                      "offset": 0,
+                      "status": "Success",
+                      "total": 1
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/telemetryDataResp"
+                }
+              }
+            },
+            "description": "the 200 response of the telemetry data request.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get device telemetry data.",
+        "tags": [
+          "Telemetry Data"
+        ]
+      }
+    },
+    "/network-troubleshooting/v1/telemetry-subscriptions": {
+      "post": {
+        "description": "Create live telemetry subscriptions for a list of devices.",
+        "operationId": "createTelemetrySubscriptionsV1",
+        "parameters": [
+          {
+            "description": "Type of device subscription.",
+            "in": "query",
+            "name": "subscribe-device-type",
+            "schema": {
+              "default": "AP",
+              "enum": [
+                "AP",
+                "GATEWAY_AMON"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/subscriptionReq"
+              }
+            }
+          },
+          "description": "A list of device subscriptions.",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "success": {
+                    "summary": "Successful subscription response",
+                    "value": {
+                      "description": "Success",
+                      "status": "Success",
+                      "subscribeList": [
+                        {
+                          "createdAt": "2025-03-17T05:00:00.000Z",
+                          "description": "Success",
+                          "generation": 1,
+                          "id": "123e4567-e89b-12d3-a456-426614174000",
+                          "serialNumber": "XXXXX9V015",
+                          "status": "Success",
+                          "subscriptionKey": "XXXXX9V015-1",
+                          "type": "network-troubleshooting/telemetry-subscription",
+                          "updatedAt": "2025-03-17T05:00:00.000Z"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/subscriptionResp"
+                }
+              }
+            },
+            "description": "the 201 created response of the subscription request.",
+            "headers": {
+              "Location": {
+                "description": "URI of the created telemetry-subscriptions resource.",
+                "required": true,
+                "schema": {
+                  "examples": [
+                    "/network-troubleshooting/v1/telemetry-subscriptions"
+                  ],
+                  "format": "uri",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Create live telemetry subscriptions on devices.",
+        "tags": [
+          "Live Subscription"
+        ]
+      }
     }
   },
   "servers": [
@@ -13282,6 +15110,18 @@
     {
       "description": "Troubleshooting operations on Gateways",
       "name": "Gateways"
+    },
+    {
+      "description": "Subscribe the telemetry data to the device.",
+      "name": "Live Subscription"
+    },
+    {
+      "description": "Get telemetry data.",
+      "name": "Telemetry Data"
+    },
+    {
+      "description": "Enable device troubleshooting and manage device troubleshooting operations.",
+      "name": "Troubleshooting Operations"
     }
   ]
 }

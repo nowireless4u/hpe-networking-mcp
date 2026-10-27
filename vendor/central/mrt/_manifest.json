@@ -9,7 +9,7 @@
       "version": "1.0.0"
     },
     {
-      "path_count": 143,
+      "path_count": 145,
       "slug": "monitoring",
       "title": "Monitoring",
       "version": "1.0.0"
@@ -21,7 +21,7 @@
       "version": "0.0.1"
     },
     {
-      "path_count": 12,
+      "path_count": 15,
       "slug": "notifications",
       "title": "Notifications",
       "version": "1.0.0"
@@ -33,13 +33,13 @@
       "version": "0.0.1"
     },
     {
-      "path_count": 52,
+      "path_count": 83,
       "slug": "services",
       "title": "Services",
       "version": "0.0.1"
     },
     {
-      "path_count": 95,
+      "path_count": 100,
       "slug": "troubleshooting",
       "title": "Troubleshooting",
       "version": "0.0.1"
@@ -55,5 +55,5 @@
     "services",
     "troubleshooting"
   ],
-  "total_paths": 310
+  "total_paths": 351
 }

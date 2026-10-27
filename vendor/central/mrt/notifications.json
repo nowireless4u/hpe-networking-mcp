@@ -285,7 +285,28 @@
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/ConflictError"
+              "$ref": "#/components/schemas/ConflictErrorDetails"
+            }
+          }
+        },
+        "description": "Conflict. The resource already exists or is in a conflicting state.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ConflictErrornotifications": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictErrornotifications"
             }
           }
         },
@@ -369,6 +390,126 @@
           }
         },
         "description": "Internal server error.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "MuteInsightResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "muteSuccess": {
+                "value": {
+                  "action": "MUTE",
+                  "insightId": "721",
+                  "siteId": "6985764272"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/AIOpsInsightMuteResult"
+            }
+          }
+        },
+        "description": "Mute insight result response.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "MutedInsightsResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "emptyList": {
+                "value": {
+                  "count": 0,
+                  "id": "1f0c4c72-5c4e-4b0b-9d1e-6b0a2f9f4c31",
+                  "items": [],
+                  "offset": 0,
+                  "tenantId": "tenant-123",
+                  "total": 0,
+                  "type": "network-notifications/muted-insight-list"
+                }
+              },
+              "nocLevelMuted": {
+                "value": {
+                  "count": 1,
+                  "id": "1f0c4c72-5c4e-4b0b-9d1e-6b0a2f9f4c31",
+                  "items": [
+                    {
+                      "createdAt": "2024-08-12T00:00:00Z",
+                      "description": "New firmware recommendation available across the network.",
+                      "endAt": null,
+                      "generation": 1,
+                      "id": "a4b1d1a7-40a9-4b92-9d8b-2d68e01d17f0",
+                      "insightId": "702",
+                      "isMuted": true,
+                      "mutedBy": "user-xyz",
+                      "siteId": null,
+                      "siteName": "GLOBAL",
+                      "startAt": null,
+                      "title": "Access Point Firmware Recommendation",
+                      "type": "network-notifications/muted-insight",
+                      "updatedAt": "2024-08-12T00:00:00Z"
+                    }
+                  ],
+                  "offset": 0,
+                  "tenantId": "tenant-123",
+                  "total": 1,
+                  "type": "network-notifications/muted-insight-list"
+                }
+              },
+              "siteLevelMuted": {
+                "value": {
+                  "count": 1,
+                  "id": "1f0c4c72-5c4e-4b0b-9d1e-6b0a2f9f4c31",
+                  "items": [
+                    {
+                      "createdAt": "2024-08-12T00:00:00Z",
+                      "description": "Clients are experiencing frequent roaming issues.",
+                      "endAt": "2024-09-12T08:00:00Z",
+                      "generation": 1,
+                      "id": "eee161d1-0819-4787-948d-6bd8bec19a5d",
+                      "insightId": "721",
+                      "isMuted": true,
+                      "mutedBy": "user-abc",
+                      "siteId": "6985764272",
+                      "siteName": "Bengaluru (BLR) - Campus",
+                      "startAt": "2024-08-12T08:00:00Z",
+                      "title": "Client Roaming Recommendation",
+                      "type": "network-notifications/muted-insight",
+                      "updatedAt": "2024-08-12T00:00:00Z"
+                    }
+                  ],
+                  "offset": 0,
+                  "tenantId": "tenant-123",
+                  "total": 1,
+                  "type": "network-notifications/muted-insight-list"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/AIOpsInsightMutedList"
+            }
+          }
+        },
+        "description": "Muted insight list response.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -475,6 +616,27 @@
       },
       "ResponseWithNoContent": {
         "description": "Operation completed successfully with no response.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableErrorDetails"
+            }
+          }
+        },
+        "description": "Service unavailable.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -608,6 +770,36 @@
           }
         }
       },
+      "UnmuteInsightResponse": {
+        "content": {
+          "application/json": {
+            "examples": {
+              "unmuteSuccess": {
+                "value": {
+                  "action": "UNMUTE",
+                  "insightId": "721",
+                  "siteId": "6985764272"
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/components/schemas/AIOpsInsightMuteResult"
+            }
+          }
+        },
+        "description": "Unmute insight result response.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "UnprocessableEntity": {
         "content": {
           "application/json": {
@@ -617,6 +809,27 @@
           }
         },
         "description": "Unprocessable Entity. The request was well-formed but failed semantic validation.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnsupportedMediaTypeErrorDetails"
+            }
+          }
+        },
+        "description": "Unsupported media type. The request body must be application/json.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -655,6 +868,197 @@
           "siteName",
           "impactedDeviceCount",
           "impactedClientCount"
+        ],
+        "type": "object"
+      },
+      "AIOpsInsightMuteResult": {
+        "properties": {
+          "action": {
+            "enum": [
+              "MUTE",
+              "UNMUTE"
+            ],
+            "type": "string"
+          },
+          "insightId": {
+            "type": "string"
+          },
+          "siteId": {
+            "description": "Site the mute applies to. Null when applied at NOC/global scope.",
+            "examples": [
+              "6985764272",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "insightId",
+          "action"
+        ],
+        "type": "object"
+      },
+      "AIOpsInsightMutedItem": {
+        "properties": {
+          "createdAt": {
+            "description": "Timestamp when the mute record was created, RFC 3339 UTC+0.",
+            "examples": [
+              "2024-09-12T08:00:00Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "endAt": {
+            "examples": [
+              "2024-09-12T08:00:00Z",
+              null
+            ],
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "generation": {
+            "description": "Auto incrementing generation number for the mute record. Increments on each update to the record.",
+            "examples": [
+              1
+            ],
+            "minimum": 0,
+            "readOnly": true,
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier of the mute record.",
+            "examples": [
+              "eee161d1-0819-4787-948d-6bd8bec19a5d"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "type": "string"
+          },
+          "insightId": {
+            "description": "Identifier of the muted insight type. Obtainable from GET /network-notifications/v1/insights via the insightId field.",
+            "examples": [
+              "721"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "isMuted": {
+            "type": "boolean"
+          },
+          "mutedBy": {
+            "type": "string"
+          },
+          "siteId": {
+            "description": "Site the mute applies to. Null for NOC-level (global) mutes.",
+            "examples": [
+              "6985764272",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "siteName": {
+            "description": "Site name for the mute scope. Global for NOC-level (global) mutes.",
+            "type": "string"
+          },
+          "startAt": {
+            "examples": [
+              "2024-08-12T08:00:00Z",
+              null
+            ],
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of the muted insight resource.",
+            "examples": [
+              "network-notifications/muted-insight"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Timestamp when the mute record was last updated, RFC 3339 UTC+0.",
+            "examples": [
+              "2024-09-12T08:00:00Z"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "insightId",
+          "isMuted",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "AIOpsInsightMutedList": {
+        "properties": {
+          "count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AIOpsInsightMutedItem"
+            },
+            "type": "array"
+          },
+          "offset": {
+            "examples": [
+              0
+            ],
+            "minimum": 0,
+            "type": "integer"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "total": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "examples": [
+              "network-notifications/muted-insight-list"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "items",
+          "count",
+          "total",
+          "offset"
         ],
         "type": "object"
       },
@@ -1213,29 +1617,26 @@
         "type": "object"
       },
       "BadRequestErrorDetails": {
-        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.",
-            "example": "HPE_GL_NETWORK_NOTIFICATIONS_BAD_REQUEST",
+            "enum": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_INVALID_INPUT"
+            ],
+            "example": "HPE_GL_NETWORK_NOTIFICATIONS_INVALID_INPUT",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.",
             "example": 400,
             "maximum": 400,
             "minimum": 400,
             "type": "integer"
           },
           "message": {
-            "description": "Error message indicating the cause of the failure.",
-            "example": "Invalid input received for notification rule.",
-            "maxLength": 512,
-            "type": "string"
+            "$ref": "#/components/schemas/ErrorMessage"
           }
         },
         "required": [
@@ -1299,11 +1700,45 @@
         ],
         "type": "object"
       },
-      "ConflictError": {
-        "description": "Conflict Error details returned from the server.",
+      "ConflictErrorDetails": {
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "enum": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_INSIGHT_ALREADY_MUTED"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_INSIGHT_ALREADY_MUTED"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "const": 409,
+            "examples": [
+              409
+            ],
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ConflictErrornotifications": {
+        "description": "Conflict Error details returned from the server.",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugIdnotifications"
           },
           "errorCode": {
             "description": "Internal error code.",
@@ -1334,6 +1769,11 @@
         "type": "object"
       },
       "DebugId": {
+        "description": "Unique identifier for debugging purposes. This ID can be used to trace the error in server logs.",
+        "maxLength": 256,
+        "type": "string"
+      },
+      "DebugIdnotifications": {
         "description": "A unique identifier used for troubleshooting and debugging purposes.",
         "example": "78f002e32e0cefba3d8cc94fa8179342",
         "maxLength": 512,
@@ -1366,30 +1806,30 @@
         ],
         "type": "object"
       },
+      "ErrorMessage": {
+        "description": "Error message providing additional details about the error.",
+        "maxLength": 512,
+        "type": "string"
+      },
       "ForbiddenErrorDetails": {
-        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.",
+            "description": "Error code indicating the reason for access denial.",
             "example": "HPE_GL_NETWORK_NOTIFICATIONS_FORBIDDEN",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.",
             "example": 403,
             "maximum": 403,
             "minimum": 403,
             "type": "integer"
           },
           "message": {
-            "description": "Error message indicating the cause of the failure.",
-            "example": "Access forbidden.",
-            "maxLength": 512,
-            "type": "string"
+            "$ref": "#/components/schemas/ErrorMessage"
           }
         },
         "required": [
@@ -1401,29 +1841,23 @@
         "type": "object"
       },
       "InternalServerErrorDetails": {
-        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.",
             "example": "HPE_GL_NETWORK_NOTIFICATIONS_INTERNAL_SERVER_ERROR",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.",
             "example": 500,
             "maximum": 500,
             "minimum": 500,
             "type": "integer"
           },
           "message": {
-            "description": "Error message indicating the cause of the failure.",
-            "example": "Internal Server Error while processing the request.",
-            "maxLength": 512,
-            "type": "string"
+            "$ref": "#/components/schemas/ErrorMessage"
           }
         },
         "required": [
@@ -1460,11 +1894,32 @@
         },
         "type": "object"
       },
+      "MuteInsightRequest": {
+        "properties": {
+          "endAt": {
+            "description": "End of the mute window, RFC 3339 UTC+0. Must be later than startAt.",
+            "examples": [
+              "2024-09-12T08:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "startAt": {
+            "description": "Start of the mute window, RFC 3339 UTC+0. Omit together with endAt for a permanent mute.",
+            "examples": [
+              "2024-08-12T08:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "NotFoundErrorDetails": {
         "description": "Not Found error details returned from the server.",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdnotifications"
           },
           "errorCode": {
             "description": "Internal error code.",
@@ -1569,7 +2024,8 @@
           "name": {
             "description": "Name of the notification rule.",
             "example": "email-rule",
-            "maxLength": 128,
+            "maxLength": 64,
+            "minLength": 4,
             "type": "string"
           },
           "source": {
@@ -2031,6 +2487,40 @@
         ],
         "type": "object"
       },
+      "ServiceUnavailableErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "enum": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_SERVICE_UNAVAILABLE"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_SERVICE_UNAVAILABLE"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "const": 503,
+            "examples": [
+              503
+            ],
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
       "SetActiveAlertsRequest": {
         "description": "Request body for setting alerts to active status.\n",
         "properties": {
@@ -2085,29 +2575,23 @@
         "type": "object"
       },
       "TooManyRequestsErrorDetails": {
-        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.",
             "example": "HPE_GL_NETWORK_NOTIFICATIONS_TOO_MANY_REQUESTS",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.",
             "example": 429,
             "maximum": 429,
             "minimum": 429,
             "type": "integer"
           },
           "message": {
-            "description": "Error message indicating the cause of the failure.",
-            "example": "Too Many Requests. Rate limit exceeded.",
-            "maxLength": 512,
-            "type": "string"
+            "$ref": "#/components/schemas/ErrorMessage"
           }
         },
         "required": [
@@ -2119,29 +2603,23 @@
         "type": "object"
       },
       "UnauthorizedErrorDetails": {
-        "description": "Error details returned from the server.",
         "properties": {
           "debugId": {
             "$ref": "#/components/schemas/DebugId"
           },
           "errorCode": {
-            "description": "Internal error code.",
             "example": "HPE_GL_NETWORK_NOTIFICATIONS_UNAUTHORIZED",
-            "maxLength": 128,
+            "maxLength": 256,
             "type": "string"
           },
           "httpStatusCode": {
-            "description": "HTTP status code.",
             "example": 401,
             "maximum": 401,
             "minimum": 401,
             "type": "integer"
           },
           "message": {
-            "description": "Error message indicating the cause of the failure.",
-            "example": "Unauthorized request.",
-            "maxLength": 512,
-            "type": "string"
+            "$ref": "#/components/schemas/ErrorMessage"
           }
         },
         "required": [
@@ -2156,7 +2634,7 @@
         "description": "Error details returned when semantic validation fails (e.g., invalid email format, unknown alertName).",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdnotifications"
           },
           "errorCode": {
             "description": "Internal error code.",
@@ -2176,6 +2654,40 @@
             "example": "Unprocessable Entity. The request was well-formed but failed semantic validation.",
             "maxLength": 512,
             "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "UnsupportedMediaTypeErrorDetails": {
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "enum": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "examples": [
+              "HPE_GL_NETWORK_NOTIFICATIONS_UNSUPPORTED_MEDIA_TYPE"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "const": 415,
+            "examples": [
+              415
+            ],
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessage"
           }
         },
         "required": [
@@ -2834,6 +3346,247 @@
         ]
       }
     },
+    "/network-notifications/v1/insights/{insight-id}/mute": {
+      "post": {
+        "description": "Mutes the specified insight for the optional site. When startAt and endAt are omitted, the mute is permanent. Timestamps must be RFC 3339 UTC timestamps.",
+        "operationId": "muteInsightV1",
+        "parameters": [
+          {
+            "description": "Insight identifier for the recommender to mute.",
+            "in": "path",
+            "name": "insight-id",
+            "required": true,
+            "schema": {
+              "examples": [
+                "721"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional site identifier. Omit site-id to apply the mute at NOC/global scope; provide it to apply the mute to a specific site.",
+            "in": "query",
+            "name": "site-id",
+            "schema": {
+              "examples": [
+                "6985764272"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "mutePermanent": {
+                  "value": {}
+                },
+                "muteWithTimeRange": {
+                  "value": {
+                    "endAt": "2024-08-19T08:00:00Z",
+                    "startAt": "2024-08-12T08:00:00Z"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MuteInsightRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MuteInsightResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictError"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Mute an insight",
+        "tags": [
+          "Insights"
+        ]
+      }
+    },
+    "/network-notifications/v1/insights/{insight-id}/unmute": {
+      "post": {
+        "description": "Unmutes the specified insight for the optional site.",
+        "operationId": "unmuteInsightV1",
+        "parameters": [
+          {
+            "description": "Insight identifier for the recommender to unmute.",
+            "in": "path",
+            "name": "insight-id",
+            "required": true,
+            "schema": {
+              "examples": [
+                "721"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional site identifier. Omit site-id to apply the unmute at NOC/global scope; provide it to apply the unmute to a specific site.",
+            "in": "query",
+            "name": "site-id",
+            "schema": {
+              "examples": [
+                "6985764272"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/UnmuteInsightResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Unmute an insight",
+        "tags": [
+          "Insights"
+        ]
+      }
+    },
+    "/network-notifications/v1/muted-insights": {
+      "get": {
+        "description": "Returns the muted insights for the tenant. The optional site-id filters the results to a site; when omitted, NOC-level muted insights are returned.",
+        "operationId": "listMutedInsightsV1",
+        "parameters": [
+          {
+            "description": "Site identifier. Omit for NOC/global results.",
+            "in": "query",
+            "name": "site-id",
+            "schema": {
+              "examples": [
+                "6985764272"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of muted insights to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "examples": [
+                50
+              ],
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Number of muted insights to skip.",
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "examples": [
+                0
+              ],
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/MutedInsightsResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "List muted insights",
+        "tags": [
+          "Insights"
+        ]
+      }
+    },
     "/network-notifications/v1/notification-rules": {
       "get": {
         "description": "This API endpoint retrieves the list of notification rules. The notification rules list includes data source and destination channel details.\nNOTE: The source.alerts.alertCount field in responses is a summary count; use getNotificationRuleV1 to retrieve the full list of alertNames",
@@ -2925,7 +3678,7 @@
             "$ref": "#/components/responses/NotFoundError"
           },
           "409": {
-            "$ref": "#/components/responses/ConflictError"
+            "$ref": "#/components/responses/ConflictErrornotifications"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
@@ -3097,7 +3850,7 @@
             "$ref": "#/components/responses/NotFoundError"
           },
           "409": {
-            "$ref": "#/components/responses/ConflictError"
+            "$ref": "#/components/responses/ConflictErrornotifications"
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"

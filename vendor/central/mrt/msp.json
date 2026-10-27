@@ -29,44 +29,40 @@
       }
     },
     "parameters": {
-      "Filter": {
+      "Filtermsp": {
         "description": "OData Version 4.0 filter string (limited functionality). Supports only 'and' conjunction ('or' and 'not' are NOT supported). Supported fields and operators are in the below given table.\n| Field | Operators |\n| ----------------- | ---- |\n| `tenantName`    | `eq` |\n| `deviceOwnership` | `in` |\n\n**The operators are implemented as follows:**\n\n* `eq`: Only values exactly matching the given value are returned.\n\n* `in`: Only values present in the given list are returned.\n\n**Using Special Character for filtering the `tenantName`**\n\n* If the `tenantName` needs to be filtered with a special character like a single quote `'`, then it has to be passed as escaped character.\n\n* For example: `tenantName eq 'Tenant\\\\'s account 1'`\n",
-        "example": "tenantName eq 'tenant A' and deviceOwnership in ('MSP', 'TENANT')",
         "in": "query",
         "name": "filter",
         "required": false,
         "schema": {
-          "$ref": "#/components/schemas/Filter"
+          "$ref": "#/components/schemas/Filtermsp"
         }
       },
-      "Limit": {
-        "description": "Denotes the maximum number of tenants returned in the response. Maximum value is 100.",
-        "example": 10,
+      "Limitmsp": {
+        "description": "Denotes the maximum number of tenants returned in the response. Minimum value is 0, maximum value is 100. Defaults to 10 if not specified.",
         "in": "query",
         "name": "limit",
-        "required": true,
+        "required": false,
         "schema": {
-          "$ref": "#/components/schemas/Limit"
+          "$ref": "#/components/schemas/Limitmsp"
         }
       },
       "Next": {
-        "description": "Specifies the pagination cursor for the next page of resources. The minimum value is 1.",
-        "example": "2",
+        "description": "Specifies the pagination cursor for the next page of resources. If omitted, the first page is returned.",
         "in": "query",
         "name": "next",
-        "required": true,
+        "required": false,
         "schema": {
           "$ref": "#/components/schemas/Next"
         }
       },
-      "Sort": {
-        "description": "Sorting can be supported on the following fields: `tenantName`, `totalSites`, `deviceHealthStatus`, `degradedSites`, `alerts`, `deviceOwnership` and `createdTime`.\n\nFor `alerts`, sorting will be done in order of `critical`, `major` and `minor` counts. For example if input is `alerts DESC`, then the tenant row with the highest `critical` alerts count will appear at the top.\n\nFor `deviceHealthStatus` sorting will be done in order of `poor`, `fair` and `good` counts. For example if input is `deviceHealthStatus DESC`, then the tenant row with the highest `poor` health count will appear at the top.\n",
-        "example": "alerts DESC",
+      "Sortmsp": {
+        "description": "Sorting can be supported on the following fields: `tenantName`, `totalSites`, `deviceHealthStatus`, `degradedSites`, `alerts`, `deviceOwnership` and `createdAt`.\n\nFor `alerts`, sorting will be done in order of `critical`, `major` and `minor` counts. For example if input is `alerts DESC`, then the tenant row with the highest `critical` alerts count will appear at the top.\n\nFor `deviceHealthStatus` sorting will be done in order of `poor`, `fair` and `good` counts. For example if input is `deviceHealthStatus DESC`, then the tenant row with the highest `poor` health count will appear at the top.\n",
         "in": "query",
         "name": "sort",
         "required": false,
         "schema": {
-          "$ref": "#/components/schemas/Sort"
+          "$ref": "#/components/schemas/Sortmsp"
         }
       }
     },
@@ -134,11 +130,11 @@
           }
         }
       },
-      "ListTenantsResponse": {
+      "ListTenantsResponsemsp": {
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/ListTenantsResponse"
+              "$ref": "#/components/schemas/ListTenantsResponsemsp"
             }
           }
         },
@@ -164,6 +160,27 @@
           }
         },
         "description": "Not Found error",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "ServiceUnavailable": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service unavailable.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -224,26 +241,30 @@
         "description": "Error details returned from the server.\n",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdmsp"
           },
           "errorCode": {
             "description": "Error code\n",
             "enum": [
               "HPE_GL_NETWORK_MSP_INVALID_INPUT"
             ],
-            "example": "HPE_GL_NETWORK_MSP_INVALID_INPUT",
+            "examples": [
+              "HPE_GL_NETWORK_MSP_INVALID_INPUT"
+            ],
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
             "description": "HTTP status code.\n",
-            "example": 400,
+            "examples": [
+              400
+            ],
             "maximum": 400,
             "minimum": 400,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagemsp"
           }
         },
         "required": [
@@ -261,6 +282,15 @@
         "maxLength": 512,
         "type": "string"
       },
+      "DebugIdmsp": {
+        "description": "A unique identifier used for troubleshooting and debugging purposes.\n",
+        "examples": [
+          "78f002e32e0cefba3d8cc94fa8179342"
+        ],
+        "format": "const",
+        "maxLength": 512,
+        "type": "string"
+      },
       "ErrorMessage": {
         "description": "Error message indicating the cause of the failure.\n",
         "example": "Reason for the error",
@@ -268,8 +298,19 @@
         "maxLength": 1024,
         "type": "string"
       },
-      "Filter": {
-        "example": "deviceOwnership in ('MSP')",
+      "ErrorMessagemsp": {
+        "description": "Error message indicating the cause of the failure.\n",
+        "examples": [
+          "Reason for the error"
+        ],
+        "format": "const",
+        "maxLength": 1024,
+        "type": "string"
+      },
+      "Filtermsp": {
+        "examples": [
+          "tenantName eq 'tenant A' and deviceOwnership in ('MSP', 'TENANT')"
+        ],
         "format": "const",
         "maxLength": 256,
         "type": "string"
@@ -309,27 +350,31 @@
         "description": "Internal server error details returned from the server.\n",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdmsp"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
             "enum": [
               "HPE_GL_NETWORK_MSP_INTERNAL_SERVER_ERROR"
             ],
-            "example": "HPE_GL_NETWORK_MSP_INTERNAL_SERVER_ERROR",
+            "examples": [
+              "HPE_GL_NETWORK_MSP_INTERNAL_SERVER_ERROR"
+            ],
             "format": "const",
             "maxLength": 128,
             "type": "string"
           },
           "httpStatusCode": {
             "description": "HTTP status code.",
-            "example": 500,
+            "examples": [
+              500
+            ],
             "maximum": 500,
             "minimum": 500,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagemsp"
           }
         },
         "required": [
@@ -340,72 +385,93 @@
         ],
         "type": "object"
       },
-      "Limit": {
+      "Limitmsp": {
         "default": 10,
-        "example": 10,
+        "examples": [
+          10
+        ],
         "format": "int32",
         "maximum": 100,
+        "minimum": 0,
         "type": "integer"
       },
-      "ListTenantsResponse": {
+      "ListTenantsResponsemsp": {
         "description": "List of all the tenants for an MSP. It includes details like tenant name, tenant CID, sites count, devices count with health status, alerts count, etc.",
-        "example": {
-          "count": 10,
-          "items": [
-            {
-              "alerts": {
-                "critical": 8,
-                "major": 10,
-                "minor": 40,
-                "total": 58
-              },
-              "createdTime": 1633036806,
-              "degradedSites": 1,
-              "deviceHealthStatus": {
-                "fair": 15,
-                "good": 130,
-                "poor": 5,
-                "total": 150
-              },
-              "deviceOwnership": "MSP",
-              "lastUpdatedTime": 1732320000,
-              "tenantId": "fa451230e38a11ef8a28061d9656",
-              "tenantName": "Tenant A",
-              "totalSites": 12
-            }
-          ],
-          "next": "2",
-          "total": 100
-        },
+        "examples": [
+          {
+            "count": 10,
+            "items": [
+              {
+                "alerts": {
+                  "critical": 8,
+                  "major": 10,
+                  "minor": 40,
+                  "total": 58
+                },
+                "createdAt": "2021-10-01T12:00:06Z",
+                "degradedSites": 1,
+                "deviceHealthStatus": {
+                  "fair": 15,
+                  "good": 130,
+                  "poor": 5,
+                  "total": 150
+                },
+                "deviceOwnership": "MSP",
+                "generation": 1,
+                "id": "fa451230e38a11ef8a28061d9656",
+                "tenantName": "Tenant A",
+                "totalSites": 12,
+                "type": "network-msp/tenant",
+                "updatedAt": "2024-11-23T00:00:00Z"
+              }
+            ],
+            "next": "2",
+            "total": 100
+          }
+        ],
         "properties": {
           "count": {
             "description": "The number of objects returned in the current response.",
-            "example": 10,
+            "examples": [
+              10
+            ],
             "format": "int32",
             "type": "integer"
           },
           "items": {
             "items": {
-              "$ref": "#/components/schemas/MSPTenant"
+              "$ref": "#/components/schemas/MSPTenantmsp"
             },
             "type": "array"
           },
           "next": {
-            "description": "Specifies the pagination cursor for the next page of resources.",
-            "example": "2",
+            "description": "Specifies the pagination cursor for the next page of resources. `null` if there are no further pages.",
+            "examples": [
+              "2"
+            ],
             "format": "const",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "total": {
             "description": "The total number of objects contained in the database.",
-            "example": 200,
+            "examples": [
+              200
+            ],
             "format": "int64",
             "type": "integer"
           }
         },
+        "required": [
+          "count",
+          "items",
+          "next"
+        ],
         "type": "object"
       },
-      "MSPTenant": {
+      "MSPTenantmsp": {
         "description": "An object containing details of a tenant under MSP.",
         "properties": {
           "alerts": {
@@ -413,40 +479,52 @@
             "properties": {
               "critical": {
                 "description": "The total number of critical alerts.",
-                "example": 8,
+                "examples": [
+                  8
+                ],
                 "format": "int32",
                 "type": "integer"
               },
               "major": {
                 "description": "The total number of major alerts.",
-                "example": 10,
+                "examples": [
+                  10
+                ],
                 "format": "int32",
                 "type": "integer"
               },
               "minor": {
                 "description": "The total number of minor alerts.",
-                "example": 40,
+                "examples": [
+                  40
+                ],
                 "format": "int32",
                 "type": "integer"
               },
               "total": {
                 "description": "The total number of alerts.",
-                "example": 58,
+                "examples": [
+                  58
+                ],
                 "format": "int32",
                 "type": "integer"
               }
             },
             "type": "object"
           },
-          "createdTime": {
-            "description": "Timestamp in seconds indicating creation time of a tenant.",
-            "example": 1633036806,
-            "format": "int64",
-            "type": "integer"
+          "createdAt": {
+            "description": "RFC 3339 timestamp indicating when the tenant was created.",
+            "examples": [
+              "2021-10-01T12:00:06Z"
+            ],
+            "format": "date-time",
+            "type": "string"
           },
           "degradedSites": {
             "description": "The total number of sites belonging to the tenant where at least one device health is poor.",
-            "example": 3,
+            "examples": [
+              3
+            ],
             "format": "int32",
             "type": "integer"
           },
@@ -455,25 +533,33 @@
             "properties": {
               "fair": {
                 "description": "The total number of devices with health status fair.",
-                "example": 15,
+                "examples": [
+                  15
+                ],
                 "format": "int32",
                 "type": "integer"
               },
               "good": {
                 "description": "The total number of devices with health status good.",
-                "example": 130,
+                "examples": [
+                  130
+                ],
                 "format": "int32",
                 "type": "integer"
               },
               "poor": {
                 "description": "The total number of devices with health status poor.",
-                "example": 5,
+                "examples": [
+                  5
+                ],
                 "format": "int32",
                 "type": "integer"
               },
               "total": {
                 "description": "The total number of devices.",
-                "example": 150,
+                "examples": [
+                  150
+                ],
                 "format": "int32",
                 "type": "integer"
               }
@@ -481,46 +567,83 @@
             "type": "object"
           },
           "deviceOwnership": {
-            "description": "Indicates devices ownership by MSP or tenant",
+            "description": "Indicates devices ownership by MSP or tenant.",
             "enum": [
               "MSP",
               "TENANT"
             ],
-            "example": "MSP",
+            "examples": [
+              "MSP"
+            ],
             "format": "const",
             "maxLength": 128,
             "type": "string"
           },
-          "lastUpdatedTime": {
-            "description": "Timestamp in seconds indicating last update of a tenant details.",
-            "example": 1732320000,
+          "generation": {
+            "description": "Resource generation counter. Currently always 1.",
+            "examples": [
+              1
+            ],
             "format": "int64",
+            "readOnly": true,
             "type": "integer"
           },
-          "tenantId": {
-            "description": "Application CID of the tenant.",
-            "example": "fa451230e38a11ef8a28061d9656",
-            "format": "const",
+          "id": {
+            "description": "Unique identifier of the tenant.",
+            "examples": [
+              "fa451230e38a11ef8a28061d9656"
+            ],
+            "maxLength": 128,
             "type": "string"
           },
           "tenantName": {
             "description": "Name of the tenant.",
-            "example": "Tenant A",
+            "examples": [
+              "Tenant A"
+            ],
             "format": "const",
+            "maxLength": 256,
             "type": "string"
           },
           "totalSites": {
             "description": "The total number of sites belonging to the tenant.",
-            "example": 8,
+            "examples": [
+              8
+            ],
             "format": "int32",
             "type": "integer"
+          },
+          "type": {
+            "description": "The resource type, unique across the API group and prefixed by the API group name.",
+            "examples": [
+              "network-msp/tenant"
+            ],
+            "maxLength": 128,
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "RFC 3339 timestamp indicating when the tenant details were last updated.",
+            "examples": [
+              "2024-11-23T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
           }
         },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
         "type": "object"
       },
       "Next": {
         "description": "Specifies the pagination cursor for the next page of resources.",
-        "example": "2",
+        "examples": [
+          "2"
+        ],
         "format": "const",
         "type": "string"
       },
@@ -528,23 +651,62 @@
         "description": "Not Found error details returned from the server.\n",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdmsp"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
             "enum": [
               "HPE_GL_ERROR_NOT_FOUND"
             ],
-            "example": "HPE_GL_ERROR_NOT_FOUND",
+            "examples": [
+              "HPE_GL_ERROR_NOT_FOUND"
+            ],
             "format": "const",
             "maxLength": 256,
             "type": "string"
           },
           "httpStatusCode": {
             "description": "HTTP status code.\n",
-            "example": 404,
+            "examples": [
+              404
+            ],
             "maximum": 404,
             "minimum": 404,
+            "type": "integer"
+          },
+          "message": {
+            "$ref": "#/components/schemas/ErrorMessagemsp"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
+        ],
+        "type": "object"
+      },
+      "ServiceUnavailableError": {
+        "description": "Service unavailable error details returned from the server.\n",
+        "properties": {
+          "debugId": {
+            "$ref": "#/components/schemas/DebugId"
+          },
+          "errorCode": {
+            "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
+            "examples": [
+              "HPE_GL_ERROR_SERVICE_UNAVAILABLE"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.\n",
+            "examples": [
+              503
+            ],
+            "maximum": 503,
+            "minimum": 503,
             "type": "integer"
           },
           "message": {
@@ -559,8 +721,11 @@
         ],
         "type": "object"
       },
-      "Sort": {
-        "default": "alerts DESC",
+      "Sortmsp": {
+        "default": "alerts desc",
+        "examples": [
+          "alerts desc"
+        ],
         "format": "const",
         "maxLength": 256,
         "type": "string"
@@ -600,23 +765,27 @@
         "description": "Unauthorized error details returned from the server.\n",
         "properties": {
           "debugId": {
-            "$ref": "#/components/schemas/DebugId"
+            "$ref": "#/components/schemas/DebugIdmsp"
           },
           "errorCode": {
             "description": "* A unique machine-friendly, but human-readable identifier for the error. It has prefix HPE_GL_.\n* For more details regarding error please refer to error message\n",
-            "example": "HPE_GL_ERROR_UNAUTHORIZED",
+            "examples": [
+              "HPE_GL_ERROR_UNAUTHORIZED"
+            ],
             "maxLength": 256,
             "type": "string"
           },
           "httpStatusCode": {
             "description": "HTTP status code.\n",
-            "example": 401,
+            "examples": [
+              401
+            ],
             "maximum": 401,
             "minimum": 401,
             "type": "integer"
           },
           "message": {
-            "$ref": "#/components/schemas/ErrorMessage"
+            "$ref": "#/components/schemas/ErrorMessagemsp"
           }
         },
         "required": [
@@ -652,19 +821,19 @@
   },
   "openapi": "3.1.0",
   "paths": {
-    "/network-msp/v1/list-tenants": {
+    "/network-msp/v2/list-tenants": {
       "get": {
         "description": "This API provides the list of tenants for an MSP. Tenants list includes details like tenant name, tenant CID, sites count, devices count with health status, alerts count, etc. The query parameters allow you to narrow down the results that meet specific criteria, ensuring you receive only the relevant data.",
-        "operationId": "listTenantsV1",
+        "operationId": "listTenantsV2",
         "parameters": [
           {
-            "$ref": "#/components/parameters/Filter"
+            "$ref": "#/components/parameters/Filtermsp"
           },
           {
-            "$ref": "#/components/parameters/Sort"
+            "$ref": "#/components/parameters/Sortmsp"
           },
           {
-            "$ref": "#/components/parameters/Limit"
+            "$ref": "#/components/parameters/Limitmsp"
           },
           {
             "$ref": "#/components/parameters/Next"
@@ -672,7 +841,7 @@
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/ListTenantsResponse"
+            "$ref": "#/components/responses/ListTenantsResponsemsp"
           },
           "400": {
             "$ref": "#/components/responses/BadRequestError"
@@ -691,6 +860,9 @@
           },
           "500": {
             "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
