@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0.4] - 2026-10-30
+
+### Fixed
+- **`central_get_scope_tree` works again**, and with it `central_get_scope_resources`, `central_get_committed_config`, `central_get_effective_config` and `central_get_scope_diagram`. The scope tree was built from `cnxdevice/v1/debug/get_scope_data`, which Central retired: it now returns `404 Route Not Found` (`HPE_GL_NETWORKING_ERROR_NOT_FOUND`), so every scope-tree tool failed with "Error building scope tree". The tree is now read from the network-config scope routes (new `platforms/central/scope_fetch.py`):
+  - global scope, site-collections, sites and device-groups from `network-config/v1` (documented);
+  - the device inventory from `network-monitoring/v1/devices` (model, MAC, device function → persona via `network-config/v1alpha1/device-persona-mapping`);
+  - each device's scope from the paged `network-config/v1alpha1/devices` list (scopeId, siteId, deviceGroupId). If that route is unavailable, it falls back to one documented `GET network-config/v1/hierarchy?type=device` per device. The fallback is rate-limited (about a minute for 700 devices), so the bulk list is tried first.
+
+  Scope maps still come from `network-config/v1alpha1/scope-maps` (unchanged, live). Node shape, types (GLOBAL, SITE_COLLECTION, SITE, DEVICE_COLLECTION, DEVICE) and the tree builder are unchanged. Live-verified read-only on three tenants: 12 nodes in 2.2 s, 746 nodes in 5.4 s, and 6 nodes in 1.9 s, each rooted at the tenant's global scope. Adds `test_central_scope_fetch.py` (route set, paths, persona, bulk/fallback parity, tree build).
+
 ## [3.7.0.3] - 2026-10-27
 
 ### Fixed
