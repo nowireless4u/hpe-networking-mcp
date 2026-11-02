@@ -1075,6 +1075,27 @@
           }
         }
       },
+      "Conflict": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ConflictError"
+            }
+          }
+        },
+        "description": "A request is already outstanding for this Idempotency-Key.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "DeletedDeviceResponseV1": {
         "description": "The device has been successfully deleted.",
         "headers": {
@@ -2701,6 +2722,27 @@
           }
         }
       },
+      "ServiceUnavailablerouting": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ServiceUnavailableError"
+            }
+          }
+        },
+        "description": "Service temporarily unavailable.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "SiteHealthResponse": {
         "content": {
           "application/json": {
@@ -3345,6 +3387,27 @@
           }
         }
       },
+      "UnprocessableContent": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnprocessableContentError"
+            }
+          }
+        },
+        "description": "Idempotency-Key has already been used with a different request payload.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
       "UnsupportedMediaType": {
         "content": {
           "application/json": {
@@ -3354,6 +3417,27 @@
           }
         },
         "description": "Unsupported Media Type. The request payload format is not supported by the server.",
+        "headers": {
+          "X-RateLimit-Limit": {
+            "$ref": "#/components/headers/XRateLimitLimit"
+          },
+          "X-RateLimit-Remaining": {
+            "$ref": "#/components/headers/XRateLimitRemaining"
+          },
+          "X-RateLimit-Reset": {
+            "$ref": "#/components/headers/XRateLimitReset"
+          }
+        }
+      },
+      "UnsupportedMediaTyperouting": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UnsupportedMediaTypeError"
+            }
+          }
+        },
+        "description": "Unsupported media type.",
         "headers": {
           "X-RateLimit-Limit": {
             "$ref": "#/components/headers/XRateLimitLimit"
@@ -3507,11 +3591,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/tunnels/Tunnel1~Primary",
           "metric": "jitter",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -3535,15 +3619,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -3557,6 +3637,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -3565,7 +3648,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -3591,11 +3675,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001",
           "metric": "ap_throughput",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -3620,15 +3704,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -3642,6 +3722,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -3650,7 +3733,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -3667,11 +3751,11 @@
                 ],
                 "timestamp": "2022-07-30T19:38:16Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001",
           "metric": "cpu_utilization",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -3695,15 +3779,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -3717,6 +3797,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -3725,7 +3808,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -4056,11 +4140,11 @@
                 ],
                 "timestamp": "2022-07-30T21:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001",
           "metric": "memory_utilization",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -4084,15 +4168,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -4106,6 +4186,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -4114,7 +4197,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -4148,11 +4232,11 @@
           "portIndex": {
             "$ref": "#/components/schemas/portIndex"
           },
-          "portStatus": {
-            "$ref": "#/components/schemas/portStatus"
-          },
           "speed": {
             "$ref": "#/components/schemas/speed"
+          },
+          "status": {
+            "$ref": "#/components/schemas/portStatus"
           },
           "vlanMode": {
             "$ref": "#/components/schemas/vlanMode"
@@ -4178,11 +4262,11 @@
                 ],
                 "timestamp": "2022-07-30T21:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001",
           "metric": "power_consumption",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -4206,15 +4290,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -4228,6 +4308,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -4236,7 +4319,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -5137,11 +5221,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/wlans/wlan1",
           "metric": "wlan_throughput",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -5166,15 +5250,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -5188,6 +5268,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -5196,7 +5279,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -6001,6 +6085,421 @@
         "description": "Authentication type used by the client to connect with the device.",
         "example": "Captive Portal",
         "type": "string"
+      },
+      "BGPNeighbor": {
+        "properties": {
+          "address": {
+            "description": "IP address of the BGP neighbor.",
+            "type": "string"
+          },
+          "asn": {
+            "description": "Autonomous System Number of the BGP neighbor.",
+            "type": "integer"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "Optional user-defined description of the BGP neighbor.",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "holdTimeInSecs": {
+            "description": "BGP hold time in seconds. If no keepalive or update is received within this period, the session is considered down.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "isIbgp": {
+            "description": "Whether this is an iBGP (internal BGP) neighbor.",
+            "type": "boolean"
+          },
+          "keepAliveTimeInSecs": {
+            "description": "BGP keepalive interval in seconds.",
+            "type": "integer"
+          },
+          "nexthopAddress": {
+            "description": "Next-hop IP address advertised by this neighbor.",
+            "type": "string"
+          },
+          "recvPathCount": {
+            "description": "Number of paths (routes) received from this neighbor.",
+            "type": "integer"
+          },
+          "routerId": {
+            "description": "Router ID of the BGP neighbor.",
+            "type": "string"
+          },
+          "sentPathCount": {
+            "description": "Number of paths (routes) sent to this neighbor.",
+            "type": "integer"
+          },
+          "sourceAddress": {
+            "description": "Local source IP address used for the BGP session.",
+            "type": "string"
+          },
+          "state": {
+            "description": "Current BGP session state (e.g., Idle, Connect, Active, OpenSent, OpenConfirm, Established).",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-bgp-neighbor",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-bgp-neighbor"
+            ],
+            "type": "string"
+          },
+          "upTime": {
+            "description": "Duration the BGP session has been in Established state (human-readable, e.g., '2d 5h 30m').",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "BGPNeighborDetailResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "examples": [
+              1
+            ],
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of BGP neighbor detail items.",
+            "items": {
+              "$ref": "#/components/schemas/BGPNeighborDetails"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "BGPNeighborDetails": {
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "keepaliveRx": {
+            "description": "Number of KEEPALIVE messages received.",
+            "type": "integer"
+          },
+          "keepaliveTx": {
+            "description": "Number of KEEPALIVE messages sent.",
+            "type": "integer"
+          },
+          "notificationRx": {
+            "description": "Number of NOTIFICATION messages received.",
+            "type": "integer"
+          },
+          "notificationTx": {
+            "description": "Number of NOTIFICATION messages sent.",
+            "type": "integer"
+          },
+          "numExportedRoutes": {
+            "description": "Number of routes exported (advertised) to this neighbor.",
+            "type": "integer"
+          },
+          "numImportedRoutes": {
+            "description": "Number of routes imported (accepted) from this neighbor.",
+            "type": "integer"
+          },
+          "numPreferredRoutes": {
+            "description": "Number of routes from this neighbor selected as preferred (best path).",
+            "type": "integer"
+          },
+          "openRx": {
+            "description": "Number of OPEN messages received.",
+            "type": "integer"
+          },
+          "openTx": {
+            "description": "Number of OPEN messages sent.",
+            "type": "integer"
+          },
+          "preference": {
+            "description": "Local preference value for routes from this neighbor.",
+            "type": "integer"
+          },
+          "tcpConnectionState": {
+            "description": "State of the underlying TCP connection (e.g., ESTABLISHED, CLOSE_WAIT).",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-bgp-neighbor-detail",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-bgp-neighbor-detail"
+            ],
+            "type": "string"
+          },
+          "updateRx": {
+            "description": "Number of UPDATE messages received.",
+            "type": "integer"
+          },
+          "updateTx": {
+            "description": "Number of UPDATE messages sent.",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "BGPNeighborsResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/BGPNeighbor"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/BGPSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "BGPRoute": {
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "length": {
+            "description": "Prefix length (subnet mask length in bits).",
+            "type": "integer"
+          },
+          "nexthop": {
+            "description": "Next-hop information for this BGP route.",
+            "properties": {
+              "address": {
+                "description": "Next-hop IP address for this route.",
+                "type": "string"
+              },
+              "asPath": {
+                "description": "AS_PATH attribute showing the sequence of ASNs traversed.",
+                "type": "string"
+              },
+              "community": {
+                "description": "BGP community attributes associated with this route.",
+                "type": "string"
+              },
+              "extendedCommunity": {
+                "description": "BGP extended community attributes associated with this route.",
+                "type": "string"
+              },
+              "igpNexthop": {
+                "description": "IGP next-hop address used to reach the BGP next-hop.",
+                "type": "string"
+              },
+              "isBestPath": {
+                "description": "Whether this route is selected as the best path.",
+                "type": "boolean"
+              },
+              "localPreference": {
+                "description": "LOCAL_PREF attribute value (higher is more preferred).",
+                "type": "integer"
+              },
+              "metric": {
+                "description": "Multi-Exit Discriminator (MED) value.",
+                "type": "integer"
+              },
+              "origin": {
+                "description": "BGP origin attribute (IGP, EGP, or incomplete).",
+                "type": "string"
+              },
+              "peerGroup": {
+                "description": "Name of the peer group this route was learned from.",
+                "type": "string"
+              },
+              "routeSource": {
+                "description": "Source of the route (e.g., eBGP, iBGP, local).",
+                "type": "string"
+              },
+              "routerId": {
+                "description": "Router ID of the BGP peer that advertised this route.",
+                "type": "string"
+              },
+              "status": {
+                "description": "Route status flags (e.g., valid, best, internal).",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "prefix": {
+            "description": "Network prefix (IP address) of the BGP route.",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-bgp-route",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-bgp-route"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "BGPRoutesResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/BGPRoute"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "BGPSummary": {
+        "properties": {
+          "adminStatus": {
+            "description": "Administrative status of BGP (e.g., enabled, disabled).",
+            "type": "string"
+          },
+          "asn": {
+            "description": "Local Autonomous System Number (ASN).",
+            "type": "integer"
+          },
+          "numNeighbors": {
+            "description": "Total number of configured BGP neighbors.",
+            "type": "integer"
+          },
+          "numRoutes": {
+            "description": "Total number of BGP routes in the routing table.",
+            "type": "integer"
+          },
+          "routerId": {
+            "description": "BGP router identifier (IP address).",
+            "type": "string"
+          },
+          "upNeighbors": {
+            "description": "Number of BGP neighbors in Established state.",
+            "type": "integer"
+          }
+        },
+        "type": "object"
       },
       "BadRequestError": {
         "description": "Bad request error details returned from the server.",
@@ -14844,6 +15343,32 @@
         ],
         "type": "string"
       },
+      "MutationResponse": {
+        "description": "Response returned by mutation (reset) operations. The action is fire-and-forget; a successful response indicates the reset command was accepted.",
+        "properties": {
+          "data": {
+            "description": "Mutation result payload. For reset operations this object is empty, indicating the command was accepted successfully.",
+            "properties": {
+              "message": {
+                "description": "Human-readable message describing the result.",
+                "examples": [
+                  "Reset command accepted"
+                ],
+                "type": "string"
+              },
+              "status": {
+                "description": "Status of the mutation operation.",
+                "examples": [
+                  "accepted"
+                ],
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "Name": {
         "example": "GE 0/0/2",
         "maxLength": 16,
@@ -15012,6 +15537,459 @@
         "format": "const",
         "maxLength": 256,
         "type": "string"
+      },
+      "OSPFArea": {
+        "properties": {
+          "areaId": {
+            "description": "OSPF area identifier (dotted-decimal notation).",
+            "type": "string"
+          },
+          "areaType": {
+            "description": "Type of OSPF area (e.g., normal, stub, nssa, totally-stub).",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "defaultCost": {
+            "description": "Default cost for summary routes injected into stub/NSSA areas.",
+            "type": "integer"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "interfaceCount": {
+            "description": "Number of interfaces in this area.",
+            "type": "integer"
+          },
+          "spfRunCount": {
+            "description": "Number of times SPF has been computed for this area.",
+            "type": "integer"
+          },
+          "summaryEnable": {
+            "description": "Whether summary LSA generation is enabled for this area.",
+            "type": "boolean"
+          },
+          "type": {
+            "const": "network-monitoring/routing-ospf-area",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-ospf-area"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OSPFAreasResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OSPFArea"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OSPFSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OSPFDatabaseResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OSPFLSA"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OSPFSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OSPFInterface": {
+        "properties": {
+          "address": {
+            "description": "IP address assigned to this interface.",
+            "type": "string"
+          },
+          "areaId": {
+            "description": "OSPF area ID this interface belongs to.",
+            "type": "string"
+          },
+          "cost": {
+            "description": "OSPF cost metric for this interface.",
+            "type": "integer"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "mask": {
+            "description": "Subnet mask of the interface.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the network interface.",
+            "type": "string"
+          },
+          "neighborCount": {
+            "description": "Number of OSPF neighbors on this interface.",
+            "type": "integer"
+          },
+          "operState": {
+            "description": "Operational state of the interface (e.g., up, down).",
+            "type": "string"
+          },
+          "state": {
+            "description": "OSPF interface state (e.g., DR, BDR, DROther, PointToPoint, Down).",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-ospf-interface",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-ospf-interface"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OSPFInterfacesResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OSPFInterface"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OSPFSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OSPFLSA": {
+        "properties": {
+          "age": {
+            "description": "LSA age in seconds since origination.",
+            "type": "integer"
+          },
+          "areaId": {
+            "description": "OSPF area ID where this LSA resides.",
+            "type": "string"
+          },
+          "checksum": {
+            "description": "LSA checksum (hexadecimal).",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "linkCount": {
+            "description": "Number of links described in this LSA (applicable to Router LSAs).",
+            "type": "integer"
+          },
+          "lsId": {
+            "description": "Link-State ID of the LSA.",
+            "type": "string"
+          },
+          "lsaType": {
+            "description": "LSA type (e.g., Router, Network, Summary, ASBR-Summary, External).",
+            "type": "string"
+          },
+          "routerId": {
+            "description": "Router ID of the originator of this LSA.",
+            "type": "string"
+          },
+          "seqNo": {
+            "description": "LSA sequence number (hexadecimal).",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-ospf-lsa",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-ospf-lsa"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OSPFNeighbor": {
+        "properties": {
+          "address": {
+            "description": "IP address of the OSPF neighbor.",
+            "type": "string"
+          },
+          "areaId": {
+            "description": "OSPF area ID for this adjacency.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "deadTimerInSecs": {
+            "description": "Dead timer interval in seconds. If no Hello is received within this period, the neighbor is declared down.",
+            "type": "integer"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "interfaceName": {
+            "description": "Name of the local interface connected to this neighbor.",
+            "type": "string"
+          },
+          "interfaceState": {
+            "description": "OSPF state of the local interface (e.g., DR, BDR, DROther).",
+            "type": "string"
+          },
+          "neighborId": {
+            "description": "OSPF router ID of the neighbor.",
+            "type": "string"
+          },
+          "neighborState": {
+            "description": "OSPF neighbor state (e.g., Init, 2-Way, ExStart, Exchange, Loading, Full).",
+            "type": "string"
+          },
+          "priority": {
+            "description": "Router priority used in DR/BDR election.",
+            "type": "integer"
+          },
+          "rexmtTimerInSecs": {
+            "description": "Retransmission timer interval in seconds for LSA retransmissions.",
+            "type": "integer"
+          },
+          "type": {
+            "const": "network-monitoring/routing-ospf-neighbor",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-ospf-neighbor"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OSPFNeighborsResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OSPFNeighbor"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OSPFSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OSPFSummary": {
+        "properties": {
+          "activeLsaCount": {
+            "description": "Number of active LSAs in the link-state database.",
+            "type": "integer"
+          },
+          "adminStatus": {
+            "description": "Administrative status of OSPF (e.g., enabled, disabled).",
+            "type": "string"
+          },
+          "areaCount": {
+            "description": "Number of OSPF areas configured.",
+            "type": "integer"
+          },
+          "interfaceCount": {
+            "description": "Number of OSPF-enabled interfaces.",
+            "type": "integer"
+          },
+          "maxRoutes": {
+            "description": "Maximum number of OSPF routes supported.",
+            "type": "integer"
+          },
+          "neighborCount": {
+            "description": "Number of OSPF neighbors.",
+            "type": "integer"
+          },
+          "rexmtLsaCount": {
+            "description": "Number of LSAs pending retransmission.",
+            "type": "integer"
+          },
+          "routerId": {
+            "description": "OSPF router identifier (IP address).",
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "OccurredAt": {
         "description": "Specifies the transition time of the client.",
@@ -15455,6 +16433,492 @@
         ],
         "type": "object"
       },
+      "OverlayAdvertisedRoute": {
+        "properties": {
+          "age": {
+            "description": "Time since this route was installed (human-readable).",
+            "type": "string"
+          },
+          "attrs": {
+            "description": "Additional route attributes.",
+            "properties": {
+              "cost": {
+                "description": "Route cost metric.",
+                "type": "integer"
+              },
+              "segmentId": {
+                "description": "Overlay segment identifier for this route.",
+                "type": "integer"
+              },
+              "vlanId": {
+                "description": "VLAN identifier associated with this route.",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "flags": {
+            "description": "Route flags indicating route properties.",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "interface": {
+            "description": "Overlay tunnel interface for this route.",
+            "type": "string"
+          },
+          "length": {
+            "description": "Prefix length (subnet mask length in bits).",
+            "type": "integer"
+          },
+          "metric": {
+            "description": "Route metric used for path selection.",
+            "type": "integer"
+          },
+          "nexthop": {
+            "description": "IP address of the next-hop for this advertised route.",
+            "type": "string"
+          },
+          "prefix": {
+            "description": "Network prefix (IP address) of the advertised overlay route.",
+            "type": "string"
+          },
+          "routeFlags": {
+            "description": "Additional route-specific flags.",
+            "type": "string"
+          },
+          "source": {
+            "description": "Source of the route.",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-overlay-advertised-route",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-overlay-advertised-route"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OverlayBestRoute": {
+        "properties": {
+          "age": {
+            "description": "Time since this route was installed (human-readable).",
+            "type": "string"
+          },
+          "attrs": {
+            "description": "Additional route attributes.",
+            "properties": {
+              "cost": {
+                "description": "Route cost metric.",
+                "type": "integer"
+              },
+              "segmentId": {
+                "description": "Overlay segment identifier for this route.",
+                "type": "integer"
+              },
+              "vlanId": {
+                "description": "VLAN identifier associated with this route.",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "flags": {
+            "description": "Route flags indicating route properties.",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "interface": {
+            "description": "Overlay tunnel interface for this route.",
+            "type": "string"
+          },
+          "length": {
+            "description": "Prefix length (subnet mask length in bits).",
+            "type": "integer"
+          },
+          "metric": {
+            "description": "Route metric used for path selection.",
+            "type": "integer"
+          },
+          "nexthop": {
+            "description": "IP address of the next-hop for this best route.",
+            "type": "string"
+          },
+          "prefix": {
+            "description": "Network prefix (IP address) of the best overlay route.",
+            "type": "string"
+          },
+          "routeFlags": {
+            "description": "Additional route-specific flags.",
+            "type": "string"
+          },
+          "source": {
+            "description": "Source of the route (e.g., the overlay peer that advertised it).",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-overlay-best-route",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-overlay-best-route"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OverlayConnectionResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OverlayPeer"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OverlaySummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OverlayInterface": {
+        "properties": {
+          "address": {
+            "description": "IP address of the overlay tunnel endpoint.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the overlay tunnel interface.",
+            "type": "string"
+          },
+          "routesLearned": {
+            "description": "Number of routes learned via this overlay interface.",
+            "type": "integer"
+          },
+          "state": {
+            "description": "Operational state of the overlay interface (e.g., up, down).",
+            "type": "string"
+          },
+          "tunnelId": {
+            "description": "Unique identifier for the overlay tunnel.",
+            "type": "integer"
+          },
+          "type": {
+            "const": "network-monitoring/routing-overlay-interface",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-overlay-interface"
+            ],
+            "type": "string"
+          },
+          "upTime": {
+            "description": "Duration the overlay interface has been in up state (human-readable, e.g., '2d 5h 30m').",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OverlayInterfacesResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OverlayInterface"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OverlaySummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OverlayLearnedRoute": {
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "learnTime": {
+            "description": "Timestamp or duration since this route was learned.",
+            "type": "string"
+          },
+          "length": {
+            "description": "Prefix length (subnet mask length in bits).",
+            "type": "integer"
+          },
+          "nexthop": {
+            "description": "Next-hop information for this overlay learned route.",
+            "properties": {
+              "address": {
+                "description": "IP address of the next-hop overlay peer.",
+                "type": "string"
+              },
+              "flags": {
+                "description": "Route flags indicating route properties.",
+                "type": "string"
+              },
+              "interface": {
+                "description": "Overlay tunnel interface through which this route was learned.",
+                "type": "string"
+              },
+              "isBest": {
+                "description": "Whether this is the best (preferred) route for the prefix.",
+                "type": "boolean"
+              },
+              "metric": {
+                "description": "Route metric used for path selection.",
+                "type": "integer"
+              },
+              "protocol": {
+                "description": "Protocol from which this route was redistributed (e.g., static, connected, bgp).",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "prefix": {
+            "description": "Network prefix (IP address) of the learned overlay route.",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-overlay-learned-route",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-overlay-learned-route"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "OverlayPeer": {
+        "properties": {
+          "channelDownCount": {
+            "description": "Number of times the control channel has gone down.",
+            "type": "integer"
+          },
+          "channelState": {
+            "description": "State of the overlay control channel (e.g., up, down, connecting).",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "disconnectReason": {
+            "description": "Reason for the last disconnection.",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "keepalivePending": {
+            "description": "Number of keepalive messages pending acknowledgment.",
+            "type": "integer"
+          },
+          "keepaliveRcvd": {
+            "description": "Number of keepalive messages received from this peer.",
+            "type": "integer"
+          },
+          "keepaliveSent": {
+            "description": "Number of keepalive messages sent to this peer.",
+            "type": "integer"
+          },
+          "lastDisconnect": {
+            "description": "Timestamp of the last disconnection event.",
+            "type": "string"
+          },
+          "master": {
+            "description": "Whether this peer is the master in the overlay relationship.",
+            "type": "boolean"
+          },
+          "routesAdvertised": {
+            "description": "Number of routes advertised to this peer.",
+            "type": "integer"
+          },
+          "routesLearned": {
+            "description": "Number of routes learned from this peer.",
+            "type": "integer"
+          },
+          "tunnelCount": {
+            "description": "Number of tunnels established with this peer.",
+            "type": "integer"
+          },
+          "type": {
+            "const": "network-monitoring/routing-overlay-peer",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-overlay-peer"
+            ],
+            "type": "string"
+          },
+          "upDownTime": {
+            "description": "Duration the peer has been in its current state (human-readable, e.g., '2d 5h 30m').",
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "vgwHaStatus": {
+            "description": "Virtual Gateway HA status (e.g., active, standby, none).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "OverlayResponse": {
         "properties": {
           "code": {
@@ -15473,6 +16937,148 @@
               "PARTIAL_SUCCESS"
             ],
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OverlayRoutesAdvertisedResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OverlayAdvertisedRoute"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OverlaySummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OverlayRoutesBestResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OverlayBestRoute"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OverlaySummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OverlayRoutesLearnedResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/OverlayLearnedRoute"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/OverlaySummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "OverlaySummary": {
+        "properties": {
+          "adminStatus": {
+            "description": "Administrative status of the overlay protocol (e.g., enabled, disabled).",
+            "type": "string"
+          },
+          "advertisedRouteCount": {
+            "description": "Number of routes advertised to overlay peers.",
+            "type": "integer"
+          },
+          "deviceId": {
+            "description": "Unique identifier of the device in the overlay network.",
+            "type": "string"
+          },
+          "learnedRouteCount": {
+            "description": "Number of routes learned from overlay peers.",
+            "type": "integer"
+          },
+          "macAddress": {
+            "description": "MAC address of the device in the overlay network.",
+            "type": "string"
+          },
+          "operState": {
+            "description": "Operational state of the overlay protocol (e.g., up, down).",
+            "type": "string"
+          },
+          "routeCount": {
+            "description": "Total number of overlay routes.",
+            "type": "integer"
+          },
+          "tunnelCount": {
+            "description": "Number of active overlay tunnels.",
+            "type": "integer"
           }
         },
         "type": "object"
@@ -16031,11 +17637,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/ports/0",
           "metric": "collision",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16060,15 +17666,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16082,6 +17684,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16090,7 +17695,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16109,11 +17715,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/ports/0",
           "metric": "crc",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16138,15 +17744,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16160,6 +17762,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16168,7 +17773,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16191,11 +17797,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/ports/0",
           "metric": "frames",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16222,15 +17828,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16244,6 +17846,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16252,7 +17857,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16290,7 +17896,7 @@
                       "$ref": "#/components/schemas/duplex"
                     },
                     "id": {
-                      "$ref": "#/components/schemas/RadioIdentifier"
+                      "$ref": "#/components/schemas/PortIdentifier"
                     },
                     "isUplink": {
                       "$ref": "#/components/schemas/isUplink"
@@ -16304,14 +17910,14 @@
                     "nativeVlan": {
                       "$ref": "#/components/schemas/nativeVlan"
                     },
-                    "porStatus": {
-                      "$ref": "#/components/schemas/portStatus"
-                    },
                     "portIndex": {
                       "$ref": "#/components/schemas/portIndex"
                     },
                     "speed": {
                       "$ref": "#/components/schemas/speed"
+                    },
+                    "status": {
+                      "$ref": "#/components/schemas/portStatus"
                     },
                     "type": {
                       "$ref": "#/components/schemas/Type"
@@ -16395,11 +18001,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/ports/0",
           "metric": "port_throughput",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16424,15 +18030,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16446,6 +18048,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16454,7 +18059,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16667,11 +18273,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/radios/0",
           "metric": "channel_quality",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16695,15 +18301,11 @@
                 },
                 "maxItems": 36,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16717,6 +18319,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16725,7 +18330,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16746,11 +18352,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/radios/0",
           "metric": "channel_utilization",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16776,15 +18382,11 @@
                 },
                 "maxItems": 36,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16798,6 +18400,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16806,7 +18411,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16825,11 +18431,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/radios/0",
           "metric": "frames",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16854,15 +18460,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16876,6 +18478,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16884,7 +18489,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -16901,11 +18507,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/radios/0",
           "metric": "noise_floor",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -16929,15 +18535,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -16951,6 +18553,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -16959,8 +18564,495 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
+        "type": "object"
+      },
+      "RIPInterface": {
+        "properties": {
+          "address": {
+            "description": "IP address assigned to this interface.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "mask": {
+            "description": "Subnet mask of the interface.",
+            "type": "string"
+          },
+          "metric": {
+            "description": "RIP metric (hop count) added to routes learned on this interface.",
+            "type": "integer"
+          },
+          "name": {
+            "description": "Name of the network interface.",
+            "type": "string"
+          },
+          "neighborCount": {
+            "description": "Number of RIP neighbors on this interface.",
+            "type": "integer"
+          },
+          "nextUpdate": {
+            "description": "Time remaining until the next scheduled RIP update on this interface.",
+            "type": "string"
+          },
+          "state": {
+            "description": "Operational state of the RIP interface (e.g., up, down).",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-rip-interface",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-rip-interface"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RIPInterfacesResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/RIPInterface"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/RIPSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "RIPNeighbor": {
+        "properties": {
+          "address": {
+            "description": "IP address of the RIP neighbor.",
+            "type": "string"
+          },
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "interfaceName": {
+            "description": "Name of the local interface connected to this neighbor.",
+            "type": "string"
+          },
+          "lastSeen": {
+            "description": "Timestamp or duration since the last update was received from this neighbor.",
+            "type": "string"
+          },
+          "metric": {
+            "description": "RIP metric (hop count) for routes from this neighbor.",
+            "type": "integer"
+          },
+          "routes": {
+            "description": "Number of routes learned from this neighbor.",
+            "type": "integer"
+          },
+          "type": {
+            "const": "network-monitoring/routing-rip-neighbor",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-rip-neighbor"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RIPNeighborsResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/RIPNeighbor"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/RIPSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "RIPRoute": {
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "length": {
+            "description": "Prefix length (subnet mask length in bits).",
+            "type": "integer"
+          },
+          "nexthop": {
+            "description": "Next-hop information for this RIP route.",
+            "properties": {
+              "address": {
+                "description": "IP address of the next-hop gateway.",
+                "type": "string"
+              },
+              "expireTime": {
+                "description": "Time remaining before this route expires (becomes invalid).",
+                "type": "string"
+              },
+              "metric": {
+                "description": "RIP metric (hop count) for this route.",
+                "type": "integer"
+              },
+              "tag": {
+                "description": "Route tag used for policy-based filtering.",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          },
+          "prefix": {
+            "description": "Network prefix (IP address) of the RIP route.",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-rip-route",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-rip-route"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RIPRoutesResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/RIPRoute"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/RIPSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "RIPSummary": {
+        "properties": {
+          "adminStatus": {
+            "description": "Administrative status of RIP (e.g., enabled, disabled).",
+            "type": "string"
+          },
+          "ecmpCount": {
+            "description": "Maximum number of equal-cost multipath (ECMP) routes allowed.",
+            "type": "integer"
+          },
+          "flushTimerInSecs": {
+            "description": "Time in seconds after which an invalid route is removed from the table.",
+            "type": "integer"
+          },
+          "infinityCost": {
+            "description": "Metric value representing an unreachable route (typically 16).",
+            "type": "integer"
+          },
+          "interfaceCount": {
+            "description": "Number of RIP-enabled interfaces.",
+            "type": "integer"
+          },
+          "invalidTimerInSecs": {
+            "description": "Time in seconds after which a route without updates is marked invalid.",
+            "type": "integer"
+          },
+          "neighborCount": {
+            "description": "Number of RIP neighbors.",
+            "type": "integer"
+          },
+          "routeCount": {
+            "description": "Number of routes in the RIP routing table.",
+            "type": "integer"
+          },
+          "updateTimerInSecs": {
+            "description": "Interval in seconds between periodic RIP route updates.",
+            "type": "integer"
+          },
+          "version": {
+            "description": "RIP protocol version (e.g., RIPv1, RIPv2).",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "RTMRoute": {
+        "properties": {
+          "createdAt": {
+            "description": "Creation timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "generation": {
+            "description": "Resource generation.",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Unique identifier for the resource.",
+            "type": "string"
+          },
+          "length": {
+            "description": "Prefix length (subnet mask length in bits).",
+            "type": "integer"
+          },
+          "nexthop": {
+            "description": "Next-hop information for this route.",
+            "properties": {
+              "address": {
+                "description": "IP address of the next-hop gateway.",
+                "type": "string"
+              },
+              "adminDistance": {
+                "description": "Administrative distance (route preference value; lower is more preferred).",
+                "type": "integer"
+              },
+              "flags": {
+                "description": "Route flags indicating route properties (e.g., up, gateway, host).",
+                "type": "string"
+              },
+              "interface": {
+                "description": "Outgoing network interface for this route.",
+                "type": "string"
+              },
+              "metric": {
+                "description": "Route metric used for path selection.",
+                "type": "integer"
+              },
+              "protocol": {
+                "description": "Routing protocol that installed this route (e.g., static, bgp, ospf, rip, connected).",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "prefix": {
+            "description": "Network prefix (IP address) of the route.",
+            "type": "string"
+          },
+          "type": {
+            "const": "network-monitoring/routing-route",
+            "description": "Resource type identifier.",
+            "examples": [
+              "network-monitoring/routing-route"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "description": "Last update timestamp.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "generation",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "RTMRoutesResponse": {
+        "properties": {
+          "count": {
+            "description": "Number of items in the current page.",
+            "type": "integer"
+          },
+          "items": {
+            "description": "List of resource items.",
+            "items": {
+              "$ref": "#/components/schemas/RTMRoute"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "Cursor for the next page of results. Null when there are no more pages.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "$ref": "#/components/schemas/RTMSummary"
+          },
+          "total": {
+            "description": "Total number of items across all pages.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "count",
+          "next"
+        ],
+        "type": "object"
+      },
+      "RTMSummary": {
+        "properties": {
+          "connected": {
+            "description": "Number of directly connected routes.",
+            "type": "integer"
+          },
+          "default": {
+            "description": "Number of default routes.",
+            "type": "integer"
+          },
+          "dynamic": {
+            "description": "Number of dynamically learned routes.",
+            "type": "integer"
+          },
+          "maximum": {
+            "description": "Maximum number of routes supported.",
+            "type": "integer"
+          },
+          "overlay": {
+            "description": "Number of overlay routes.",
+            "type": "integer"
+          },
+          "static": {
+            "description": "Number of static routes.",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Total number of routes in the routing table.",
+            "type": "integer"
+          }
+        },
         "type": "object"
       },
       "RadioBand": {
@@ -17182,11 +19274,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/radios/0",
           "metric": "radio_throughput",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -17211,15 +19303,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -17233,6 +19321,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -17241,7 +19332,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -21345,11 +23437,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "AP00000001/tunnels/Tunnel1~Primary",
           "metric": "tunnel_throughput",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -21374,15 +23466,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -21396,6 +23484,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -21404,7 +23495,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -21546,6 +23638,51 @@
         "required": [
           "id",
           "type"
+        ],
+        "type": "object"
+      },
+      "UnprocessableContentError": {
+        "description": "Unprocessable content error returned when the Idempotency-Key has already been used with a different request payload.",
+        "properties": {
+          "debugId": {
+            "description": "A unique identifier used for troubleshooting and debugging purposes.",
+            "examples": [
+              "78f002e32e0cefba3d8cc94fa8179342"
+            ],
+            "maxLength": 512,
+            "type": "string"
+          },
+          "errorCode": {
+            "description": "Error code.",
+            "examples": [
+              "HPE_GL_NETWORK_MONITORING_UNPROCESSABLE_CONTENT"
+            ],
+            "maxLength": 256,
+            "type": "string"
+          },
+          "httpStatusCode": {
+            "description": "HTTP status code.",
+            "examples": [
+              422
+            ],
+            "maximum": 422,
+            "minimum": 422,
+            "type": "integer"
+          },
+          "message": {
+            "description": "Error message indicating the cause of the failure.",
+            "examples": [
+              "Idempotency-Key has already been used with a different request payload."
+            ],
+            "maxLength": 512,
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpStatusCode",
+          "errorCode",
+          "message",
+          "debugId"
         ],
         "type": "object"
       },
@@ -21969,11 +24106,11 @@
                 ],
                 "timestamp": "2022-07-30T20:00:00Z"
               }
-            ],
-            "samplingIntervalInMinutes": 5
+            ]
           },
           "id": "wlans/wlan1",
           "metric": "wlan_throughput",
+          "samplingIntervalInMinutes": 5,
           "type": "network-monitoring/access-point-monitoring"
         },
         "properties": {
@@ -21998,15 +24135,11 @@
                 },
                 "maxItems": 10000,
                 "type": "array"
-              },
-              "samplingIntervalInMinutes": {
-                "$ref": "#/components/schemas/SamplingIntervalInMinutes"
               }
             },
             "required": [
               "keys",
-              "samples",
-              "samplingIntervalInMinutes"
+              "samples"
             ],
             "type": "object"
           },
@@ -22020,6 +24153,9 @@
             "maxLength": 128,
             "type": "string"
           },
+          "samplingIntervalInMinutes": {
+            "$ref": "#/components/schemas/SamplingIntervalInMinutes"
+          },
           "type": {
             "$ref": "#/components/schemas/Type"
           }
@@ -22028,7 +24164,8 @@
           "metric",
           "graph",
           "id",
-          "type"
+          "type",
+          "samplingIntervalInMinutes"
         ],
         "type": "object"
       },
@@ -22880,6 +25017,122 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/network-monitoring/v0/routing-routes": {
+      "get": {
+        "deprecated": true,
+        "description": "Legacy endpoint (v0). This pre-GA version is formally documented here for sunsetting purposes. Use /network-monitoring/v1/routing-routes instead.",
+        "operationId": "listRoutingRoutesV0",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RTMRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with routing table data.",
+            "headers": {
+              "Deprecation": {
+                "description": "Indicates that this endpoint is deprecated.",
+                "example": "true",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "description": "The date after which this endpoint may be removed.",
+                "schema": {
+                  "format": "date-time",
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get routing table entries for a device (legacy).",
+        "tags": [
+          "Route Table Manager"
+        ]
+      }
+    },
     "/network-monitoring/v1/application-categories": {
       "get": {
         "description": "This API endpoint returns the top N application categories ranked by usage (tx + rx bytes) for the requested scope. The maximum time range is 7 days. If the range between start-at and end-at exceeds 7 days, start-at is automatically adjusted to be 7 days before end-at. This is intentional behavior; no error is returned.\n",
@@ -29506,6 +31759,1989 @@
         ]
       }
     },
+    "/network-monitoring/v1/routing-bgp-advertised-routes": {
+      "get": {
+        "description": "Returns routes advertised to a specific BGP neighbor.",
+        "operationId": "listRoutingBGPAdvertisedRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP address of the BGP neighbor.",
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BGPRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with advertised routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get routes advertised to a BGP neighbor.",
+        "tags": [
+          "BGP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-bgp-learned-routes": {
+      "get": {
+        "description": "Returns routes learned from a specific BGP neighbor.",
+        "operationId": "listRoutingBGPLearnedRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP address of the BGP neighbor.",
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BGPRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with learned routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get routes learned from a BGP neighbor.",
+        "tags": [
+          "BGP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-bgp-neighbor-details": {
+      "get": {
+        "description": "Returns detailed statistics for a specific BGP neighbor.",
+        "operationId": "listRoutingBGPNeighborDetailsV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP address of the BGP neighbor.",
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of items to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BGPNeighborDetailResponse"
+                }
+              }
+            },
+            "description": "Successful response with BGP neighbor detail.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get detailed BGP neighbor information.",
+        "tags": [
+          "BGP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-bgp-neighbors": {
+      "get": {
+        "description": "Returns the list of BGP neighbors and summary information.",
+        "operationId": "listRoutingBGPNeighborsV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of neighbors to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BGPNeighborsResponse"
+                }
+              }
+            },
+            "description": "Successful response with BGP neighbor data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get BGP neighbors for a device.",
+        "tags": [
+          "BGP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-bgp-neighbors/reset": {
+      "post": {
+        "description": "Resets the BGP session for a specific neighbor or all neighbors on a device. Supports the Idempotency-Key request header for safe retries.",
+        "operationId": "resetBGPNeighborV1",
+        "parameters": [
+          {
+            "description": "Optional unique identifier for idempotent retries. If provided, duplicate requests with the same key within the retention window (24 hours) will return the original response.",
+            "in": "header",
+            "name": "idempotency-key",
+            "schema": {
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP address of the BGP neighbor to reset. If omitted, all neighbors are reset.",
+            "in": "query",
+            "name": "address",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationResponse"
+                }
+              }
+            },
+            "description": "Successful reset response.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaTyperouting"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableContent"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Reset a BGP neighbor session.",
+        "tags": [
+          "BGP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-bgp-routes": {
+      "get": {
+        "description": "Returns the BGP routing table with summary and route details.",
+        "operationId": "listRoutingBGPRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BGPRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with BGP routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get all BGP routes for a device.",
+        "tags": [
+          "BGP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-ospf-areas": {
+      "get": {
+        "description": "Returns OSPF area information including summary and area details.",
+        "operationId": "listRoutingOSPFAreasV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of areas to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSPFAreasResponse"
+                }
+              }
+            },
+            "description": "Successful response with OSPF area data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get OSPF areas for a device.",
+        "tags": [
+          "OSPF"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-ospf-databases": {
+      "get": {
+        "description": "Returns the OSPF LSDB including LSA details.",
+        "operationId": "listRoutingOSPFDatabasesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of LSAs to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSPFDatabaseResponse"
+                }
+              }
+            },
+            "description": "Successful response with OSPF database.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get OSPF link-state database for a device.",
+        "tags": [
+          "OSPF"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-ospf-interfaces": {
+      "get": {
+        "description": "Returns OSPF interface information including state, cost, and neighbor details.",
+        "operationId": "listRoutingOSPFInterfacesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of interfaces to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSPFInterfacesResponse"
+                }
+              }
+            },
+            "description": "Successful response with OSPF interface data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get OSPF interfaces for a device.",
+        "tags": [
+          "OSPF"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-ospf-neighbors": {
+      "get": {
+        "description": "Returns OSPF neighbor information including state and timers.",
+        "operationId": "listRoutingOSPFNeighborsV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of neighbors to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSPFNeighborsResponse"
+                }
+              }
+            },
+            "description": "Successful response with OSPF neighbor data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get OSPF neighbors for a device.",
+        "tags": [
+          "OSPF"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-overlay-advertised-routes": {
+      "get": {
+        "description": "Returns routes advertised via the overlay protocol.",
+        "operationId": "listRoutingOverlayAdvertisedRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayRoutesAdvertisedResponse"
+                }
+              }
+            },
+            "description": "Successful response with advertised overlay routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get advertised overlay routes.",
+        "tags": [
+          "Overlay"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-overlay-best-routes": {
+      "get": {
+        "description": "Returns the best routes learned via the overlay protocol.",
+        "operationId": "listRoutingOverlayBestRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayRoutesBestResponse"
+                }
+              }
+            },
+            "description": "Successful response with best learned overlay routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get best learned overlay routes.",
+        "tags": [
+          "Overlay"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-overlay-connections": {
+      "get": {
+        "description": "Returns overlay connection status including peer details.",
+        "operationId": "listRoutingOverlayConnectionsV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of items to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayConnectionResponse"
+                }
+              }
+            },
+            "description": "Successful response with overlay connection data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get overlay connection status.",
+        "tags": [
+          "Overlay"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-overlay-connections/reset": {
+      "post": {
+        "description": "Resets the overlay connection for a device. Supports the Idempotency-Key request header for safe retries.",
+        "operationId": "resetOverlayConnectionV1",
+        "parameters": [
+          {
+            "description": "Optional unique identifier for idempotent retries. If provided, duplicate requests with the same key within the retention window (24 hours) will return the original response.",
+            "in": "header",
+            "name": "idempotency-key",
+            "schema": {
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MutationResponse"
+                }
+              }
+            },
+            "description": "Successful reset response.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaTyperouting"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableContent"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Reset overlay connection.",
+        "tags": [
+          "Overlay"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-overlay-interfaces": {
+      "get": {
+        "description": "Returns overlay interface information including tunnel details.",
+        "operationId": "listRoutingOverlayInterfacesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of interfaces to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayInterfacesResponse"
+                }
+              }
+            },
+            "description": "Successful response with overlay interface data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get overlay interfaces.",
+        "tags": [
+          "Overlay"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-overlay-learned-routes": {
+      "get": {
+        "description": "Returns routes learned via the overlay protocol.",
+        "operationId": "listRoutingOverlayLearnedRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayRoutesLearnedResponse"
+                }
+              }
+            },
+            "description": "Successful response with learned overlay routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get learned overlay routes.",
+        "tags": [
+          "Overlay"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-rip-interfaces": {
+      "get": {
+        "description": "Returns RIP interface information including configuration and state.",
+        "operationId": "listRoutingRIPInterfacesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of interfaces to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RIPInterfacesResponse"
+                }
+              }
+            },
+            "description": "Successful response with RIP interface data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get RIP interfaces for a device.",
+        "tags": [
+          "RIP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-rip-neighbor-routes": {
+      "get": {
+        "description": "Returns routes learned from a specific RIP neighbor.",
+        "operationId": "listRoutingRIPNeighborRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP address of the RIP neighbor.",
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RIPRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with RIP neighbor routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get routes from a specific RIP neighbor.",
+        "tags": [
+          "RIP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-rip-neighbors": {
+      "get": {
+        "description": "Returns RIP neighbor information.",
+        "operationId": "listRoutingRIPNeighborsV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of neighbors to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RIPNeighborsResponse"
+                }
+              }
+            },
+            "description": "Successful response with RIP neighbor data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get RIP neighbors for a device.",
+        "tags": [
+          "RIP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-rip-routes": {
+      "get": {
+        "description": "Returns the RIP routing table with summary and route details.",
+        "operationId": "listRoutingRIPRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RIPRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with RIP routes.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get all RIP routes for a device.",
+        "tags": [
+          "RIP"
+        ]
+      }
+    },
+    "/network-monitoring/v1/routing-routes": {
+      "get": {
+        "description": "Returns the routing table entries for a specific device, including summary counts and route details.",
+        "operationId": "listRoutingRoutesV1",
+        "parameters": [
+          {
+            "description": "Serial number of the device.",
+            "in": "query",
+            "name": "serial",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of device (e.g., GW, SWITCH).",
+            "in": "query",
+            "name": "device-type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GW",
+                "SWITCH"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Maximum number of routes to return.",
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor for the next page of results.",
+            "in": "query",
+            "name": "next",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RTMRoutesResponse"
+                }
+              }
+            },
+            "description": "Successful response with routing table data.",
+            "headers": {
+              "X-RateLimit-Limit": {
+                "$ref": "#/components/headers/XRateLimitLimit"
+              },
+              "X-RateLimit-Remaining": {
+                "$ref": "#/components/headers/XRateLimitRemaining"
+              },
+              "X-RateLimit-Reset": {
+                "$ref": "#/components/headers/XRateLimitReset"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailablerouting"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": []
+          }
+        ],
+        "summary": "Get routing table entries for a device.",
+        "tags": [
+          "Route Table Manager"
+        ]
+      }
+    },
     "/network-monitoring/v1/security-risks": {
       "get": {
         "description": "This API endpoint returns a breakdown of application security risks (High / Medium / Low) for the requested scope. The maximum time range is 7 days. If the range between start-at and end-at exceeds 7 days, start-at is automatically adjusted to be 7 days before end-at. This is intentional behavior; no error is returned.\n",
@@ -35553,6 +39789,10 @@
       "name": "Application Visibility"
     },
     {
+      "description": "BGP routing protocol APIs.",
+      "name": "BGP"
+    },
+    {
       "description": "APIs to retrieve onboarding stage scores, stage export summaries, top reasons, and top grouped counts.",
       "name": "Client Onboarding"
     },
@@ -35579,6 +39819,22 @@
     {
       "description": "IDPS(Intrusion Detection and Prevention System) Monitoring APIs to retrieve threat list and a particular threat details",
       "name": "IDPS"
+    },
+    {
+      "description": "OSPF routing protocol APIs.",
+      "name": "OSPF"
+    },
+    {
+      "description": "Overlay (OAP) routing APIs.",
+      "name": "Overlay"
+    },
+    {
+      "description": "RIP routing protocol APIs.",
+      "name": "RIP"
+    },
+    {
+      "description": "Route table management APIs for underlay routing.",
+      "name": "Route Table Manager"
     },
     {
       "description": "Site Health APIs to get site details with health, devices, clients, alerts information.",
