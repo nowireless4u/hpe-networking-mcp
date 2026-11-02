@@ -31898,7 +31898,8 @@
     },
     "/compute-ops-mgmt/v1beta2/firmware-bundles": {
       "get": {
-        "description": "Retrieve the list of firmware bundles\n\n<div style=\"background-color: #EBEDF0; color: #444444; padding: 20px; margin: 10px 0px; border-radius: 8px; font-size: 16px;\">\n<h5 style=\"padding: 0px; margin: 0px; letter-spacing: 0.3px; text-transform: uppercase; font-size: 16px;\">URI PATH PREFIX RENAME</h5>\n\nThis API now supports the URI path prefix `/compute-ops-mgmt` which used to be `/compute-ops`. <b>The `/compute-ops` prefix is deprecated\nand might become unresponsive after Tuesday, April 1, 2025</b>. The [Guide](https://developer.greenlake.hpe.com/docs/greenlake/services/compute-ops-mgmt/public/guide/)\nprovides more information about this change.\n</div>",
+        "deprecated": true,
+        "description": "**Note:** This path operation is going to be **deprecated and sunset!**\n- Deprecated at: `Fri, 30 Oct 2026 23:59:59 GMT`\n- Sunset at : `Thu, 3 Dec 2026 23:59:59 GMT`\n- Successor version: `compute-ops-mgmt/v1/firmware-bundles`\n\nRetrieve the list of firmware bundles\n",
         "operationId": "get_v1beta2_firmware_bundles",
         "parameters": [
           {
@@ -31920,7 +31921,31 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "Deprecation": {
+                "description": "The path operation will be deprecated as of this date and time.\n",
+                "required": true,
+                "schema": {
+                  "format": "RFC-5322",
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "Link to additional information about the deprecation and sunset of this path operation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "description": "The path operation will be sunset and might become unresponsive anytime after this date and time.\n",
+                "required": true,
+                "schema": {
+                  "format": "RFC-5322",
+                  "type": "string"
+                }
+              }
+            }
           },
           "400": {
             "$ref": "#/components/responses/400-badRequestResponse"
@@ -31946,7 +31971,8 @@
     },
     "/compute-ops-mgmt/v1beta2/firmware-bundles/{id}": {
       "get": {
-        "description": "Retrieve the firmware bundle details by its `id`\n\n<div style=\"background-color: #EBEDF0; color: #444444; padding: 20px; margin: 10px 0px; border-radius: 8px; font-size: 16px;\">\n<h5 style=\"padding: 0px; margin: 0px; letter-spacing: 0.3px; text-transform: uppercase; font-size: 16px;\">URI PATH PREFIX RENAME</h5>\n\nThis API now supports the URI path prefix `/compute-ops-mgmt` which used to be `/compute-ops`. <b>The `/compute-ops` prefix is deprecated\nand might become unresponsive after Tuesday, April 1, 2025</b>. The [Guide](https://developer.greenlake.hpe.com/docs/greenlake/services/compute-ops-mgmt/public/guide/)\nprovides more information about this change.\n</div>",
+        "deprecated": true,
+        "description": "**Note:** This path operation is going to be **deprecated and sunset!**\n- Deprecated at: `Fri, 30 Oct 2026 23:59:59 GMT`\n- Sunset at : `Thu, 3 Dec 2026 23:59:59 GMT`\n- Successor version: `compute-ops-mgmt/v1/firmware-bundles/{id}`\n\nRetrieve the firmware bundle details by its `id`\n",
         "operationId": "get_v1beta2_firmware_bundle_by_id",
         "parameters": [
           {
@@ -31971,7 +31997,31 @@
                 }
               }
             },
-            "description": "OK"
+            "description": "OK",
+            "headers": {
+              "Deprecation": {
+                "description": "The path operation will be deprecated as of this date and time.\n",
+                "required": true,
+                "schema": {
+                  "format": "RFC-5322",
+                  "type": "string"
+                }
+              },
+              "Link": {
+                "description": "Link to additional information about the deprecation and sunset of this path operation.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Sunset": {
+                "description": "The path operation will be sunset and might become unresponsive anytime after this date and time.\n",
+                "required": true,
+                "schema": {
+                  "format": "RFC-5322",
+                  "type": "string"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/401-unauthorizedResponse"
