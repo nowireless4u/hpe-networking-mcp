@@ -9,7 +9,7 @@
       "version": "1.0.0"
     },
     {
-      "path_count": 145,
+      "path_count": 167,
       "slug": "monitoring",
       "title": "Monitoring",
       "version": "1.0.0"
@@ -55,5 +55,5 @@
     "services",
     "troubleshooting"
   ],
-  "total_paths": 351
+  "total_paths": 373
 }
