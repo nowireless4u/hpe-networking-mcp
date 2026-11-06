@@ -39,7 +39,7 @@
       "version": "0.0.1"
     },
     {
-      "path_count": 100,
+      "path_count": 95,
       "slug": "troubleshooting",
       "title": "Troubleshooting",
       "version": "0.0.1"
@@ -55,5 +55,5 @@
     "services",
     "troubleshooting"
   ],
-  "total_paths": 373
+  "total_paths": 368
 }
