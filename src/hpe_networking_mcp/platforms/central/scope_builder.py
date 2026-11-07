@@ -13,6 +13,7 @@ from typing import Any, Literal
 from loguru import logger
 from treelib import Tree
 
+from hpe_networking_mcp.platforms.central.scope_fetch import fetch_scope_data
 from hpe_networking_mcp.platforms.central.utils import retry_central_command
 
 # ---------------------------------------------------------------------------
@@ -124,7 +125,8 @@ def _build_tree(device_data: dict, maps_data: dict) -> Tree:
     """Build the complete scope tree from the two Central API responses.
 
     Args:
-        device_data: Response from cnxdevice/v1/debug/get_scope_data (contains "devices").
+        device_data: Scope nodes from scope_fetch.fetch_scope_data ("devices", each with a
+            leaf-to-root hier_path).
         maps_data: Response from network-config/v1alpha1/scope-maps (contains "scope-map").
 
     Returns:
@@ -177,9 +179,9 @@ def _build_tree(device_data: dict, maps_data: dict) -> Tree:
 async def build_scope_tree(conn: Any) -> Tree:
     """Fetch scope data and scope maps from Central, return a treelib Tree.
 
-    Makes two API calls:
-      1. GET cnxdevice/v1/debug/get_scope_data
-      2. GET network-config/v1alpha1/scope-maps
+    Scope nodes come from scope_fetch.fetch_scope_data (network-config/v1 scope lists, the
+    device inventory and per-device GET network-config/v1/hierarchy); resources
+    from GET network-config/v1alpha1/scope-maps.
 
     Args:
         conn: CentralClient instance.
@@ -187,17 +189,12 @@ async def build_scope_tree(conn: Any) -> Tree:
     Returns:
         A treelib Tree representing the scope hierarchy.
     """
-    device_resp = await retry_central_command(
-        central_conn=conn,
-        api_method="GET",
-        api_path="cnxdevice/v1/debug/get_scope_data",
-    )
+    device_data = await fetch_scope_data(conn)
     maps_resp = await retry_central_command(
         central_conn=conn,
         api_method="GET",
         api_path="network-config/v1alpha1/scope-maps",
     )
-    device_data = device_resp.get("msg", {})
     maps_data = maps_resp.get("msg", {})
     return _build_tree(device_data, maps_data)
 
