@@ -15,7 +15,7 @@
       "version": "1.0.0"
     },
     {
-      "path_count": 1,
+      "path_count": 5,
       "slug": "msp",
       "title": "MSP",
       "version": "0.0.1"
@@ -55,5 +55,5 @@
     "services",
     "troubleshooting"
   ],
-  "total_paths": 368
+  "total_paths": 372
 }
