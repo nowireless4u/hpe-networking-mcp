@@ -541,6 +541,14 @@
       },
       "server.GetContactNBResponse": {
         "properties": {
+          "contactSource": {
+            "description": "How the contact was entered: GLP if picked from GreenLake users, NONGLP if entered as a non-GreenLake contact. Not re-checked against current workspace membership.",
+            "enum": [
+              "GLP",
+              "NONGLP"
+            ],
+            "type": "string"
+          },
           "email": {
             "description": "The email address of the contact.",
             "type": "string"
