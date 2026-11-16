@@ -839,7 +839,7 @@
             "headers": {
               "Location": {
                 "description": "URL where the generated resource can be accessed",
-                "example": "/reporting/v1alpha1/async-operations/1fa85f64-5434-9980-b3fc-3c963f44fgh9",
+                "example": "/reporting/v1/async-operations/1fa85f64-5434-9980-b3fc-3c963f44fgh9",
                 "schema": {
                   "format": "uri",
                   "type": "string"

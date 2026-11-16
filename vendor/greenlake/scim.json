@@ -753,7 +753,7 @@
         "description": "The SCIM user creation extension defines additional attributes and structure\nfor creating user resources in the SCIM API. This extension is compliant\nwith [SCIM 2.0](https://tools.ietf.org/html/rfc7644).\n",
         "properties": {
           "countryCode": {
-            "description": "Specifies the user's country using a two-letter ISO country code.",
+            "description": "Specifies the user's country using a two-letter ISO 3166-1 alpha-2 country code. Must be uppercase, for example `US`. Lowercase input is normalized to uppercase before being stored, and the value is always returned in uppercase.",
             "example": "US",
             "pattern": "[A-Z]{2}",
             "type": "string"
@@ -790,7 +790,7 @@
         "description": "The SCIM user extension defines additional attributes and structure for user resources in the SCIM API. This extension is compliant with [SCIM 2.0](https://tools.ietf.org/html/rfc7644).",
         "properties": {
           "countryCode": {
-            "description": "Specifies the user's country using a two-letter ISO code.",
+            "description": "Specifies the user's country using a two-letter ISO 3166-1 alpha-2 code. Must be uppercase, for example `US`. Lowercase input is normalized to uppercase before being stored, and the value is always returned in uppercase.",
             "example": "US",
             "type": "string"
           },
@@ -1052,8 +1052,13 @@
         "operationId": "listGroupsSCIM",
         "parameters": [
           {
-            "description": "Return only the subset of groups that match the filter.\nThe filter grammar is a subset of OData 4.0.\n<br><br>**NOTE:** The filter query parameter must use [URL\nencoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients\ndo this automatically with inputs provided to them specifically as\nquery parameters. Encoding must be done manually for any query\nparameters provided as part of the URL. The reserved characters `!`\n`#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]`\nmust be encoded with percent encoded equivalents. <br><br>\n\n**The Get Groups API filters enabled are**:\n\nSupported filters:\n- `displayName` (operators: `sw`, `eq`, `co`)\n- `urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:source` (operators: `eq`)\n",
+            "description": "Return only the subset of groups that match the filter.\nThe filter grammar is a subset of OData 4.0.\n<br><br>**NOTE:** The filter query parameter must use [URL\nencoding](https://en.wikipedia.org/wiki/URL_encoding). Most clients\ndo this automatically with inputs provided to them specifically as\nquery parameters. Encoding must be done manually for any query\nparameters provided as part of the URL. The reserved characters `!`\n`#` `$` `&` `'` `(` `)` `*` `+` `,` `/` `:` `;` `=` `?` `@` `[` `]`\nmust be encoded with percent encoded equivalents. <br><br>\n\n**The Get Groups API filters enabled are**:\n\nSupported filters:\n- `displayName` (operators: `sw`, `eq`, `co`)\n- `urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:source` (operators: `eq`)\nAttribute names, operators, and filter values are case-insensitive.\nCombine one source `eq` filter with one `displayName` filter using `AND`,\nin either order. The `displayName` filter supports `eq`, `sw`, and `co`.\nFor example:\n`urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:source eq Local AND displayName co \"AAA\"`.\n",
             "examples": {
+              "Combined source and displayName filter": {
+                "description": "Return Local groups whose display names contain the specified text.",
+                "summary": "Filter groups by source and displayName",
+                "value": "urn:ietf:params:scim:schemas:extensions:hpe-greenlake:2.0:Group:source eq Local AND displayName co \"AAA\""
+              },
               "Equals Filter with displayName": {
                 "description": "Search for groups whose display name exactly matches the specified text. This filter is useful for finding specific groups when you know the exact group name, ensuring exact matches and no partial results.",
                 "summary": "Use the equals filter with displayName",

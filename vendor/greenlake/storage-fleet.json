@@ -70058,13 +70058,16 @@
   ],
   "servers": [
     {
-      "url": "https://eu1.data.cloud.hpe.com"
+      "url": "https://us-west.api.greenlake.hpe.com"
     },
     {
-      "url": "https://us1.data.cloud.hpe.com"
+      "url": "https://eu-west.api.greenlake.hpe.com"
     },
     {
-      "url": "https://jp1.data.cloud.hpe.com"
+      "url": "https://eu-central.api.greenlake.hpe.com"
+    },
+    {
+      "url": "https://ap-northeast.api.greenlake.hpe.com"
     }
   ],
   "tags": [
