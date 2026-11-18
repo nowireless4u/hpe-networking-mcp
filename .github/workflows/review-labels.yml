@@ -68,7 +68,7 @@ jobs:
           ASSIGNERS = {"leonardo-operations-lead[bot]", REPO.split("/")[0]}
           STATES = ("pending", "changes", "blocked", "cleared")
           STRICTNESS = {"cleared": 0, "changes": 1, "blocked": 2}
-          FENCE = re.compile(r"^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$", re.M | re.S)
+          FENCE = re.compile(r"^[ \t]*(`{3,}|~{3,}).*?^[ \t]*\1[^\n]*$", re.M | re.S)
           VERDICT_LINE = re.compile(r"^[ \t*_#-]*verdict[ \t*_]*:(.*)$", re.I | re.M)
           VERDICT_WORD = re.compile(r"^[ \t*_`]*(cleared|changes|blocked)[ \t*_`.]*$", re.I)
           HUNK = re.compile(r"^@@[^@]*@@", re.M)
@@ -135,7 +135,7 @@ jobs:
           def status(reviews, login, head, base_sha):
               """The <status> one requested reviewer should show, and why."""
               latest = None
-              for review in reviews:
+              for review in sorted(reviews, key=lambda r: r["id"]):  # oldest first, whatever the API order
                   if (review.get("user") or {}).get("login") == login and verdict(review):
                       latest = review
               if latest is None:
@@ -154,8 +154,11 @@ jobs:
 
           def requested_reviewers(number):
               """Names whose review:<name> label was last added, not removed, by an assigner."""
+              # Full paginated history; a PR would need thousands of label changes before an early request
+              # fell out of it, and then that reviewer would visibly drop off rather than silently clear.
               wanted = {}
-              for event in gh(f"repos/{REPO}/issues/{number}/events?per_page=100", paginate=True):
+              events = gh(f"repos/{REPO}/issues/{number}/events?per_page=100", paginate=True)
+              for event in sorted(events, key=lambda e: e["id"]):  # oldest first, whatever the API order
                   name = (event.get("label") or {}).get("name", "")
                   actor = (event.get("actor") or {}).get("login")
                   if event["event"] in ("labeled", "unlabeled") and name.startswith("review:") and actor in ASSIGNERS:
