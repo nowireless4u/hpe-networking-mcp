@@ -1,23 +1,28 @@
 # review-labels: keeps each requested reviewer's <name>:<status> label in step with their reviews.
 #
-#   review:<name>           added by people: asks <name> for a review
-#   <name>:pending          no verdict on the current changes yet
-#   <name>:changes          changes requested on the current changes
-#   <name>:blocked          blocked on something outside the diff; survives new pushes
-#   <name>:cleared          cleared the current changes (not merge approval)
+#   review:<name>     the review request; counts only when added by Leonardo or the repo owner
+#   <name>:pending    no verdict on the current changes yet
+#   <name>:changes    changes requested on the current changes
+#   <name>:blocked    blocked on something outside the diff; survives new commits
+#   <name>:cleared    cleared the current changes (not merge approval)
 #
-# A verdict comes from the reviewer's own latest review: a "Verdict: cleared|changes|blocked" line in
-# the body wins; otherwise Approve = cleared and Request changes = changes. Plain comments change nothing.
-# A new push resets cleared/changes to pending unless the PR's own diff is unchanged (a merge from or
-# rebase onto the base branch keeps verdicts). Status labels set by hand are put back on the next run.
-# The same file goes in every repo; edit REVIEWERS to change who can review.
+# The labels are a display. Nothing may gate, approve or merge on them; anything that does must re-read
+# the reviews, their authors and the head commit itself.
+#
+# Verdicts come from the reviewer's own reviews. One "Verdict: cleared|changes|blocked" line, with nothing
+# after the word, and the review type (Approve = cleared, Request changes = changes) are combined, and the
+# stricter wins. Plain comments change nothing; a dismissed review is pending.
+# A commit that changes the PR's own diff resets cleared/changes to pending; merging the base branch in or
+# rebasing onto it does not. Review requests and status labels changed by anyone else are put back.
+# Runs from the default branch only: pull_request_target directly, review events via review-labels-trigger.
 name: review-labels
 
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled, unlabeled]
-  pull_request_review:
-    types: [submitted, edited, dismissed]
+  workflow_run:
+    workflows: [review-labels-trigger]
+    types: [completed]
 
 permissions:
   contents: read
@@ -25,16 +30,19 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: review-labels-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  # One run at a time per PR branch; a newer event waits and then reconciles from scratch.
+  group: >-
+    review-labels-${{ github.event.pull_request.head.repo.full_name || github.event.workflow_run.head_repository.full_name }}-${{ github.event.pull_request.head.ref || github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
 
 jobs:
   sync:
     # Label events matter only for review:* and <name>:<status> labels (both contain a colon).
     if: >-
-      github.event_name == 'pull_request_review' ||
-      (github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
-      contains(github.event.label.name, ':')
+      (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'pull_request_review') ||
+      (github.event_name == 'pull_request_target' &&
+       ((github.event.action != 'labeled' && github.event.action != 'unlabeled') ||
+        contains(github.event.label.name, ':')))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -42,7 +50,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.workflow_run.pull_requests[0].number }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           python3 - <<'PY'
           import hashlib, json, os, re, subprocess, sys, urllib.parse
@@ -52,12 +61,17 @@ jobs:
               "raphael": "raphael-security-infrastructure[bot]",
               "michelangelo": "michelangelo-operator-experience[bot]",
               "donatello": "donatello-engineering-automation[bot]",
-              "casey": "casey-jones-ops[bot]",
+              "casey": "casey-delivery-coordinator[bot]",
           }
+          REPO = os.environ["REPO"]
+          # Who may add or remove review:<name>: Leonardo and the repository owner.
+          ASSIGNERS = {"leonardo-operations-lead[bot]", REPO.split("/")[0]}
           STATES = ("pending", "changes", "blocked", "cleared")
-          VERDICT = re.compile(r"^[ \t*_#-]*verdict[\s*_]*:[\s*_`]*(cleared|changes|blocked)\b", re.I | re.M)
+          STRICTNESS = {"cleared": 0, "changes": 1, "blocked": 2}
+          FENCE = re.compile(r"^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$", re.M | re.S)
+          VERDICT_LINE = re.compile(r"^[ \t*_#-]*verdict[ \t*_]*:(.*)$", re.I | re.M)
+          VERDICT_WORD = re.compile(r"^[ \t*_`]*(cleared|changes|blocked)[ \t*_`.]*$", re.I)
           HUNK = re.compile(r"^@@[^@]*@@", re.M)
-          REPO, PR = os.environ["REPO"], os.environ["PR_NUMBER"]
           DRY = os.environ.get("DRY_RUN") == "1"
 
 
@@ -76,14 +90,25 @@ jobs:
               return json.loads(out.stdout) if out.stdout.strip() else None
 
 
+          def stricter(*verdicts):
+              found = [v for v in verdicts if v]
+              return max(found, key=STRICTNESS.get) if found else None
+
+
+          def line_verdict(body):
+              """The body's verdict line, ignoring code blocks and quotes; the stricter one if several."""
+              text = FENCE.sub("", body or "")
+              text = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith(">"))
+              words = [VERDICT_WORD.match(m.group(1)) for m in VERDICT_LINE.finditer(text)]
+              return stricter(*(w.group(1).lower() for w in words if w))
+
+
           def verdict(review):
               """The verdict one review gives, or None when it gives none."""
               if review["state"] == "DISMISSED":
                   return "pending"
-              found = VERDICT.search(review.get("body") or "")
-              if found:
-                  return found.group(1).lower()
-              return {"APPROVED": "cleared", "CHANGES_REQUESTED": "changes"}.get(review["state"])
+              typed = {"APPROVED": "cleared", "CHANGES_REQUESTED": "changes"}.get(review["state"])
+              return stricter(line_verdict(review.get("body")), typed)
 
 
           _prints = {}
@@ -93,15 +118,14 @@ jobs:
               """Hash of the PR's own diff at `sha` (vs its merge base), or None when it can't be told."""
               if sha not in _prints:
                   try:
-                      files = gh(f"repos/{REPO}/compare/{base_sha}...{sha}").get("files") or []
+                      files = gh(f"repos/{REPO}/compare/{base_sha}...{sha}").get("files")
                   except RuntimeError:
                       files = None
-                  if files is None or len(files) >= 300:
-                      _prints[sha] = None
+                  if not files or len(files) >= 300 or any("patch" not in f for f in files):
+                      _prints[sha] = None  # unknown, truncated, binary or mode-only: treat as changed
                   else:
                       parts = sorted(
-                          f"{f['filename']}|{f.get('previous_filename', '')}|{f['status']}|"
-                          + (HUNK.sub("@@", f["patch"]) if "patch" in f else "blob:" + f["sha"])
+                          f"{f['filename']}|{f.get('previous_filename', '')}|{f['status']}|{HUNK.sub('@@', f['patch'])}"
                           for f in files
                       )
                       _prints[sha] = hashlib.sha256("\n".join(parts).encode()).hexdigest()
@@ -109,7 +133,7 @@ jobs:
 
 
           def status(reviews, login, head, base_sha):
-              """The <status> one requested reviewer should show."""
+              """The <status> one requested reviewer should show, and why."""
               latest = None
               for review in reviews:
                   if (review.get("user") or {}).get("login") == login and verdict(review):
@@ -128,39 +152,66 @@ jobs:
               return "pending", f"{given} on {sha[:8]}; the diff changed since"
 
 
-          def main():
-              pr = gh(f"repos/{REPO}/pulls/{PR}")
+          def requested_reviewers(number):
+              """Names whose review:<name> label was last added, not removed, by an assigner."""
+              wanted = {}
+              for event in gh(f"repos/{REPO}/issues/{number}/events?per_page=100", paginate=True):
+                  name = (event.get("label") or {}).get("name", "")
+                  actor = (event.get("actor") or {}).get("login")
+                  if event["event"] in ("labeled", "unlabeled") and name.startswith("review:") and actor in ASSIGNERS:
+                      wanted[name[len("review:"):]] = event["event"] == "labeled"
+              return {n for n, on in wanted.items() if on and n in REVIEWERS}
+
+
+          def write(number, add, remove):
+              if add:
+                  gh(f"repos/{REPO}/issues/{number}/labels", "POST", {"labels": add})
+              for name in remove:
+                  gh(f"repos/{REPO}/issues/{number}/labels/{urllib.parse.quote(name, safe='')}", "DELETE")
+
+
+          def summarize(number, rows):
+              summary = os.environ.get("GITHUB_STEP_SUMMARY")
+              if summary and rows:
+                  with open(summary, "a", encoding="utf-8") as fh:
+                      fh.write(f"PR #{number}\n\n| Reviewer | Label | Why |\n| --- | --- | --- |\n")
+                      fh.write("\n".join(rows) + "\n\n")
+
+
+          def reconcile(number):
+              pr = gh(f"repos/{REPO}/pulls/{number}")
               if pr["state"] != "open":
-                  print("PR is closed; nothing to do.")
-                  return 0
+                  print(f"PR #{number} is closed; nothing to do.")
+                  return
               head, base_sha = pr["head"]["sha"], pr["base"]["sha"]
               current = {label["name"] for label in pr["labels"]}
-              requested = {n for n in REVIEWERS if f"review:{n}" in current}
-              reviews = gh(f"repos/{REPO}/pulls/{PR}/reviews?per_page=100", paginate=True) if requested else []
-              desired, rows = set(), []
+              requested = requested_reviewers(number)
+              reviews = gh(f"repos/{REPO}/pulls/{number}/reviews?per_page=100", paginate=True) if requested else []
+              desired, rows = {f"review:{n}" for n in requested}, []
               for name in sorted(requested):
                   state, why = status(reviews, REVIEWERS[name], head, base_sha)
                   desired.add(f"{name}:{state}")
                   rows.append(f"| {name} | {name}:{state} | {why} |")
-              managed = {f"{n}:{s}" for n in REVIEWERS for s in STATES}
+              managed = {f"{n}:{s}" for n in REVIEWERS for s in STATES} | {f"review:{n}" for n in REVIEWERS}
               add, remove = sorted(desired - current), sorted((current & managed) - desired)
-              print(f"PR #{PR} head {head[:8]} requested={sorted(requested)} add={add} remove={remove}")
-              summary = os.environ.get("GITHUB_STEP_SUMMARY")
-              if summary and rows:
-                  with open(summary, "a", encoding="utf-8") as fh:
-                      fh.write("| Reviewer | Label | Why |\n| --- | --- | --- |\n" + "\n".join(rows) + "\n")
-              if DRY:
-                  return 0
-              try:
-                  if add:
-                      gh(f"repos/{REPO}/issues/{PR}/labels", "POST", {"labels": add})
-                  for name in remove:
-                      gh(f"repos/{REPO}/issues/{PR}/labels/{urllib.parse.quote(name, safe='')}", "DELETE")
-              except RuntimeError as err:
-                  # Reviews on fork PRs run with a read-only token; the next push or label event reconciles.
-                  print(f"::warning::could not update labels: {err}")
-              return 0
+              print(f"PR #{number} head {head[:8]} requested={sorted(requested)} add={add} remove={remove}")
+              summarize(number, rows)
+              if DRY or not (add or remove):
+                  return
+              if gh(f"repos/{REPO}/pulls/{number}")["head"]["sha"] != head:
+                  print(f"PR #{number} moved past {head[:8]} during this run; the queued run for the new head will reconcile.")
+                  return
+              write(number, add, remove)
 
 
-          sys.exit(main())
+          def pr_numbers():
+              if os.environ.get("PR_NUMBER"):
+                  return [os.environ["PR_NUMBER"]]
+              head = os.environ.get("HEAD_SHA")  # review on a fork PR: workflow_run carries no PR number
+              pulls = gh(f"repos/{REPO}/pulls?state=open&per_page=100", paginate=True) if head else []
+              return [str(p["number"]) for p in pulls if p["head"]["sha"] == head]
+
+
+          for pr_number in pr_numbers():
+              reconcile(pr_number)
           PY
