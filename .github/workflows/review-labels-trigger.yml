@@ -1,0 +1,20 @@
+# review-labels-trigger: wakes review-labels when a PR review is submitted, edited or dismissed.
+#
+# GitHub runs this file from the pull request's own branch, so it holds no permissions and does
+# nothing itself. review-labels listens for this run finishing (workflow_run) and does the work from
+# the default branch's copy, which a pull request cannot change.
+name: review-labels-trigger
+
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Hand off to review-labels
+        run: echo "Review event on PR ${{ github.event.pull_request.number }}; review-labels reconciles it from the default branch."
