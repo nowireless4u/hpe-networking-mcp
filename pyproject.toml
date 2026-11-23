@@ -119,3 +119,11 @@ testpaths = ["tests"]
 [tool.bandit]
 exclude_dirs = ["tests"]
 skips = ["B101", "B104", "B110"]  # B101: assert, B104: 0.0.0.0 bind (Docker), B110: try/except/pass in shutdown
+
+[tool.uv]
+constraint-dependencies = [
+    "dnspython>=2.9.2",
+    "joserfc>=1.7.6",
+    "msgpack>=1.2.3",
+    "opentelemetry-api>=1.45.2",
+]
