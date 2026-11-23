@@ -6,7 +6,7 @@
 FROM ghcr.io/astral-sh/uv:0.13.5@sha256:32a7bb39b496babbd997b0a39a4d66c126bdaf5661b302bf6f06abda8deca6ff AS uv
 FROM denoland/deno:bin-2.9.8@sha256:b507583d3c68ba69f3ed2ce5969ae5b8b70f43421c781279c7aea06435263543 AS deno
 
-FROM python:3.13-slim-trixie@sha256:d3449c0493345868b09708d7056dce5edda3a75233ea86008fc80c934d355a10 AS deps
+FROM python:3.13-slim-trixie@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90 AS deps
 
 # Install uv
 COPY --from=uv /uv /usr/local/bin/uv
@@ -27,19 +27,19 @@ RUN uv sync --locked --no-dev --no-install-project
 # specs. Stdlib-only (json + sqlite3), so it needs no project deps — just the
 # builder script and vendor/. Only the resulting .db ships to the runtime image;
 # the 90 vendored specs stay out of it.
-FROM python:3.13-slim-trixie@sha256:d3449c0493345868b09708d7056dce5edda3a75233ea86008fc80c934d355a10 AS specindex
+FROM python:3.13-slim-trixie@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90 AS specindex
 WORKDIR /app
 COPY scripts/build_spec_index.py ./scripts/build_spec_index.py
 COPY vendor/ ./vendor/
 RUN python scripts/build_spec_index.py /tmp/spec_index.db
 
 # --- Runtime stage ---
-FROM python:3.13-slim-trixie@sha256:d3449c0493345868b09708d7056dce5edda3a75233ea86008fc80c934d355a10
+FROM python:3.13-slim-trixie@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
 
 # Pull in Debian security fixes that the pinned base image doesn't have yet.
-# Targeted to the flagged packages so the image stays close to the pinned base.
+# Currently only zlib1g (CVE-2026-85091); remove once the base image ships 1.3.1-1+deb13u1.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends --only-upgrade apt libapt-pkg7.0 zlib1g \
+    && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv in runtime
