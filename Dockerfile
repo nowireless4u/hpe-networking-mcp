@@ -36,6 +36,12 @@ RUN python scripts/build_spec_index.py /tmp/spec_index.db
 # --- Runtime stage ---
 FROM python:3.13-slim-trixie@sha256:d3449c0493345868b09708d7056dce5edda3a75233ea86008fc80c934d355a10
 
+# Pull in Debian security fixes that the pinned base image doesn't have yet.
+# Targeted to the flagged packages so the image stays close to the pinned base.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade apt libapt-pkg7.0 zlib1g \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install uv in runtime
 COPY --from=uv /uv /usr/local/bin/uv
 
