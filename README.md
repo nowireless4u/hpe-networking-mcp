@@ -1,7 +1,7 @@
 # HPE Networking MCP Server
 
-[![CI](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/ci.yml)
-[![Security](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/nowireless4u/hpe-networking-mcp/actions/workflows/security.yml)
+[![CI](https://github.com/nmjoo/hpe-networking-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/nmjoo/hpe-networking-mcp/actions/workflows/ci.yml)
+[![Security](https://github.com/nmjoo/hpe-networking-mcp/actions/workflows/security.yml/badge.svg)](https://github.com/nmjoo/hpe-networking-mcp/actions/workflows/security.yml)
 
 > ### ⚠️ Active development — releases are paused
 >
