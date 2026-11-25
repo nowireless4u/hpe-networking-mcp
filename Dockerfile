@@ -37,9 +37,10 @@ RUN python scripts/build_spec_index.py /tmp/spec_index.db
 FROM python:3.13-slim-trixie@sha256:e48f59cdba69a3cbd9ed2cf0f348d90d45a8d350d98134cf1070bc106ee9ed90
 
 # Pull in Debian security fixes that the pinned base image doesn't have yet.
-# Currently only zlib1g (CVE-2026-85091); remove once the base image ships 1.3.1-1+deb13u1.
+# Currently zlib1g (CVE-2026-85091; remove once the base image ships 1.3.1-1+deb13u1)
+# and libzstd1 (CVE-2026-124851; remove once the base image ships 1.5.7+dfsg-1+deb13u1).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+    && apt-get install -y --no-install-recommends --only-upgrade zlib1g libzstd1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv in runtime
